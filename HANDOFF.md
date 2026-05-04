@@ -232,3 +232,20 @@ Depois rodar:
 ```bash
 npm run predeploy
 ```
+
+## Correcao: menu duplicado no RML
+
+Em 04/05/2026 foi corrigida a duplicacao da barra de etapas no modulo RML.
+
+Causa:
+- O layout da avaliacao ja renderiza o menu principal com StepNav.
+- A pagina RML tambem renderizava outro StepNav.
+
+Arquivo alterado:
+- src/app/(app)/avaliacoes/[id]/rml/page.tsx
+
+Alteracao:
+- removido o import de StepNav;
+- removida a renderizacao <StepNav steps={steps} />;
+- mantido o estado steps, porque ele ainda e usado pelos botoes anterior/proximo.
+
