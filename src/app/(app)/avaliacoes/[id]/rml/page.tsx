@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { calcularRML, PROTOCOLOS_RML } from '@/lib/calculations/rml';
 import { Info, CheckCircle2 } from 'lucide-react';
 
-/* â”€â”€ Cores de classificaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Cores de classificação ─────────────────────────────────────────────────── */
 const COR_CLASSE: Record<string, string> = {
   'Excelente':   'bg-emerald-100 text-emerald-800 border-emerald-300',
   'Bom':         'bg-blue-100 text-blue-800 border-blue-300',
@@ -21,7 +21,7 @@ const COR_CLASSE: Record<string, string> = {
   'Muito fraco': 'bg-red-100 text-red-800 border-red-300',
 };
 
-/* â”€â”€ Badge de classificaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Badge de classificação ─────────────────────────────────────────────────── */
 function ClassBadge({ cls }: { cls?: string | null }) {
   if (!cls) return null;
   return (
@@ -32,7 +32,7 @@ function ClassBadge({ cls }: { cls?: string | null }) {
   );
 }
 
-/* â”€â”€ Card de protocolo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Card de protocolo ──────────────────────────────────────────────────────── */
 function ProtocoloCard({ proto }: { proto: { nome: string; descricao: string; fonte: string } }) {
   const [open, setOpen] = useState(false);
   return (
@@ -56,7 +56,7 @@ function ProtocoloCard({ proto }: { proto: { nome: string; descricao: string; fo
   );
 }
 
-/* â”€â”€ Componente principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Componente principal ───────────────────────────────────────────────────── */
 export default function RMLPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const avalId = params.id;
@@ -82,7 +82,7 @@ export default function RMLPage({ params }: { params: { id: string } }) {
   const [saving, setSaving]           = useState(false);
   const [saved, setSaved]             = useState(false);
 
-  // CÃ¡lculo automÃ¡tico
+  // Cálculo automático
   const resultado = calcularRML({
     categoria,
     sexo,
@@ -196,8 +196,8 @@ export default function RMLPage({ params }: { params: { id: string } }) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-800 text-gray-900">ResistÃªncia Muscular Localizada</h1>
-            <p className="text-sm text-gray-500 mt-1">AvaliaÃ§Ã£o de RML por categoria etÃ¡ria</p>
+            <h1 className="text-2xl font-800 text-gray-900">Resistência Muscular Localizada</h1>
+            <p className="text-sm text-gray-500 mt-1">Avaliação de RML por categoria etária</p>
           </div>
           <div className="flex items-center gap-3">
             <SaveIndicator state={saving ? 'saving' : saved ? 'saved' : autoSaveState} />
@@ -210,14 +210,14 @@ export default function RMLPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* SeleÃ§Ã£o de categoria */}
+        {/* Seleção de categoria */}
         <Card>
           <CardHeader><CardTitle>Perfil do avaliado</CardTitle></CardHeader>
           <CardBody>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-600 text-gray-700 mb-2">
-                  Categoria da avaliaÃ§Ã£o
+                  Categoria da avaliação
                 </label>
                 <div className="flex gap-3">
                   <button
@@ -230,7 +230,7 @@ export default function RMLPage({ params }: { params: { id: string } }) {
                     }`}
                   >
                     Jovem / Ativo
-                    <div className="text-xs font-400 mt-0.5 opacity-70">AtÃ© 59 anos</div>
+                    <div className="text-xs font-400 mt-0.5 opacity-70">Até 59 anos</div>
                   </button>
                   <button
                     type="button"
@@ -265,13 +265,13 @@ export default function RMLPage({ params }: { params: { id: string } }) {
           </CardBody>
         </Card>
 
-        {/* â”€â”€ JOVEM / ATIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── JOVEM / ATIVO ─────────────────────────────────────────────────── */}
         {categoria === 'jovem_ativo' && (
           <>
             {/* MMSS */}
             <Card>
               <CardHeader>
-                <CardTitle>RML de MMSS â€” FlexÃ£o de braÃ§o</CardTitle>
+                <CardTitle>RML de MMSS — Flexão de braço</CardTitle>
               </CardHeader>
               <CardBody>
                 <div className="mb-4">
@@ -299,7 +299,7 @@ export default function RMLPage({ params }: { params: { id: string } }) {
                     : PROTOCOLOS_RML.flexao_modificada
                 } />
                 <div className="grid grid-cols-2 gap-4 items-end">
-                  <Field label="RepetiÃ§Ãµes">
+                  <Field label="Repetições">
                     <Input
                       type="number" min="0" placeholder="0"
                       value={mmssReps}
@@ -319,10 +319,10 @@ export default function RMLPage({ params }: { params: { id: string } }) {
               <CardBody className="space-y-6">
                 {/* Teste 1 */}
                 <div>
-                  <p className="text-sm font-600 text-gray-700 mb-2">Teste 1 â€” Abdominal em 1 minuto</p>
+                  <p className="text-sm font-600 text-gray-700 mb-2">Teste 1 — Abdominal em 1 minuto</p>
                   <ProtocoloCard proto={PROTOCOLOS_RML.abdominal_1min} />
                   <div className="grid grid-cols-2 gap-4 items-end">
-                    <Field label="RepetiÃ§Ãµes em 1 min">
+                    <Field label="Repetições em 1 min">
                       <Input
                         type="number" min="0" placeholder="0"
                         value={abd1minReps}
@@ -334,7 +334,7 @@ export default function RMLPage({ params }: { params: { id: string } }) {
                 </div>
 
                 <div className="border-t pt-4">
-                  <p className="text-sm font-600 text-gray-700 mb-2">Teste 2 â€” Prancha ventral mÃ¡xima</p>
+                  <p className="text-sm font-600 text-gray-700 mb-2">Teste 2 — Prancha ventral máxima</p>
                   <ProtocoloCard proto={PROTOCOLOS_RML.prancha_ventral} />
                   <div className="grid grid-cols-2 gap-4 items-end">
                     <Field label="Tempo sustentado (segundos)">
@@ -356,10 +356,10 @@ export default function RMLPage({ params }: { params: { id: string } }) {
               <CardBody className="space-y-6">
                 {/* Agachamento */}
                 <div>
-                  <p className="text-sm font-600 text-gray-700 mb-2">Teste 1 â€” Agachamento livre em 1 minuto</p>
+                  <p className="text-sm font-600 text-gray-700 mb-2">Teste 1 — Agachamento livre em 1 minuto</p>
                   <ProtocoloCard proto={PROTOCOLOS_RML.agachamento_1min} />
                   <div className="grid grid-cols-2 gap-4 items-end">
-                    <Field label="RepetiÃ§Ãµes em 1 min">
+                    <Field label="Repetições em 1 min">
                       <Input
                         type="number" min="0" placeholder="0"
                         value={mmiiAgachReps}
@@ -373,7 +373,7 @@ export default function RMLPage({ params }: { params: { id: string } }) {
                 {/* Wall sit */}
                 <div className="border-t pt-4">
                   <p className="text-sm font-600 text-gray-700 mb-1">
-                    Teste 2 â€” Wall sit{' '}
+                    Teste 2 — Wall sit{' '}
                     <span className="text-xs font-400 text-gray-400">(opcional)</span>
                   </p>
                   <ProtocoloCard proto={PROTOCOLOS_RML.wall_sit} />
@@ -393,15 +393,15 @@ export default function RMLPage({ params }: { params: { id: string } }) {
           </>
         )}
 
-        {/* â”€â”€ IDOSO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── IDOSO ────────────────────────────────────────────────────────── */}
         {categoria === 'idoso' && (
           <>
             <Card>
-              <CardHeader><CardTitle>RML de MMII â€” Sentar e Levantar 30s</CardTitle></CardHeader>
+              <CardHeader><CardTitle>RML de MMII — Sentar e Levantar 30s</CardTitle></CardHeader>
               <CardBody>
                 <ProtocoloCard proto={PROTOCOLOS_RML.sentar_levantar_30s} />
                 <div className="grid grid-cols-2 gap-4 items-end">
-                  <Field label="RepetiÃ§Ãµes em 30s">
+                  <Field label="Repetições em 30s">
                     <Input
                       type="number" min="0" placeholder="0"
                       value={idosoSlReps}
@@ -414,11 +414,11 @@ export default function RMLPage({ params }: { params: { id: string } }) {
             </Card>
 
             <Card>
-              <CardHeader><CardTitle>RML de MMSS Funcional â€” Arm Curl Test 30s</CardTitle></CardHeader>
+              <CardHeader><CardTitle>RML de MMSS Funcional — Arm Curl Test 30s</CardTitle></CardHeader>
               <CardBody>
                 <ProtocoloCard proto={PROTOCOLOS_RML.arm_curl_30s} />
                 <div className="grid grid-cols-2 gap-4 items-end">
-                  <Field label="RepetiÃ§Ãµes em 30s">
+                  <Field label="Repetições em 30s">
                     <Input
                       type="number" min="0" placeholder="0"
                       value={idosoArmcurlReps}
@@ -432,14 +432,14 @@ export default function RMLPage({ params }: { params: { id: string } }) {
           </>
         )}
 
-        {/* ObservaÃ§Ãµes */}
+        {/* Observações */}
         <Card>
           <CardBody>
-            <Field label="ObservaÃ§Ãµes clÃ­nicas">
+            <Field label="Observações clínicas">
               <textarea
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 rows={3}
-                placeholder="CondiÃ§Ãµes especiais, intercorrÃªncias, adaptaÃ§Ãµes de protocolo..."
+                placeholder="Condições especiais, intercorrências, adaptações de protocolo..."
                 value={observacoes}
                 onChange={e => setObservacoes(e.target.value)}
               />
@@ -447,7 +447,7 @@ export default function RMLPage({ params }: { params: { id: string } }) {
           </CardBody>
         </Card>
 
-        {/* AÃ§Ãµes */}
+        {/* Ações */}
         <div className="flex justify-between">
           <Button variant="secondary" onClick={() => {
             const prev = steps.find(s => s.key === 'forca')
@@ -459,10 +459,10 @@ export default function RMLPage({ params }: { params: { id: string } }) {
           </Button>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Salvandoâ€¦' : 'Salvar'}
+              {saving ? 'Salvando…' : 'Salvar'}
             </Button>
             <Button onClick={handleNext}>
-              PrÃ³ximo â†’
+              Próximo →
             </Button>
           </div>
         </div>
