@@ -107,6 +107,17 @@ Atualizacao posterior: como os erros persistiram em producao, foi criada uma cor
 
 Essa mudanca foi validada localmente com `npm run predeploy` em 04/05/2026. Resultado: auditoria OK, smoke test OK, TypeScript OK e lint sem erros bloqueantes.
 
+Nova descoberta em 04/05/2026: a pagina especifica da anamnese ainda tinha um `supabase.from('anamnese').upsert(...)` proprio, fora de `src/lib/modulos.ts`. Isso mantinha o erro 403 em producao mesmo depois da criacao de `/api/modulos`.
+
+Correcao aplicada:
+
+- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` agora importa `buscarModulo` e `upsertModulo` de `src/lib/modulos.ts`.
+- A leitura dos dados salvos da anamnese passou por `buscarModulo('anamnese', params.id)`.
+- O salvamento da anamnese passou por `upsertModulo('anamnese', params.id, { respostas, template_id })`.
+- Busca de avaliacao e templates continua direta no Supabase, pois sao leituras necessarias e nao eram a origem do erro de POST.
+
+Validacao local apos essa correcao: `npm run predeploy` passou novamente.
+
 Depois do deploy dessa correcao, retestar:
 
 1. Salvar anamnese em producao e conferir que nao aparece mais erro 403.

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { SaveIndicator } from '@/components/ui/SaveIndicator';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { buildSteps } from '@/lib/steps';
+import { buscarModulo, upsertModulo } from '@/lib/modulos';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 type TipoCampo = 'texto' | 'texto_longo' | 'boolean' | 'numero' | 'escala' | 'selecao' | 'data' | 'secao';
@@ -181,8 +182,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
       setAval(av);
 
       // 2. Buscar dados salvos de anamnese
-      const { data: an } = await supabase.from('anamnese')
-        .select('*').eq('avaliacao_id', params.id).maybeSingle();
+      const an = await buscarModulo('anamnese', params.id);
 
       // 3. Buscar template da clínica (padrão ou o salvo na anamnese)
       const clinicaId = av?.clinica_id;
@@ -237,11 +237,10 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
 
   async function salvarAnamnese(v = { respostas, template_id: templateId }) {
     if (!loaded) return;
-    const { error } = await supabase.from('anamnese').upsert(
-      { avaliacao_id: params.id, respostas: v.respostas, template_id: v.template_id },
-      { onConflict: 'avaliacao_id' }
-    );
-    if (error) throw error;
+    await upsertModulo('anamnese', params.id, {
+      respostas: v.respostas,
+      template_id: v.template_id,
+    });
   }
 
   // AutoSave
