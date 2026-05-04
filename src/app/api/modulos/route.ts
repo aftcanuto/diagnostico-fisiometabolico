@@ -23,6 +23,15 @@ async function getUserId() {
 }
 
 async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) {
+  const supabase = createClient();
+  const { data: avaliacaoVisivel } = await supabase
+    .from('avaliacoes')
+    .select('id')
+    .eq('id', avaliacaoId)
+    .maybeSingle();
+
+  if (avaliacaoVisivel?.id) return true;
+
   const admin = createAdminClient();
   const { data: avaliacao, error: erroAvaliacao } = await admin
     .from('avaliacoes')

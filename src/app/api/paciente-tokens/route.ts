@@ -10,6 +10,15 @@ async function getUserId() {
 }
 
 async function usuarioPodeAcessarPaciente(userId: string, pacienteId: string) {
+  const supabase = createClient();
+  const { data: pacienteVisivel } = await supabase
+    .from('pacientes')
+    .select('id')
+    .eq('id', pacienteId)
+    .maybeSingle();
+
+  if (pacienteVisivel?.id) return true;
+
   const admin = createAdminClient();
   const { data: paciente, error: erroPaciente } = await admin
     .from('pacientes')

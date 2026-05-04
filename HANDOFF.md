@@ -131,6 +131,15 @@ Correcao aplicada:
 
 Validacao local apos essa correcao: `npm run predeploy` passou novamente.
 
+Nova correcao em 04/05/2026: o erro 403 em `/api/modulos` persistiu para a anamnese em producao. Para evitar incompatibilidade com dados antigos/migrados, a API passou a considerar tambem a visibilidade RLS normal do usuario:
+
+- `src/app/api/modulos/route.ts`: antes das checagens administrativas, a rota tenta ler a avaliacao com o cliente autenticado normal. Se a avaliacao esta visivel para o usuario pela propria RLS, o acesso e permitido.
+- `src/app/api/paciente-tokens/route.ts`: antes das checagens administrativas, a rota tenta ler o paciente com o cliente autenticado normal. Se o paciente esta visivel para o usuario pela propria RLS, o acesso e permitido.
+
+Isso mantem seguranca porque a permissao inicial continua sendo a RLS do Supabase; a service role so e usada depois para executar a gravacao que o RLS estava bloqueando em tabelas filhas.
+
+Validacao local apos essa correcao: `npm run predeploy` passou novamente.
+
 Depois do deploy dessa correcao, retestar:
 
 1. Salvar anamnese em producao e conferir que nao aparece mais erro 403.
