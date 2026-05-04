@@ -2,6 +2,31 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Regra obrigatoria de continuidade
+
+Toda e qualquer mudanca feita no projeto deve atualizar este arquivo no mesmo ciclo de trabalho.
+
+Isso inclui:
+
+- alteracoes de codigo;
+- novas migrations ou ajustes no banco;
+- mudancas visuais em relatorio, dashboard clinico ou dashboard do paciente;
+- correcoes de bug;
+- novas regras de negocio;
+- comandos importantes executados;
+- erros encontrados e como foram corrigidos;
+- pendencias que ainda precisam ser testadas ou aplicadas em producao.
+
+Ao trabalhar de outro local ou em outra conversa, antes de alterar o projeto:
+
+1. Ler este `HANDOFF.md`.
+2. Fazer a alteracao necessaria.
+3. Rodar os testes adequados.
+4. Atualizar este `HANDOFF.md` com o que mudou.
+5. Fazer commit/push incluindo tambem este arquivo.
+
+Nenhuma mudanca deve ficar apenas na conversa ou apenas no codigo sem registro aqui.
+
 ## Repositorio e deploy
 
 - GitHub: https://github.com/aftcanuto/diagnostico-fisiometabolico
