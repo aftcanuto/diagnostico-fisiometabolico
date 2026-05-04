@@ -1,0 +1,74 @@
+import { createClient } from '@/lib/supabase/server';
+import { PdfConfigForm } from '@/components/forms/PdfConfigForm';
+import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
+import { FileText, BookOpen, Shield } from 'lucide-react';
+
+export default async function ConfiguracoesPage() {
+  const supabase = createClient();
+  const { data: clinicaId } = await supabase.rpc('current_clinica_id');
+
+  // Buscar config existente ou usar defaults (tabela pode não existir ainda)
+  let config = null;
+  try {
+    const { data } = await supabase
+      .from('pdf_config')
+      .select('*')
+      .eq('clinica_id', clinicaId)
+      .maybeSingle();
+    config = data;
+  } catch { /* migration 013 ainda não aplicada */ }
+
+  // Buscar papel do usuário
+  const { data: papel } = await supabase.rpc('current_papel');
+  const isAdmin = papel === 'admin' || papel === 'owner';
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800">Configurações do Laudo</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Personalize os protocolos, referências e textos que aparecem no PDF — sem precisar alterar o código.
+        </p>
+      </div>
+
+      {!isAdmin && (
+        <Card>
+          <CardBody className="py-8 text-center text-slate-500">
+            <Shield className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+            Apenas administradores podem editar as configurações do laudo.
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Card de Templates de Anamnese */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-brand-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-slate-800">Formulários de anamnese</div>
+                <p className="text-sm text-slate-500">
+                  Crie e gerencie formulários personalizados para diferentes perfis de pacientes.
+                </p>
+              </div>
+            </div>
+            <a href="/configuracoes/anamnese-templates"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition">
+              Gerenciar templates
+            </a>
+          </div>
+        </CardBody>
+      </Card>
+
+      {isAdmin && (
+        <PdfConfigForm
+          clinicaId={clinicaId}
+          config={config ?? null}
+        />
+      )}
+    </div>
+  );
+}
