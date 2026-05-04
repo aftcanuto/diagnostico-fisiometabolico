@@ -1,12 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { Copy, Link2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
-  const supabase = createClient();
   const [tokens, setTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(true);
@@ -14,42 +12,42 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.from('paciente_tokens')
-      .select('*').eq('paciente_id', pacienteId).order('criado_em', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setErro(error.message);
-        setTokens(data ?? []);
-        setLoading(false);
-      });
-  }, [pacienteId, supabase]);
+    fetch(`/api/paciente-tokens?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' })
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) setErro(body.error ?? 'Erro ao carregar links');
+        setTokens(body.data ?? []);
+      })
+      .catch(() => setErro('Erro ao carregar links'))
+      .finally(() => setLoading(false));
+  }, [pacienteId]);
 
   async function gerar() {
     setErro(null);
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setErro('Sessão expirada. Faça login novamente.');
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase.from('paciente_tokens').insert({
-      paciente_id: pacienteId,
-      avaliador_id: user.id,
-    }).select('*').single();
-
-    if (error) setErro(error.message);
-    if (!error && data) setTokens(t => [data, ...t]);
+    const res = await fetch('/api/paciente-tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pacienteId }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) setErro(body.error ?? 'Erro ao gerar link');
+    if (res.ok && body.data) setTokens(t => [body.data, ...t]);
     setLoading(false);
     setExpanded(true);
   }
 
   async function revogar(token: string) {
-    if (!confirm('Revogar este link? O paciente não conseguirá mais acessar.')) return;
+    if (!confirm('Revogar este link? O paciente nao conseguira mais acessar.')) return;
     setErro(null);
-    const { error } = await supabase.from('paciente_tokens').update({ revogado: true }).eq('token', token);
-    if (error) {
-      setErro(error.message);
+    const res = await fetch('/api/paciente-tokens', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErro(body.error ?? 'Erro ao revogar link');
       return;
     }
     setTokens(t => t.map(x => x.token === token ? { ...x, revogado: true } : x));
@@ -85,12 +83,12 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
       {expanded && (
         <CardBody>
           <p className="text-sm text-slate-500 mb-3">
-            Gere um link seguro para o paciente acessar o próprio dashboard.
-            Expira em 90 dias. Você pode revogar a qualquer momento.
+            Gere um link seguro para o paciente acessar o proprio dashboard.
+            Expira em 90 dias. Voce pode revogar a qualquer momento.
           </p>
           {erro && (
             <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              Não foi possível gerar o link: {erro}
+              Nao foi possivel gerar o link: {erro}
             </div>
           )}
           <Button onClick={gerar} disabled={loading}>

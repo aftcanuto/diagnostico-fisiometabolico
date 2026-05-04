@@ -98,6 +98,22 @@ A correcao local e a migration `027_clinica_membership_rls_fix.sql` ja existem. 
 3. Aguardar redeploy da Vercel.
 4. Retestar salvamento da anamnese e geracao do link do portal do paciente.
 
+Atualizacao posterior: como os erros persistiram em producao, foi criada uma correcao mais robusta no codigo:
+
+- `src/app/api/modulos/route.ts`: rota interna segura para buscar/salvar modulos usando service role apos validar que o usuario autenticado e membro ativo da clinica da avaliacao.
+- `src/lib/modulos.ts`: `buscarModulo` e `upsertModulo` agora chamam `/api/modulos`, evitando gravacao direta do navegador no Supabase.
+- `src/app/api/paciente-tokens/route.ts`: rota interna segura para listar, criar e revogar links do portal do paciente.
+- `src/components/ShareTokenPanel.tsx`: painel do link do paciente agora usa `/api/paciente-tokens`.
+
+Essa mudanca foi validada localmente com `npm run predeploy` em 04/05/2026. Resultado: auditoria OK, smoke test OK, TypeScript OK e lint sem erros bloqueantes.
+
+Depois do deploy dessa correcao, retestar:
+
+1. Salvar anamnese em producao e conferir que nao aparece mais erro 403.
+2. Trocar de modulo e voltar para confirmar que os campos continuam preenchidos.
+3. Gerar link do portal do paciente.
+4. Revogar link do portal do paciente.
+
 ## Comandos principais
 
 Instalar:

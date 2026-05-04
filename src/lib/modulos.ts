@@ -1,17 +1,19 @@
 'use client';
-import { createClient } from './supabase/client';
 
 export async function upsertModulo(tabela: string, avaliacaoId: string, payload: Record<string, any>) {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from(tabela)
-    .upsert({ avaliacao_id: avaliacaoId, ...payload }, { onConflict: 'avaliacao_id' });
-  if (error) throw error;
+  const res = await fetch('/api/modulos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tabela, avaliacaoId, payload }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error ?? 'Erro ao salvar modulo');
 }
 
 export async function buscarModulo(tabela: string, avaliacaoId: string) {
-  const supabase = createClient();
-  const { data } = await supabase.from(tabela)
-    .select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
-  return data;
+  const params = new URLSearchParams({ tabela, avaliacaoId });
+  const res = await fetch(`/api/modulos?${params.toString()}`, { cache: 'no-store' });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error ?? 'Erro ao buscar modulo');
+  return body.data;
 }
