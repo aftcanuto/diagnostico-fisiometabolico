@@ -55,8 +55,23 @@ Principais pontos ja feitos:
 - `024_schema_alignment_for_deploy.sql`: alinhamento de forca, biomecanica e remocao de impedancia Z.
 - `025_internal_access_and_evaluator_profile.sql`: uso interno, convite, perfil do avaliador e produto completo.
 - `026_paciente_tokens_clinica_policies.sql`: policies do portal do paciente por clinica.
+- `027_clinica_membership_rls_fix.sql`: corrige RLS para gravar modulos e gerar link do portal usando vinculo real de membro ativo da clinica.
 
 Antes de deploy em ambiente novo, aplicar todas as migrations em ordem.
+
+## Pendencia imediata em producao
+
+Em 04/05/2026, o app em producao apresentou erro 403/RLS ao salvar anamnese e ao gerar link do portal:
+
+- `new row violates row-level security policy for table "paciente_tokens"`
+- `POST /rest/v1/anamnese?on_conflict=avaliacao_id 403 Forbidden`
+
+A correcao local e a migration `027_clinica_membership_rls_fix.sql` ja existem. Para resolver em producao:
+
+1. Aplicar a migration 027 no SQL Editor do Supabase.
+2. Fazer commit/push da migration 027 para o GitHub.
+3. Aguardar redeploy da Vercel.
+4. Retestar salvamento da anamnese e geracao do link do portal do paciente.
 
 ## Comandos principais
 
