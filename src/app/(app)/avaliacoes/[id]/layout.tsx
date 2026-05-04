@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { StepNav } from '@/components/ui/StepNav';
 import { buildSteps } from '@/lib/steps';
 import { calcIdade } from '@/lib/calculations/antropometria';
@@ -13,17 +13,18 @@ export default async function AvaliacaoLayout({
     .from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();
   if (!aval) notFound();
 
+  const admin = createAdminClient();
   const [anam, sv, pg, bio, ant, flex, fo, rml, cr, biomec] = await Promise.all([
-    supabase.from('anamnese').select('respostas,template_id').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('sinais_vitais').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('posturografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('bioimpedancia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('flexibilidade').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('forca').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('rml').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('biomecanica_corrida').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('anamnese').select('respostas,template_id').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('sinais_vitais').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('posturografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('bioimpedancia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('flexibilidade').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('forca').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('rml').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('cardiorrespiratorio').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('biomecanica_corrida').select('*').eq('avaliacao_id', params.id).maybeSingle(),
   ]);
 
   const temDados = (row: any) => {

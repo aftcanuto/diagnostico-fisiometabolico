@@ -140,6 +140,18 @@ Isso mantem seguranca porque a permissao inicial continua sendo a RLS do Supabas
 
 Validacao local apos essa correcao: `npm run predeploy` passou novamente.
 
+Nova correcao em 04/05/2026: anamnese e sinais vitais passaram a salvar, mas as etapas nao eram marcadas como "Feito" na barra de navegacao.
+
+Causa: `src/app/(app)/avaliacoes/[id]/layout.tsx` calculava o `statusMap` lendo tabelas de modulos com o cliente Supabase normal. Como os dados passaram a ser gravados por rotas seguras com service role, a leitura do layout podia nao enxergar as linhas filhas em dados antigos/RLS.
+
+Correcao aplicada:
+
+- `src/app/(app)/avaliacoes/[id]/layout.tsx` continua validando que a avaliacao e visivel pelo usuario logado.
+- Depois disso, usa `createAdminClient()` apenas para ler os dados dos modulos e montar `statusMap`.
+- Isso permite marcar corretamente Anamnese, Sinais vitais e demais modulos como "Feito" quando houver dados.
+
+Validacao local: `npm run predeploy` passou novamente.
+
 Depois do deploy dessa correcao, retestar:
 
 1. Salvar anamnese em producao e conferir que nao aparece mais erro 403.
