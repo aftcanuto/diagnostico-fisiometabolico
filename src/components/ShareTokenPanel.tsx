@@ -3,27 +3,42 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
-import { Copy, Link2, RotateCcw, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Link2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
   const supabase = createClient();
   const [tokens, setTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [copiado, setCopiado] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.from('paciente_tokens')
       .select('*').eq('paciente_id', pacienteId).order('criado_em', { ascending: false })
-      .then(({ data }) => { setTokens(data ?? []); setLoading(false); });
+      .then(({ data, error }) => {
+        if (error) setErro(error.message);
+        setTokens(data ?? []);
+        setLoading(false);
+      });
   }, [pacienteId, supabase]);
 
   async function gerar() {
+    setErro(null);
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setErro('Sessão expirada. Faça login novamente.');
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase.from('paciente_tokens').insert({
-      paciente_id: pacienteId, avaliador_id: user!.id,
+      paciente_id: pacienteId,
+      avaliador_id: user.id,
     }).select('*').single();
+
+    if (error) setErro(error.message);
     if (!error && data) setTokens(t => [data, ...t]);
     setLoading(false);
     setExpanded(true);
@@ -31,7 +46,12 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
 
   async function revogar(token: string) {
     if (!confirm('Revogar este link? O paciente não conseguirá mais acessar.')) return;
-    await supabase.from('paciente_tokens').update({ revogado: true }).eq('token', token);
+    setErro(null);
+    const { error } = await supabase.from('paciente_tokens').update({ revogado: true }).eq('token', token);
+    if (error) {
+      setErro(error.message);
+      return;
+    }
     setTokens(t => t.map(x => x.token === token ? { ...x, revogado: true } : x));
   }
 
@@ -68,8 +88,13 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
             Gere um link seguro para o paciente acessar o próprio dashboard.
             Expira em 90 dias. Você pode revogar a qualquer momento.
           </p>
+          {erro && (
+            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              Não foi possível gerar o link: {erro}
+            </div>
+          )}
           <Button onClick={gerar} disabled={loading}>
-            <Link2 className="w-4 h-4" /> Gerar novo link
+            <Link2 className="w-4 h-4" /> {loading ? 'Carregando...' : 'Gerar novo link'}
           </Button>
 
           {tokens.length > 0 && (

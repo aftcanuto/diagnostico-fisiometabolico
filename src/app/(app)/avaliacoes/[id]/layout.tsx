@@ -13,20 +13,42 @@ export default async function AvaliacaoLayout({
     .from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();
   if (!aval) notFound();
 
-  // descobre quais módulos já possuem registro
-  const [anam, sv, pg, ant, fo, cr] = await Promise.all([
-    supabase.from('anamnese').select('avaliacao_id').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('sinais_vitais').select('avaliacao_id').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('posturografia').select('avaliacao_id').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('antropometria').select('avaliacao_id').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('forca').select('avaliacao_id').eq('avaliacao_id', params.id).maybeSingle(),
-    supabase.from('cardiorrespiratorio').select('avaliacao_id').eq('avaliacao_id', params.id).maybeSingle(),
+  const [anam, sv, pg, bio, ant, flex, fo, rml, cr, biomec] = await Promise.all([
+    supabase.from('anamnese').select('respostas,template_id').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('sinais_vitais').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('posturografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('bioimpedancia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('flexibilidade').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('forca').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('rml').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    supabase.from('biomecanica_corrida').select('*').eq('avaliacao_id', params.id).maybeSingle(),
   ]);
 
+  const temDados = (row: any) => {
+    if (!row) return false;
+    const ignorar = new Set(['id', 'avaliacao_id', 'created_at', 'updated_at', 'clinica_id']);
+    return Object.entries(row).some(([k, v]) => {
+      if (ignorar.has(k)) return false;
+      if (v == null || v === '') return false;
+      if (Array.isArray(v)) return v.length > 0;
+      if (typeof v === 'object') return Object.keys(v).length > 0;
+      return true;
+    });
+  };
+
   const statusMap: Record<string, boolean> = {
-    'anamnese': !!anam.data, 'sinais-vitais': !!sv.data,
-    'posturografia': !!pg.data, 'antropometria': !!ant.data,
-    'forca': !!fo.data, 'cardiorrespiratorio': !!cr.data,
+    anamnese: temDados(anam.data?.respostas ?? null),
+    'sinais-vitais': temDados(sv.data),
+    posturografia: temDados(pg.data),
+    bioimpedancia: temDados(bio.data),
+    antropometria: temDados(ant.data),
+    flexibilidade: temDados(flex.data),
+    forca: temDados(fo.data),
+    rml: temDados(rml.data),
+    cardiorrespiratorio: temDados(cr.data),
+    biomecanica: temDados(biomec.data),
   };
 
   const steps = buildSteps(params.id, aval.modulos_selecionados, statusMap);

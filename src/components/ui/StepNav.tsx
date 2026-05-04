@@ -29,12 +29,15 @@ export function StepNav({ steps }: { steps: Step[] }) {
                     'flex items-center gap-2 rounded-lg px-3 py-2 text-sm border transition',
                     active
                       ? 'bg-brand-50 border-brand-200 text-brand-700 font-medium'
+                      : s.done
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                       : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'
                   )}
                 >
                   <Icon className={cn('w-4 h-4', s.done && 'text-emerald-600')} />
                   <span className="text-xs text-slate-400">{String(i + 1).padStart(2, '0')}</span>
                   <span>{s.label}</span>
+                  {s.done && <span className="text-[10px] font-semibold text-emerald-700 bg-white/70 border border-emerald-200 rounded-full px-1.5 py-0.5">Feito</span>}
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm border border-dashed border-slate-200 text-slate-400">

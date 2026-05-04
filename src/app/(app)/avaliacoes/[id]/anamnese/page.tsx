@@ -235,15 +235,18 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
     })();
   }, [params.id]);
 
-  // AutoSave
-  const payload = { respostas, template_id: templateId };
-  const saveState = useAutoSave(payload, async (v) => {
+  async function salvarAnamnese(v = { respostas, template_id: templateId }) {
     if (!loaded) return;
-    await supabase.from('anamnese').upsert(
+    const { error } = await supabase.from('anamnese').upsert(
       { avaliacao_id: params.id, respostas: v.respostas, template_id: v.template_id },
       { onConflict: 'avaliacao_id' }
     );
-  });
+    if (error) throw error;
+  }
+
+  // AutoSave
+  const payload = { respostas, template_id: templateId };
+  const saveState = useAutoSave(payload, salvarAnamnese);
 
   const setResp = (id: string, val: any) =>
     setRespostas(prev => ({ ...prev, [id]: val }));
@@ -317,7 +320,10 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
       })()}
 
       <div className="flex justify-end">
-        <Button onClick={() => next && router.push(next.href)}>
+        <Button onClick={async () => {
+          await salvarAnamnese();
+          if (next) router.push(next.href);
+        }}>
           Continuar →
         </Button>
       </div>
