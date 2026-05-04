@@ -26,21 +26,45 @@ async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) 
   const admin = createAdminClient();
   const { data: avaliacao, error: erroAvaliacao } = await admin
     .from('avaliacoes')
-    .select('id, clinica_id')
+    .select('id, clinica_id, avaliador_id, paciente_id')
     .eq('id', avaliacaoId)
     .maybeSingle();
 
-  if (erroAvaliacao || !avaliacao?.clinica_id) return false;
+  if (erroAvaliacao || !avaliacao) return false;
+  if (avaliacao.avaliador_id === userId) return true;
 
-  const { data: membro, error: erroMembro } = await admin
+  if (avaliacao.clinica_id) {
+    const { data: membro, error: erroMembro } = await admin
+      .from('clinica_membros')
+      .select('id')
+      .eq('clinica_id', avaliacao.clinica_id)
+      .eq('user_id', userId)
+      .eq('ativo', true)
+      .maybeSingle();
+
+    if (!erroMembro && !!membro) return true;
+  }
+
+  if (!avaliacao.paciente_id) return false;
+  const { data: paciente, error: erroPaciente } = await admin
+    .from('pacientes')
+    .select('avaliador_id, clinica_id')
+    .eq('id', avaliacao.paciente_id)
+    .maybeSingle();
+
+  if (erroPaciente || !paciente) return false;
+  if (paciente.avaliador_id === userId) return true;
+
+  if (!paciente.clinica_id) return false;
+  const { data: membroPaciente, error: erroMembroPaciente } = await admin
     .from('clinica_membros')
     .select('id')
-    .eq('clinica_id', avaliacao.clinica_id)
+    .eq('clinica_id', paciente.clinica_id)
     .eq('user_id', userId)
     .eq('ativo', true)
     .maybeSingle();
 
-  return !erroMembro && !!membro;
+  return !erroMembroPaciente && !!membroPaciente;
 }
 
 export async function GET(req: NextRequest) {

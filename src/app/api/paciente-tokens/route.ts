@@ -13,11 +13,13 @@ async function usuarioPodeAcessarPaciente(userId: string, pacienteId: string) {
   const admin = createAdminClient();
   const { data: paciente, error: erroPaciente } = await admin
     .from('pacientes')
-    .select('id, clinica_id')
+    .select('id, avaliador_id, clinica_id')
     .eq('id', pacienteId)
     .maybeSingle();
 
-  if (erroPaciente || !paciente?.clinica_id) return false;
+  if (erroPaciente || !paciente) return false;
+  if (paciente.avaliador_id === userId) return true;
+  if (!paciente.clinica_id) return false;
 
   const { data: membro, error: erroMembro } = await admin
     .from('clinica_membros')

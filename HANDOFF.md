@@ -118,6 +118,19 @@ Correcao aplicada:
 
 Validacao local apos essa correcao: `npm run predeploy` passou novamente.
 
+Nova correcao em 04/05/2026: apos deploy, `/api/modulos?tabela=anamnese...` retornou 403 `Sem permissao para esta avaliacao`. A causa provavel e compatibilidade com dados antigos em que `avaliacoes.clinica_id` ou o vinculo de clinica nao esta consistente, embora o usuario seja o avaliador dono.
+
+Correcao aplicada:
+
+- `src/app/api/modulos/route.ts`: `usuarioPodeAcessarAvaliacao` agora permite acesso quando:
+  - `avaliacoes.avaliador_id` e o usuario logado;
+  - ou o usuario e membro ativo da clinica da avaliacao;
+  - ou o paciente da avaliacao pertence ao avaliador logado;
+  - ou o usuario e membro ativo da clinica do paciente.
+- `src/app/api/paciente-tokens/route.ts`: `usuarioPodeAcessarPaciente` agora tambem permite quando `pacientes.avaliador_id` e o usuario logado, alem do vinculo por clinica.
+
+Validacao local apos essa correcao: `npm run predeploy` passou novamente.
+
 Depois do deploy dessa correcao, retestar:
 
 1. Salvar anamnese em producao e conferir que nao aparece mais erro 403.
