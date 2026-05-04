@@ -21,25 +21,30 @@ const MODULOS = [
   { k: 'biomecanica_corrida', label: 'Biomecânica da corrida' },
 ];
 
+const TODOS_MODULOS = Object.fromEntries(MODULOS.map(m => [m.k, true]));
+
 export function ProdutoForm({ id }: { id?: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [form, setForm] = useState<any>({
     nome: '', descricao: '', duracao_minutos: '', preco: '',
     ativo: true, padrao: false,
-    modulos: { anamnese: true, sinais_vitais: true, posturografia: true, antropometria: true, forca: true, cardiorrespiratorio: true },
+    modulos: TODOS_MODULOS,
   });
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     supabase.from('produtos').select('*').eq('id', id).single().then(({ data }) => {
       if (data) setForm({
         ...data,
+        modulos: { ...TODOS_MODULOS, ...(data.modulos ?? {}) },
         duracao_minutos: data.duracao_minutos ?? '',
         preco: data.preco ?? '',
       });
+      else setNotFound(true);
       setLoading(false);
     });
   }, [id, supabase]);
@@ -50,6 +55,7 @@ export function ProdutoForm({ id }: { id?: string }) {
     const { data: clinicaId } = await supabase.rpc('current_clinica_id');
     const payload = {
       ...form,
+      modulos: { ...TODOS_MODULOS, ...(form.modulos ?? {}), anamnese: true },
       clinica_id: clinicaId,
       duracao_minutos: form.duracao_minutos === '' ? null : Number(form.duracao_minutos),
       preco: form.preco === '' ? null : Number(form.preco),
@@ -67,11 +73,14 @@ export function ProdutoForm({ id }: { id?: string }) {
   async function excluir() {
     if (!id) return;
     if (!confirm('Excluir este produto?')) return;
-    await supabase.from('produtos').delete().eq('id', id);
+    const { error } = await supabase.from('produtos').delete().eq('id', id);
+    if (error) { alert(error.message); return; }
     router.push('/produtos');
   }
 
   if (loading) return <p className="text-slate-500">Carregando…</p>;
+
+  if (notFound) return <p className="text-red-600">Produto nÃ£o encontrado ou sem permissÃ£o para editar.</p>;
 
   return (
     <div className="max-w-3xl space-y-5">

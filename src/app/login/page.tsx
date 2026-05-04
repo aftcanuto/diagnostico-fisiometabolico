@@ -16,19 +16,26 @@ export default function LoginPage() {
   const [nome, setNome] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null); setLoading(true);
+    setErr(null); setNotice(null); setLoading(true);
     try {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password, options: { data: { nome } }
         });
         if (error) throw error;
+        if (!data.session) {
+          setNotice('Cadastro criado. Enviamos um e-mail de confirmacao; abra sua caixa de entrada e confirme a conta antes de fazer login.');
+          setMode('signin');
+          setPassword('');
+          return;
+        }
       }
       router.push('/dashboard');
       router.refresh();
@@ -74,6 +81,11 @@ export default function LoginPage() {
                 <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
               </Field>
               {err && <p className="text-sm text-red-600">{err}</p>}
+              {notice && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                  {notice}
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Aguarde…' : mode === 'signin' ? 'Entrar' : 'Criar conta'}
               </Button>

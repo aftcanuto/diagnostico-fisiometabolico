@@ -5,9 +5,16 @@ import { Button } from '@/components/ui/Button';
 import { Plus, Package, Check } from 'lucide-react';
 
 const MODULOS_META: Record<string, string> = {
-  anamnese: 'Anamnese', sinais_vitais: 'Sinais vitais',
-  posturografia: 'Posturografia', antropometria: 'Antropometria',
-  forca: 'Força', cardiorrespiratorio: 'Cardio',
+  anamnese: 'Anamnese',
+  sinais_vitais: 'Sinais vitais',
+  posturografia: 'Posturografia',
+  bioimpedancia: 'Bioimpedância',
+  antropometria: 'Antropometria',
+  flexibilidade: 'Flexibilidade',
+  forca: 'Força',
+  rml: 'RML',
+  cardiorrespiratorio: 'Cardio',
+  biomecanica_corrida: 'Biomecânica da corrida',
 };
 
 export default async function ProdutosPage() {
@@ -33,7 +40,7 @@ export default async function ProdutosPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {produtos.map(p => {
-            const ativos = Object.entries(p.modulos).filter(([, v]) => v).map(([k]) => MODULOS_META[k] ?? k);
+            const ativos = Object.entries(p.modulos ?? {}).filter(([, v]) => v).map(([k]) => MODULOS_META[k] ?? k);
             return (
               <Link key={p.id} href={`/produtos/${p.id}`}>
                 <Card className="hover:shadow-md transition h-full">

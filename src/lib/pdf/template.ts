@@ -22,7 +22,7 @@ export interface AnaliseIA {
 export interface LaudoData {
   clinica?: ClinicaBranding | null;
   paciente: { nome: string; sexo: 'M' | 'F'; data_nascimento: string; idade: number; cpf?: string | null };
-  avaliador: { nome: string; conselho?: string | null };
+  avaliador: { nome: string; conselho?: string | null; especialidade?: string | null };
   avaliacao: { data: string; tipo: string };
   modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };
   dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any };
@@ -299,6 +299,7 @@ function rodapeIdentificacao(d: LaudoData, pri: string): string {
   const empresa = c?.nome ?? '';
   const avNome  = d.avaliador.nome;
   const avCons  = d.avaliador.conselho ?? '';
+  const avEsp   = d.avaliador.especialidade ?? '';
   const pacNome = d.paciente.nome;
   const pacCpf  = d.paciente.cpf ?? '';
   const emissao = new Date().toLocaleDateString('pt-BR');
@@ -330,7 +331,7 @@ function rodapeIdentificacao(d: LaudoData, pri: string): string {
     <!-- Centro: avaliador + conselho -->
     <div style="display:flex;align-items:center;gap:5px;flex:1;justify-content:center">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.7"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      <span>${x(avNome)}${avCons ? ` Â· ${x(avCons)}` : ''}</span>
+      <span>${x(avNome)}${avCons ? ` Â· ${x(avCons)}` : ''}${avEsp ? ` Â· ${x(avEsp)}` : ''}</span>
     </div>
 
     <!-- Direita: paciente + CPF -->

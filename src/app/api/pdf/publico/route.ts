@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-    supabase.from('avaliadores').select('nome').eq('id', tok.avaliador_id).single(),
+    supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', tok.avaliador_id).single(),
     aval.clinica_id ? supabase.from('clinicas').select('*').eq('id', aval.clinica_id).single() : Promise.resolve({ data: null }),
     supabase.from('analises_ia').select('tipo, conteudo, texto_editado').eq('avaliacao_id', avaliacaoId),
   ]);
@@ -54,7 +54,11 @@ export async function GET(req: NextRequest) {
       data_nascimento: aval.pacientes.data_nascimento,
       idade: calcIdade(aval.pacientes.data_nascimento),
     },
-    avaliador: { nome: avaliador.data?.nome ?? 'Avaliador' },
+    avaliador: {
+      nome: avaliador.data?.nome ?? 'Avaliador',
+      conselho: avaliador.data?.crefito_crm ?? null,
+      especialidade: avaliador.data?.especialidade ?? null,
+    },
     avaliacao: { data: aval.data, tipo: aval.tipo },
     modulos: aval.modulos_selecionados,
     dados: {

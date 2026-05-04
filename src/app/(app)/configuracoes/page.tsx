@@ -1,13 +1,19 @@
 import { createClient } from '@/lib/supabase/server';
 import { PdfConfigForm } from '@/components/forms/PdfConfigForm';
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
-import { FileText, BookOpen, Shield } from 'lucide-react';
+import { Card, CardBody } from '@/components/ui/Card';
+import { BookOpen, Shield } from 'lucide-react';
+import { AvaliadorPerfilForm } from '@/components/forms/AvaliadorPerfilForm';
 
 export default async function ConfiguracoesPage() {
   const supabase = createClient();
   const { data: clinicaId } = await supabase.rpc('current_clinica_id');
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: perfil } = await supabase
+    .from('avaliadores')
+    .select('nome, crefito_crm, especialidade')
+    .eq('id', user!.id)
+    .single();
 
-  // Buscar config existente ou usar defaults (tabela pode não existir ainda)
   let config = null;
   try {
     const { data } = await supabase
@@ -16,20 +22,21 @@ export default async function ConfiguracoesPage() {
       .eq('clinica_id', clinicaId)
       .maybeSingle();
     config = data;
-  } catch { /* migration 013 ainda não aplicada */ }
+  } catch {}
 
-  // Buscar papel do usuário
   const { data: papel } = await supabase.rpc('current_papel');
   const isAdmin = papel === 'admin' || papel === 'owner';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Configurações do Laudo</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Configurações</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Personalize os protocolos, referências e textos que aparecem no PDF — sem precisar alterar o código.
+          Perfil do avaliador, formulários e textos usados no relatório.
         </p>
       </div>
+
+      <AvaliadorPerfilForm perfil={perfil} />
 
       {!isAdmin && (
         <Card>
@@ -40,7 +47,6 @@ export default async function ConfiguracoesPage() {
         </Card>
       )}
 
-      {/* Card de Templates de Anamnese */}
       <Card>
         <CardBody>
           <div className="flex items-center justify-between">
