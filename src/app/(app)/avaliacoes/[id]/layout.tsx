@@ -62,10 +62,17 @@ export default async function AvaliacaoLayout({
 
   const temAntropometria = (row: any) => !!row && (
     row.peso != null ||
+    row.peso_kg != null ||
     row.estatura != null ||
-    (row.dobras && Object.values(row.dobras).some((d: any) => d?.m1 || d?.m2 || d?.m3 || d?.media)) ||
-    (row.circunferencias && Object.keys(row.circunferencias).length > 0) ||
-    (row.diametros && Object.keys(row.diametros).length > 0)
+    row.estatura_cm != null ||
+    row.imc != null ||
+    row.percentual_gordura != null ||
+    row.massa_magra != null ||
+    (row.dobras && Object.values(row.dobras).some((d: any) =>
+      d?.m1 != null || d?.m2 != null || d?.m3 != null || d?.media != null
+    )) ||
+    (row.circunferencias && Object.values(row.circunferencias).some((v: any) => v != null && v !== '')) ||
+    (row.diametros && Object.values(row.diametros).some((v: any) => v != null && v !== ''))
   );
 
   const temFlexibilidade = (row: any) => !!row && (

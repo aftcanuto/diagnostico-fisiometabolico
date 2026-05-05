@@ -23,11 +23,19 @@ export interface LLMResponse {
 }
 
 const PRICING = {
-  'claude-sonnet-4-5': { in: 3 / 1e6, out: 15 / 1e6 },
+  'claude-sonnet-4-20250514': { in: 3 / 1e6, out: 15 / 1e6 },
   'claude-3-5-sonnet-20241022': { in: 3 / 1e6, out: 15 / 1e6 },
   'gpt-4o': { in: 2.5 / 1e6, out: 10 / 1e6 },
   'gpt-4o-mini': { in: 0.15 / 1e6, out: 0.6 / 1e6 },
 };
+
+const CLAUDE_DEFAULT = 'claude-sonnet-4-20250514';
+const CLAUDE_FALLBACK = 'claude-3-5-sonnet-20241022';
+
+function normalizarModeloClaude(modelo?: string) {
+  if (!modelo || modelo === 'claude-sonnet-4-5') return CLAUDE_DEFAULT;
+  return modelo;
+}
 
 export async function llmCall(opts: LLMOptions): Promise<LLMResponse> {
   if (process.env.ANTHROPIC_API_KEY) {
@@ -42,7 +50,11 @@ export async function llmCall(opts: LLMOptions): Promise<LLMResponse> {
 }
 
 async function callClaude(opts: LLMOptions): Promise<LLMResponse> {
-  const modelo = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5';
+  const modelo = normalizarModeloClaude(process.env.ANTHROPIC_MODEL);
+  return callClaudeComModelo(opts, modelo);
+}
+
+async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LLMResponse> {
   const body: any = {
     model: modelo,
     max_tokens: opts.maxTokens ?? 1500,
@@ -60,13 +72,19 @@ async function callClaude(opts: LLMOptions): Promise<LLMResponse> {
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Claude API: ${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    const erro = await res.text();
+    if (res.status === 404 && modelo !== CLAUDE_FALLBACK) {
+      return callClaudeComModelo(opts, CLAUDE_FALLBACK);
+    }
+    throw new Error(`Claude API: ${res.status} ${erro}`);
+  }
   const data = await res.json();
 
   const text = data.content?.[0]?.text ?? '';
   const tokensIn = data.usage?.input_tokens ?? 0;
   const tokensOut = data.usage?.output_tokens ?? 0;
-  const price = (PRICING as any)[modelo] ?? PRICING['claude-sonnet-4-5'];
+  const price = (PRICING as any)[modelo] ?? PRICING[CLAUDE_DEFAULT];
   const custoUsd = tokensIn * price.in + tokensOut * price.out;
 
   return { text, modelo, tokensIn, tokensOut, custoUsd };

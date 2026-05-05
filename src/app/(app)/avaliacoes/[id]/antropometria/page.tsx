@@ -131,20 +131,20 @@ export default function AntropometriaPage({ params }: { params: { id: string } }
   }, [form, pac]);
 
   const salvar = async (v = form) => {
-    if (!loaded || !calculados) return;
+    if (!loaded) return;
     await upsertModulo('antropometria', params.id, {
       peso: Number(v.peso) || null,
       estatura: Number(v.estatura) || null,
-      dobras: calculados.dobrasCalc,
+      dobras: calculados?.dobrasCalc ?? v.dobras,
       circunferencias: v.circunferencias,
       diametros: v.diametros,
-      imc: calculados.imcVal,
-      percentual_gordura: calculados.pctG,
-      massa_magra: calculados.mm,
-      massa_ossea: calculados.mo,
-      somatotipo: calculados.somato,
-      rcq: calculados.rcqVal ?? null,
-      ffmi: calculados.ffmiVal ?? null,
+      imc: calculados?.imcVal ?? null,
+      percentual_gordura: calculados?.pctG ?? null,
+      massa_magra: calculados?.mm ?? null,
+      massa_ossea: calculados?.mo ?? null,
+      somatotipo: calculados?.somato ?? null,
+      rcq: calculados?.rcqVal ?? null,
+      ffmi: calculados?.ffmiVal ?? null,
     });
   };
 

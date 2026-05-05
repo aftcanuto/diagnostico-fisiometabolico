@@ -52,7 +52,7 @@ async function testAnthropic(env) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+        model: env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
         max_tokens: 20,
         temperature: 0,
         messages: [{ role: 'user', content: 'Responda apenas: ok' }],
@@ -76,7 +76,7 @@ async function testAnthropic(env) {
 
   console.log('Configuração local');
   for (const key of required) console.log(`- ${key}: ${mask(env[key] || '')}`);
-  console.log(`- ANTHROPIC_MODEL: ${env.ANTHROPIC_MODEL || 'claude-sonnet-4-5'}`);
+  console.log(`- ANTHROPIC_MODEL: ${env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514'}`);
 
   const supabase = await testSupabase(env);
   console.log(`\nTeste Supabase: ${supabase.ok ? 'ok' : 'falhou'} (${supabase.reason})`);

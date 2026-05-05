@@ -262,6 +262,16 @@ Nova correcao complementar:
 - composicao corporal na revisao tambem usa bioimpedancia como fallback quando antropometria nao tem `% gordura`/IMC;
 - score de forca na revisao usa preensao quando existir e, se nao houver preensao, calcula um score simples a partir de dinamometria SPTech/tracao e assimetria.
 
+Nova correcao em 04/05/2026:
+
+- antropometria preenchida nao marcava como "Feito";
+- `src/app/(app)/avaliacoes/[id]/antropometria/page.tsx` agora salva peso/estatura/dobras mesmo quando nem todos os calculos estao disponiveis;
+- `src/app/(app)/avaliacoes/[id]/layout.tsx` passou a reconhecer antropometria concluida por peso, estatura, IMC, percentual de gordura, massa magra, dobras, circunferencias ou diametros;
+- PDF em producao falhou com `libnss3.so`; `src/lib/pdf/browser.ts` agora define `AWS_LAMBDA_JS_RUNTIME=nodejs22.x` em Vercel antes de carregar Chromium e reforca flags serverless;
+- analise IA falhou porque o modelo `claude-sonnet-4-5` nao existe na API Anthropic;
+- `src/lib/ai/client.ts` agora usa `claude-sonnet-4-20250514` como padrao, normaliza `claude-sonnet-4-5` para esse modelo e tenta fallback para `claude-3-5-sonnet-20241022` em erro 404;
+- `scripts/check-env.js` foi atualizado para o mesmo modelo padrao.
+
 ## Comandos principais
 
 Instalar:
