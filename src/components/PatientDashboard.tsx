@@ -6,7 +6,7 @@ import { ZonasChart } from '@/components/ui/ZonasChart';
 import { DeltaBadge } from '@/components/ui/DeltaBadge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Input';
-import { Camera, FileDown, TrendingUp, Activity, Heart, Dumbbell, User, Sparkles, Trash2, Pencil, ChevronDown } from 'lucide-react';
+import { Camera, FileDown, TrendingUp, Activity, Heart, Dumbbell, User, Sparkles, Trash2, Pencil, ChevronDown, Info } from 'lucide-react';
 import { consolidarHistorico, type AvaliacaoHidratada } from '@/lib/historico';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { createClient } from '@/lib/supabase/client';
@@ -355,6 +355,12 @@ function parseField(v: string, kind: string) {
   return v;
 }
 
+function parseNumeroSeguro(v: any): number | null {
+  if (v == null || v === '') return null;
+  const n = typeof v === 'string' ? Number(v.replace(',', '.')) : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 function cloneData<T>(v: T): T {
   return v == null ? v : JSON.parse(JSON.stringify(v));
 }
@@ -541,6 +547,72 @@ function renderAiText(c: any): string {
   return partes.join('\n\n');
 }
 
+function textoAnaliseClinica(v: any): string {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  return String(v.texto_editado ?? v.texto ?? renderAiText(v.conteudo ?? v) ?? '').trim();
+}
+
+function AnaliseInfoTooltip({ texto }: { texto: string }) {
+  const [open, setOpen] = useState(false);
+  if (!texto) return null;
+  return (
+    <span
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
+    >
+      <button
+        type="button"
+        aria-label="Ver análise clínica"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 999,
+          border: '1px solid #bbf7d0',
+          background: '#ecfdf5',
+          color: '#047857',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'help',
+          boxShadow: '0 8px 18px rgba(16,185,129,.12)',
+        }}
+      >
+        <Info size={15} />
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 34,
+            zIndex: 50,
+            width: 420,
+            maxWidth: 'min(420px, calc(100vw - 48px))',
+            padding: '14px 16px',
+            borderRadius: 14,
+            background: '#ffffff',
+            border: '1px solid #d1fae5',
+            boxShadow: '0 24px 60px rgba(15,23,42,.18)',
+            color: '#14532d',
+            fontSize: 12,
+            lineHeight: 1.55,
+            whiteSpace: 'pre-line',
+          }}
+        >
+          <div style={{ fontSize: 10, fontWeight: 900, color: '#047857', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 7 }}>
+            Análise clínica
+          </div>
+          {texto}
+        </div>
+      )}
+    </span>
+  );
+}
+
 function QuickEditPanel({ avaliacao, defaultOpen = false }: { avaliacao: AvaliacaoHidratada; defaultOpen?: boolean }) {
   const [selected, setSelected] = useState<string | null>(defaultOpen ? '__first__' : null);
   const modules = [
@@ -691,7 +763,17 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
   const altura = atual.antropometria?.estatura ?? (atual as any).bioimpedancia?.altura_cm ?? null;
   const massaOssea = atual.antropometria?.massa_ossea ?? (atual as any).bioimpedancia?.massa_ossea_kg ?? null;
   const ffmiRaw = atual.antropometria?.ffmi as any;
-  const ffmiValor = typeof ffmiRaw === 'number' ? ffmiRaw : (ffmiRaw?.ffmiNorm ?? ffmiRaw?.ffmi ?? null);
+  const ffmiSalvo = parseNumeroSeguro(
+    typeof ffmiRaw === 'object'
+      ? (ffmiRaw?.ffmiNorm ?? ffmiRaw?.ffmi ?? ffmiRaw?.valor ?? ffmiRaw?.resultado)
+      : ffmiRaw
+  );
+  const massaMagraNum = parseNumeroSeguro(mlg);
+  const alturaNum = parseNumeroSeguro(altura);
+  const ffmiCalculado = massaMagraNum != null && alturaNum != null && alturaNum > 0
+    ? +(massaMagraNum / ((alturaNum / 100) ** 2)).toFixed(1)
+    : null;
+  const ffmiValor = ffmiSalvo ?? ffmiCalculado;
   const gorCor = pctG == null ? '#10b981' : paciente.sexo === 'M'
     ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : '#ef4444'
     : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : '#ef4444';
@@ -1086,28 +1168,28 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   ❤️ Sinais Vitais
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  {sv.pa_sistolica && sv.pa_diastolica && (
+                  {sv.pa_sistolica != null && sv.pa_diastolica != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>Pressão arterial</div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{sv.pa_sistolica}/{sv.pa_diastolica}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>mmHg</div>
                     </div>
                   )}
-                  {sv.fc_repouso && (
+                  {sv.fc_repouso != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>FC repouso</div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#f87171' }}>{sv.fc_repouso}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>bpm</div>
                     </div>
                   )}
-                  {sv.spo2 && (
+                  {sv.spo2 != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>SpO₂</div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#60a5fa' }}>{sv.spo2}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>%</div>
                     </div>
                   )}
-                  {sv.freq_respiratoria && (
+                  {sv.freq_respiratoria != null && sv.freq_respiratoria !== '' && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>Freq. resp.</div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#a78bfa' }}>{sv.freq_respiratoria}</div>
@@ -1565,13 +1647,17 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         ];
 
         const ativos = testes.filter(t => t.val != null);
+        const analiseRml = textoAnaliseClinica(atual.analises_ia?.rml);
 
         return (
           <div style={{ order: 80, background: 'white', borderRadius: 16, padding: '24px 28px', marginBottom: 16, border: '1px solid #e2e8f0' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>Resistência Muscular (RML)</div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                  Resistência Muscular (RML)
+                  <AnaliseInfoTooltip texto={analiseRml} />
+                </div>
                 <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
                   {cat === 'jovem_ativo' ? 'Jovem / Ativo' : 'Idoso (≥ 60 anos)'}
                 </div>
@@ -1617,17 +1703,6 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               })}
             </div>
 
-            {/* Análise IA */}
-            {atual.analises_ia?.rml && (
-              <div style={{ background: '#f0fdf4', borderLeft: '3px solid #10b981', borderRadius: '0 8px 8px 0', padding: '10px 14px' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#065f46', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
-                  🔄 Análise clínica
-                </div>
-                <div style={{ fontSize: 11, color: '#166534', lineHeight: 1.6, fontStyle: 'italic' }}>
-                  {typeof atual.analises_ia.rml === 'string' ? atual.analises_ia.rml : atual.analises_ia.rml?.texto_editado}
-                </div>
-              </div>
-            )}
           </div>
         );
       })()}
@@ -1733,7 +1808,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                             Referência: {v.ideal_min != null && v.ideal_max != null ? `${v.ideal_min}° a ${v.ideal_max}°` : 'não informada'}
                           </div>
                           {comentario && (
-                            <div style={{ marginTop: 8, padding: '9px 10px', borderRadius: 8, background: '#fff', border: '1px solid #e2e8f0', fontSize: 11, lineHeight: 1.5, color: '#334155', whiteSpace: 'pre-line' }}>
+                            <div style={{ marginTop: 8, padding: '9px 10px', borderRadius: 8, background: '#fff', border: '1px solid #e2e8f0', fontSize: 11, lineHeight: 1.5, color: '#334155', whiteSpace: 'pre-line', overflowWrap:'anywhere' }}>
                               {comentario}
                             </div>
                           )}
@@ -1758,12 +1833,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   {bio.achados.ineficiencia_propulsiva && <span style={{ background: '#fef2f2', color: '#991b1b', fontSize: 11, padding: '3px 10px', borderRadius: 20, border: '0.5px solid #fca5a5' }}>Ineficiência propulsiva</span>}
                 </div>
                 {bio.achados.comentarios_risco && (
-                  <div style={{ marginTop: 8, padding: '10px 11px', borderRadius: 8, background: '#fff7ed', border: '1px solid #fed7aa', fontSize: 12, color: '#7c2d12', lineHeight: 1.55, whiteSpace: 'pre-line' }}>
+                  <div style={{ marginTop: 8, padding: '10px 11px', borderRadius: 8, background: '#fff7ed', border: '1px solid #fed7aa', fontSize: 12, color: '#7c2d12', lineHeight: 1.55, whiteSpace: 'pre-line', overflowWrap:'anywhere' }}>
                     {bio.achados.comentarios_risco}
                   </div>
                 )}
                 {bio.achados.observacoes && (
-                  <p style={{ fontSize: 12, color: '#475569', marginTop: 8, lineHeight: 1.6 }}>{bio.achados.observacoes}</p>
+                  <div style={{ marginTop: 8, padding: '10px 11px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', lineHeight: 1.55, whiteSpace: 'pre-line', overflowWrap:'anywhere' }}>
+                    {bio.achados.observacoes}
+                  </div>
                 )}
               </div>
             )}

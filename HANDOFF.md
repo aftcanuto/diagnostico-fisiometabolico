@@ -476,6 +476,92 @@ Validacao local em 05/05/2026:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.
 
+## Correcao: numero 0 solto em sinais vitais
+
+Em 05/05/2026 foi corrigido um `0` que aparecia solto fora dos cards na secao de sinais vitais.
+
+Causa:
+
+- alguns campos opcionais de sinais vitais usavam renderizacao condicional com `&&`;
+- quando o valor era `0`, o React renderizava o proprio numero `0` em vez de esconder o card.
+
+Correcoes aplicadas:
+
+- `src/components/PatientDashboard.tsx` passou a checar `!= null` para pressao arterial, FC repouso e SpO2;
+- frequencia respiratoria agora so renderiza quando existe valor diferente de string vazia;
+- `src/components/PortalPaciente.tsx` recebeu o mesmo padrao nos blocos de sinais vitais e cardiorrespiratorio.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco, smoke test, TypeScript e lint passaram;
+- lint manteve apenas avisos antigos nao bloqueantes.
+
+## Correcao: textos de biomecanica fora da caixa
+
+Em 05/05/2026 foi corrigido texto solto no bloco de biomecanica do dashboard clinico.
+
+Problema observado:
+
+- `achados.comentarios_risco` aparecia em uma caixa, mas `achados.observacoes` era exibido como paragrafo solto logo abaixo;
+- textos longos ou sem espaco podiam sair visualmente da area do card.
+
+Correcao aplicada:
+
+- `src/components/PatientDashboard.tsx` agora renderiza `achados.observacoes` em uma caixa propria, com fundo claro e borda;
+- comentarios de angulos, comentarios de risco e observacoes receberam `overflowWrap: anywhere`;
+- isso mantem textos longos dentro do card e preserva o alinhamento do dashboard.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco, smoke test, TypeScript e lint passaram;
+- lint manteve apenas avisos antigos nao bloqueantes.
+
+## Ajuste: analise clinica em popup no dashboard clinico
+
+Em 05/05/2026 foi ajustada a exibicao da analise clinica no dashboard do profissional.
+
+Problema observado:
+
+- no bloco de RML, a faixa `Analise clinica` aparecia, mas o texto da IA podia nao ser exibido;
+- quando a IA vinha em formato estruturado, o componente tentava ler apenas `texto_editado`.
+
+Correcao aplicada:
+
+- `src/components/PatientDashboard.tsx` recebeu `textoAnaliseClinica()`, que aceita texto simples, `texto_editado`, `texto` ou conteudo estruturado renderizado por `renderAiText()`;
+- foi criado `AnaliseInfoTooltip()`;
+- no modulo RML, a analise deixou de ocupar uma faixa vazia e passou a aparecer em um icone de informacao ao lado do titulo;
+- ao passar o mouse ou focar no icone, abre uma caixa flutuante com o texto completo da analise clinica.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco, smoke test, TypeScript e lint passaram;
+- lint manteve apenas avisos antigos nao bloqueantes.
+
+## Correcao: FFMI sem numero no painel clinico
+
+Em 05/05/2026 foi corrigido o card de FFMI no painel clinico.
+
+Problema observado:
+
+- o card mostrava a barra de potencial muscular, mas o numero principal do FFMI ficava vazio;
+- isso acontecia quando o banco nao retornava `antropometria.ffmi` em formato numerico ou nos nomes esperados, mesmo havendo massa magra e estatura suficientes para calcular.
+
+Correcao aplicada:
+
+- `src/components/PatientDashboard.tsx` recebeu `parseNumeroSeguro()`;
+- o painel agora tenta ler FFMI salvo em `ffmi`, `ffmiNorm`, `valor` ou `resultado`;
+- quando nao houver valor salvo, calcula automaticamente `massa_magra / altura_m²`;
+- com massa magra `65.12 kg` e estatura `170 cm`, o painel passa a exibir aproximadamente `22.5`.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco, smoke test, TypeScript e lint passaram;
+- lint manteve apenas avisos antigos nao bloqueantes.
+
 ## Refinamento: rodape do PDF e subtitulos orfaos
 
 Em 05/05/2026 foi feito novo ajuste no PDF apos teste visual do laudo real.

@@ -711,11 +711,11 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
             <Card>
               <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Sinais vitais</h3>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:8}}>
-                {sv?.pa_sistolica&&sv?.pa_diastolica&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
-                {sv?.fc_repouso&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
-                {sv?.spo2&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
-                {sv?.temperatura&&<MetricaHorizontal label="Temperatura" valor={sv.temperatura} un="°C"/>}
-                {sv?.fr&&<MetricaHorizontal label="Frequência respiratória" valor={sv.fr} un="irpm"/>}
+                {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
+                {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
+                {sv?.spo2!=null&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
+                {sv?.temperatura!=null&&sv?.temperatura!==''&&<MetricaHorizontal label="Temperatura" valor={sv.temperatura} un="°C"/>}
+                {sv?.fr!=null&&sv?.fr!==''&&<MetricaHorizontal label="Frequência respiratória" valor={sv.fr} un="irpm"/>}
               </div>
             </Card>
           )}
@@ -900,9 +900,9 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
                 {atual.cardiorrespiratorio?.classificacao_vo2&&<MetricaHorizontal label="Classificação" valor={atual.cardiorrespiratorio.classificacao_vo2}/>}
                 {atual.cardiorrespiratorio?.fc_limiar!=null&&<MetricaHorizontal label="FC limiar" valor={atual.cardiorrespiratorio.fc_limiar} un="bpm" cor="#f59e0b"/>}
                 {atual.cardiorrespiratorio?.fc_max!=null&&<MetricaHorizontal label="FC máxima" valor={atual.cardiorrespiratorio.fc_max} un="bpm" cor="#f87171"/>}
-                {sv?.pa_sistolica&&sv?.pa_diastolica&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
-                {sv?.fc_repouso&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
-                {sv?.spo2&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
+                {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
+                {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
+                {sv?.spo2!=null&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
               </div>
               {atual.cardiorrespiratorio?.protocolo&&(
                 <div style={{marginTop:10,padding:'11px 13px',borderRadius:10,background:'#f8fafc',border:'1px solid #f1f5f9'}}>
