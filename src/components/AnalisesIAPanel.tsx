@@ -54,7 +54,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
       if (!res.ok) throw new Error(json.error ?? 'Erro');
       setAnalises(a => ({ ...a, [tipo]: { tipo, conteudo: json.conteudo } }));
     } catch (e: any) {
-      alert('Falha: ' + e.message);
+      alert(e.message);
     } finally { setLoading(null); }
   }
 

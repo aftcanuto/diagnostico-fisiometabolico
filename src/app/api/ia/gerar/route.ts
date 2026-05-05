@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, conteudo });
   } catch (err: any) {
     console.error('Erro IA:', err);
-    return NextResponse.json({ error: err.message ?? 'Erro ao gerar análise' }, { status: 500 });
+    const status = err?.code === 'CLAUDE_MODEL_UNAVAILABLE' ? 400 : 500;
+    return NextResponse.json({ error: err.message ?? 'Erro ao gerar análise' }, { status });
   }
 }

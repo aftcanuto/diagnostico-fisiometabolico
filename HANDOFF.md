@@ -272,6 +272,14 @@ Nova correcao em 04/05/2026:
 - `src/lib/ai/client.ts` agora usa `claude-sonnet-4-20250514` como padrao, normaliza `claude-sonnet-4-5` para esse modelo e tenta fallback para `claude-3-5-sonnet-20241022` em erro 404;
 - `scripts/check-env.js` foi atualizado para o mesmo modelo padrao.
 
+Correcao complementar da IA:
+
+- a chave Anthropic em producao tambem retornou 404 para `claude-3-5-sonnet-20241022`;
+- `src/lib/ai/client.ts` agora tenta, em ordem, o modelo definido em `ANTHROPIC_MODEL`, `claude-sonnet-4-20250514`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20241022` e `claude-3-5-haiku-20241022`;
+- se todos os modelos Claude retornarem 404 e houver `OPENAI_API_KEY`, o app usa OpenAI como fallback;
+- se nao houver modelo disponivel, a API retorna erro 400 com instrucao clara para remover/ajustar `ANTHROPIC_MODEL` ou configurar `OPENAI_API_KEY`;
+- `src/components/AnalisesIAPanel.tsx` deixou de prefixar o alerta com `Falha:` duplicado.
+
 ## Comandos principais
 
 Instalar:
