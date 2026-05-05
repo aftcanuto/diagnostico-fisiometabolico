@@ -466,8 +466,10 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
     ?Object.entries(anamnese).map(([k,v])=>({label:humanLabel(k),valor:fmtValor(v)})).filter(i=>i.valor)
     :[];
   const anamneseTopLabels=['Objetivo','Queixa Principal','Historico Lesoes','Histórico Lesões'];
+  const anamneseFullLabels=['Historia Familiar','História Familiar'];
   const anamneseTop=anamneseItems.filter(i=>anamneseTopLabels.includes(i.label));
-  const anamneseRest=anamneseItems.filter(i=>!anamneseTopLabels.includes(i.label));
+  const anamneseFull=anamneseItems.filter(i=>anamneseFullLabels.includes(i.label));
+  const anamneseRest=anamneseItems.filter(i=>!anamneseTopLabels.includes(i.label)&&!anamneseFullLabels.includes(i.label));
   const segs=[
     {k:'braco_dir',l:'Braço direito'},
     {k:'braco_esq',l:'Braço esquerdo'},

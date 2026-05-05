@@ -247,6 +247,12 @@ Validacao local neste ciclo:
 - antes do deploy, o Vercel deve instalar as novas dependencias pelo `package-lock.json`;
 - apos deploy, retestar o botao/URL de PDF em producao.
 
+Correcao complementar no mesmo ciclo:
+
+- o deploy falhou em `src/components/PortalPaciente.tsx` porque `anamneseFull` era usado no JSX, mas nao tinha sido declarado;
+- `anamneseFull` foi declarado a partir dos campos "Historia Familiar"/"História Familiar";
+- `anamneseRest` agora exclui esse campo para que ele apareca apenas em linha inteira, abaixo dos cards menores.
+
 ## Comandos principais
 
 Instalar:
