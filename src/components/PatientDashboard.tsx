@@ -41,8 +41,8 @@ function zoneLabel(v: number | null) {
 function GaugeSVG({ value, label, size = 'sm' }: { value: number | null; label: string; size?: 'lg' | 'sm' }) {
   const isLg = size === 'lg';
   const vw = isLg ? 200 : 160;
-  const vh = isLg ? 130 : 105;
-  const cx = vw / 2, cy = isLg ? 108 : 88;
+  const vh = isLg ? 168 : 118;
+  const cx = vw / 2, cy = isLg ? 104 : 88;
   const r  = isLg ? 80 : 64;
   const sw = isLg ? 14 : 11;
   const tw = isLg ? 9  : 7;
@@ -114,7 +114,7 @@ function GaugeSVG({ value, label, size = 'sm' }: { value: number | null; label: 
           </>
         )}
         {/* Valor */}
-        <text x={cx} y={(cy - r*0.40).toFixed(1)} textAnchor="middle"
+        <text x={cx} y={(isLg ? cy + 42 : cy + 24).toFixed(1)} textAnchor="middle"
           fontSize={fsize} fontWeight="800" fill={col} fontFamily="Inter,Arial">
           {value ?? '—'}
         </text>

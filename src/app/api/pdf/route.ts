@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
         displayHeaderFooter: true,
         headerTemplate: '<div></div>',
         footerTemplate,
-        margin: { top: '0', right: '0', bottom: '11mm', left: '0' },
+        margin: { top: '0', right: '0', bottom: '13mm', left: '0' },
       });
 
       return new NextResponse(Buffer.from(pdf), {

@@ -475,3 +475,52 @@ Validacao local em 05/05/2026:
 - smoke test passou e gerou previews HTML;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.
+
+## Refinamento: rodape do PDF e subtitulos orfaos
+
+Em 05/05/2026 foi feito novo ajuste no PDF apos teste visual do laudo real.
+
+Problemas observados:
+
+- em Antropometria, o subtitulo `Circunferencias` podia ficar no fim de uma pagina enquanto os dados iam para a pagina seguinte;
+- o rodape estava funcional, mas ainda simples para o padrao visual esperado do relatorio.
+
+Correcoes aplicadas:
+
+- `src/lib/pdf/pagination.ts` agora agrupa subtitulos `.sec-sub` com os blocos/tabelas imediatamente seguintes;
+- esse agrupamento recebe `break-inside: avoid`, reduzindo o risco de titulo solto sem conteudo;
+- `src/lib/pdf/template.ts` recebeu a classe `.pdf-keep-group` no CSS do PDF;
+- `renderLaudoFooterHTML()` foi refinado com faixa de identidade visual, corpo em capsula, sombra leve, informacoes em colunas e numeracao destacada;
+- as rotas `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` passaram a usar margem inferior de `13mm` para acomodar o rodape mais refinado.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- smoke test gerou novamente os previews HTML;
+- lint permaneceu apenas com avisos antigos nao bloqueantes.
+
+## Correcao: portal do paciente e velocimetro do painel clinico
+
+Em 05/05/2026 foram feitos ajustes apos novo teste em producao.
+
+Problemas observados:
+
+- o portal publico do paciente em `/p/[token]` podia abrir em tela branca com erro de excecao no cliente;
+- o numero do score global no painel clinico ficava sobreposto ao ponteiro do velocimetro;
+- durante a recuperacao local de arquivo foi criada uma pasta temporaria `.tmp-portal-restore*`, agora ignorada pelo Git.
+
+Correcoes aplicadas:
+
+- `src/components/PortalPaciente.tsx` recebeu `valorParaTela()`;
+- `Metrica` e `MetricaHorizontal` agora convertem valores compostos em texto seguro antes de renderizar;
+- isso evita quebra quando o banco retorna objetos reais em campos de medida, como dobras ou estruturas com `media`, `valor`, `resultado`, `kg` ou `pct`;
+- `src/components/PatientDashboard.tsx` ajustou o `GaugeSVG` do score global, aumentando a area vertical e movendo o numero para baixo do ponteiro;
+- `.gitignore` passou a ignorar `.tmp-portal-restore*` para impedir que arquivos temporarios sejam enviados por engano.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente `preview-laudo.html`, `preview-dashboard-cliente.html`, `preview-dashboard-clinico.html` e `preview-laudo-full-smoke.html`;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.

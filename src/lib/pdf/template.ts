@@ -242,6 +242,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .anam-value { font-size:13px; font-weight:500; color:#111827; line-height:1.45; letter-spacing:0; }
 .anam-card.wide .anam-value { font-size:13px; font-weight:500; }
 .sec-sub { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 12px; }
+.pdf-keep-group { break-inside: avoid; page-break-inside: avoid; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; break-inside: auto; page-break-inside: auto; }
 th { text-align: left; padding: 10px 14px; background: #f3f4f6; color: #6b7280; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 td { padding: 10px 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
@@ -316,6 +317,7 @@ function mkList(t: string, items: string[], col: string): string {
 export function renderLaudoFooterHTML(d: LaudoData): string {
   const c = d.clinica;
   const empresa = c?.nome ?? '';
+  const pri = c?.cor_primaria ?? '#0f766e';
   const avNome  = d.avaliador.nome;
   const avCons  = d.avaliador.conselho ?? '';
   const avEsp   = d.avaliador.especialidade ?? '';
@@ -328,22 +330,41 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
 
   return `<div style="
     width:100%;
-    height:34px;
-    background:#ffffff;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 11mm;
-    font-size:7px;
+    height:42px;
+    padding:0 11mm 5px;
+    box-sizing:border-box;
     font-family:Arial,Helvetica,sans-serif;
     color:#64748b;
-    border-top:1px solid #e2e8f0;
-    box-sizing:border-box;
+    background:linear-gradient(180deg,rgba(255,255,255,.96),#ffffff);
   ">
-    <div style="width:25%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#334155">${x(empresa)}</div>
-    <div style="width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center">${x(centro)}</div>
-    <div style="width:33%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
-      ${x(paciente)} · pág. <span class="pageNumber"></span>/<span class="totalPages"></span>
+    <div style="height:3px;border-radius:999px;background:linear-gradient(90deg,${x(pri)},#38bdf8,rgba(226,232,240,.35));margin:0 0 6px;"></div>
+    <div style="
+      height:28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border:1px solid #e2e8f0;
+      border-radius:999px;
+      padding:0 10px;
+      box-shadow:0 8px 18px rgba(15,23,42,.05);
+      background:#ffffff;
+      font-size:7.5px;
+      line-height:1;
+    ">
+      <div style="width:28%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#0f172a">${x(empresa || 'Diagnóstico Fisiometabólico')}</div>
+      <div style="width:38%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;color:#475569">${x(centro)}</div>
+      <div style="width:27%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;color:#475569">${x(paciente)}</div>
+      <div style="
+        min-width:42px;
+        margin-left:8px;
+        padding:5px 8px;
+        border-radius:999px;
+        background:${x(pri)}12;
+        border:1px solid ${x(pri)}33;
+        color:${x(pri)};
+        font-weight:700;
+        text-align:center;
+      "><span class="pageNumber"></span>/<span class="totalPages"></span></div>
     </div>
   </div>`;
 }

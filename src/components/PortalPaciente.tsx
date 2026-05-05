@@ -259,23 +259,40 @@ function Card({children,bg,style}:{children:React.ReactNode;bg?:string;style?:Re
     {children}
   </div>;
 }
+
+function valorParaTela(v:any): string {
+  if(v==null||v==='')return '—';
+  if(typeof v==='boolean')return v?'Sim':'Não';
+  if(Array.isArray(v)){
+    const texto:string=v.map((item:any)=>valorParaTela(item)).filter(Boolean).filter((i:string)=>i!=='—').join(', ');
+    return texto||'—';
+  }
+  if(typeof v==='object'){
+    const alvo=v.media??v.média??v.valor??v.resultado??v.total??v.kg??v.pct;
+    return alvo==null||alvo===''?'—':String(alvo);
+  }
+  return String(v);
+}
+
 function Metrica({label,valor,un,cor,d,dBoa}:{label:string;valor:any;un?:string;cor?:string;d?:number|null;dBoa?:'subir'|'descer'}) {
+  const valorSeguro=valorParaTela(valor);
   return <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',overflow:'hidden',minWidth:0}}>
     <div style={{fontSize:10,color:'#94a3b8',fontWeight:500,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{label}</div>
     <div style={{fontSize:17,fontWeight:700,color:cor??'#0f172a',lineHeight:1.2,wordBreak:'break-word'}}>
-      {valor??'—'}{un&&<span style={{fontSize:11,fontWeight:400,color:'#94a3b8',marginLeft:3}}>{un}</span>}
+      {valorSeguro}{un&&valorSeguro!=='—'&&<span style={{fontSize:11,fontWeight:400,color:'#94a3b8',marginLeft:3}}>{un}</span>}
     </div>
     {d!=null&&dBoa&&<div style={{marginTop:5}}><DeltaB d={d} boa={dBoa}/></div>}
   </div>;
 }
 
 function MetricaHorizontal({label,valor,un,cor,d,dBoa,nowrapValor}:{label:string;valor:any;un?:string;cor?:string;d?:number|null;dBoa?:'subir'|'descer';nowrapValor?:boolean}) {
+  const valorSeguro=valorParaTela(valor);
   return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
     padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
     <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25}}>{label}</div>
     <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'right'}}>
-      <span style={{fontSize:16,fontWeight:900,color:cor??'#0f172a',lineHeight:1.15,whiteSpace:nowrapValor?'nowrap':'normal',overflowWrap:nowrapValor?'normal':'anywhere'}}>{valor??'—'}</span>
-      {un&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8',whiteSpace:'nowrap'}}>{un}</span>}
+      <span style={{fontSize:16,fontWeight:900,color:cor??'#0f172a',lineHeight:1.15,whiteSpace:nowrapValor?'nowrap':'normal',overflowWrap:nowrapValor?'normal':'anywhere'}}>{valorSeguro}</span>
+      {un&&valorSeguro!=='—'&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8',whiteSpace:'nowrap'}}>{un}</span>}
       {d!=null&&dBoa&&<DeltaB d={d} boa={dBoa}/>}
     </div>
   </div>;

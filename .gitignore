@@ -2,6 +2,7 @@ node_modules/
 .next/
 .npm-cache/
 .tmp-preview-laudo/
+.tmp-portal-restore*
 out/
 build/
 .DS_Store

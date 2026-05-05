@@ -57,6 +57,43 @@ export async function prepararPaginacaoLaudo(page: any) {
       return pageSection;
     }
 
+    function montarBlocos(section: HTMLElement, header: Element) {
+      const filhos = Array.from(section.children).filter(child => child !== header);
+      const blocos: HTMLElement[] = [];
+      let i = 0;
+
+      while (i < filhos.length) {
+        const child = filhos[i] as HTMLElement;
+
+        if (child.classList.contains('sec-sub')) {
+          const grupo = document.createElement('div');
+          grupo.className = 'pdf-keep-group';
+          grupo.style.cssText = [
+            'break-inside:avoid',
+            'page-break-inside:avoid',
+            'margin:0 0 14px',
+          ].join(';');
+          grupo.appendChild(child);
+          i += 1;
+
+          while (i < filhos.length) {
+            const prox = filhos[i] as HTMLElement;
+            if (prox.classList.contains('sec-sub') || prox.classList.contains('ai-box')) break;
+            grupo.appendChild(prox);
+            i += 1;
+          }
+
+          blocos.push(grupo);
+          continue;
+        }
+
+        blocos.push(child);
+        i += 1;
+      }
+
+      return blocos;
+    }
+
     const secoes = Array.from(document.querySelectorAll('section.page')).filter(ehModuloPaginavel) as HTMLElement[];
 
     for (const section of secoes) {
@@ -65,7 +102,7 @@ export async function prepararPaginacaoLaudo(page: any) {
       const header = section.querySelector(':scope > .mod-head');
       if (!header) continue;
 
-      const filhos = Array.from(section.children).filter(child => child !== header);
+      const filhos = montarBlocos(section, header);
       const paginas: HTMLElement[] = [];
       let atual = novaPagina(section, header, false);
       section.parentNode?.insertBefore(atual, section);
