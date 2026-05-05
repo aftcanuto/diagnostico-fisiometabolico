@@ -20,6 +20,23 @@ interface Props {
 function zCor(v:number|null){if(v==null)return'#94a3b8';if(v<=40)return'#ef4444';if(v<=70)return'#f59e0b';return'#10b981';}
 function zLabel(v:number|null){if(v==null)return'N/A';if(v<=40)return'Crítico';if(v<=70)return'Atenção';return'Ótimo';}
 function dlt(a:any,b:any){const x=Number(a),y=Number(b);if(!isFinite(x)||!isFinite(y)||a==null||b==null)return null;return+(x-y).toFixed(1);}
+const MESES = ['janeiro','fevereiro','mar\u00e7o','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function partesData(data?: string | null) {
+  const iso = String(data ?? '').slice(0, 10);
+  const [ano, mes, dia] = iso.split('-').map(Number);
+  if (!ano || !mes || !dia) return null;
+  return { ano, mes, dia };
+}
+function dataCurtaBR(data?: string | null) {
+  const p = partesData(data);
+  if (!p) return '';
+  return `${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}/${p.ano}`;
+}
+function dataLongaBR(data?: string | null) {
+  const p = partesData(data);
+  if (!p) return '';
+  return `${p.dia} de ${MESES[p.mes - 1]} de ${p.ano}`;
+}
 
 /* ── Velocímetro HDR ── */
 function Gauge({value,label,size=150}:{value:number|null;label:string;size?:number}) {
@@ -553,7 +570,7 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
                   borderRadius:8,color:'white',fontSize:12,padding:'7px 32px 7px 12px',cursor:'pointer',outline:'none'}}>
                 {hist.ordenadas.slice().reverse().map(a=>(
                   <option key={a.id} value={a.id} style={{background:'#065f46'}}>
-                    {new Date(a.data).toLocaleDateString('pt-BR')} · {a.tipo}
+                    {dataCurtaBR(a.data)} · {a.tipo}
                   </option>
                 ))}
               </select>
@@ -564,8 +581,8 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
         </div>
         <div style={{marginTop:14,paddingTop:12,borderTop:'1px solid rgba(255,255,255,.1)',
           fontSize:11,color:'rgba(255,255,255,.45)'}}>
-          Avaliação: {new Date(atual.data).toLocaleDateString('pt-BR',{dateStyle:'long'})}
-          {ant&&<span> · Comparando com {new Date(ant.data).toLocaleDateString('pt-BR')}</span>}
+          Avaliação: {dataLongaBR(atual.data)}
+          {ant&&<span> · Comparando com {dataCurtaBR(ant.data)}</span>}
         </div>
       </div>
 
@@ -1300,7 +1317,7 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
               padding:'10px 0',borderBottom:i<hist.ordenadas.length-1?'1px solid #f1f5f9':'none'}}>
               <div>
                 <div style={{fontSize:13,fontWeight:600,color:'#0f172a'}}>
-                  {new Date(a.data).toLocaleDateString('pt-BR',{dateStyle:'long'})}
+                  {dataLongaBR(a.data)}
                 </div>
                 <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>
                   {a.tipo} · Score: <b style={{color:'#0f172a'}}>{a.scores?.global??'—'}</b>

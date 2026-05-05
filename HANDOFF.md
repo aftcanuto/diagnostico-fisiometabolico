@@ -300,6 +300,26 @@ Validar depois do deploy:
 3. conferir se cards pequenos nao ficam cortados ao meio;
 4. conferir se o rodape aparece ao final do bloco sem sobrepor conteudo.
 
+## Correcao: dashboard publico do paciente
+
+Em 04/05/2026, o link `/p/[token]` passou a abrir com erro client-side e mensagens React minificadas `#425`, `#418` e `#423` no console.
+
+Causa provavel:
+
+- o portal usava `new Date(...).toLocaleDateString(...)` dentro do componente client;
+- no SSR da Vercel e no navegador do usuario, datas ISO podem ser formatadas com fuso/locale diferente, gerando HTML diferente na hidratacao.
+
+Correcao aplicada:
+
+- `src/components/PortalPaciente.tsx` agora usa `dataCurtaBR()` e `dataLongaBR()` deterministicas, baseadas em split da string `YYYY-MM-DD`;
+- removidas as chamadas `new Date(...).toLocaleDateString(...)` do componente do portal.
+
+Validar depois do deploy:
+
+1. abrir o mesmo link publico `/p/[token]`;
+2. confirmar que a pagina nao mostra mais erro client-side;
+3. conferir se as datas aparecem corretamente em formato curto e longo.
+
 ## Comandos principais
 
 Instalar:
