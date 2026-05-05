@@ -253,6 +253,15 @@ Correcao complementar no mesmo ciclo:
 - `anamneseFull` foi declarado a partir dos campos "Historia Familiar"/"História Familiar";
 - `anamneseRest` agora exclui esse campo para que ele apareca apenas em linha inteira, abaixo dos cards menores.
 
+Nova correcao complementar:
+
+- o PDF em producao passou a falhar com `O diretório de entrada "/var/task/.next/server/bin" não existe`;
+- `next.config.js` agora deixa `puppeteer`, `puppeteer-core` e `@sparticuz/chromium` como pacotes externos do servidor e inclui `node_modules/@sparticuz/chromium/bin/**/*` no tracing das rotas `/api/pdf` e `/api/pdf/publico`;
+- a tela de revisao buscava dados dos modulos direto pelo Supabase no navegador, o que podia voltar vazio por RLS e deixar os graficos de score com "—";
+- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` agora busca modulos por `buscarModulo`, usando a rota interna segura;
+- composicao corporal na revisao tambem usa bioimpedancia como fallback quando antropometria nao tem `% gordura`/IMC;
+- score de forca na revisao usa preensao quando existir e, se nao houver preensao, calcula um score simples a partir de dinamometria SPTech/tracao e assimetria.
+
 ## Comandos principais
 
 Instalar:

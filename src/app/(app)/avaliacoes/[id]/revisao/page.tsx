@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Gauge } from '@/components/ui/Gauge';
 import { AnalisesIAPanel } from '@/components/AnalisesIAPanel';
-import { finalizarAvaliacao, upsertScores } from '@/lib/modulos';
+import { buscarModulo, finalizarAvaliacao, upsertScores } from '@/lib/modulos';
 import { createClient } from '@/lib/supabase/client';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
@@ -31,12 +31,13 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       .select('*, pacientes(*)').eq('id', params.id).single();
     setAval(av);
 
-    const [ant, fo, cr, pg, fl, outras] = await Promise.all([
-      supabase.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-      supabase.from('forca').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-      supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-      supabase.from('posturografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
-      supabase.from('flexibilidade').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    const [antData, bioData, foData, crData, pgData, flData, outras] = await Promise.all([
+      buscarModulo('antropometria', params.id).catch(() => null),
+      buscarModulo('bioimpedancia', params.id).catch(() => null),
+      buscarModulo('forca', params.id).catch(() => null),
+      buscarModulo('cardiorrespiratorio', params.id).catch(() => null),
+      buscarModulo('posturografia', params.id).catch(() => null),
+      buscarModulo('flexibilidade', params.id).catch(() => null),
       supabase.from('avaliacoes').select('id', { count: 'exact' })
         .eq('paciente_id', av!.paciente_id).eq('status', 'finalizada'),
     ]);
@@ -45,16 +46,16 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     const idade = calcIdade(av!.pacientes.data_nascimento);
     const sexo = av!.pacientes.sexo;
-    const composicao = ant.data ? scoreComposicaoCorporal({ pctGordura: ant.data.percentual_gordura, imc: ant.data.imc, sexo }) : null;
-    const temPreensao = fo.data?.preensao_dir_kgf != null && fo.data?.preensao_esq_kgf != null;
-    const forca = temPreensao ? scoreForca({
-      preensaoDir: Number(fo.data.preensao_dir_kgf), preensaoEsq: Number(fo.data.preensao_esq_kgf),
-      sexo, idade, populacao: fo.data.populacao_ref ?? 'geral',
-    }) : null;
-    const cardio = cr.data ? scoreCardio({ vo2max: cr.data.vo2max, sexo, idade }) : null;
-    const postura = pg.data ? scorePostura(pg.data.alinhamentos) : null;
-    const flexibilidade = fl.data?.melhor_resultado != null
-      ? scoreFlexibilidade(fl.data.melhor_resultado, sexo, idade)
+    const pctGordura = antData?.percentual_gordura ?? bioData?.percentual_gordura ?? null;
+    const imc = antData?.imc ?? bioData?.imc ?? null;
+    const composicao = pctGordura != null && imc != null
+      ? scoreComposicaoCorporal({ pctGordura, imc, sexo })
+      : null;
+    const forca = calcularScoreForca(foData, sexo, idade);
+    const cardio = crData ? scoreCardio({ vo2max: crData.vo2max, sexo, idade }) : null;
+    const postura = pgData ? scorePostura(pgData.alinhamentos) : null;
+    const flexibilidade = flData?.melhor_resultado != null
+      ? scoreFlexibilidade(flData.melhor_resultado, sexo, idade)
       : null;
     const global = scoreGlobal({ postura, composicao_corporal: composicao, forca, flexibilidade, cardiorrespiratorio: cardio });
 
@@ -68,12 +69,12 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
     }
 
     // Limite natural muscular
-    if (ant.data?.massa_magra && ant.data?.estatura) {
+    if (antData?.massa_magra && antData?.estatura) {
       const ln = calcLimiteNatural({
-        massaMagra: Number(ant.data.massa_magra),
-        estaturaCm: Number(ant.data.estatura),
+        massaMagra: Number(antData.massa_magra),
+        estaturaCm: Number(antData.estatura),
         sexo,
-        massaOssea: ant.data.massa_ossea ? Number(ant.data.massa_ossea) : null,
+        massaOssea: antData.massa_ossea ? Number(antData.massa_ossea) : null,
       });
       setLimiteNatural(ln);
     }
@@ -213,6 +214,41 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       </div>
     </div>
   );
+}
+
+function calcularScoreForca(dados: any, sexo: any, idade: number): number | null {
+  if (!dados) return null;
+
+  if (dados.preensao_dir_kgf != null && dados.preensao_esq_kgf != null) {
+    return scoreForca({
+      preensaoDir: Number(dados.preensao_dir_kgf),
+      preensaoEsq: Number(dados.preensao_esq_kgf),
+      sexo,
+      idade,
+      populacao: dados.populacao_ref ?? 'geral',
+    });
+  }
+
+  const assimetrias = [
+    ...(Array.isArray(dados.sptech_testes) ? dados.sptech_testes : []),
+    ...(Array.isArray(dados.tracao_testes) ? dados.tracao_testes : []),
+  ]
+    .map((t: any) => Number(t.assimetria_pct))
+    .filter((v: number) => Number.isFinite(v));
+
+  const temDinamometria = [
+    ...(Array.isArray(dados.sptech_testes) ? dados.sptech_testes : []),
+    ...(Array.isArray(dados.tracao_testes) ? dados.tracao_testes : []),
+  ].some((t: any) =>
+    Number(t?.lado_d?.kgf ?? t?.lado_d?.fim_kgf ?? 0) > 0 ||
+    Number(t?.lado_e?.kgf ?? t?.lado_e?.fim_kgf ?? 0) > 0
+  );
+
+  if (!temDinamometria) return null;
+  if (!assimetrias.length) return 70;
+
+  const mediaAssimetria = assimetrias.reduce((sum, v) => sum + v, 0) / assimetrias.length;
+  return Math.max(0, Math.min(100, Math.round(85 - mediaAssimetria * 2)));
 }
 
 function Stat({ label, value, sub }: { label: string; value: any; sub?: string }) {
