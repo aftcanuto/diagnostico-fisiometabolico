@@ -646,3 +646,38 @@ Validacao local:
 - smoke test gerou novamente `preview-laudo.html`, `preview-dashboard-cliente.html`, `preview-dashboard-clinico.html` e `preview-laudo-full-smoke.html`;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.
+## Refinamento: padronizacao dos dashboards e popups
+
+Em 05/05/2026 foram aplicados novos ajustes visuais e de consistencia entre o painel clinico e o dashboard do paciente.
+
+Problemas observados:
+
+- campos de anamnese no painel clinico apareciam como JSON/codigo em vez de texto legivel;
+- sinais vitais precisavam ocupar melhor a linha com cards menores;
+- o score de postura ficava distante do rotulo, dificultando a leitura;
+- o somatotipo precisava voltar para o lado direito da silhueta;
+- RML do painel clinico estava com visual diferente do dashboard do paciente;
+- popups de analises e referencias abriam para baixo perto do fim da pagina, ficando limitados pela tela;
+- o grafico de zonas tinha barras/bolhas grandes demais em relacao ao card;
+- o rodape do portal precisava ficar mais robusto quando o paciente nao tem `clinica_id`, mas a avaliacao tem.
+
+Correcoes aplicadas:
+
+- `src/components/PatientDashboard.tsx` passou a formatar objetos e arrays de anamnese como texto limpo, com popup para detalhes;
+- os popups de anamnese e analises no painel clinico agora abrem para cima e possuem altura maxima com rolagem;
+- o bloco de sinais vitais usa grid responsivo com cards menores, permitindo quatro informacoes em linha quando houver espaco;
+- o score de postura fica ao lado do texto `Score postura`;
+- o RML do painel clinico usa o mesmo conceito de cards numericos do dashboard do paciente;
+- `src/components/PortalPaciente.tsx` limita os popups de analises e referencias, abrindo para cima nas secoes finais;
+- as referencias agora aparecem numeradas e separadas por linhas, com rolagem dentro da caixa;
+- `src/components/ui/SilhuetaCircunferencias.tsx` manteve indicadores principais do lado esquerdo e moveu Somatotipo para os demais dados do lado direito;
+- `src/components/ui/ZonasChart.tsx` reduziu a largura das barras, aumentou respiros internos e refinou a posicao dos rotulos;
+- `src/app/p/[token]/page.tsx` passou a buscar a clinica tambem pelo `clinica_id` da avaliacao quando o paciente antigo nao tiver esse campo preenchido.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard do cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.

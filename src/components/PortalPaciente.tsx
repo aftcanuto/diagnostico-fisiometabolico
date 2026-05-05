@@ -290,9 +290,10 @@ function textoAnalise(v:any): string {
   return '';
 }
 
-function TooltipInfo({ texto, label='Ver detalhes' }: { texto?: string | null; label?: string }) {
+function TooltipInfo({ texto, label='Ver detalhes', placement='bottom' }: { texto?: string | null; label?: string; placement?: 'top'|'bottom' }) {
   const [open,setOpen]=useState(false);
   if(!texto)return null;
+  const popupPos = placement === 'top' ? { right: 0, bottom: 30 } : { right: 0, top: 30 };
   return (
     <span style={{position:'relative',display:'inline-flex',alignItems:'center',flexShrink:0}}
       onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)}
@@ -302,7 +303,8 @@ function TooltipInfo({ texto, label='Ver detalhes' }: { texto?: string | null; l
         <Info size={13}/>
       </button>
       {open&&(
-        <div style={{position:'absolute',right:0,top:30,zIndex:80,width:420,maxWidth:'min(420px,calc(100vw - 48px))',
+        <div style={{position:'absolute',...popupPos,zIndex:80,width:420,maxWidth:'min(420px,calc(100vw - 48px))',
+          maxHeight:320,overflowY:'auto',
           padding:'12px 14px',borderRadius:12,background:'#ffffff',border:'1px solid #dbe7ef',
           boxShadow:'0 24px 60px rgba(15,23,42,.18)',fontSize:12,lineHeight:1.55,color:'#334155',
           whiteSpace:'pre-line',textAlign:'left',overflowWrap:'anywhere'}}>
@@ -562,7 +564,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const referenciasTexto=[
     ...REFERENCIAS_CLINICAS.geral,
     ...modulosAnalise.flatMap(([k])=>REFERENCIAS_CLINICAS[k]??[]),
-  ].filter((r,i,arr)=>arr.indexOf(r)===i).join('\n');
+  ].filter((r,i,arr)=>arr.indexOf(r)===i).map((r,i)=>`${i+1}. ${r}`).join('\n\n');
   const segs=[
     {k:'braco_dir',l:'Braço direito'},
     {k:'braco_esq',l:'Braço esquerdo'},
@@ -1384,7 +1386,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                     <span style={{fontSize:12,color:'#64748b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(520px,60vw)'}}>
                       {a.texto}
                     </span>
-                    <TooltipInfo texto={a.texto} label={`Ver análise de ${a.label}`}/>
+                    <TooltipInfo texto={a.texto} label={`Ver análise de ${a.label}`} placement="top"/>
                   </div>
                 </div>
               ))}
@@ -1399,7 +1401,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>Base técnica e científica utilizada</div>
             <div style={{fontSize:12,color:'#94a3b8',marginTop:3}}>Passe o mouse no ícone para ver as referências cadastradas.</div>
           </div>
-          <TooltipInfo texto={referenciasTexto} label="Ver referências"/>
+          <TooltipInfo texto={referenciasTexto} label="Ver referências" placement="top"/>
         </Card>
       </Secao>
 

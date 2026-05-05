@@ -21,7 +21,7 @@ export default async function PortalPacientePage({ params }: { params: { token: 
     supabase
       .from('avaliacoes')
       .select(`
-        id, data, tipo, status, modulos_selecionados,
+        id, clinica_id, avaliador_id, data, tipo, status, modulos_selecionados,
         scores(*),
         antropometria(*),
         bioimpedancia(*),
@@ -42,11 +42,12 @@ export default async function PortalPacientePage({ params }: { params: { token: 
 
   if (!paciente) return notFound();
 
-  const { data: clinica } = paciente.clinica_id
+  const clinicaId = paciente.clinica_id ?? (avaliacoes ?? []).find((a: any) => a.clinica_id)?.clinica_id ?? null;
+  const { data: clinica } = clinicaId
     ? await supabase
       .from('clinicas')
       .select('nome, logo_url, telefone, email, endereco, site')
-      .eq('id', paciente.clinica_id)
+      .eq('id', clinicaId)
       .maybeSingle()
     : { data: null };
 

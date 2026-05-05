@@ -6,14 +6,14 @@ export function ZonasChart({ zonas }: { zonas: Zona[] }) {
   if (!zonas.length) return null;
 
   const W = 720;
-  const H = 270;
-  const PAD = { top: 34, right: 26, bottom: 72, left: 42 };
+  const H = 285;
+  const PAD = { top: 46, right: 34, bottom: 76, left: 50 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const maxVal = Math.max(...zonas.map(z => z.max), 1);
   const minVal = Math.min(...zonas.map(z => z.min || z.max), maxVal);
   const span = Math.max(1, maxVal - minVal);
-  const barW = Math.min(74, innerW / zonas.length - 26);
+  const barW = Math.min(62, innerW / zonas.length - 34);
   const gap = zonas.length > 1 ? (innerW - zonas.length * barW) / (zonas.length - 1) : 0;
 
   return (
@@ -69,10 +69,10 @@ export function ZonasChart({ zonas }: { zonas: Zona[] }) {
                 <stop offset="100%" stopColor={z.cor} stopOpacity=".58"/>
               </linearGradient>
             </defs>
-            <rect x={x} y={PAD.top} width={barW} height={innerH} rx="15" fill="#f1f5f9"/>
-            <rect x={x} y={y} width={barW} height={h} rx="15" fill={`url(#zonaBar${i})`} filter="url(#zonaShadow)"/>
-            <rect x={x + 8} y={y + 8} width={barW - 16} height={Math.max(8, h * 0.35)} rx="10" fill="#fff" opacity=".2"/>
-            <text x={x + barW / 2} y={y - 12} textAnchor="middle" fontSize="13" fontWeight="900" fill={z.cor} fontFamily="Inter,system-ui">
+            <rect x={x} y={PAD.top} width={barW} height={innerH} rx="18" fill="#f1f5f9"/>
+            <rect x={x} y={y} width={barW} height={h} rx="18" fill={`url(#zonaBar${i})`} filter="url(#zonaShadow)"/>
+            <rect x={x + 9} y={y + 8} width={barW - 18} height={Math.max(7, h * 0.28)} rx="10" fill="#fff" opacity=".22"/>
+            <text x={x + barW / 2} y={Math.max(24, y - 12)} textAnchor="middle" fontSize="12" fontWeight="900" fill={z.cor} fontFamily="Inter,system-ui">
               {range} bpm
             </text>
             <text x={x + barW / 2} y={PAD.top + innerH + 26} textAnchor="middle" fontSize="14" fontWeight="900" fill="#0f172a" fontFamily="Inter,system-ui">

@@ -210,13 +210,13 @@ function MetricLine({ label, value, unit, color }: { label: string; value: any; 
 }
 
 function PreviewMetricLine({ label, value }: { label: string; value: any }) {
-  const text = String(value ?? '—');
+  const text = formatDashboardValue(value);
   const [open, setOpen] = useState(false);
   return (
     <div onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
       style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,
         padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
-      <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 92px'}}>{label}</div>
+      <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 140px'}}>{label}</div>
       <div style={{fontSize:14,fontWeight:900,color:'#0f172a',lineHeight:1.2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0,flex:1}}>
         {text}
       </div>
@@ -225,14 +225,28 @@ function PreviewMetricLine({ label, value }: { label: string; value: any }) {
         i
       </div>
       {open && (
-        <div style={{position:'absolute',zIndex:20,right:0,top:'calc(100% + 8px)',width:'min(420px,80vw)',
+        <div style={{position:'absolute',zIndex:20,right:0,bottom:'calc(100% + 8px)',width:'min(420px,80vw)',maxHeight:280,overflowY:'auto',
           padding:'12px 14px',background:'#0f172a',color:'#fff',borderRadius:12,boxShadow:'0 18px 40px rgba(15,23,42,.22)',
-          fontSize:13,lineHeight:1.55,fontWeight:600,whiteSpace:'normal'}}>
+          fontSize:13,lineHeight:1.55,fontWeight:600,whiteSpace:'pre-line'}}>
           {text}
         </div>
       )}
     </div>
   );
+}
+
+function formatDashboardValue(v: any): string {
+  if (v == null || v === '') return '-';
+  if (typeof v === 'boolean') return v ? 'Sim' : 'Nao';
+  if (typeof v !== 'object') return String(v);
+  if (Array.isArray(v)) {
+    const itens = v.map(formatDashboardValue).filter(x => x && x !== '-');
+    return itens.length ? itens.join('\n') : '-';
+  }
+  const pares = Object.entries(v)
+    .filter(([, val]) => val != null && val !== '' && !(typeof val === 'object' && Object.keys(val as any).length === 0))
+    .map(([k, val]) => `${humanField(k)}: ${formatDashboardValue(val)}`);
+  return pares.length ? pares.join('\n') : '-';
 }
 
 function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|null; massaMagra:number|null; massaOssea:number|null; peso:number|null; altura:number|null; sexo:'M'|'F'}) {
@@ -588,10 +602,12 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
           style={{
             position: 'absolute',
             right: 0,
-            top: 34,
+            bottom: 34,
             zIndex: 50,
             width: 420,
             maxWidth: 'min(420px, calc(100vw - 48px))',
+            maxHeight: 320,
+            overflowY: 'auto',
             padding: '14px 16px',
             borderRadius: 14,
             background: '#ffffff',
@@ -1154,7 +1170,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 10 }}>
                   {Object.entries(cleanModulo(anam)).filter(([,v]) => v != null && v !== '').slice(0, 8).map(([k,v]) => (
-                    <PreviewMetricLine key={k} label={humanField(k)} value={typeof v === 'object' ? JSON.stringify(v) : String(v)} />
+                    <PreviewMetricLine key={k} label={humanField(k)} value={v} />
                   ))}
                 </div>
               </div>
@@ -1167,7 +1183,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
                   ❤️ Sinais Vitais
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10 }}>
                   {sv.pa_sistolica != null && sv.pa_diastolica != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>Pressão arterial</div>
@@ -1296,7 +1312,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                       )}
                       {sc.postura != null && (
                         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center',
-                          justifyContent: 'space-between' }}>
+                          justifyContent: 'flex-start', gap: 8 }}>
                           <span style={{ fontSize: 10, color: '#94a3b8' }}>Score postura</span>
                           <span style={{ fontSize: 16, fontWeight: 800,
                             color: zoneColor(sc.postura) }}>{sc.postura}</span>
@@ -1673,31 +1689,18 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 10, marginBottom: 16 }}>
               {ativos.map((t, i) => {
                 const cor = t.cls ? (COR[t.cls] ?? '#6b7280') : '#6b7280';
-                const pct = t.val != null ? Math.min(100, (t.val / (t.unit === 'seg' ? 180 : 60)) * 100) : 0;
-                const r = 24; const circ = 2 * Math.PI * r;
-                const dash = (pct / 100) * circ;
                 return (
-                  <div key={i} style={{ display: 'flex', alignItems:'center', gap:12, padding:'12px 14px', border:'1px solid #e2e8f0', borderRadius:14, background:'#f8fafc' }}>
-                    <svg width={62} height={62} viewBox="0 0 62 62" style={{flexShrink:0}}>
-                      <circle cx={31} cy={31} r={r} fill="none" stroke="#e2e8f0" strokeWidth={7} />
-                      <circle cx={31} cy={31} r={r} fill="none" stroke={cor} strokeWidth={7}
-                        strokeDasharray={`${dash.toFixed(1)} ${circ}`}
-                        strokeDashoffset={circ * 0.25}
-                        strokeLinecap="round"
-                        transform="rotate(-90 31 31)" />
-                      <text x={31} y={35} textAnchor="middle" fontSize={13} fontWeight={900} fill={cor} fontFamily="Inter,sans-serif">
-                        {t.val}
-                      </text>
-                    </svg>
-                    <div style={{minWidth:0}}>
-                      <div style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', lineHeight:1.2 }}>{t.lbl}</div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginTop:3 }}>{t.val} {t.unit}</div>
+                  <div key={i} style={{ display: 'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:7, minHeight:104, padding:'14px 16px', border:`1px solid ${cor}35`, borderRadius:14, background:'#f8fafc', textAlign:'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 950, color: cor, lineHeight:1 }}>
+                      {t.val}
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.5px' }}>{t.unit}</div>
+                    <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a', lineHeight:1.2 }}>{t.lbl}</div>
                       {t.cls && (
                         <span style={{ display:'inline-block', marginTop:7, padding: '3px 9px', borderRadius: 100, fontSize: 9, fontWeight: 800, background: `${cor}18`, color: cor, border:`1px solid ${cor}30` }}>
                           {t.cls}
                         </span>
                       )}
-                    </div>
                   </div>
                 );
               })}
