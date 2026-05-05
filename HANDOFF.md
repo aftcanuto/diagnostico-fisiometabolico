@@ -715,3 +715,31 @@ Validacao local:
 - smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes.
+
+## Refinamento: FFMI, RML e biomecanica grafica
+
+Em 05/05/2026 foram aplicados ajustes adicionais solicitados no dashboard do cliente e no painel clinico.
+
+Problemas observados:
+
+- o rodape/contato do portal precisava continuar puxando os dados cadastrados da clinica, incluindo suporte para Instagram;
+- os valores de massa magra e massa ossea no card de FFMI estavam sendo cortados com reticencias;
+- os cinco cards de RML ficavam quebrando para a segunda linha mesmo quando havia espaco horizontal;
+- a biomecanica da corrida no painel clinico ainda usava cards textuais antigos em vez do modelo grafico usado no dashboard do cliente.
+
+Correcoes aplicadas:
+
+- `src/components/PortalPaciente.tsx` ajustou `MetricaHorizontal` para nao truncar valores quando o campo exige `nowrapValor`, corrigindo os numeros do FFMI;
+- `src/components/PatientDashboard.tsx` reduziu a largura minima dos cards de RML para permitir cinco cards na mesma linha em telas largas;
+- `src/components/PatientDashboard.tsx` passou a renderizar os angulos da biomecanica com o componente grafico `BiomecanicaRunnerCompare`, mantendo comentarios dos achados logo abaixo;
+- `src/app/p/[token]/page.tsx` passou a buscar tambem o campo `instagram` da clinica para o rodape clicavel do portal;
+- `src/components/forms/ClinicaBrandingForm.tsx` ganhou campo de Instagram na identidade da clinica;
+- `supabase/migrations/028_clinica_instagram.sql` adiciona a coluna `instagram` em `clinicas`.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.

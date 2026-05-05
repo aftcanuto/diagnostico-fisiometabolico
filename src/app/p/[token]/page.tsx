@@ -46,7 +46,7 @@ export default async function PortalPacientePage({ params }: { params: { token: 
   const { data: clinica } = clinicaId
     ? await supabase
       .from('clinicas')
-      .select('nome, logo_url, telefone, email, endereco, site')
+      .select('nome, logo_url, telefone, email, endereco, site, instagram')
       .eq('id', clinicaId)
       .maybeSingle()
     : { data: null };

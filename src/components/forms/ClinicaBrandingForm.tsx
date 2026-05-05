@@ -15,6 +15,7 @@ export function ClinicaBrandingForm({ clinica, podeEditar }: { clinica: any; pod
     email: clinica.email ?? '',
     endereco: clinica.endereco ?? '',
     site: clinica.site ?? '',
+    instagram: clinica.instagram ?? '',
     logo_url: clinica.logo_url ?? '',
     cor_primaria: clinica.cor_primaria ?? '#1854ed',
     cor_secundaria: clinica.cor_secundaria ?? '#0b1f5b',
@@ -65,6 +66,7 @@ export function ClinicaBrandingForm({ clinica, podeEditar }: { clinica: any; pod
           <Field label="Telefone"><Input disabled={!podeEditar} value={form.telefone} onChange={e => setForm((f: any) => ({ ...f, telefone: e.target.value }))} /></Field>
           <Field label="E-mail"><Input disabled={!podeEditar} value={form.email} onChange={e => setForm((f: any) => ({ ...f, email: e.target.value }))} /></Field>
           <Field label="Site"><Input disabled={!podeEditar} value={form.site} onChange={e => setForm((f: any) => ({ ...f, site: e.target.value }))} /></Field>
+          <Field label="Instagram"><Input disabled={!podeEditar} value={form.instagram} onChange={e => setForm((f: any) => ({ ...f, instagram: e.target.value }))} /></Field>
           <Field label="Endereço"><Input disabled={!podeEditar} value={form.endereco} onChange={e => setForm((f: any) => ({ ...f, endereco: e.target.value }))} /></Field>
         </div>
 

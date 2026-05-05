@@ -332,9 +332,9 @@ function MetricaHorizontal({label,valor,un,cor,d,dBoa,nowrapValor}:{label:string
   const precisaTooltip=valorSeguro.length>34;
   return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
     padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
-    <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 96px'}}>{label}</div>
-    <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'left',flex:1}}>
-      <span style={{fontSize:13,fontWeight:600,color:cor??'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{valorSeguro}</span>
+    <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:nowrapValor?'0 0 88px':'0 0 96px'}}>{label}</div>
+    <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'left',flex:1,justifyContent:nowrapValor?'flex-end':'flex-start'}}>
+      <span style={{fontSize:nowrapValor?14:13,fontWeight:nowrapValor?800:600,color:cor??'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:nowrapValor?'visible':'hidden',textOverflow:nowrapValor?'clip':'ellipsis',maxWidth:nowrapValor?'none':'100%'}}>{valorSeguro}</span>
       {un&&valorSeguro!=='—'&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8',whiteSpace:'nowrap'}}>{un}</span>}
       {d!=null&&dBoa&&<DeltaB d={d} boa={dBoa}/>}
       {precisaTooltip&&<TooltipInfo texto={valorSeguro}/>}

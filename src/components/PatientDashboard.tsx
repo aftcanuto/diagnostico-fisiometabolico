@@ -1713,7 +1713,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 10, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10, marginBottom: 16 }}>
               {ativos.map((t, i) => {
                 const cor = t.cls ? (COR[t.cls] ?? '#6b7280') : '#6b7280';
                 return (
@@ -1742,11 +1742,6 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         const bio = atual.biomecanica_corrida as any;
         const ang = bio.angulos ?? {};
         const met = bio.metricas ?? {};
-        const cls = (key: string) => {
-          const a = ang[key];
-          if (!a) return '#94a3b8';
-          return a.classificacao === 'ideal' ? '#10b981' : a.classificacao === 'atencao' ? '#f59e0b' : '#ef4444';
-        };
         return (
           <div style={{ order: 100, background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px 28px', color: '#0f172a' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid #f1f5f9' }}>
@@ -1803,48 +1798,22 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   </div>
                 )}
 
-                {/* Ângulos cinemáticos */}
+                {/* Angulos cinematicos */}
                 {Object.keys(ang).length > 0 && (
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
-                      Ângulos cinemáticos
-                    </div>
-                    {Object.entries(ang).map(([k, v]: any) => {
-                      const c = cls(k);
-                      const comentario = bio.comentarios_angulos?.[k];
-                      const labels: any = {
-                        cabeca: 'Cabeça', tronco: 'Tronco', aterrissagem_passada: 'Aterrissagem',
-                        joelho_frente_contato: 'Joelho da frente ao contato',
-                        joelho_posterior_contato: 'Joelho posterior ao contato',
-                        bracos: 'Braços', queda_pelve_esq: 'Queda da pelve - pé esquerdo',
-                        queda_pelve_dir: 'Queda da pelve - pé direito',
-                        alinhamento_joelho_esq: 'Alinhamento joelho esquerdo',
-                        alinhamento_joelho_dir: 'Alinhamento joelho direito',
-                        pronacao_supinacao_esq: 'Pronação/Supinação pé esquerdo',
-                        pronacao_supinacao_dir: 'Pronação/Supinação pé direito',
-                        cotovelo: 'Cotovelo', joelho_posterior: 'Joelho posterior',
-                        joelho_impacto: 'Joelho impacto', overstride: 'Overstride'
-                      };
-                      return (
-                        <div key={k} style={{ marginBottom: 10, padding:'12px 14px', border:'1px solid #e2e8f0', borderRadius:12, background:'#f8fafc' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(150px,1fr) auto', gap: 10, alignItems:'center' }}>
-                            <span style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>{labels[k] ?? humanField(k)}</span>
-                            <span style={{ fontSize: 18, fontWeight: 950, color: c, whiteSpace:'nowrap' }}>{v.valor}°</span>
-                            <span style={{ gridColumn:'1 / -1', justifySelf:'start', fontSize: 11, fontWeight: 900, color: c, background:`${c}16`, border:`1px solid ${c}30`, borderRadius:999, padding:'4px 10px', textTransform:'capitalize', whiteSpace:'nowrap' }}>
-                              {v.classificacao ?? '—'}
-                            </span>
-                          </div>
-                          <div style={{ marginTop: 7, fontSize: 11, color: '#64748b', fontWeight: 700 }}>
-                            Referência: {v.ideal_min != null && v.ideal_max != null ? `${v.ideal_min}° a ${v.ideal_max}°` : 'não informada'}
-                          </div>
-                          {comentario && (
-                            <div style={{ marginTop: 8, padding: '9px 10px', borderRadius: 8, background: '#fff', border: '1px solid #e2e8f0', fontSize: 11, lineHeight: 1.5, color: '#334155', whiteSpace: 'pre-line', overflowWrap:'anywhere' }}>
-                              {comentario}
-                            </div>
-                          )}
+                    <BiomecanicaRunnerCompare ang={ang} />
+                    {bio.comentarios_angulos && Object.values(bio.comentarios_angulos).some(Boolean) && (
+                      <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                          Comentarios dos achados
                         </div>
-                      );
-                    })}
+                        {Object.entries(bio.comentarios_angulos).filter(([, comentario]: any) => Boolean(comentario)).map(([k, comentario]: any) => (
+                          <div key={k} style={{ padding: '10px 12px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', fontSize: 11, lineHeight: 1.6, color: '#334155', whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
+                            <strong style={{ color: '#0f172a' }}>{humanField(k)}:</strong> {comentario}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
