@@ -296,16 +296,15 @@ function TooltipInfo({ texto, label='Ver detalhes', placement='bottom' }: { text
   const popupPos = placement === 'top' ? { right: 0, bottom: 30 } : { right: 0, top: 30 };
   return (
     <span style={{position:'relative',display:'inline-flex',alignItems:'center',flexShrink:0}}
-      onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)}
-      onFocus={()=>setOpen(true)} onBlur={()=>setOpen(false)}>
-      <button type="button" aria-label={label} style={{width:24,height:24,borderRadius:'50%',border:'1px solid #bbf7d0',
+      onBlur={()=>setOpen(false)}>
+      <button type="button" aria-label={label} onClick={(e)=>{e.stopPropagation();setOpen(v=>!v);}} style={{width:24,height:24,borderRadius:'50%',border:'1px solid #bbf7d0',
         background:'#ecfdf5',color:'#059669',display:'inline-flex',alignItems:'center',justifyContent:'center',cursor:'help'}}>
         <Info size={13}/>
       </button>
       {open&&(
         <div style={{position:'absolute',...popupPos,zIndex:80,width:420,maxWidth:'min(420px,calc(100vw - 48px))',
           maxHeight:320,overflowY:'auto',
-          padding:'12px 14px',borderRadius:12,background:'#ffffff',border:'1px solid #dbe7ef',
+          padding:'14px 16px',borderRadius:12,background:'#ffffff',border:'1px solid #dbe7ef',
           boxShadow:'0 24px 60px rgba(15,23,42,.18)',fontSize:12,lineHeight:1.55,color:'#334155',
           whiteSpace:'pre-line',textAlign:'left',overflowWrap:'anywhere'}}>
           {texto}
@@ -333,9 +332,9 @@ function MetricaHorizontal({label,valor,un,cor,d,dBoa,nowrapValor}:{label:string
   const precisaTooltip=valorSeguro.length>34;
   return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
     padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
-    <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25}}>{label}</div>
-    <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'right'}}>
-      <span style={{fontSize:16,fontWeight:900,color:cor??'#0f172a',lineHeight:1.15,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(460px,60vw)'}}>{valorSeguro}</span>
+    <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 96px'}}>{label}</div>
+    <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'left',flex:1}}>
+      <span style={{fontSize:13,fontWeight:600,color:cor??'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{valorSeguro}</span>
       {un&&valorSeguro!=='—'&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8',whiteSpace:'nowrap'}}>{un}</span>}
       {d!=null&&dBoa&&<DeltaB d={d} boa={dBoa}/>}
       {precisaTooltip&&<TooltipInfo texto={valorSeguro}/>}
@@ -1250,7 +1249,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 </div>
               )}
               {achados.comentarios_risco && (
-                <div style={{marginBottom:grafItems.length?16:0,padding:'10px 11px',borderRadius:8,background:'#fff7ed',border:'1px solid #fed7aa'}}>
+                <div style={{marginTop:16,marginBottom:grafItems.length?16:0,padding:'10px 11px',borderRadius:8,background:'#fff7ed',border:'1px solid #fed7aa'}}>
                   <div style={{fontSize:9,fontWeight:800,color:'#9a3412',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Pontos de atenção e risco</div>
                   <div style={{fontSize:12,lineHeight:1.55,color:'#7c2d12',whiteSpace:'pre-line'}}>{achados.comentarios_risco}</div>
                 </div>

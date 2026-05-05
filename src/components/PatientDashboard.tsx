@@ -213,21 +213,22 @@ function PreviewMetricLine({ label, value }: { label: string; value: any }) {
   const text = formatDashboardValue(value);
   const [open, setOpen] = useState(false);
   return (
-    <div onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
-      style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,
+    <div
+      style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'flex-start',gap:12,
         padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
       <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 140px'}}>{label}</div>
-      <div style={{fontSize:14,fontWeight:900,color:'#0f172a',lineHeight:1.2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0,flex:1}}>
+      <button type="button" onClick={()=>setOpen(v=>!v)}
+        style={{fontSize:13,fontWeight:600,color:'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0,flex:1,textAlign:'left',border:0,background:'transparent',padding:0,cursor:'pointer'}}>
         {text}
-      </div>
-      <div aria-label="Ver texto completo" style={{width:22,height:22,borderRadius:999,display:'flex',alignItems:'center',justifyContent:'center',
+      </button>
+      <button type="button" aria-label="Ver texto completo" onClick={()=>setOpen(v=>!v)} style={{width:22,height:22,borderRadius:999,display:'flex',alignItems:'center',justifyContent:'center',
         flexShrink:0,background:'#ecfdf5',border:'1px solid #bbf7d0',color:'#047857',fontSize:12,fontWeight:900,cursor:'help'}}>
         i
-      </div>
+      </button>
       {open && (
         <div style={{position:'absolute',zIndex:20,right:0,bottom:'calc(100% + 8px)',width:'min(420px,80vw)',maxHeight:280,overflowY:'auto',
           padding:'12px 14px',background:'#0f172a',color:'#fff',borderRadius:12,boxShadow:'0 18px 40px rgba(15,23,42,.22)',
-          fontSize:13,lineHeight:1.55,fontWeight:600,whiteSpace:'pre-line'}}>
+          fontSize:12,lineHeight:1.7,fontWeight:500,whiteSpace:'pre-line'}}>
           {text}
         </div>
       )}
@@ -567,20 +568,26 @@ function textoAnaliseClinica(v: any): string {
   return String(v.texto_editado ?? v.texto ?? renderAiText(v.conteudo ?? v) ?? '').trim();
 }
 
+function formatAnaliseLeitura(texto: string) {
+  return texto
+    .replace(/\s+(Achados:|Alertas:|Beneficios:|Benef?cios:|Riscos:|Prioridades:|Pontos Fortes:|Pontos Criticos:|Pontos Cr?ticos:)/g, '\n\n$1')
+    .replace(/,\s+(?=[A-Z???????????][a-z???????????]+:)/g, '\n')
+    .trim();
+}
+
 function AnaliseInfoTooltip({ texto }: { texto: string }) {
   const [open, setOpen] = useState(false);
   if (!texto) return null;
+  const textoFormatado = formatAnaliseLeitura(texto);
   return (
     <span
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
       onBlur={() => setOpen(false)}
       style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
     >
       <button
         type="button"
         aria-label="Ver análise clínica"
+        onClick={(e)=>{e.stopPropagation();setOpen(v=>!v);}}
         style={{
           width: 28,
           height: 28,
@@ -615,14 +622,15 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
             boxShadow: '0 24px 60px rgba(15,23,42,.18)',
             color: '#14532d',
             fontSize: 12,
-            lineHeight: 1.55,
+            lineHeight: 1.75,
+            fontWeight: 500,
             whiteSpace: 'pre-line',
           }}
         >
           <div style={{ fontSize: 10, fontWeight: 900, color: '#047857', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 7 }}>
             Análise clínica
           </div>
-          {texto}
+          {textoFormatado}
         </div>
       )}
     </span>
@@ -1167,6 +1175,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 <div style={{ fontSize: 9, fontWeight: 600, color: '#94a3b8',
                   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
                   Anamnese
+                  <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.anamnese)} /></span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 10 }}>
                   {Object.entries(cleanModulo(anam)).filter(([,v]) => v != null && v !== '').slice(0, 8).map(([k,v]) => (
@@ -1182,6 +1191,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 <div style={{ fontSize: 9, fontWeight: 600, color: '#94a3b8',
                   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
                   ❤️ Sinais Vitais
+                  <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.sinais_vitais)} /></span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10 }}>
                   {sv.pa_sistolica != null && sv.pa_diastolica != null && (
@@ -1218,30 +1228,21 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
 
             {/* Flexibilidade */}
             {flex && (
-              <div style={{ order: 60, background: 'white', borderRadius: 14, padding: '18px 20px', color: '#0f172a' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: '#94a3b8',
-                  textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
-                  🤸 Flexibilidade
-                </div>
-                <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                  <div style={{ fontSize: 42, fontWeight: 900, color: corFlex, lineHeight: 1 }}>
-                    {flex.melhor_resultado ?? '—'}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>cm</div>
-                  <div style={{ display: 'inline-block', marginTop: 10, padding: '4px 16px',
-                    borderRadius: 100, fontSize: 11, fontWeight: 700,
-                    background: `${corFlex}22`, color: corFlex, border: `1px solid ${corFlex}44` }}>
-                    {flex.classificacao ?? '—'}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 8 }}>
-                    Banco de Wells · ACSM
+              <div style={{ order: 60, background: 'white', borderRadius: 16, padding: '24px 28px', color: '#0f172a', border:'1px solid #e2e8f0' }}>
+                <div style={{ display:'flex',alignItems:'center',gap:8,fontSize: 18, fontWeight: 900, color:'#0f172a', marginBottom: 4 }}>Flexibilidade <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.flexibilidade)} /></div>
+                <div style={{ fontSize: 12, color:'#94a3b8', marginBottom: 16 }}>Banco de Wells - Sit and Reach</div>
+                <div style={{display:'flex',alignItems:'center',gap:24,flexWrap:'wrap'}}>
+                  <div style={{textAlign:'center',flexShrink:0,paddingRight:18,borderRight:'1px solid #f1f5f9'}}>
+                    <div style={{fontSize:44,fontWeight:800,color:corFlex,lineHeight:1}}>{flex.melhor_resultado ?? '-'}</div>
+                    <div style={{fontSize:12,color:'#94a3b8',marginTop:2}}>cm</div>
+                    <div style={{display:'inline-block',marginTop:8,padding:'3px 14px',borderRadius:100,fontSize:11,fontWeight:700,background:`${corFlex}15`,color:corFlex,border:`1px solid ${corFlex}30`}}>
+                      {flex.classificacao ?? '-'}
+                    </div>
                   </div>
                   {flex.tentativa_1 != null && (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 10 }}>
+                    <div style={{flex:1,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:10,minWidth:260}}>
                       {[flex.tentativa_1, flex.tentativa_2, flex.tentativa_3].filter(Boolean).map((v, i) => (
-                        <div key={i} style={{ fontSize: 10, color: '#94a3b8' }}>
-                          T{i+1}: <b style={{ color: '#334155' }}>{v}cm</b>
-                        </div>
+                        <MetricLine key={i} label={`Tentativa ${i+1}`} value={v} unit="cm"/>
                       ))}
                     </div>
                   )}
@@ -1255,6 +1256,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 <div style={{ fontSize: 9, fontWeight: 600, color: '#94a3b8',
                   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
                   🧍 Posturografia
+                  <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.posturografia)} /></span>
                 </div>
                 {/* Fotos de posturografia — somente no modo clínico */}
                 {modo === 'clinico' && (
@@ -1642,6 +1644,31 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       )}
 
       {/* ══ RML — RESISTÊNCIA MUSCULAR LOCALIZADA ══ */}
+      {atual.cardiorrespiratorio && (() => {
+        const cardio = atual.cardiorrespiratorio as any;
+        const sv = atual.sinais_vitais as any;
+        const itens = [
+          ['VO2max', cardio.vo2max, 'ml/kg/min', '#10b981'],
+          ['Classificacao', cardio.classificacao_vo2, '', '#0f172a'],
+          ['FC limiar', cardio.fc_limiar, 'bpm', '#f59e0b'],
+          ['FC maxima', cardio.fc_max, 'bpm', '#f87171'],
+          ['Pressao arterial', sv?.pa_sistolica != null && sv?.pa_diastolica != null ? `${sv.pa_sistolica}/${sv.pa_diastolica}` : null, 'mmHg', '#0f172a'],
+          ['FC repouso', sv?.fc_repouso, 'bpm', '#0f172a'],
+          ['SpO2', sv?.spo2 != null ? `${sv.spo2}%` : null, '', '#0f172a'],
+        ].filter(([,v]) => v != null && v !== '');
+        if (!itens.length && !cardio.protocolo) return null;
+        return (
+          <div style={{order: 76, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:900,marginBottom:4}}>Saude cardiovascular <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /></div>
+            <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aerobica, sinais vitais e zonas de treinamento</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:8}}>
+              {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
+            </div>
+            {cardio.protocolo && <div style={{marginTop:10}}><MetricLine label="Protocolo" value={cardio.protocolo}/></div>}
+          </div>
+        );
+      })()}
+
       {(atual as any)?.rml && (() => {
         const rml = (atual as any).rml as any;
         const cat: string = rml.categoria ?? 'jovem_ativo';
@@ -1758,12 +1785,12 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       {[
-                        ['Freq. passos', met.frequencia_passos_ppm, 'ppm'],
-                        ['Comp. passada', met.comprimento_passada_m, 'm'],
-                        ['Contato solo', met.tempo_contato_solo_s, 's'],
-                        ['Tempo voo', met.tempo_voo_s, 's'],
-                        ['Fator esforço', met.fator_esforco_pct, `% ${met.fator_esforco_tipo ?? ''}`],
-                        ['Comp. passo', met.comprimento_passo_m, 'm'],
+                        ['Frequência de passos', met.frequencia_passos_ppm, 'passos por minuto'],
+                        ['Comprimento da passada', met.comprimento_passada_m, 'metros'],
+                        ['Tempo de contato com o solo', met.tempo_contato_solo_s, 'segundos'],
+                        ['Tempo de voo', met.tempo_voo_s, 'segundos'],
+                        ['Fator de esforço', met.fator_esforco_pct, `% ${met.fator_esforco_tipo ?? ''}`],
+                        ['Comprimento do passo', met.comprimento_passo_m, 'metros'],
                       ].filter(([, v]) => v != null).map(([l, v, u]: any) => (
                         <div key={l} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 12px', border: '1px solid #f1f5f9' }}>
                           <div style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.3px' }}>{l}</div>

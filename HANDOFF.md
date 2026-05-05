@@ -681,3 +681,37 @@ Validacao local:
 - smoke test gerou novamente os previews do laudo, dashboard do cliente e dashboard clinico;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Refinamento: leitura dos cards e analises por clique
+
+Em 05/05/2026 foram feitos ajustes finos apos revisao visual dos dashboards.
+
+Problemas observados:
+
+- valores de anamnese e sinais vitais ficavam pesados, em negrito e muito afastados do titulo;
+- pressao arterial podia ser cortada em cards estreitos;
+- o card de pontos de atencao e risco da biomecanica ficava grudado nos cards de angulo;
+- textos de analise ficavam embolados e o balao por hover podia desaparecer durante a leitura;
+- flexibilidade no painel clinico ainda usava modelo antigo;
+- metricas da biomecanica estavam simplificadas demais;
+- alguns modulos do painel clinico nao tinham ponto preparado para mostrar analise de IA.
+
+Correcoes aplicadas:
+
+- `src/components/PortalPaciente.tsx` reduziu peso/tamanho dos valores em `MetricaHorizontal`, aproximando valor e rotulo e evitando corte da pressao arterial;
+- o tooltip do portal passou a abrir/fechar por clique, com caixa rolavel e mais controlada;
+- o card de `Pontos de atencao e risco` recebeu margem superior para nao ficar colado aos cards anteriores;
+- `src/components/PatientDashboard.tsx` passou a abrir os popups de anamnese e analises por clique, com linha de leitura maior e texto menos pesado;
+- o RML manteve o padrao de cards numericos aprovado;
+- a flexibilidade do painel clinico foi refeita no mesmo conceito visual do dashboard cliente, com numero principal lateral e tentativas em cards;
+- a saude cardiovascular foi adicionada ao painel clinico com VO2max, classificacao, FCs, PA, SpO2 e protocolo;
+- titulos dos principais modulos no painel clinico receberam ponto de analise por IA, mas o icone so aparece quando ha texto salvo;
+- metricas da biomecanica passaram a usar nomes completos, como `Frequencia de passos`, `passos por minuto`, `Tempo de contato com o solo` e `segundos`.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes.
