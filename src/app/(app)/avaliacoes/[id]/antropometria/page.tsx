@@ -130,7 +130,7 @@ export default function AntropometriaPage({ params }: { params: { id: string } }
     return { idade, imcVal, pctG, mm, mo, rcqVal, somato, dobrasCalc, algumaDivergente, ffmiVal };
   }, [form, pac]);
 
-  const saveState = useAutoSave(form, async v => {
+  const salvar = async (v = form) => {
     if (!loaded || !calculados) return;
     await upsertModulo('antropometria', params.id, {
       peso: Number(v.peso) || null,
@@ -146,7 +146,9 @@ export default function AntropometriaPage({ params }: { params: { id: string } }
       rcq: calculados.rcqVal ?? null,
       ffmi: calculados.ffmiVal ?? null,
     });
-  });
+  };
+
+  const saveState = useAutoSave(form, salvar);
 
   const setDobra = (k: string, field: 'm1' | 'm2' | 'm3', val: string) => {
     setForm((f: any) => ({
@@ -315,7 +317,14 @@ export default function AntropometriaPage({ params }: { params: { id: string } }
 
       <div className="flex justify-between">
         <Button variant="secondary" onClick={() => router.push(prevStep?.href ?? `/avaliacoes/${params.id}/posturografia`)}>← Voltar</Button>
-        <Button onClick={() => router.push(nextStep?.href ?? `/avaliacoes/${params.id}/revisao`)}>Continuar →</Button>
+        <Button onClick={async () => {
+          try {
+            await salvar();
+            router.push(nextStep?.href ?? `/avaliacoes/${params.id}/revisao`);
+          } catch (error: any) {
+            alert(error?.message ?? 'Nao foi possivel salvar a antropometria.');
+          }
+        }}>Continuar →</Button>
       </div>
       <SaveIndicator state={saveState} />
     </div>

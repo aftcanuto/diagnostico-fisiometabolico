@@ -58,7 +58,7 @@ export default function FlexibilidadePage({ params }: { params: { id: string } }
     }));
   })(); }, [params.id, supabase]);
 
-  const saving = useAutoSave(form, async (v) => {
+  const salvar = async (v = form) => {
     const t1 = parseFloat(v.tentativa_1) || null;
     const t2 = parseFloat(v.tentativa_2) || null;
     const t3 = parseFloat(v.tentativa_3) || null;
@@ -78,7 +78,9 @@ export default function FlexibilidadePage({ params }: { params: { id: string } }
       testes_adicionais: v.testes_adicionais,
       observacoes: v.observacoes,
     });
-  }, 2000);
+  };
+
+  const saving = useAutoSave(form, salvar, 2000);
 
   // Classificação em tempo real
   const classificacaoAtual = (() => {
@@ -159,7 +161,13 @@ export default function FlexibilidadePage({ params }: { params: { id: string } }
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={() => {
+          <Button onClick={async () => {
+            try {
+              await salvar();
+            } catch (error: any) {
+              alert(error?.message ?? 'Nao foi possivel salvar a flexibilidade.');
+              return;
+            }
             const next = steps.find(s => s.key === 'forca')
               ?? steps.find(s => s.key === 'rml')
               ?? steps.find(s => s.key === 'cardiorrespiratorio')

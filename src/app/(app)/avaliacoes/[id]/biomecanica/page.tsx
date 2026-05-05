@@ -130,22 +130,22 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
   }
 
   async function uploadGrafico(key: keyof typeof graficos, file: File) {
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id ?? 'uploads';
-    const ext = file.name.split('.').pop() || 'png';
-    const path = `${uid}/${params.id}/${key}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('biomecanica').upload(path, file, { upsert: true });
-    if (error) {
-      alert(`Não foi possível enviar a imagem: ${error.message}`);
+    const body = new FormData();
+    body.append('avaliacaoId', params.id);
+    body.append('key', key);
+    body.append('file', file);
+    const res = await fetch('/api/uploads/biomecanica', { method: 'POST', body });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) {
+      alert(data.error ?? 'Nao foi possivel enviar a imagem.');
       return;
     }
-    const { data } = supabase.storage.from('biomecanica').getPublicUrl(path);
-    setGraficos(g => ({ ...g, [key]: data.publicUrl }));
+    setGraficos(g => ({ ...g, [key]: data.url }));
   }
 
   const autoSaveValue = { velocidade, movimento, linkVideo, fotoFrame, metricas, angulos, comentariosAngulos, achados, recomendacoes, graficos, comentarioGraficos };
 
-  const saving = useAutoSave(autoSaveValue, async (v) => {
+  const salvar = async (v = autoSaveValue) => {
     const met: any = {};
     for (const [k, val] of Object.entries(v.metricas)) {
       if (k === 'fator_esforco_tipo') met[k] = val;
@@ -159,7 +159,9 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
       achados: v.achados, recomendacoes: v.recomendacoes, graficos: v.graficos,
       comentarios_graficos: { geral: v.comentarioGraficos },
     });
-  }, 2000);
+  };
+
+  const saving = useAutoSave(autoSaveValue, salvar, 2000);
 
   if (!aval) return <p className="text-slate-500">Carregando…</p>;
   const steps = buildSteps(params.id, aval.modulos_selecionados);
@@ -384,7 +386,13 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={() => {
+          <Button onClick={async () => {
+            try {
+              await salvar();
+            } catch (error: any) {
+              alert(error?.message ?? 'Nao foi possivel salvar a biomecanica.');
+              return;
+            }
             const st = buildSteps(params.id, aval.modulos_selecionados);
             const nx = st.find(s => s.key === 'revisao');
             router.push(nx?.href ?? `/avaliacoes/${params.id}/revisao`);

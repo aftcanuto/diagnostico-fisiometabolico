@@ -159,6 +159,50 @@ Depois do deploy dessa correcao, retestar:
 3. Gerar link do portal do paciente.
 4. Revogar link do portal do paciente.
 
+## Correcao em andamento: salvamento, scores, links e revisao
+
+Em 04/05/2026 foi aplicada uma correcao de fluxo apos testes em producao mostrarem:
+
+- modulos preenchidos sem marcar como "Feito";
+- antropometria sem salvar ao clicar em continuar;
+- erro 403 ao gravar `scores`;
+- erro 400 em `/api/modulos` quando a base nao possui alguma coluna nova;
+- imagens de biomecanica falhando no upload;
+- score global sem graficos;
+- finalizacao sem mensagem de sucesso/erro;
+- link do portal do paciente falhando por chave estrangeira em `paciente_tokens.avaliador_id`;
+- PDF mais sensivel a RLS ao buscar dados dos modulos.
+
+Mudancas aplicadas:
+
+- botoes "Continuar" salvam explicitamente antes de navegar;
+- `scores` agora grava por rota server-side com service role, evitando 403 no navegador;
+- revisao calcula e mostra scores mesmo se a persistencia falhar;
+- finalizacao usa rota server-side e mostra mensagem de sucesso/erro;
+- biomecanica envia imagens por rota server-side;
+- link do paciente garante o registro em `avaliadores` antes de criar `paciente_tokens`;
+- PDF busca modulos com service role depois de validar usuario autenticado;
+- barra de etapas usa regras especificas por modulo para marcar "Feito" apenas quando ha dados reais;
+- forca SPTech inicia com articulacoes predefinidas na tela, mas salva apenas testes com medida preenchida;
+- `/api/modulos` e `/api/scores` tentam ignorar colunas ausentes para evitar quebra quando alguma migration ainda nao foi aplicada.
+
+Arquivos principais alterados:
+
+- `src/lib/modulos.ts`
+- `src/app/api/modulos/route.ts`
+- `src/app/api/scores/route.ts`
+- `src/app/api/avaliacoes/[id]/finalizar/route.ts`
+- `src/app/api/uploads/biomecanica/route.ts`
+- `src/app/api/paciente-tokens/route.ts`
+- `src/app/api/pdf/route.ts`
+- paginas dos modulos `bioimpedancia`, `antropometria`, `flexibilidade`, `cardiorrespiratorio`, `biomecanica`, `forca`, `rml`, `revisao`
+- `src/app/(app)/avaliacoes/[id]/layout.tsx`
+
+Validacao local:
+
+- `npm install` falhou no Windows por permissao no cache do npm (`EPERM`), entao lint/build nao rodaram neste ciclo.
+- Antes de um proximo deploy grande, tentar limpar o cache do npm ou rodar em outro ambiente e executar `npm run predeploy`.
+
 ## Comandos principais
 
 Instalar:

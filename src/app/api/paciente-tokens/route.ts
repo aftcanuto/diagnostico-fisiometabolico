@@ -9,6 +9,21 @@ async function getUserId() {
   return user?.id ?? null;
 }
 
+async function garantirAvaliador(userId: string) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const admin = createAdminClient();
+  const nome =
+    user?.user_metadata?.nome ??
+    user?.user_metadata?.name ??
+    user?.email?.split('@')[0] ??
+    'Avaliador';
+
+  await admin
+    .from('avaliadores')
+    .upsert({ id: userId, nome }, { onConflict: 'id' });
+}
+
 async function usuarioPodeAcessarPaciente(userId: string, pacienteId: string) {
   const supabase = createClient();
   const { data: pacienteVisivel } = await supabase
@@ -73,6 +88,7 @@ export async function POST(req: NextRequest) {
   if (!permitido) return NextResponse.json({ error: 'Sem permissao para este paciente' }, { status: 403 });
 
   const admin = createAdminClient();
+  await garantirAvaliador(userId);
   const { data, error } = await admin
     .from('paciente_tokens')
     .insert({ paciente_id: pacienteId, avaliador_id: userId })

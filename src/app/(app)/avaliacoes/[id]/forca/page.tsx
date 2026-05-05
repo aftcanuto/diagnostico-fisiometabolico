@@ -114,6 +114,20 @@ const testeVazio = (): SPTechTeste => ({
   assimetria_pct:'', classificacao_assimetria:'Leve',
 });
 
+const testesPredefinidos = (): SPTechTeste[] =>
+  ['Joelho', 'Quadril', 'Ombro', 'Cotovelo', 'Punho', 'Tornozelo', 'Coluna', 'Cervical', 'Lombar']
+    .map(articulacao => {
+      const movs = MOVIMENTOS[articulacao] ?? [];
+      return { ...testeVazio(), articulacao, movimento: movs[0] ?? '' };
+    });
+
+function temMedidaSPTech(t: SPTechTeste) {
+  return !!(
+    t.lado_d.kgf || t.lado_d.torque_nm || t.lado_d.rm1_kg ||
+    t.lado_e.kgf || t.lado_e.torque_nm || t.lado_e.rm1_kg
+  );
+}
+
 const algVazio = (): AlgometriaPonto => ({
   segmento:'', lado:'sem_lado', valor_kgf:'', observacao:'',
 });
@@ -266,12 +280,14 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
       setPreDir(d.preensao_dir_kgf?.toString() ?? '');
       setPreEsq(d.preensao_esq_kgf?.toString() ?? '');
       setModeloDinamometria(d.modelo_dinamometria ?? 'medeor');
-      setSPTestes(d.sptech_testes ?? []);
+      setSPTestes((d.sptech_testes?.length ? d.sptech_testes : testesPredefinidos()));
       setSPRelacoes(d.sptech_relacoes ?? []);
       setTracaoTestes((d.tracao_testes ?? []).map((t:TracaoTeste)=>recalcTracao(t)));
       setTemAlgometria(d.tem_algometria ?? false);
       setAlgPontos(d.algometria ?? []);
       setTestes(d.testes ?? []);
+    } else {
+      setSPTestes(testesPredefinidos());
     }
   })();}, [params.id, supabase]);
 
@@ -292,7 +308,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
       assimetria_percent: dir&&esq
         ? +((Math.abs(dir-esq)/Math.max(dir,esq))*100).toFixed(2) : null,
       modelo_dinamometria: v.modeloDinamometria,
-      sptech_testes: v.spTestes,
+      sptech_testes: v.spTestes.filter(temMedidaSPTech),
       sptech_relacoes: v.spRelacoes,
       tracao_testes: v.tracaoTestes,
       tem_algometria: v.temAlgometria,

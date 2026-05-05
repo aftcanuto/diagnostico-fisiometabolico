@@ -77,7 +77,7 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
     }
   })(); }, [params.id, supabase]);
 
-  const saving = useAutoSave(form, async (v) => {
+  const salvar = async (v = form) => {
     const n = (v: string) => v !== '' && v != null ? Number(v) : null;
     return upsertModulo('bioimpedancia', params.id, {
       aparelho: v.aparelho || null,
@@ -97,7 +97,9 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
       segmentar_gordura: v.segmentar_gordura,
 
     });
-  }, 2000);
+  };
+
+  const saving = useAutoSave(form, salvar, 2000);
 
   if (!aval) return <p className="text-slate-500">Carregando…</p>;
   const steps = buildSteps(params.id, aval.modulos_selecionados);
@@ -248,7 +250,14 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={() => router.push(nextStep?.href ?? `/avaliacoes/${params.id}/revisao`)}>
+          <Button onClick={async () => {
+            try {
+              await salvar();
+              router.push(nextStep?.href ?? `/avaliacoes/${params.id}/revisao`);
+            } catch (error: any) {
+              alert(error?.message ?? 'Nao foi possivel salvar a bioimpedancia.');
+            }
+          }}>
             Continuar →
           </Button>
         </div>

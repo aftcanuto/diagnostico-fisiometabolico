@@ -6,7 +6,7 @@ import { Field, Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { SaveIndicator } from '@/components/ui/SaveIndicator';
 import { buildSteps } from '@/lib/steps';
-import { buscarModulo, upsertModulo } from '@/lib/modulos';
+import { buscarModulo, upsertModulo, upsertScores } from '@/lib/modulos';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
 import { calcularRML, PROTOCOLOS_RML } from '@/lib/calculations/rml';
@@ -158,22 +158,14 @@ export default function RMLPage({ params }: { params: { id: string } }) {
   const autoSaveState = useAutoSave(payload, async (p) => {
     await upsertModulo('rml', avalId, p);
     // Atualizar score
-    const supabase = createClient();
-    await supabase.from('scores').upsert(
-      { avaliacao_id: avalId, rml: resultado.score },
-      { onConflict: 'avaliacao_id' }
-    );
+    await upsertScores(avalId, { rml: resultado.score });
   });
 
   async function handleSave() {
     setSaving(true);
     try {
       await upsertModulo('rml', avalId, payload);
-      const supabase = createClient();
-      await supabase.from('scores').upsert(
-        { avaliacao_id: avalId, rml: resultado.score },
-        { onConflict: 'avaliacao_id' }
-      );
+      await upsertScores(avalId, { rml: resultado.score });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {

@@ -113,9 +113,25 @@ export async function POST(req: NextRequest) {
   if (!permitido) return NextResponse.json({ error: 'Sem permissao para esta avaliacao' }, { status: 403 });
 
   const admin = createAdminClient();
-  const { error } = await admin
-    .from(tabela)
-    .upsert({ avaliacao_id: avaliacaoId, ...payload }, { onConflict: 'avaliacao_id' });
+  let payloadSeguro = { ...payload };
+  let error: any = null;
+
+  for (let tentativa = 0; tentativa < 8; tentativa += 1) {
+    const result = await admin
+      .from(tabela)
+      .upsert({ avaliacao_id: avaliacaoId, ...payloadSeguro }, { onConflict: 'avaliacao_id' });
+
+    error = result.error;
+    if (!error) break;
+
+    const msg = error.message ?? '';
+    const coluna =
+      msg.match(/Could not find the '([^']+)' column/)?.[1] ??
+      msg.match(/column "([^"]+)" of relation/)?.[1];
+
+    if (!coluna || !(coluna in payloadSeguro)) break;
+    delete payloadSeguro[coluna];
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
@@ -28,35 +28,37 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
 
+    const admin = createAdminClient();
+
     // Buscar todos os módulos em paralelo
     const [
       anamnese, sinais_vitais, posturografia, bioimpedancia,
       antropometria, forca, flexibilidade, rml, cardio, biomecanica,
       scoresRow, avaliador, clinica, analises,
     ] = await Promise.all([
-      supabase.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('bioimpedancia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('forca').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('flexibilidade').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('rml').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).single(),
+      admin.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('bioimpedancia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('forca').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('flexibilidade').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('rml').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).single(),
       aval.clinica_id
-        ? supabase.from('clinicas').select('*').eq('id', aval.clinica_id).single()
+        ? admin.from('clinicas').select('*').eq('id', aval.clinica_id).single()
         : Promise.resolve({ data: null, error: null }),
-      supabase.from('analises_ia').select('tipo, conteudo, texto_editado').eq('avaliacao_id', avaliacaoId),
+      admin.from('analises_ia').select('tipo, conteudo, texto_editado').eq('avaliacao_id', avaliacaoId),
     ]);
 
     // pdf_config separado — tabela pode ainda não existir se migration 013 não foi aplicada
     let pdfConfigData: any = null;
     if (aval.clinica_id) {
       try {
-        const { data } = await supabase
+        const { data } = await admin
           .from('pdf_config')
           .select('*')
           .eq('clinica_id', aval.clinica_id)

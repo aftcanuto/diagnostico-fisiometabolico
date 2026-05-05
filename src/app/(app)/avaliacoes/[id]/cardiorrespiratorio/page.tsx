@@ -107,7 +107,7 @@ export default function CardioPage({ params }: { params: { id: string } }) {
 
   const autoSaveValue = { form, recFC, zonasPct, velTreino, zonasLimiar, zonasCalc, classificacao };
 
-  const saving = useAutoSave(autoSaveValue, async (v) => {
+  const salvar = async (v = autoSaveValue) => {
     const zonas_percentual = INTENSIDADES.filter(i => v.zonasPct[i]).map(i => ({ pct: i, bpm: num(v.zonasPct[i]) }));
     const velocidades_treino = INTENS_VEL.filter(i => v.velTreino[i]?.velocidade).map(i => ({
       intensidade: i, velocidade: num(v.velTreino[i].velocidade), pace: v.velTreino[i].pace || null
@@ -130,7 +130,9 @@ export default function CardioPage({ params }: { params: { id: string } }) {
       classificacao_vo2: v.form.classificacao_vo2 || v.classificacao || null,
       zonas, rec_fc, zonas_percentual, velocidades_treino, zonas_limiar,
     });
-  }, 2000);
+  };
+
+  const saving = useAutoSave(autoSaveValue, salvar, 2000);
 
   if (!aval) return <p className="text-slate-500">Carregando…</p>;
   const steps = buildSteps(params.id, aval.modulos_selecionados);
@@ -347,7 +349,13 @@ export default function CardioPage({ params }: { params: { id: string } }) {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={() => {
+          <Button onClick={async () => {
+            try {
+              await salvar();
+            } catch (error: any) {
+              alert(error?.message ?? 'Nao foi possivel salvar o modulo cardiorrespiratorio.');
+              return;
+            }
             const next = steps.find(s => s.key === 'biomecanica');
             router.push(next?.href ?? `/avaliacoes/${params.id}/revisao`);
           }}>
