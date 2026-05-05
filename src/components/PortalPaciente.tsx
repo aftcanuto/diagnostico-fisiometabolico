@@ -7,6 +7,8 @@ import { ScoresBarEvol } from '@/components/ui/ScoresBarEvol';
 import { ZonasChart } from '@/components/ui/ZonasChart';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
 import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
+import { scoreCardio, scoreComposicaoCorporal, scoreForca, scoreGlobal, scorePostura } from '@/lib/scores';
 
 interface Props {
   paciente: { nome:string; sexo:'M'|'F'; data_nascimento:string; cpf?:string|null };
@@ -341,15 +343,15 @@ function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentar
   const i1 = Math.max(0, Math.min(100, (((v?.ideal_max ?? 0) - scaleMin) / span) * 100));
   const idealW = Math.max(4, i1 - i0);
   const status = v?.classificacao === 'ideal' ? 'Dentro do ideal' : v?.classificacao === 'atencao' ? 'Atenção' : 'Fora do ideal';
-  return <div style={{ background:'white', border:'1px solid #e2e8f0', borderRadius:12, padding:'10px 12px' }}>
-    <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:8}}>
-      <div style={{fontSize:11,fontWeight:800,color:'#334155',lineHeight:1.2}}>{label}</div>
+  return <div style={{ background:'white', border:'1px solid #e2e8f0', borderRadius:12, padding:'12px 14px', minHeight:128, overflow:'hidden' }}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:12,alignItems:'flex-start',marginBottom:12}}>
+      <div style={{fontSize:12,fontWeight:900,color:'#334155',lineHeight:1.25,wordBreak:'break-word'}}>{label}</div>
       <div style={{textAlign:'right',flexShrink:0}}>
         <div style={{fontSize:16,fontWeight:900,color:c,lineHeight:1}}>{v?.valor}°</div>
-        <div style={{fontSize:8,fontWeight:800,color:c,textTransform:'uppercase',letterSpacing:.4,marginTop:2}}>{status}</div>
+        <div style={{fontSize:8,fontWeight:900,color:c,textTransform:'uppercase',letterSpacing:.3,marginTop:3,maxWidth:84,whiteSpace:'normal'}}>{status}</div>
       </div>
     </div>
-    <div style={{position:'relative',height:18,background:'#edf2f7',borderRadius:999,boxShadow:'inset 0 1px 2px #0f172a18'}}>
+    <div style={{position:'relative',height:20,background:'#edf2f7',borderRadius:999,boxShadow:'inset 0 1px 2px #0f172a18'}}>
       <div style={{position:'absolute',left:`${i0}%`,width:`${idealW}%`,top:4,height:10,background:'linear-gradient(90deg,#86efac,#10b981)',borderRadius:999,boxShadow:'0 0 0 1px #10b98133'}}/>
       <div style={{position:'absolute',left:`${valPct}%`,top:'50%',transform:'translate(-50%,-50%)',width:3,height:24,background:c,borderRadius:2,boxShadow:`0 1px 5px ${c}55`}}/>
       <div style={{position:'absolute',left:`${valPct}%`,top:'50%',transform:'translate(-50%,-50%)',width:11,height:11,background:'#fff',border:`3px solid ${c}`,borderRadius:'50%'}}/>
@@ -371,7 +373,7 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
 
   if(!atual)return <div style={{textAlign:'center',padding:'60px 20px',color:'#94a3b8'}}>Nenhuma avaliação finalizada ainda.</div>;
 
-  const sc=atual.scores??{}, asc=ant?.scores??{};
+  const scBase=atual.scores??{}, ascBase=ant?.scores??{};
   const pctG=atual.antropometria?.percentual_gordura??(atual as any).bioimpedancia?.percentual_gordura;
   const peso=atual.antropometria?.peso??(atual as any).bioimpedancia?.peso_kg;
   const mlg=atual.antropometria?.massa_magra??(atual as any).bioimpedancia?.massa_livre_gordura_kg;
@@ -379,13 +381,53 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
   const altura=atual.antropometria?.estatura??(atual as any).bioimpedancia?.altura_cm;
   const massaOssea=atual.antropometria?.massa_ossea??(atual as any).bioimpedancia?.massa_ossea_kg;
   const ffmiRaw=atual.antropometria?.ffmi as any;
-  const ffmiValor=typeof ffmiRaw==='number'?ffmiRaw:(ffmiRaw?.ffmiNorm??ffmiRaw?.ffmi??null);
+  const alturaCalculada=altura??(peso&&imc?Math.sqrt(Number(peso)/Number(imc))*100:null);
+  const ffmiFallback=mlg&&alturaCalculada?+(Number(mlg)/((Number(alturaCalculada)/100)**2)).toFixed(1):null;
+  const ffmiValor=typeof ffmiRaw==='number'?ffmiRaw:(ffmiRaw?.ffmiNorm??ffmiRaw?.ffmi??ffmiFallback);
   const vo2=atual.cardiorrespiratorio?.vo2max;
   const sv=atual.sinais_vitais as any;
   const anamnese=(atual as any).anamnese as any;
   const bioImp=(atual as any).bioimpedancia as any;
   const flex=atual.flexibilidade as any;
   const post=atual.posturografia as any;
+  const idadePaciente=calcIdade(paciente.data_nascimento);
+  const composicaoFallback=scoreComposicaoCorporal({
+    pctGordura: pctG!=null?Number(pctG):null,
+    imc: imc!=null?Number(imc):null,
+    sexo: paciente.sexo,
+  });
+  const forcaFallback=atual.forca?.preensao_dir_kgf!=null&&atual.forca?.preensao_esq_kgf!=null
+    ? scoreForca({
+      preensaoDir:Number(atual.forca.preensao_dir_kgf),
+      preensaoEsq:Number(atual.forca.preensao_esq_kgf),
+      sexo:paciente.sexo,
+      idade:idadePaciente,
+      populacao:atual.forca.populacao_ref??'geral',
+    })
+    : null;
+  const flexFallback=flex?.melhor_resultado!=null
+    ? scoreFlexibilidade(Number(flex.melhor_resultado), paciente.sexo, idadePaciente)
+    : null;
+  const cardioFallback=vo2!=null
+    ? scoreCardio({ vo2max:Number(vo2), sexo:paciente.sexo, idade:idadePaciente })
+    : null;
+  const posturaFallback=post?.alinhamentos ? scorePostura(post.alinhamentos) : null;
+  const sc={
+    ...scBase,
+    postura: scBase.postura ?? posturaFallback,
+    composicao_corporal: scBase.composicao_corporal ?? composicaoFallback,
+    forca: scBase.forca ?? forcaFallback,
+    flexibilidade: scBase.flexibilidade ?? flexFallback,
+    cardiorrespiratorio: scBase.cardiorrespiratorio ?? cardioFallback,
+  } as any;
+  sc.global = scBase.global ?? scoreGlobal({
+    postura: sc.postura ?? null,
+    composicao_corporal: sc.composicao_corporal ?? null,
+    forca: sc.forca ?? null,
+    flexibilidade: sc.flexibilidade ?? null,
+    cardiorrespiratorio: sc.cardiorrespiratorio ?? null,
+  });
+  const asc=ascBase;
   const gorCor=pctG==null?'#10b981':paciente.sexo==='M'?(pctG<=15?'#10b981':pctG<=22?'#f59e0b':'#ef4444'):(pctG<=21?'#10b981':pctG<=29?'#f59e0b':'#ef4444');
 
   const zonas=atual.cardiorrespiratorio?.zonas as any;
@@ -421,7 +463,7 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
   const corFlex=flex?.classificacao==='Excelente'?'#16a34a':flex?.classificacao==='Bom'?'#10b981'
     :flex?.classificacao==='Médio'?'#f59e0b':flex?.classificacao==='Regular'?'#f97316':'#ef4444';
   const anamneseItems=anamnese
-    ?Object.entries(anamnese).map(([k,v])=>({label:humanLabel(k),valor:fmtValor(v)})).filter(i=>i.valor).slice(0,8)
+    ?Object.entries(anamnese).map(([k,v])=>({label:humanLabel(k),valor:fmtValor(v)})).filter(i=>i.valor)
     :[];
   const anamneseTopLabels=['Objetivo','Queixa Principal','Historico Lesoes','Histórico Lesões'];
   const anamneseTop=anamneseItems.filter(i=>anamneseTopLabels.includes(i.label));
@@ -620,6 +662,13 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
                   ))}
                 </div>
               )}
+              {anamneseFull.length>0&&(
+                <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8,marginTop:10}}>
+                  {anamneseFull.map((i)=>(
+                    <MetricaHorizontal key={i.label} label={i.label} valor={i.valor}/>
+                  ))}
+                </div>
+              )}
             </Card>
           )}
           {sv&&(
@@ -687,7 +736,7 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
             massaMagra={mlg??null}
             massaOssea={massaOssea??null}
             peso={peso??null}
-            altura={altura??null}
+            altura={alturaCalculada??null}
             sexo={paciente.sexo}
           />
         </Secao>
@@ -845,8 +894,8 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
               <Card>
                 <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Recuperação da FC</h3>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:8}}>
-                  {Object.entries((atual.cardiorrespiratorio as any).rec_fc).filter(([,v])=>v!=null).map(([k,v])=>(
-                    <Metrica key={k} label={humanLabel(k)} valor={v} un="bpm"/>
+                  {[10,30,60].map(String).filter(k=>(atual.cardiorrespiratorio as any).rec_fc[k]!=null).map((k)=>(
+                    <Metrica key={k} label={`${k}s`} valor={(atual.cardiorrespiratorio as any).rec_fc[k]} un="bpm"/>
                   ))}
                 </div>
               </Card>
@@ -1113,7 +1162,7 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
                 </a>
               )}
               {keys.length > 0 && (
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10,marginBottom:grafItems.length?16:0}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12,marginBottom:grafItems.length?16:0}}>
                   {keys.map(k => <AnguloGauge key={k} label={labels[k]} v={ang[k]} comentario={comentAngs[k]}/>)}
                 </div>
               )}

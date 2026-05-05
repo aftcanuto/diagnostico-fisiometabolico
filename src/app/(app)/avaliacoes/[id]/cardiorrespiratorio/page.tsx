@@ -15,7 +15,7 @@ import { buildSteps } from '@/lib/steps';
 
 const INTENSIDADES = [60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115];
 const INTENS_VEL   = [60, 65, 70, 75, 80, 85, 90, 95, 100];
-const REC_SEGUNDOS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+const REC_SEGUNDOS = [10, 30, 60];
 
 const ZONAS_LIMIAR_DEFAULT = [
   { nome: 'Saúde Cardiovascular', pct_min: 50,  pct_max: 72,  bpm_min: '', bpm_max: '' },

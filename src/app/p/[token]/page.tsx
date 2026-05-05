@@ -7,9 +7,66 @@ export const dynamic = 'force-dynamic';
 
 export default async function PortalPacientePage({ params }: { params: { token: string } }) {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc('paciente_dashboard_por_token', { p_token: params.token });
+  const { data: tok, error: tokenError } = await supabase
+    .from('paciente_tokens')
+    .select('token, paciente_id, avaliador_id, expira_em, revogado')
+    .eq('token', params.token)
+    .maybeSingle();
 
-  if (error || !data) return notFound();
+  if (tokenError || !tok || tok.revogado || new Date(tok.expira_em).getTime() < Date.now()) return notFound();
+
+  const [{ data: paciente }, { data: avaliador }, { data: avaliacoes }] = await Promise.all([
+    supabase.from('pacientes').select('*').eq('id', tok.paciente_id).single(),
+    supabase.from('avaliadores').select('nome, crefito_crm').eq('id', tok.avaliador_id).maybeSingle(),
+    supabase
+      .from('avaliacoes')
+      .select(`
+        id, data, tipo, status, modulos_selecionados,
+        scores(*),
+        antropometria(*),
+        bioimpedancia(*),
+        forca(*),
+        flexibilidade(*),
+        rml(*),
+        cardiorrespiratorio(*),
+        posturografia(*),
+        sinais_vitais(*),
+        anamnese(*),
+        biomecanica_corrida(*),
+        analises_ia(tipo, conteudo, texto_editado, gerado_em)
+      `)
+      .eq('paciente_id', tok.paciente_id)
+      .eq('status', 'finalizada')
+      .order('data', { ascending: true }),
+  ]);
+
+  if (!paciente) return notFound();
+
+  const normalizadas = (avaliacoes ?? []).map((a: any) => {
+    const um = (v: any) => Array.isArray(v) ? (v[0] ?? null) : v;
+    const analises = Array.isArray(a.analises_ia)
+      ? Object.fromEntries(a.analises_ia.map((ia: any) => [
+          ia.tipo,
+          { conteudo: ia.conteudo, texto_editado: ia.texto_editado, gerado_em: ia.gerado_em },
+        ]))
+      : {};
+
+    return {
+      ...a,
+      scores: um(a.scores),
+      antropometria: um(a.antropometria),
+      bioimpedancia: um(a.bioimpedancia),
+      forca: um(a.forca),
+      flexibilidade: um(a.flexibilidade),
+      rml: um(a.rml),
+      cardiorrespiratorio: um(a.cardiorrespiratorio),
+      posturografia: um(a.posturografia),
+      sinais_vitais: um(a.sinais_vitais),
+      anamnese: um(a.anamnese),
+      biomecanica_corrida: um(a.biomecanica_corrida),
+      analises_ia: analises,
+    };
+  });
 
   return (
     <div className="min-h-screen" style={{ background: '#f8fafc' }}>
@@ -36,9 +93,9 @@ export default async function PortalPacientePage({ params }: { params: { token: 
       {/* Conteúdo */}
       <main style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px' }}>
         <PortalPaciente
-          paciente={data.paciente}
-          avaliador={data.avaliador}
-          avaliacoes={data.avaliacoes ?? []}
+          paciente={paciente}
+          avaliador={avaliador ? { nome: avaliador.nome, conselho: avaliador.crefito_crm } : null}
+          avaliacoes={normalizadas}
         />
       </main>
     </div>

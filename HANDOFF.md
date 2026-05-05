@@ -203,6 +203,24 @@ Validacao local:
 - `npm install` falhou no Windows por permissao no cache do npm (`EPERM`), entao lint/build nao rodaram neste ciclo.
 - Antes de um proximo deploy grande, tentar limpar o cache do npm ou rodar em outro ambiente e executar `npm run predeploy`.
 
+## Correcao: dashboard do cliente e cardio
+
+Em 04/05/2026 foram ajustados pontos do portal do paciente:
+
+- portal publico `/p/[token]` deixou de depender apenas da RPC `paciente_dashboard_por_token` e agora busca os dados pelo servidor com service role apos validar token ativo. Isso inclui fotos da posturografia, que a RPC mais recente removia.
+- dashboard do cliente calcula scores de composicao, forca, flexibilidade, cardio e postura como fallback quando a tabela `scores` vem incompleta.
+- score global tambem e recalculado no portal quando `scores.global` esta vazio.
+- historico familiar na anamnese passa a ocupar linha inteira abaixo dos outros campos.
+- potencial muscular natural passa a inferir estatura por peso/IMC quando a estatura direta nao esta disponivel, permitindo calcular limite estimado.
+- recuperacao de FC foi reduzida para 10s, 30s e 60s no modulo cardiorrespiratorio e no dashboard do cliente.
+- cards de biomecanica do dashboard cliente ficaram maiores e com layout mais resistente a sobreposicao de numero/status/texto.
+
+Arquivos alterados:
+
+- `src/app/p/[token]/page.tsx`
+- `src/components/PortalPaciente.tsx`
+- `src/app/(app)/avaliacoes/[id]/cardiorrespiratorio/page.tsx`
+
 ## Comandos principais
 
 Instalar:
