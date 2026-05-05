@@ -184,11 +184,11 @@ const CSS = (pri: string) => `
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 210mm; }
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.page { width: 210mm; min-height: 297mm; position: relative; page-break-after: always; break-after: page; display: block; overflow: visible; }
+.page { width: 210mm; position: relative; page-break-after: always; break-after: page; display: block; overflow: visible; }
 .page:last-child { page-break-after: auto; }
 
 /* Cover */
-.cover { min-height: 297mm; background: linear-gradient(135deg, #052e16 0%, #065f46 50%, #059669 100%); color: white; padding: 40px; display: flex; flex-direction: column; }
+.cover { min-height: 286mm; height: 286mm; background: linear-gradient(135deg, #052e16 0%, #065f46 50%, #059669 100%); color: white; padding: 40px; display: flex; flex-direction: column; }
 .cover-logo { width: 58px; height: 58px; background:#e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; flex-shrink: 0; }
 .cover-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 64px 0 48px; }
 .cover-badge { background:rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4); padding: 8px 22px; border-radius: 100px; font-size: 11px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 28px; }
@@ -198,7 +198,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .chip-val { font-size: 15px; font-weight: 700; color: #ffffff; }
 
 /* Summary */
-.summary { background: #ffffff; color: #0f172a; padding: 32px 36px 60px; }
+.summary { background: #ffffff; color: #0f172a; padding: 30px 36px 28px; }
 .sum-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 26px; }
 .metric-chip { text-align: center; padding: 12px 18px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; min-width: 88px; }
 .metric-chip-val { font-size: 22px; font-weight: 700; }
@@ -216,7 +216,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .leg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 
 /* Modules */
-.module { background: #ffffff; color: #111827; padding: 32px 36px 38px; position: relative; overflow: visible; }
+.module { background: #ffffff; color: #111827; padding: 30px 36px 28px; position: relative; overflow: visible; }
 .module::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, ${pri}, ${pri}aa); }
 .mod-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; margin-bottom: 22px; break-after: avoid; page-break-after: avoid; }
 .mod-title { font-size: 26px; font-weight: 700; color: #111827; }
@@ -260,6 +260,21 @@ tr:last-child td { border-bottom: none; }
 .side-e { border: 1.5px solid #8b5cf620; border-radius: 10px; padding: 14px; background: #8b5cf605; break-inside: avoid; page-break-inside: avoid; }
 img, svg { break-inside: avoid; page-break-inside: avoid; }
 .data-grid, .kpi-grid, .anam-grid { break-inside: auto; page-break-inside: auto; }
+.mod-head, .score-pill, .metric-chip, .gauge-card, .silhouette-card { break-inside: avoid; page-break-inside: avoid; }
+.module div[style*="border-radius:8px"],
+.module div[style*="border-radius:10px"],
+.module div[style*="border-radius:12px"],
+.module div[style*="border-radius:14px"],
+.module div[style*="border:1px solid"],
+.summary div[style*="border-radius:8px"],
+.summary div[style*="border-radius:10px"],
+.summary div[style*="border-radius:12px"],
+.summary div[style*="border-radius:14px"],
+.summary div[style*="border:1px solid"] {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+p, li { orphans: 3; widows: 3; }
 .side-title-d { font-size: 10px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
 .side-title-e { font-size: 10px; font-weight: 700; color: #8b5cf6; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
 .ref-section { padding: 28px 36px; background: white; }
@@ -296,9 +311,9 @@ function mkList(t: string, items: string[], col: string): string {
 // â”€â”€â”€ SeÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
-// â”€â”€â”€ RodapÃ© de identificaÃ§Ã£o â€” inserido em todas as pÃ¡ginas (exceto capa) â”€â”€â”€â”€â”€
-
-function rodapeIdentificacao(d: LaudoData, pri: string): string {
+// Rodape de identificacao usado pelo Puppeteer como footer real do PDF.
+// Ele fica fora do fluxo do HTML para nao ser empurrado por modulos longos.
+export function renderLaudoFooterHTML(d: LaudoData): string {
   const c = d.clinica;
   const empresa = c?.nome ?? '';
   const avNome  = d.avaliador.nome;
@@ -306,43 +321,29 @@ function rodapeIdentificacao(d: LaudoData, pri: string): string {
   const avEsp   = d.avaliador.especialidade ?? '';
   const pacNome = d.paciente.nome;
   const pacCpf  = d.paciente.cpf ?? '';
-  const emissao = new Date().toLocaleDateString('pt-BR');
 
-  // Mascara CPF: 000.000.000-00
   const cpfFmt = pacCpf.replace(/\D/g,'').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  const centro = `${avNome}${avCons ? ` · ${avCons}` : ''}${avEsp ? ` · ${avEsp}` : ''}`;
+  const paciente = `${pacNome}${cpfFmt ? ` · CPF: ${cpfFmt}` : ''}`;
 
   return `<div style="
-    margin-top:24px;
-    height:28px;
-    background:${pri}ee;
+    width:100%;
+    height:34px;
+    background:#ffffff;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:0 20px;
-    font-size:8.5px;
-    font-family:Inter,Helvetica,Arial;
-    color:#0f172a;
-    gap:12px;
-    border-top:1px solid ${pri};
-    break-inside:avoid;
-    page-break-inside:avoid;
+    padding:0 11mm;
+    font-size:7px;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#64748b;
+    border-top:1px solid #e2e8f0;
+    box-sizing:border-box;
   ">
-    <!-- Esquerda: empresa -->
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span style="font-weight:700;letter-spacing:.3px">${x(empresa)}</span>
-    </div>
-
-    <!-- Centro: avaliador + conselho -->
-    <div style="display:flex;align-items:center;gap:5px;flex:1;justify-content:center">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.7"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      <span>${x(avNome)}${avCons ? ` Â· ${x(avCons)}` : ''}${avEsp ? ` Â· ${x(avEsp)}` : ''}</span>
-    </div>
-
-    <!-- Direita: paciente + CPF -->
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;text-align:right">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span><b>${x(pacNome)}</b>${cpfFmt ? ` Â· CPF: ${cpfFmt}` : ''}</span>
+    <div style="width:25%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#334155">${x(empresa)}</div>
+    <div style="width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center">${x(centro)}</div>
+    <div style="width:33%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">
+      ${x(paciente)} · pág. <span class="pageNumber"></span>/<span class="totalPages"></span>
     </div>
   </div>`;
 }
@@ -1403,45 +1404,34 @@ export function renderLaudoHTML(d: LaudoData): string {
   const m = d.modulos, ia = d.analisesIA??{};
   const pri = d.clinica?.cor_primaria ?? '#059669';
 
-  // RodapÃ© de identificaÃ§Ã£o â€” reutilizado em todas as pÃ¡ginas (exceto capa)
-  const rodape = rodapeIdentificacao(d, pri);
-
-  // Helper: injetar rodapÃ© antes do ÃšLTIMO </section> de cada pÃ¡gina
-  function comRodape(html: string): string {
-    const marker = '</section>';
-    const lastIdx = html.lastIndexOf(marker);
-    if (lastIdx === -1) return html;
-    return html.slice(0, lastIdx) + rodape + html.slice(lastIdx);
-  }
-
   const pages = [
-    pgCapa(d),                           // sem rodapÃ© â€” Ã© a capa
-    comRodape(pgResumo(d)),
-    ia.conclusao_global ? comRodape(pgConclusao(d, pri)) : '',
+    pgCapa(d),
+    pgResumo(d),
+    ia.conclusao_global ? pgConclusao(d, pri) : '',
     // Anamnese + Sinais Vitais â€” pÃ¡gina combinada
     (m.anamnese || m.sinais_vitais)
-      ? comRodape(pgSinaisAnamnese(
+      ? pgSinaisAnamnese(
           m.anamnese      ? d.dados.anamnese      : null,
           m.sinais_vitais ? d.dados.sinais_vitais : null,
-          ia.anamnese, ia.sinais_vitais, pri))
+          ia.anamnese, ia.sinais_vitais, pri)
       : '',
     // Posturografia + Flexibilidade — página combinada única
     (m.posturografia || m.flexibilidade)
-      ? comRodape(pgPosturaFlex(
+      ? pgPosturaFlex(
           m.posturografia  ? d.dados.posturografia : null, m.posturografia ? d.scores.postura : null,
           m.flexibilidade ? d.dados.flexibilidade : null, m.flexibilidade ? d.scores.flexibilidade??null : null,
-          m.posturografia ? ia.posturografia : null, m.flexibilidade ? ia.flexibilidade : null, pri))
+          m.posturografia ? ia.posturografia : null, m.flexibilidade ? ia.flexibilidade : null, pri)
       : '',
-    m.bioimpedancia       ? comRodape(pgBio(d.dados.bioimpedancia, ia.bioimpedancia)) : '',
-    m.antropometria       ? comRodape(pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria)) : '',
-    m.forca               ? comRodape(pgForca(d.dados.forca, d.scores.forca, ia.forca)) : '',
-    m.rml                 ? comRodape(pgRML(d.dados.rml, d.scores.rml??null, d.paciente.sexo, d.paciente.idade, ia.rml, pri)) : '',
-    m.cardiorrespiratorio ? comRodape(pgCardio(d.dados.cardiorrespiratorio, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio)) : '',
+    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia) : '',
+    m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria) : '',
+    m.forca               ? pgForca(d.dados.forca, d.scores.forca, ia.forca) : '',
+    m.rml                 ? pgRML(d.dados.rml, d.scores.rml??null, d.paciente.sexo, d.paciente.idade, ia.rml, pri) : '',
+    m.cardiorrespiratorio ? pgCardio(d.dados.cardiorrespiratorio, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio) : '',
     m.biomecanica_corrida ? pgBiomecanica(d.dados.biomecanica_corrida, ia.biomecanica_corrida, pri) : '',
-    ia.evolucao           ? comRodape(pgModulo('Evolução longitudinal', null,
+    ia.evolucao           ? pgModulo('Evolução longitudinal', null,
       '<p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.</p>',
-      ia.evolucao)) : '',
-    comRodape(pgRodape(d, pri)),
+      ia.evolucao) : '',
+    pgRodape(d, pri),
   ].filter(Boolean).join('\n');
 
   return limparTextoHTML(`<!DOCTYPE html>

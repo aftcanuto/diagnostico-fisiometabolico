@@ -410,3 +410,40 @@ Alteracao:
 - removida a renderizacao <StepNav steps={steps} />;
 - mantido o estado steps, porque ele ainda e usado pelos botoes anterior/proximo.
 
+## Correcao: rodape e quebras de pagina do PDF
+
+Em 05/05/2026 foi revisado o problema de rodape e quebra de paginas no PDF.
+
+Problema observado:
+
+- quando um modulo tinha muita informacao, os cards podiam ser cortados no meio;
+- o rodape era inserido como bloco HTML dentro da pagina, entao era empurrado pelo conteudo e podia sair da posicao correta;
+- apos ajustes anteriores, o PDF ganhou mais quebras e o rodape ficou visualmente instavel.
+
+Causa tecnica:
+
+- `src/lib/pdf/template.ts` injetava o rodape dentro de cada `<section class="page">`, antes do `</section>`;
+- isso fazia o rodape participar do fluxo normal do documento, em vez de ser um rodape real de pagina;
+- quando o conteudo ultrapassava a altura util da folha, o navegador paginava o conteudo e o rodape podia ficar fora do lugar.
+
+Correcao aplicada:
+
+- criado `renderLaudoFooterHTML(d)` em `src/lib/pdf/template.ts`;
+- removida a injecao do rodape dentro do HTML das paginas;
+- `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` agora usam `displayHeaderFooter: true`, `footerTemplate` e margem inferior de `11mm`;
+- o rodape passou a ser renderizado pelo Puppeteer fora do fluxo do conteudo, com clinica, avaliador, paciente e numeracao `pagina/total`;
+- o CSS do PDF foi ajustado para reduzir excesso de altura fixa e melhorar `break-inside/page-break-inside` em cards, KPIs, tabelas, imagens e blocos com borda/arredondamento.
+
+Validacao local:
+
+- `npm run test:full` passou;
+- `npm run predeploy` passou;
+- tentativa de gerar PDF local diretamente falhou porque esta maquina nao tem Chrome do Puppeteer instalado no cache local, mas a rota de producao usa `@sparticuz/chromium` no Vercel.
+
+Reteste recomendado em producao apos deploy:
+
+1. Gerar PDF de uma avaliacao com bastante informacao em forca, antropometria, cardio e biomecanica.
+2. Conferir se os cards nao sao cortados no meio quando couberem inteiros na pagina.
+3. Conferir se o rodape fica sempre na margem inferior, com alinhamento uniforme.
+4. Conferir se a numeracao de paginas aparece corretamente.
+

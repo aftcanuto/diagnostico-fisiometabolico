@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
-import { renderLaudoHTML } from '@/lib/pdf/template';
+import { renderLaudoFooterHTML, renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { launchPdfBrowser } from '@/lib/pdf/browser';
 
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Renderizar HTML
-    const html = renderLaudoHTML({
+    const dadosLaudo = {
       clinica: clinica.data,
       paciente: {
         nome: aval.pacientes.nome,
@@ -112,7 +112,10 @@ export async function GET(req: NextRequest) {
       },
       analisesIA: analisesMap,
       pdfConfig: pdfConfigData ?? null,
-    });
+    };
+
+    const html = renderLaudoHTML(dadosLaudo);
+    const footerTemplate = renderLaudoFooterHTML(dadosLaudo);
 
     const browser = await launchPdfBrowser();
 
@@ -129,7 +132,10 @@ export async function GET(req: NextRequest) {
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
-        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate,
+        margin: { top: '0', right: '0', bottom: '11mm', left: '0' },
       });
 
       return new NextResponse(Buffer.from(pdf), {
