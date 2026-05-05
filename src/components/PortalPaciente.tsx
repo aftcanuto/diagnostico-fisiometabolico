@@ -6,13 +6,15 @@ import { LineChart } from '@/components/ui/LineChart';
 import { ScoresBarEvol } from '@/components/ui/ScoresBarEvol';
 import { ZonasChart } from '@/components/ui/ZonasChart';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
-import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown, Info, Phone, Globe, MapPin, Instagram } from 'lucide-react';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
 import { scoreCardio, scoreComposicaoCorporal, scoreForca, scoreGlobal, scorePostura } from '@/lib/scores';
+import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
 
 interface Props {
   paciente: { nome:string; sexo:'M'|'F'; data_nascimento:string; cpf?:string|null };
-  avaliador?: { nome:string; conselho?:string|null }|null;
+  avaliador?: { nome:string; conselho?:string|null; especialidade?:string|null }|null;
+  clinica?: { nome?:string|null; logo_url?:string|null; telefone?:string|null; email?:string|null; endereco?:string|null; site?:string|null; instagram?:string|null }|null;
   avaliacoes: AvaliacaoHidratada[];
 }
 
@@ -274,26 +276,67 @@ function valorParaTela(v:any): string {
   return String(v);
 }
 
+function textoAnalise(v:any): string {
+  if(!v)return '';
+  if(typeof v==='string')return v.trim();
+  const alvo=v.texto_editado??v.texto??v.conteudo;
+  if(typeof alvo==='string')return alvo.trim();
+  if(alvo&&typeof alvo==='object'){
+    return Object.entries(alvo)
+      .map(([k,val])=>`${humanLabel(k)}: ${valorParaTela(val)}`)
+      .filter(Boolean)
+      .join('\n');
+  }
+  return '';
+}
+
+function TooltipInfo({ texto, label='Ver detalhes' }: { texto?: string | null; label?: string }) {
+  const [open,setOpen]=useState(false);
+  if(!texto)return null;
+  return (
+    <span style={{position:'relative',display:'inline-flex',alignItems:'center',flexShrink:0}}
+      onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)}
+      onFocus={()=>setOpen(true)} onBlur={()=>setOpen(false)}>
+      <button type="button" aria-label={label} style={{width:24,height:24,borderRadius:'50%',border:'1px solid #bbf7d0',
+        background:'#ecfdf5',color:'#059669',display:'inline-flex',alignItems:'center',justifyContent:'center',cursor:'help'}}>
+        <Info size={13}/>
+      </button>
+      {open&&(
+        <div style={{position:'absolute',right:0,top:30,zIndex:80,width:420,maxWidth:'min(420px,calc(100vw - 48px))',
+          padding:'12px 14px',borderRadius:12,background:'#ffffff',border:'1px solid #dbe7ef',
+          boxShadow:'0 24px 60px rgba(15,23,42,.18)',fontSize:12,lineHeight:1.55,color:'#334155',
+          whiteSpace:'pre-line',textAlign:'left',overflowWrap:'anywhere'}}>
+          {texto}
+        </div>
+      )}
+    </span>
+  );
+}
+
 function Metrica({label,valor,un,cor,d,dBoa}:{label:string;valor:any;un?:string;cor?:string;d?:number|null;dBoa?:'subir'|'descer'}) {
   const valorSeguro=valorParaTela(valor);
+  const precisaTooltip=valorSeguro.length>34;
   return <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',overflow:'hidden',minWidth:0}}>
     <div style={{fontSize:10,color:'#94a3b8',fontWeight:500,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{label}</div>
     <div style={{fontSize:17,fontWeight:700,color:cor??'#0f172a',lineHeight:1.2,wordBreak:'break-word'}}>
       {valorSeguro}{un&&valorSeguro!=='—'&&<span style={{fontSize:11,fontWeight:400,color:'#94a3b8',marginLeft:3}}>{un}</span>}
     </div>
     {d!=null&&dBoa&&<div style={{marginTop:5}}><DeltaB d={d} boa={dBoa}/></div>}
+    {precisaTooltip&&<div style={{marginTop:6}}><TooltipInfo texto={valorSeguro}/></div>}
   </div>;
 }
 
 function MetricaHorizontal({label,valor,un,cor,d,dBoa,nowrapValor}:{label:string;valor:any;un?:string;cor?:string;d?:number|null;dBoa?:'subir'|'descer';nowrapValor?:boolean}) {
   const valorSeguro=valorParaTela(valor);
+  const precisaTooltip=valorSeguro.length>34;
   return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
     padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
     <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25}}>{label}</div>
     <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'right'}}>
-      <span style={{fontSize:16,fontWeight:900,color:cor??'#0f172a',lineHeight:1.15,whiteSpace:nowrapValor?'nowrap':'normal',overflowWrap:nowrapValor?'normal':'anywhere'}}>{valorSeguro}</span>
+      <span style={{fontSize:16,fontWeight:900,color:cor??'#0f172a',lineHeight:1.15,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(460px,60vw)'}}>{valorSeguro}</span>
       {un&&valorSeguro!=='—'&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8',whiteSpace:'nowrap'}}>{un}</span>}
       {d!=null&&dBoa&&<DeltaB d={d} boa={dBoa}/>}
+      {precisaTooltip&&<TooltipInfo texto={valorSeguro}/>}
     </div>
   </div>;
 }
@@ -398,7 +441,7 @@ function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentar
 }
 
 /* ════════════════ COMPONENTE PRINCIPAL ════════════════ */
-export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
+export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const hist=useMemo(()=>consolidarHistorico(avaliacoes),[avaliacoes]);
   const [sel,setSel]=useState(hist.ultima?.id??'');
   const atual=hist.ordenadas.find(a=>a.id===sel)??hist.ultima;
@@ -496,14 +539,30 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
 
   const corFlex=flex?.classificacao==='Excelente'?'#16a34a':flex?.classificacao==='Bom'?'#10b981'
     :flex?.classificacao==='Médio'?'#f59e0b':flex?.classificacao==='Regular'?'#f97316':'#ef4444';
+  const camposOcultosAnamnese=new Set(['id','avaliacao_id','created_at','updated_at','clinica_id','paciente_id','avaliador_id']);
   const anamneseItems=anamnese
-    ?Object.entries(anamnese).map(([k,v])=>({label:humanLabel(k),valor:fmtValor(v)})).filter(i=>i.valor)
+    ?Object.entries(anamnese)
+      .filter(([k])=>!camposOcultosAnamnese.has(k))
+      .map(([k,v])=>({label:humanLabel(k),valor:fmtValor(v)})).filter(i=>i.valor)
     :[];
   const anamneseTopLabels=['Objetivo','Queixa Principal','Historico Lesoes','Histórico Lesões'];
   const anamneseFullLabels=['Historia Familiar','História Familiar'];
   const anamneseTop=anamneseItems.filter(i=>anamneseTopLabels.includes(i.label));
   const anamneseFull=anamneseItems.filter(i=>anamneseFullLabels.includes(i.label));
   const anamneseRest=anamneseItems.filter(i=>!anamneseTopLabels.includes(i.label)&&!anamneseFullLabels.includes(i.label));
+  const modulosAnalise=[
+    ['anamnese','Anamnese'],['sinais_vitais','Sinais vitais'],['posturografia','Posturografia'],
+    ['bioimpedancia','Bioimpedância'],['antropometria','Antropometria'],['flexibilidade','Flexibilidade'],
+    ['forca','Força'],['rml','RML'],['cardiorrespiratorio','Cardiorrespiratório'],
+    ['biomecanica_corrida','Biomecânica da corrida'],['conclusao_global','Conclusão global'],
+  ] as const;
+  const analisesPaciente=modulosAnalise
+    .map(([k,label])=>({k,label,texto:textoAnalise((atual as any).analises_ia?.[k])}))
+    .filter(i=>i.texto);
+  const referenciasTexto=[
+    ...REFERENCIAS_CLINICAS.geral,
+    ...modulosAnalise.flatMap(([k])=>REFERENCIAS_CLINICAS[k]??[]),
+  ].filter((r,i,arr)=>arr.indexOf(r)===i).join('\n');
   const segs=[
     {k:'braco_dir',l:'Braço direito'},
     {k:'braco_esq',l:'Braço esquerdo'},
@@ -686,31 +745,17 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
           {anamneseItems.length>0&&(
             <Card style={{marginBottom:14}}>
               <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Anamnese</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr',gap:9}}>
-                {anamneseTop.map((i)=>(
+              <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8}}>
+                {[...anamneseTop,...anamneseRest,...anamneseFull].map((i)=>(
                   <MetricaHorizontal key={i.label} label={i.label} valor={i.valor}/>
                 ))}
               </div>
-              {anamneseRest.length>0&&(
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:8,marginTop:10}}>
-                  {anamneseRest.map((i)=>(
-                    <MetricaHorizontal key={i.label} label={i.label} valor={i.valor}/>
-                  ))}
-                </div>
-              )}
-              {anamneseFull.length>0&&(
-                <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8,marginTop:10}}>
-                  {anamneseFull.map((i)=>(
-                    <MetricaHorizontal key={i.label} label={i.label} valor={i.valor}/>
-                  ))}
-                </div>
-              )}
             </Card>
           )}
           {sv&&(
             <Card>
               <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Sinais vitais</h3>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:8}}>
                 {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
                 {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
                 {sv?.spo2!=null&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
@@ -1327,6 +1372,37 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
       )}
 
       {/* 9. HISTÓRICO */}
+      {analisesPaciente.length>0&&(
+        <Secao ordem={116} titulo="Análises clínicas" sub="Interpretações geradas e revisadas pelo avaliador">
+          <Card>
+            <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8}}>
+              {analisesPaciente.map(a=>(
+                <div key={a.k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
+                  padding:'11px 13px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10}}>
+                  <div style={{fontSize:12,fontWeight:900,color:'#0f172a'}}>{a.label}</div>
+                  <div style={{display:'flex',alignItems:'center',gap:8,minWidth:0,flex:1,justifyContent:'flex-end'}}>
+                    <span style={{fontSize:12,color:'#64748b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(520px,60vw)'}}>
+                      {a.texto}
+                    </span>
+                    <TooltipInfo texto={a.texto} label={`Ver análise de ${a.label}`}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </Secao>
+      )}
+
+      <Secao ordem={118} titulo="Referências">
+        <Card style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>Base técnica e científica utilizada</div>
+            <div style={{fontSize:12,color:'#94a3b8',marginTop:3}}>Passe o mouse no ícone para ver as referências cadastradas.</div>
+          </div>
+          <TooltipInfo texto={referenciasTexto} label="Ver referências"/>
+        </Card>
+      </Secao>
+
       <Secao ordem={120} titulo="Histórico de avaliações">
         <Card>
           {hist.ordenadas.slice().reverse().map((a,i)=>(
@@ -1346,6 +1422,43 @@ export function PortalPaciente({paciente,avaliador,avaliacoes}:Props) {
           ))}
         </Card>
       </Secao>
+
+      {(clinica||avaliador)&&(
+        <Card style={{marginBottom:24,background:'linear-gradient(135deg,#052e16,#047857)',color:'white',border:'none',boxShadow:'0 22px 50px rgba(5,95,70,.18)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:18,flexWrap:'wrap'}}>
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              {clinica?.logo_url&&<img src={clinica.logo_url} alt="Logo da clínica" style={{width:48,height:48,borderRadius:12,objectFit:'contain',background:'white',border:'1px solid rgba(255,255,255,.35)'}}/>}
+              <div>
+                <div style={{fontSize:16,fontWeight:900,lineHeight:1.2}}>{clinica?.nome??'Diagnóstico Fisiometabólico'}</div>
+                {avaliador?.nome&&<div style={{fontSize:12,color:'rgba(255,255,255,.78)',marginTop:4}}>
+                  {avaliador.nome}
+                  {avaliador.especialidade&&` · ${avaliador.especialidade}`}
+                  {avaliador.conselho&&` · ${avaliador.conselho}`}
+                </div>}
+                {clinica?.endereco&&<div style={{fontSize:11,color:'rgba(255,255,255,.62)',marginTop:4}}>{clinica.endereco}</div>}
+              </div>
+            </div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
+              {clinica?.telefone&&<a href={`https://wa.me/${String(clinica.telefone).replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                <Phone size={13}/> WhatsApp
+              </a>}
+              {clinica?.site&&<a href={clinica.site.startsWith('http')?clinica.site:`https://${clinica.site}`} target="_blank" rel="noopener noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                <Globe size={13}/> Site
+              </a>}
+              {clinica?.instagram&&<a href={clinica.instagram.startsWith('http')?clinica.instagram:`https://instagram.com/${clinica.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                <Instagram size={13}/> Instagram
+              </a>}
+              {clinica?.endereco&&<a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} target="_blank" rel="noopener noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                <MapPin size={13}/> Endereço
+              </a>}
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div style={{textAlign:'center',fontSize:10,color:'#cbd5e1',padding:'8px 0 20px'}}>
         Dashboard compartilhado pelo seu avaliador. Dados pessoais e laudos são confidenciais.

@@ -518,6 +518,42 @@ Validacao local:
 - auditoria do banco, smoke test, TypeScript e lint passaram;
 - lint manteve apenas avisos antigos nao bloqueantes.
 
+## Refinamento: dashboard do cliente com identidade, textos e referencias
+
+Em 05/05/2026 foi refinado o dashboard publico do paciente.
+
+Problemas observados:
+
+- anamnese no dashboard do cliente tinha cards desproporcionais e exibia campos tecnicos como `avaliacao_id` e `updated_at`;
+- textos longos quebravam a estetica do painel;
+- sinais vitais nao ficavam harmonicos em linha;
+- analises de IA nao apareciam de forma clara no dashboard do cliente;
+- cabecalho do portal nao usava logomarca nem nome da clinica;
+- faltava area de referencias antes do historico e um rodape institucional apos o historico;
+- em Dados corporais, Somatotipo ficava no lado direito e Metabolismo basal vinha abreviado.
+
+Correcoes aplicadas:
+
+- `src/app/p/[token]/page.tsx` agora busca dados da clinica do paciente e envia para o portal;
+- o cabecalho do portal publico passa a usar logomarca da clinica quando cadastrada e mostra o nome da clinica no lado direito;
+- `src/components/PortalPaciente.tsx` remove campos tecnicos da anamnese e exibe todos os itens em cards horizontais de largura completa;
+- cards de texto longo agora usam reticencias e icone de informacao; ao passar o mouse, abre uma caixa flutuante com o texto completo;
+- sinais vitais foram ajustados para cards menores em linha;
+- foi criada uma secao `Analises clinicas`, com uma linha por modulo e popup para leitura completa;
+- foi criada uma secao `Referencias`, usando `src/lib/clinical/references.ts` e popup com as referencias cadastradas;
+- abaixo do historico foi criado um rodape institucional com clinica, avaliador, especialidade, conselho e links clicaveis para WhatsApp, site e endereco;
+- `src/components/ui/SilhuetaCircunferencias.tsx` passou a exibir `Somatotipo` do lado esquerdo e `Metabolismo basal` sem abreviacao.
+
+Observacao:
+
+- o campo Instagram ainda depende de coluna propria no Supabase; para nao quebrar a leitura da clinica em producao, o portal continua buscando apenas colunas ja existentes (`nome`, `logo_url`, `telefone`, `email`, `endereco`, `site`).
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco, smoke test, TypeScript e lint passaram;
+- lint manteve apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Ajuste: analise clinica em popup no dashboard clinico
 
 Em 05/05/2026 foi ajustada a exibicao da analise clinica no dashboard do profissional.
