@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/Button';
 import { PatientDashboard } from '@/components/PatientDashboard';
 import { ShareTokenPanel } from '@/components/ShareTokenPanel';
@@ -13,16 +13,17 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
   const { data: p, error: pErr } = await supabase
     .from('pacientes').select('*').eq('id', params.id).single();
   if (pErr || !p) notFound();
+  const admin = createAdminClient();
 
   // Buscar todas as avaliações com scores para o header
-  const { data: avalsLista } = await supabase
+  const { data: avalsLista } = await admin
     .from('avaliacoes')
     .select('id, data, tipo, status, modulos_selecionados, scores(global)')
     .eq('paciente_id', params.id)
     .order('data', { ascending: false });
 
   // Buscar dados completos só das finalizadas para o dashboard
-  const { data: avalsCompletas } = await supabase
+  const { data: avalsCompletas } = await admin
     .from('avaliacoes')
     .select(`
       id, data, tipo, status, modulos_selecionados,
@@ -42,13 +43,13 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
   const analisesMap: Record<string, any> = {};
   try {
     if (avalsCompletas?.length) {
-      const ids = avalsCompletas.map(a => a.id);
+      const ids = avalsCompletas.map((a: any) => a.id);
       const [{ data: bios }, { data: flexs }, { data: rmls }, { data: biomecs }, { data: analises }] = await Promise.all([
-        supabase.from('bioimpedancia').select('*').in('avaliacao_id', ids),
-        supabase.from('flexibilidade').select('*').in('avaliacao_id', ids),
-        supabase.from('rml').select('*').in('avaliacao_id', ids),
-        supabase.from('biomecanica_corrida').select('*').in('avaliacao_id', ids),
-        supabase.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado').in('avaliacao_id', ids),
+        admin.from('bioimpedancia').select('*').in('avaliacao_id', ids),
+        admin.from('flexibilidade').select('*').in('avaliacao_id', ids),
+        admin.from('rml').select('*').in('avaliacao_id', ids),
+        admin.from('biomecanica_corrida').select('*').in('avaliacao_id', ids),
+        admin.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado').in('avaliacao_id', ids),
       ]);
       bios?.forEach((b: any) => { bioMap[b.avaliacao_id] = b; });
       flexs?.forEach((f: any) => { flexMap[f.avaliacao_id] = f; });
@@ -82,8 +83,8 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
     anamnese:            flat(a.anamnese),
   }));
 
-  const totalFin = avalsLista?.filter(a => a.status === 'finalizada').length ?? 0;
-  const emAndamento = avalsLista?.filter(a => a.status !== 'finalizada') ?? [];
+  const totalFin = avalsLista?.filter((a: any) => a.status === 'finalizada').length ?? 0;
+  const emAndamento = avalsLista?.filter((a: any) => a.status !== 'finalizada') ?? [];
 
   return (
     <div className="space-y-5 max-w-5xl">

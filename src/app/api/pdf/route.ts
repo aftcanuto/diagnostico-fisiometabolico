@@ -3,6 +3,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { renderLaudoFooterHTML, renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { launchPdfBrowser } from '@/lib/pdf/browser';
+import { prepararPaginacaoLaudo } from '@/lib/pdf/pagination';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -128,6 +129,7 @@ export async function GET(req: NextRequest) {
       });
 
       await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+      await prepararPaginacaoLaudo(page);
 
       const pdf = await page.pdf({
         format: 'A4',

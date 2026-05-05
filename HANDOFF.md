@@ -447,3 +447,31 @@ Reteste recomendado em producao apos deploy:
 3. Conferir se o rodape fica sempre na margem inferior, com alinhamento uniforme.
 4. Conferir se a numeracao de paginas aparece corretamente.
 
+## Correcao: painel clinico sem dados e paginacao rigorosa do PDF
+
+Em 05/05/2026 foram feitos ajustes adicionais apos o painel clinico aparecer apenas com a estrutura visual, sem os dados da avaliacao, e apos nova revisao das quebras do PDF.
+
+Painel clinico:
+
+- arquivo alterado: `src/app/(app)/pacientes/[id]/page.tsx`;
+- a pagina continua validando o acesso ao paciente com o cliente normal do Supabase, respeitando a seguranca;
+- depois da validacao, os dados completos usados no painel de apresentacao clinica sao carregados com `createAdminClient()`;
+- isso inclui avaliacoes finalizadas, scores, anamnese, sinais vitais, posturografia, antropometria, bioimpedancia, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica e analises de IA;
+- objetivo: o painel do profissional deve exibir os dados consolidados da avaliacao para retorno/consulta online, diferente da edicao individual dos modulos.
+
+PDF:
+
+- arquivo novo: `src/lib/pdf/pagination.ts`;
+- rotas alteradas: `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts`;
+- antes de gerar o PDF, `prepararPaginacaoLaudo(page)` divide modulos muito longos em fragmentos de pagina;
+- a divisao move blocos inteiros para evitar corte de cards e informacoes no meio;
+- em paginas de continuacao, o cabecalho do modulo e repetido com visual mais suave e marcador de continuacao;
+- o rodape permanece renderizado pelo Puppeteer como footer real, fora do fluxo do HTML.
+
+Validacao local em 05/05/2026:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test passou e gerou previews HTML;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.
