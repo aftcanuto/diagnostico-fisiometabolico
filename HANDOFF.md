@@ -280,6 +280,26 @@ Correcao complementar da IA:
 - se nao houver modelo disponivel, a API retorna erro 400 com instrucao clara para remover/ajustar `ANTHROPIC_MODEL` ou configurar `OPENAI_API_KEY`;
 - `src/components/AnalisesIAPanel.tsx` deixou de prefixar o alerta com `Falha:` duplicado.
 
+## Correcao: quebra de paginas no PDF
+
+Em 04/05/2026, apos o PDF voltar a gerar, foi identificado que modulos com muitas informacoes nao quebravam pagina corretamente e ficavam visualmente ruins.
+
+Correcao aplicada:
+
+- `src/lib/pdf/template.ts` deixou de renderizar as paginas de modulo como containers `flex`;
+- `.page` agora usa fluxo normal de impressao (`display: block`) para permitir fragmentacao em mais de uma folha;
+- `.module` passou a permitir overflow/continuidade de conteudo;
+- cards pequenos, KPIs, linhas de tabela, imagens e blocos laterais foram protegidos com `break-inside: avoid`;
+- grades e tabelas longas ficaram livres para quebrar entre itens/linhas;
+- rodape de identificacao deixou de usar `margin-top:auto`, que dependia de flex e prejudicava paginas longas.
+
+Validar depois do deploy:
+
+1. gerar PDF de uma avaliacao com antropometria/forca/biomecanica cheias;
+2. conferir se tabelas longas quebram entre linhas;
+3. conferir se cards pequenos nao ficam cortados ao meio;
+4. conferir se o rodape aparece ao final do bloco sem sobrepor conteudo.
+
 ## Comandos principais
 
 Instalar:
