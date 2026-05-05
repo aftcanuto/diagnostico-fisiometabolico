@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
+import { launchPdfBrowser } from '@/lib/pdf/browser';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -113,12 +114,7 @@ export async function GET(req: NextRequest) {
       pdfConfig: pdfConfigData ?? null,
     });
 
-    // Gerar PDF com Puppeteer
-    const puppeteer = (await import('puppeteer')).default;
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    });
+    const browser = await launchPdfBrowser();
 
     try {
       const page = await browser.newPage();

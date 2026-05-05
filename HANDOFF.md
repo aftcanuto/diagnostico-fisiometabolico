@@ -221,6 +221,32 @@ Arquivos alterados:
 - `src/components/PortalPaciente.tsx`
 - `src/app/(app)/avaliacoes/[id]/cardiorrespiratorio/page.tsx`
 
+## Correcao: geracao de PDF no Vercel
+
+Em 04/05/2026, a rota `/api/pdf?avaliacaoId=...` falhou em producao com erro informando que o Chrome do Puppeteer nao foi encontrado no cache do Vercel.
+
+Causa:
+
+- as rotas de PDF usavam `puppeteer` direto;
+- no ambiente serverless da Vercel nao ha garantia de Chrome instalado no caminho esperado pelo Puppeteer.
+
+Correcao aplicada:
+
+- adicionadas dependencias `@sparticuz/chromium` e `puppeteer-core`;
+- criado `src/lib/pdf/browser.ts` com `launchPdfBrowser()`;
+- em producao/Vercel, o PDF passa a usar Chromium serverless via `@sparticuz/chromium`;
+- localmente, segue usando `puppeteer` normal;
+- atualizadas as rotas:
+  - `src/app/api/pdf/route.ts`
+  - `src/app/api/pdf/publico/route.ts`
+- atualizado `package-lock.json` com `npm install --package-lock-only --cache .npm-cache --prefer-online`.
+
+Validacao local neste ciclo:
+
+- nao foi rodado build completo porque o ambiente local ainda tem historico de problema de permissao/cache do npm em instalacao completa;
+- antes do deploy, o Vercel deve instalar as novas dependencias pelo `package-lock.json`;
+- apos deploy, retestar o botao/URL de PDF em producao.
+
 ## Comandos principais
 
 Instalar:
