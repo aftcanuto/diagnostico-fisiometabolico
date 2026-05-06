@@ -744,6 +744,49 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Ajuste: favicon e icone mobile
+
+Em 06/05/2026 foi adicionado o icone oficial do app para navegador e atalhos mobile.
+
+Correcoes aplicadas:
+
+- `public/favicon.png` foi criado a partir da imagem enviada pelo usuario;
+- `public/apple-touch-icon.png` foi criado com a mesma identidade visual para atalhos em iPhone/iPad;
+- `public/site.webmanifest` foi adicionado para suporte a instalacao/atalho mobile em modo standalone;
+- `src/app/layout.tsx` passou a declarar `icons`, `shortcut`, `apple` e `manifest` no metadata global do Next.js.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Correcao: dashboard principal em branco
+
+Em 06/05/2026 foi corrigida uma falha que podia derrubar `/dashboard` em producao com erro minificado do React.
+
+Problema observado:
+
+- o dashboard principal ficava em branco e o console mostrava `Minified React error #31`, indicando tentativa de renderizar um objeto diretamente na tela;
+- a causa mais provavel era algum campo relacional/JSON vindo do Supabase em formato de objeto ou lista na area de ultimas avaliacoes.
+
+Correcoes aplicadas:
+
+- `src/app/(app)/dashboard/page.tsx` passou a normalizar textos com `textoSeguro`, aceitando string, numero, booleano, objeto, lista ou nulo sem quebrar a interface;
+- a relacao `pacientes` agora e normalizada por `pacienteDaAvaliacao`, suportando retorno como objeto ou array;
+- tipo, status, nome do paciente e data das ultimas avaliacoes passaram a ter fallback seguro;
+- textos com caracteres quebrados nessa tela foram simplificados para ASCII, evitando problemas de codificacao no dashboard.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: contato da clinica e rodape do PDF
 
 Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.
