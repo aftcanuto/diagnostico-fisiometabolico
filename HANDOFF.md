@@ -743,3 +743,29 @@ Validacao local:
 - smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Correcao: contato da clinica e rodape do PDF
+
+Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.
+
+Problemas observados:
+
+- o dashboard do paciente buscava o e-mail da clinica, mas nao mostrava esse contato no rodape clicavel;
+- o PDF podia usar um avaliador antigo/generico quando a avaliacao ou o token apontava para cadastro incompleto ou ficticio;
+- o rodape do PDF nao passava pela mesma limpeza de caracteres aplicada ao corpo do laudo, podendo deixar caracteres quebrados no PDF final.
+
+Correcoes aplicadas:
+
+- `src/components/PortalPaciente.tsx` adicionou botao clicavel de E-mail no rodape do portal, usando o e-mail cadastrado na clinica;
+- `src/app/api/pdf/route.ts` passou a buscar tambem o perfil do usuario logado e a escolher um avaliador valido quando o avaliador salvo na avaliacao for generico/incompleto;
+- `src/app/api/pdf/publico/route.ts` passou a comparar avaliador do token e avaliador da avaliacao, evitando nomes genericos/ficticios no PDF publico;
+- `src/app/api/pdf/publico/route.ts` tambem passou CPF do paciente ao template, mantendo o rodape publico no mesmo padrao do PDF interno;
+- `src/lib/pdf/template.ts` passou a aplicar `limparTextoHTML` tambem no `renderLaudoFooterHTML`, corrigindo caracteres quebrados no rodape do PDF.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.

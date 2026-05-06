@@ -9,6 +9,33 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+type PerfilAvaliador = {
+  nome?: string | null;
+  crefito_crm?: string | null;
+  especialidade?: string | null;
+};
+
+function nomeAvaliadorGenerico(nome?: string | null) {
+  const n = (nome ?? '').trim().toLowerCase();
+  if (!n) return true;
+  return ['avaliador', 'medico', 'médico', 'fict', 'exemplo', 'fulano', 'teste'].some((termo) => n.includes(termo));
+}
+
+function escolherAvaliador(principal?: PerfilAvaliador | null, fallback?: PerfilAvaliador | null, email?: string | null) {
+  const fonte = !nomeAvaliadorGenerico(principal?.nome)
+    ? principal
+    : !nomeAvaliadorGenerico(fallback?.nome)
+      ? fallback
+      : principal ?? fallback ?? {};
+  const escolhido = fonte ?? {};
+
+  return {
+    nome: escolhido.nome?.trim() || email?.split('@')[0] || 'Avaliador',
+    conselho: escolhido.crefito_crm ?? null,
+    especialidade: escolhido.especialidade ?? null,
+  };
+}
+
 export async function GET(req: NextRequest) {
   const avaliacaoId = req.nextUrl.searchParams.get('avaliacaoId');
   if (!avaliacaoId) return NextResponse.json({ error: 'avaliacaoId required' }, { status: 400 });
@@ -36,7 +63,7 @@ export async function GET(req: NextRequest) {
     const [
       anamnese, sinais_vitais, posturografia, bioimpedancia,
       antropometria, forca, flexibilidade, rml, cardio, biomecanica,
-      scoresRow, avaliador, clinica, analises,
+      scoresRow, avaliador, avaliadorAtual, clinica, analises,
     ] = await Promise.all([
       admin.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -49,7 +76,8 @@ export async function GET(req: NextRequest) {
       admin.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-      admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).single(),
+      admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).maybeSingle(),
+      admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', user.id).maybeSingle(),
       aval.clinica_id
         ? admin.from('clinicas').select('*').eq('id', aval.clinica_id).single()
         : Promise.resolve({ data: null, error: null }),
@@ -87,11 +115,7 @@ export async function GET(req: NextRequest) {
         idade: calcIdade(aval.pacientes.data_nascimento),
         cpf: aval.pacientes.cpf ?? null,
       },
-      avaliador: {
-        nome: avaliador.data?.nome ?? 'Avaliador',
-        conselho: avaliador.data?.crefito_crm ?? null,
-        especialidade: avaliador.data?.especialidade ?? null,
-      },
+      avaliador: escolherAvaliador(avaliador.data, avaliadorAtual.data, user.email),
       avaliacao: { data: aval.data, tipo: aval.tipo },
       modulos: aval.modulos_selecionados,
       dados: {

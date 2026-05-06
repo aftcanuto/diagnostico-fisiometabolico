@@ -328,7 +328,7 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
   const centro = `${avNome}${avCons ? ` · ${avCons}` : ''}${avEsp ? ` · ${avEsp}` : ''}`;
   const paciente = `${pacNome}${cpfFmt ? ` · CPF: ${cpfFmt}` : ''}`;
 
-  return `<div style="
+  return limparTextoHTML(`<div style="
     width:100%;
     height:42px;
     padding:0 11mm 5px;
@@ -366,7 +366,7 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
         text-align:center;
       "><span class="pageNumber"></span>/<span class="totalPages"></span></div>
     </div>
-  </div>`;
+  </div>`);
 }
 
 function pgCapa(d: LaudoData): string {

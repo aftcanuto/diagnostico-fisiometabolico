@@ -6,7 +6,7 @@ import { LineChart } from '@/components/ui/LineChart';
 import { ScoresBarEvol } from '@/components/ui/ScoresBarEvol';
 import { ZonasChart } from '@/components/ui/ZonasChart';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
-import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown, Info, Phone, Globe, MapPin, Instagram } from 'lucide-react';
+import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown, Info, Phone, Globe, MapPin, Instagram, Mail } from 'lucide-react';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
 import { scoreCardio, scoreComposicaoCorporal, scoreForca, scoreGlobal, scorePostura } from '@/lib/scores';
 import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
@@ -1443,6 +1443,10 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               {clinica?.telefone&&<a href={`https://wa.me/${String(clinica.telefone).replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Phone size={13}/> WhatsApp
+              </a>}
+              {clinica?.email&&<a href={`mailto:${clinica.email}`} target="_blank" rel="noopener noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                <Mail size={13}/> E-mail
               </a>}
               {clinica?.site&&<a href={clinica.site.startsWith('http')?clinica.site:`https://${clinica.site}`} target="_blank" rel="noopener noreferrer"
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>

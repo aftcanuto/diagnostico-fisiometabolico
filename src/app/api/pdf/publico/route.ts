@@ -9,6 +9,33 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+type PerfilAvaliador = {
+  nome?: string | null;
+  crefito_crm?: string | null;
+  especialidade?: string | null;
+};
+
+function nomeAvaliadorGenerico(nome?: string | null) {
+  const n = (nome ?? '').trim().toLowerCase();
+  if (!n) return true;
+  return ['avaliador', 'medico', 'médico', 'fict', 'exemplo', 'fulano', 'teste'].some((termo) => n.includes(termo));
+}
+
+function escolherAvaliador(principal?: PerfilAvaliador | null, fallback?: PerfilAvaliador | null) {
+  const fonte = !nomeAvaliadorGenerico(principal?.nome)
+    ? principal
+    : !nomeAvaliadorGenerico(fallback?.nome)
+      ? fallback
+      : principal ?? fallback ?? {};
+  const escolhido = fonte ?? {};
+
+  return {
+    nome: escolhido.nome?.trim() || 'Avaliador',
+    conselho: escolhido.crefito_crm ?? null,
+    especialidade: escolhido.especialidade ?? null,
+  };
+}
+
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token');
   const avaliacaoId = req.nextUrl.searchParams.get('avaliacaoId');
@@ -27,7 +54,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'acesso negado' }, { status: 403 });
   }
 
-  const [anamnese, sinais_vitais, posturografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, scoresRow, avaliador, clinica, analises] = await Promise.all([
+  const [anamnese, sinais_vitais, posturografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
     supabase.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -39,7 +66,8 @@ export async function GET(req: NextRequest) {
     supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
-    supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', tok.avaliador_id).single(),
+    supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', tok.avaliador_id).maybeSingle(),
+    supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).maybeSingle(),
     aval.clinica_id ? supabase.from('clinicas').select('*').eq('id', aval.clinica_id).single() : Promise.resolve({ data: null }),
     supabase.from('analises_ia').select('tipo, conteudo, texto_editado').eq('avaliacao_id', avaliacaoId),
   ]);
@@ -55,12 +83,9 @@ export async function GET(req: NextRequest) {
       nome: aval.pacientes.nome, sexo: aval.pacientes.sexo,
       data_nascimento: aval.pacientes.data_nascimento,
       idade: calcIdade(aval.pacientes.data_nascimento),
+      cpf: aval.pacientes.cpf ?? null,
     },
-    avaliador: {
-      nome: avaliador.data?.nome ?? 'Avaliador',
-      conselho: avaliador.data?.crefito_crm ?? null,
-      especialidade: avaliador.data?.especialidade ?? null,
-    },
+    avaliador: escolherAvaliador(avaliadorToken.data, avaliadorAvaliacao.data),
     avaliacao: { data: aval.data, tipo: aval.tipo },
     modulos: aval.modulos_selecionados,
     dados: {
