@@ -4,6 +4,30 @@ import { Button } from '@/components/ui/Button';
 import { Plus, FileText, Clock, CheckCircle } from 'lucide-react';
 import { DeleteAvaliacaoButton } from '@/components/DeleteAvaliacaoButton';
 
+function textoSeguro(valor: any, fallback = '-'): string {
+  if (valor == null || valor === '') return fallback;
+  if (typeof valor === 'string' || typeof valor === 'number' || typeof valor === 'boolean') return String(valor);
+  if (Array.isArray(valor)) return textoSeguro(valor[0], fallback);
+  if (typeof valor === 'object') return textoSeguro(valor.nome ?? valor.label ?? valor.tipo ?? valor.status ?? valor.id, fallback);
+  return fallback;
+}
+
+function primeiroItem(valor: any) {
+  return Array.isArray(valor) ? valor[0] : valor;
+}
+
+function numeroSeguro(valor: any): number | null {
+  const base = primeiroItem(valor);
+  const raw = typeof base === 'object' && base ? base.global ?? base.valor ?? base.score : base;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+function dataSegura(valor: any) {
+  const d = valor ? new Date(valor) : null;
+  return d && !Number.isNaN(d.getTime()) ? d : new Date();
+}
+
 export default async function AvaliacoesPage() {
   const supabase = createClient();
 
@@ -12,31 +36,33 @@ export default async function AvaliacoesPage() {
     .select('id, data, tipo, status, modulos_selecionados, pacientes(id, nome, sexo, data_nascimento), scores(global)')
     .order('data', { ascending: false });
 
-  const grupos = (avals ?? []).reduce<Record<string, any[]>>((acc, a) => {
-    const mes = new Date(a.data).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const grupos = (avals ?? []).reduce<Record<string, any[]>>((acc, a: any) => {
+    const mes = dataSegura(a.data).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     if (!acc[mes]) acc[mes] = [];
     acc[mes].push(a);
     return acc;
   }, {});
 
+  const total = avals?.length ?? 0;
+
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Avaliações</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Avaliacoes</h1>
           <p className="text-sm text-slate-500 mt-1">
-            {avals?.length ?? 0} avaliação{(avals?.length ?? 0) !== 1 ? 'ões' : ''} no total
+            {total} {total === 1 ? 'avaliacao' : 'avaliacoes'} no total
           </p>
         </div>
         <Link href="/avaliacoes/nova">
-          <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>
+          <Button><Plus className="w-4 h-4" /> Nova avaliacao</Button>
         </Link>
       </div>
 
       {!avals?.length ? (
         <div className="text-center py-16 text-slate-400">
           <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma avaliação cadastrada ainda.</p>
+          <p>Nenhuma avaliacao cadastrada ainda.</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -47,21 +73,25 @@ export default async function AvaliacoesPage() {
               </h2>
               <div className="space-y-2">
                 {lista.map((a: any) => {
-                  const pac = Array.isArray(a.pacientes) ? a.pacientes[0] : a.pacientes;
-                  const score = Array.isArray(a.scores) ? a.scores[0]?.global : a.scores?.global;
-                  const finalizada = a.status === 'finalizada';
+                  const pac = primeiroItem(a.pacientes) ?? {};
+                  const pacNome = textoSeguro(pac.nome, 'Paciente');
+                  const pacId = textoSeguro(pac.id, '');
+                  const tipo = textoSeguro(a.tipo, 'avaliacao');
+                  const status = textoSeguro(a.status, 'em_andamento');
+                  const score = numeroSeguro(a.scores);
+                  const finalizada = status === 'finalizada';
                   const scoreColor = score == null ? '#94a3b8' : score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
 
                   return (
-                    <div key={a.id} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-brand-300 hover:shadow-sm transition">
+                    <div key={textoSeguro(a.id)} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-brand-300 hover:shadow-sm transition">
                       <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold text-sm flex-shrink-0">
-                        {pac?.nome?.charAt(0)?.toUpperCase() ?? '?'}
+                        {pacNome.charAt(0).toUpperCase()}
                       </div>
 
-                      <Link href={`/pacientes/${pac?.id}`} className="flex-1 min-w-0">
-                        <div className="font-medium text-slate-800">{pac?.nome ?? 'Paciente'}</div>
+                      <Link href={pacId ? `/pacientes/${pacId}` : '/pacientes'} className="flex-1 min-w-0">
+                        <div className="font-medium text-slate-800">{pacNome}</div>
                         <div className="text-xs text-slate-400 mt-0.5">
-                          {new Date(a.data).toLocaleDateString('pt-BR', { dateStyle: 'long' })} · {a.tipo}
+                          {dataSegura(a.data).toLocaleDateString('pt-BR', { dateStyle: 'long' })} - {tipo}
                         </div>
                       </Link>
 
@@ -84,7 +114,7 @@ export default async function AvaliacoesPage() {
                         )}
                       </div>
 
-                      <DeleteAvaliacaoButton avaliacaoId={a.id} />
+                      <DeleteAvaliacaoButton avaliacaoId={textoSeguro(a.id)} />
                     </div>
                   );
                 })}

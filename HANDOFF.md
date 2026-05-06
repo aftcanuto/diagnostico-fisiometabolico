@@ -813,6 +813,30 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: listagem de avaliacoes em branco
+
+Em 06/05/2026 foi corrigido o erro que ainda ocorria ao acessar `/avaliacoes`.
+
+Problema observado:
+
+- a pagina `/avaliacoes` ainda quebrava com `Minified React error #31`;
+- a listagem renderizava diretamente campos relacionais e campos vindos do Supabase, como paciente, tipo, status e score.
+
+Correcoes aplicadas:
+
+- `src/app/(app)/avaliacoes/page.tsx` foi refeita com normalizacao defensiva de textos, datas, paciente relacionado e score;
+- a relacao `pacientes` agora aceita objeto, array ou nulo;
+- `scores` agora aceita objeto, array, numero ou nulo;
+- tipo/status/data passaram a ter fallback seguro para evitar renderizacao de objetos no React.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: contato da clinica e rodape do PDF
 
 Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.
