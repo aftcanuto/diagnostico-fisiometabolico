@@ -769,3 +769,34 @@ Validacao local:
 - smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Correcao: modulos no painel, portal revogado e biomecanica do PDF
+
+Em 06/05/2026 foram aplicadas correcoes para alinhar os dashboards, o portal do paciente e o PDF final.
+
+Problemas observados:
+
+- no painel clinico faltavam secoes explicitas de bioimpedancia, antropometria e forca muscular;
+- links revogados do dashboard do paciente ainda podiam continuar abrindo por cache;
+- a capa do PDF quebrava nomes longos de pacientes em duas linhas;
+- o PDF interno ainda podia priorizar um avaliador antigo/ficticio salvo na avaliacao;
+- a biomecanica do PDF duplicava a analise cinematica, mantendo uma pagina com barras antigas alem do layout aprovado;
+- os tres graficos de angulos articulares precisavam permanecer no relatorio, sem retornar ao grafico antigo duplicado.
+
+Correcoes aplicadas:
+
+- `src/components/PatientDashboard.tsx` recebeu secoes proprias para bioimpedancia, antropometria e forca muscular, na ordem cronologica dos modulos da avaliacao;
+- a ordem visual do painel clinico foi ajustada para manter cardiovascular e zonas de treino depois de RML e antes da biomecanica;
+- `src/app/p/[token]/page.tsx` passou a usar `noStore`, `revalidate = 0` e `fetchCache = 'force-no-store'`, garantindo que token revogado nao continue valido em novas aberturas/atualizacoes da pagina;
+- `src/lib/pdf/template.ts` passou a reduzir automaticamente a fonte do nome do paciente na capa para caber em uma linha, sem ficar pequeno demais;
+- `src/app/api/pdf/route.ts` passou a priorizar o avaliador cadastrado do usuario logado no PDF interno, evitando nomes ficticios na capa e no rodape;
+- `src/lib/pdf/template.ts` removeu a renderizacao duplicada dos graficos antigos de barras horizontais na analise cinematica da biomecanica;
+- o PDF manteve a pagina aprovada da biomecanica e os tres graficos enviados de joelho, quadril e cotovelo quando houver imagem cadastrada.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.

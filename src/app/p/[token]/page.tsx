@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation';
+import { unstable_noStore as noStore } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/server';
 import { PortalPaciente } from '@/components/PortalPaciente';
 import { Activity } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export default async function PortalPacientePage({ params }: { params: { token: string } }) {
+  noStore();
   const supabase = createAdminClient();
   const { data: tok, error: tokenError } = await supabase
     .from('paciente_tokens')

@@ -1329,6 +1329,108 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         );
       })()}
 
+      {atual.bioimpedancia && (() => {
+        const bio = atual.bioimpedancia as any;
+        const segMagra = bio.segmentar_massa_magra ?? bio.segmentar_magra ?? {};
+        const itens = [
+          ['Peso', bio.peso_kg, 'kg', '#0f172a'],
+          ['Altura', bio.altura_cm, 'cm', '#0f172a'],
+          ['IMC', bio.imc, '', '#0f172a'],
+          ['Gordura corporal', bio.percentual_gordura, '%', '#f59e0b'],
+          ['Massa livre de gordura', bio.massa_livre_gordura_kg, 'kg', '#10b981'],
+          ['Massa muscular', bio.massa_muscular_kg, 'kg', '#10b981'],
+          ['Agua corporal', bio.agua_corporal_pct ?? bio.agua_corporal_kg, bio.agua_corporal_pct != null ? '%' : 'kg', '#0f172a'],
+          ['Metabolismo basal', bio.taxa_metabolica_basal_kcal, 'kcal', '#7c3aed'],
+          ['Gordura visceral', bio.gordura_visceral_nivel ?? bio.gordura_visceral, '', '#f97316'],
+        ].filter(([,v]) => v != null && v !== '');
+        const segEntries = Object.entries(segMagra).filter(([,v]) => v != null && v !== '');
+        if (!itens.length && !segEntries.length) return null;
+        return (
+          <div style={{order:45, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
+            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:900, marginBottom:4}}>
+              Bioimpedância <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.bioimpedancia)} />
+            </div>
+            <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Composição corporal e dados metabólicos</div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
+              {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
+            </div>
+            {segEntries.length > 0 && (
+              <div style={{marginTop:14}}>
+                <div style={{fontSize:11, fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Massa magra segmentar</div>
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
+                  {segEntries.map(([k,v]: any) => {
+                    const valor = typeof v === 'object' && v
+                      ? [v.kg != null ? `${v.kg} kg` : null, v.pct != null ? `${v.pct}%` : null].filter(Boolean).join(' · ')
+                      : v;
+                    return <MetricLine key={k} label={humanField(k)} value={valor} />;
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {atual.antropometria && (() => {
+        const a = atual.antropometria as any;
+        const dobras = a.dobras ?? {};
+        const somaDobras = Object.values(dobras).reduce((acc: number, v: any) => acc + (Number(v) || 0), 0);
+        const itens = [
+          ['Peso', a.peso, 'kg', '#0f172a'],
+          ['Estatura', a.estatura, 'cm', '#0f172a'],
+          ['IMC', a.imc, '', '#0f172a'],
+          ['Gordura corporal', a.percentual_gordura, '%', '#f59e0b'],
+          ['Massa magra', a.massa_magra, 'kg', '#10b981'],
+          ['Massa ossea', a.massa_ossea, 'kg', '#0f172a'],
+          ['RCQ', a.rcq, '', '#0f172a'],
+          ['Soma de dobras', somaDobras || null, 'mm', '#0f172a'],
+        ].filter(([,v]) => v != null && v !== '');
+        if (!itens.length && !Object.keys(dobras).length) return null;
+        return (
+          <div style={{order:55, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
+            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:900, marginBottom:4}}>
+              Antropometria <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.antropometria)} />
+            </div>
+            <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Medidas ISAK, dobras cutâneas e composição corporal</div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
+              {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
+            </div>
+            {Object.keys(dobras).length > 0 && (
+              <div style={{marginTop:14}}>
+                <div style={{fontSize:11, fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Dobras cutâneas</div>
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
+                  {Object.entries(dobras).filter(([,v]) => v != null && v !== '').map(([k,v]) => <MetricLine key={k} label={humanField(k)} value={v} unit="mm"/>)}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {atual.forca && (() => {
+        const f = atual.forca as any;
+        const itens = [
+          ['Preensao direita', f.preensao_dir_kgf, 'kgf', '#0f172a'],
+          ['Preensao esquerda', f.preensao_esq_kgf, 'kgf', '#0f172a'],
+          ['Forca relativa direita', f.forca_relativa_dir, 'kgf/kg', '#0f172a'],
+          ['Forca relativa esquerda', f.forca_relativa_esq, 'kgf/kg', '#0f172a'],
+          ['Assimetria', f.assimetria_percent, '%', '#f59e0b'],
+          ['Modelo dinamometria', f.modelo_dinamometria, '', '#0f172a'],
+        ].filter(([,v]) => v != null && v !== '');
+        if (!itens.length) return null;
+        return (
+          <div style={{order:69, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
+            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:900, marginBottom:4}}>
+              Força muscular <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.forca)} />
+            </div>
+            <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Preensão palmar, força relativa e assimetria</div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
+              {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ══ ALERTA SARCOPENIA (EWGSOP2) ══ */}
       {modo === 'clinico' && (() => {
         const f = (atual as any).forca;
@@ -1608,7 +1710,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           )}
           {/* Zonas de treinamento */}
           {zonasItems.length > 0 && (
-            <div style={{ order: 90, background: 'white', borderRadius: 16, padding: '20px 24px', color: '#0f172a' }}>
+            <div style={{ order: 91, background: 'white', borderRadius: 16, padding: '20px 24px', color: '#0f172a' }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>Zonas de treinamento (FC máx.)</div>
               <ZonasChart zonas={zonasItems} />
             </div>
@@ -1658,7 +1760,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         ].filter(([,v]) => v != null && v !== '');
         if (!itens.length && !cardio.protocolo) return null;
         return (
-          <div style={{order: 76, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
+          <div style={{order: 90, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:900,marginBottom:4}}>Saude cardiovascular <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /></div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aerobica, sinais vitais e zonas de treinamento</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:8}}>

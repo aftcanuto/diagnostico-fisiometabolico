@@ -372,6 +372,8 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
 function pgCapa(d: LaudoData): string {
   const c = d.clinica;
   const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
+  const nomeLen = (d.paciente.nome ?? '').length;
+  const nomeFont = nomeLen > 42 ? 38 : nomeLen > 34 ? 43 : nomeLen > 28 ? 48 : 54;
   const logoInner = c?.logo_url
     ? `<img src="${x(c.logo_url)}" style="width:42px;height:42px;object-fit:contain"/>`
     : `<span style="font-size:20px;font-weight:800;color:white">${(c?.nome??'F').charAt(0)}</span>`;
@@ -386,7 +388,7 @@ function pgCapa(d: LaudoData): string {
   </div>
   <div class="cover-main">
     <div class="cover-badge">AvaliaÃ§Ã£o FisiometabÃ³lica</div>
-    <h1 class="cover-name">${x(d.paciente.nome)}</h1>
+    <h1 class="cover-name" style="font-size:${nomeFont}px;white-space:nowrap;line-height:1.05">${x(d.paciente.nome)}</h1>
     <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
       ${[['Idade',`${d.paciente.idade} anos`],['Sexo',d.paciente.sexo==='M'?'Masculino':'Feminino'],['Data',fd(d.avaliacao.data)],['Tipo',d.avaliacao.tipo]].map(([l,v])=>`<div class="chip"><div class="chip-label">${l}</div><div class="chip-val">${v}</div></div>`).join('')}
     </div>
@@ -1300,9 +1302,9 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     rec.complementos         && ['Complementos', rec.complementos],
   ].filter(Boolean) as [string,string][];
 
-  const pg2 = `<section class="page module" style="display:flex;flex-direction:column">
-  <div class="mod-head"><h2 class="mod-title">AnÃ¡lise cinemÃ¡tica detalhada</h2></div>
-  ${angItems ? `<div style="margin-bottom:18px">${angItems}</div>` : ''}
+  const temPg2 = Boolean(achadosList.length || achados.comentarios_risco || achados.observacoes || recItems.length);
+  const pg2 = temPg2 ? `<section class="page module" style="display:flex;flex-direction:column">
+  <div class="mod-head"><h2 class="mod-title">Achados e recomendações da corrida</h2></div>
   ${achadosList.length || achados.comentarios_risco ? `<div class="sec-sub">Pontos de atenÃ§Ã£o e risco</div>
     ${achadosList.length ? `<div style="margin-bottom:16px">${achadosList.map(a =>
       `<div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
@@ -1321,7 +1323,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
         <p style="font-size:12px;color:#4b5563;line-height:1.6">${x(texto)}</p>
       </div>`).join('')}
     </div>` : ''}
-</section>`;
+</section>` : '';
 
   // PÃ¡gina 3: GrÃ¡ficos cinemÃ¡ticos
   const grafUrls = [

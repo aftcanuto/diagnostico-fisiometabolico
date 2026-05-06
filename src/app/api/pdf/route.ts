@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
         idade: calcIdade(aval.pacientes.data_nascimento),
         cpf: aval.pacientes.cpf ?? null,
       },
-      avaliador: escolherAvaliador(avaliador.data, avaliadorAtual.data, user.email),
+      avaliador: escolherAvaliador(avaliadorAtual.data, avaliador.data, user.email),
       avaliacao: { data: aval.data, tipo: aval.tipo },
       modulos: aval.modulos_selecionados,
       dados: {
