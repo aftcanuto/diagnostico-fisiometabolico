@@ -28,6 +28,21 @@ function dataSegura(valor: any) {
   return d && !Number.isNaN(d.getTime()) ? d : new Date();
 }
 
+function primeiroModulo(avaliacao: any): string {
+  const mods = avaliacao?.modulos_selecionados ?? {};
+  if (mods.anamnese) return 'anamnese';
+  if (mods.sinais_vitais) return 'sinais-vitais';
+  if (mods.posturografia) return 'posturografia';
+  if (mods.bioimpedancia) return 'bioimpedancia';
+  if (mods.antropometria) return 'antropometria';
+  if (mods.flexibilidade) return 'flexibilidade';
+  if (mods.forca) return 'forca';
+  if (mods.rml) return 'rml';
+  if (mods.cardiorrespiratorio) return 'cardiorrespiratorio';
+  if (mods.biomecanica_corrida || mods.biomecanica) return 'biomecanica';
+  return 'revisao';
+}
+
 export default async function AvaliacoesPage() {
   const supabase = createClient();
 
@@ -78,17 +93,19 @@ export default async function AvaliacoesPage() {
                   const pacId = textoSeguro(pac.id, '');
                   const tipo = textoSeguro(a.tipo, 'avaliacao');
                   const status = textoSeguro(a.status, 'em_andamento');
-                  const score = numeroSeguro(a.scores);
+                  const scoreRaw = numeroSeguro(a.scores);
+                  const score = scoreRaw != null && scoreRaw > 0 ? scoreRaw : null;
                   const finalizada = status === 'finalizada';
                   const scoreColor = score == null ? '#94a3b8' : score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
+                  const avaliacaoHref = `/avaliacoes/${textoSeguro(a.id)}/${primeiroModulo(a)}`;
 
                   return (
                     <div key={textoSeguro(a.id)} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-brand-300 hover:shadow-sm transition">
-                      <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold text-sm flex-shrink-0">
+                      <Link href={avaliacaoHref} className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold text-sm flex-shrink-0">
                         {pacNome.charAt(0).toUpperCase()}
-                      </div>
+                      </Link>
 
-                      <Link href={pacId ? `/pacientes/${pacId}` : '/pacientes'} className="flex-1 min-w-0">
+                      <Link href={avaliacaoHref} className="flex-1 min-w-0">
                         <div className="font-medium text-slate-800">{pacNome}</div>
                         <div className="text-xs text-slate-400 mt-0.5">
                           {dataSegura(a.data).toLocaleDateString('pt-BR', { dateStyle: 'long' })} - {tipo}

@@ -837,6 +837,29 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Ajuste: clique da avaliacao e score nao calculado
+
+Em 06/05/2026 foi ajustada a experiencia da lista de avaliacoes.
+
+Problemas observados:
+
+- ao clicar na avaliacao pela lista, o fluxo levava para a ficha do paciente em vez de abrir diretamente a avaliacao;
+- quando o score global ainda nao estava calculado, a lista podia exibir `0`, passando a impressao de score real zerado.
+
+Correcoes aplicadas:
+
+- `src/app/(app)/avaliacoes/page.tsx` agora calcula o primeiro modulo habilitado e direciona o clique para `/avaliacoes/[id]/[primeiro-modulo]`;
+- o avatar e a area principal da linha da avaliacao ficaram clicaveis para abrir a avaliacao;
+- score global igual a `0`, nulo ou nao calculado deixou de aparecer como score valido.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: contato da clinica e rodape do PDF
 
 Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.
