@@ -97,7 +97,7 @@ export default async function AvaliacoesPage() {
                   const score = scoreRaw != null && scoreRaw > 0 ? scoreRaw : null;
                   const finalizada = status === 'finalizada';
                   const scoreColor = score == null ? '#94a3b8' : score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
-                  const avaliacaoHref = `/avaliacoes/${textoSeguro(a.id)}/${primeiroModulo(a)}`;
+                  const avaliacaoHref = finalizada && pacId ? `/pacientes/${pacId}` : `/avaliacoes/${textoSeguro(a.id)}/${primeiroModulo(a)}`;
 
                   return (
                     <div key={textoSeguro(a.id)} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-brand-300 hover:shadow-sm transition">

@@ -860,6 +860,31 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Ajuste: avaliacao finalizada abre dashboard e protecao do painel clinico
+
+Em 06/05/2026 foi refinado o fluxo entre lista de avaliacoes, ficha do paciente e painel clinico.
+
+Problemas observados:
+
+- ao clicar em uma avaliacao finalizada pela lista, o sistema abria a edicao do modulo em vez do dashboard clinico;
+- ao clicar no paciente, o painel ainda podia quebrar quando algum valor real do banco chegava como objeto;
+- metricas do `PatientDashboard` ainda renderizavam alguns valores diretamente.
+
+Correcoes aplicadas:
+
+- `src/app/(app)/avaliacoes/page.tsx` agora direciona avaliacoes finalizadas para `/pacientes/[id]`, mantendo edicao somente para avaliacoes em andamento;
+- `src/components/PatientDashboard.tsx` passou a formatar valores de `MetricCard` e `MetricLine` antes de renderizar;
+- o cabecalho do `PatientDashboard` passou a usar nome, sexo, nascimento e avaliador em formato seguro;
+- componentes que recebem sexo do paciente agora usam valor normalizado `M`/`F`.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: contato da clinica e rodape do PDF
 
 Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.

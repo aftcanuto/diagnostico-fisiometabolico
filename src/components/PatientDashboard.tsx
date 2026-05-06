@@ -184,6 +184,7 @@ function ScoreBar({ label, value, anterior, icon: Icon }: {
 function MetricCard({ label, value, unit, color = '#0f172a' }: {
   label: string; value: any; unit?: string; color?: string;
 }) {
+  value = formatDashboardValue(value);
   return (
     <div style={{ background: '#f8fafc', borderRadius: 10,
       padding: 10, textAlign: 'center' }}>
@@ -197,6 +198,7 @@ function MetricCard({ label, value, unit, color = '#0f172a' }: {
 }
 
 function MetricLine({ label, value, unit, color }: { label: string; value: any; unit?: string; color?: string }) {
+  value = formatDashboardValue(value);
   return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
       padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
@@ -798,7 +800,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
     ? +(massaMagraNum / ((alturaNum / 100) ** 2)).toFixed(1)
     : null;
   const ffmiValor = ffmiSalvo ?? ffmiCalculado;
-  const gorCor = pctG == null ? '#10b981' : paciente.sexo === 'M'
+  const pacienteNome = formatDashboardValue(paciente.nome);
+  const pacienteSexo = paciente.sexo === 'M' ? 'M' : 'F';
+  const pacienteNascimento = formatDashboardValue(paciente.data_nascimento);
+  const avaliadorNome = formatDashboardValue(avaliador?.nome);
+  const gorCor = pctG == null ? '#10b981' : pacienteSexo === 'M'
     ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : '#ef4444'
     : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : '#ef4444';
 
@@ -897,13 +903,13 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               background: '#f1f5f9', border: '2px solid rgba(255,255,255,.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 22, fontWeight: 700, color: '#0f172a', flexShrink: 0 }}>
-              {paciente.nome.slice(0,1).toUpperCase()}
+              {pacienteNome.slice(0,1).toUpperCase()}
             </div>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: -.5 }}>{paciente.nome}</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: -.5 }}>{pacienteNome}</h1>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 3 }}>
-                {paciente.sexo === 'M' ? 'Masculino' : 'Feminino'} · {calcIdade(paciente.data_nascimento)} anos
-                {avaliador && <> · <b style={{ color: '#ffffff' }}>{avaliador.nome}</b></>}
+                {pacienteSexo === 'M' ? 'Masculino' : 'Feminino'} · {pacienteNascimento !== '-' ? calcIdade(pacienteNascimento) : '-'} anos
+                {avaliadorNome !== '-' && <> · <b style={{ color: '#ffffff' }}>{avaliadorNome}</b></>}
               </p>
             </div>
           </div>
@@ -1687,7 +1693,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           {(pctG != null || circItems.length > 0) && (
             <div style={{ order: 40, background: 'white', borderRadius: 16, padding: '24px 28px', color: '#0f172a' }}>
               <SilhuetaCircunferencias
-                sexo={paciente.sexo}
+                sexo={pacienteSexo}
                 circunferencias={{}}
                 pctGorduraTotal={pctG ?? null}
                 peso={peso ?? null}
@@ -1721,7 +1727,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       {(ffmiValor != null || mlg != null) && (
         <div style={{order: 50}}>
           <FfmiCard ffmi={ffmiValor ?? null} massaMagra={mlg ?? null} massaOssea={massaOssea ?? null}
-            peso={peso ?? null} altura={altura ?? null} sexo={paciente.sexo}/>
+            peso={peso ?? null} altura={altura ?? null} sexo={pacienteSexo}/>
         </div>
       )}
 
