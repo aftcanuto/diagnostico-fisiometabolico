@@ -50,7 +50,7 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
       setErro(body.error ?? 'Erro ao revogar link');
       return;
     }
-    setTokens(t => t.map(x => x.token === token ? { ...x, revogado: true } : x));
+    setTokens(t => t.filter(x => x.token !== token));
   }
 
   async function copiar(token: string) {
@@ -60,7 +60,8 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
     setTimeout(() => setCopiado(null), 2000);
   }
 
-  const ativos = tokens.filter(t => !t.revogado && new Date(t.expira_em) > new Date());
+  const linksVisiveis = tokens.filter(t => !t.revogado && new Date(t.expira_em) > new Date());
+  const ativos = linksVisiveis;
 
   return (
     <Card>
@@ -95,11 +96,11 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
             <Link2 className="w-4 h-4" /> {loading ? 'Carregando...' : 'Gerar novo link'}
           </Button>
 
-          {tokens.length > 0 && (
+          {linksVisiveis.length > 0 ? (
             <div className="mt-4 space-y-2">
-              {tokens.map(t => {
+              {linksVisiveis.map(t => {
                 const vencido = new Date(t.expira_em) <= new Date();
-                const inativo = t.revogado || vencido;
+                const inativo = vencido;
                 const url = typeof window !== 'undefined' ? `${window.location.origin}/p/${t.token}` : '';
                 return (
                   <div key={t.token} className={`rounded-lg border p-3 flex flex-col md:flex-row md:items-center gap-2 ${inativo ? 'bg-slate-50 opacity-70' : 'bg-white'}`}>
@@ -125,6 +126,12 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
                 );
               })}
             </div>
+          ) : (
+            !loading && (
+              <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
+                Nenhum link ativo no momento.
+              </div>
+            )
           )}
         </CardBody>
       )}

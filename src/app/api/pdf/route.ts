@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
-import { renderLaudoFooterHTML, renderLaudoHTML } from '@/lib/pdf/template';
+import { renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { launchPdfBrowser } from '@/lib/pdf/browser';
 import { prepararPaginacaoLaudo } from '@/lib/pdf/pagination';
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     const [
       anamnese, sinais_vitais, posturografia, bioimpedancia,
       antropometria, forca, flexibilidade, rml, cardio, biomecanica,
-      scoresRow, avaliador, avaliadorAtual, clinica, analises,
+      scoresRow, avaliador, clinica, analises,
     ] = await Promise.all([
       admin.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -77,7 +77,6 @@ export async function GET(req: NextRequest) {
       admin.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).maybeSingle(),
-      admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', user.id).maybeSingle(),
       aval.clinica_id
         ? admin.from('clinicas').select('*').eq('id', aval.clinica_id).single()
         : Promise.resolve({ data: null, error: null }),
@@ -115,7 +114,7 @@ export async function GET(req: NextRequest) {
         idade: calcIdade(aval.pacientes.data_nascimento),
         cpf: aval.pacientes.cpf ?? null,
       },
-      avaliador: escolherAvaliador(avaliadorAtual.data, avaliador.data, user.email),
+      avaliador: escolherAvaliador(avaliador.data, null, user.email),
       avaliacao: { data: aval.data, tipo: aval.tipo },
       modulos: aval.modulos_selecionados,
       dados: {
@@ -140,7 +139,6 @@ export async function GET(req: NextRequest) {
     };
 
     const html = renderLaudoHTML(dadosLaudo);
-    const footerTemplate = renderLaudoFooterHTML(dadosLaudo);
 
     const browser = await launchPdfBrowser();
 
@@ -158,10 +156,8 @@ export async function GET(req: NextRequest) {
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
-        displayHeaderFooter: true,
-        headerTemplate: '<div></div>',
-        footerTemplate,
-        margin: { top: '0', right: '0', bottom: '13mm', left: '0' },
+        displayHeaderFooter: false,
+        margin: { top: '0', right: '0', bottom: '0', left: '0' },
       });
 
       return new NextResponse(Buffer.from(pdf), {

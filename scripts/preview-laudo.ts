@@ -69,7 +69,7 @@ export const dados: LaudoData = {
     cor_gradient_3: '#67e8f9',
     telefone: '(11) 99999-0000',
     email: 'contato@movimentointegrado.com.br',
-    site: 'movimentointegrado.com.br',
+    site: 'medfit.med.br',
   },
   paciente: {
     nome: 'Marina Costa',

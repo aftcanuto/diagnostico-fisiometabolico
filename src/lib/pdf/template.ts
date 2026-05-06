@@ -39,6 +39,7 @@ export interface LaudoData {
 // â”€â”€â”€ Utils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const x = (s: any) => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const fd = (iso: string) => { try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; } };
+const cssStr = (s: any) => `"${String(s ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ').trim()}"`;
 function limparTextoHTML(html: string): string {
   const pares: [string, string][] = [
     ['ÃƒÂ¡','á'], ['ÃƒÂ ','à'], ['ÃƒÂ¢','â'], ['ÃƒÂ£','ã'], ['ÃƒÂ©','é'], ['ÃƒÂª','ê'], ['ÃƒÂ­','í'], ['ÃƒÂ³','ó'], ['ÃƒÂ´','ô'], ['ÃƒÂµ','õ'], ['ÃƒÂº','ú'], ['ÃƒÂ§','ç'],
@@ -212,6 +213,30 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .chip { background:rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); padding: 12px 22px; border-radius: 12px; text-align: center; min-width: 95px; }
 .chip-label { font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
 .chip-val { font-size: 15px; font-weight: 700; color: #ffffff; }
+
+.page:not(.cover) { padding-bottom: 58px !important; }
+.page:not(.cover)::after {
+  content: var(--laudo-footer-left) "   •   " var(--laudo-footer-center) "   •   " var(--laudo-footer-right);
+  position:absolute;
+  left:36px;
+  right:36px;
+  bottom:12px;
+  min-height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #e2e8f0;
+  border-radius:999px;
+  background:rgba(255,255,255,.96);
+  color:#64748b;
+  box-shadow:0 10px 24px rgba(15,23,42,.05);
+  font-size:7.5px;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding:0 14px;
+}
 
 /* Summary */
 .summary { background: #ffffff; color: #0f172a; padding: 30px 36px 28px; }
@@ -389,8 +414,7 @@ function pgCapa(d: LaudoData): string {
   const c = d.clinica;
   const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
   const nomeLen = (d.paciente.nome ?? '').length;
-  const nomeFont = nomeLen > 58 ? 34 : nomeLen > 50 ? 38 : nomeLen > 44 ? 42 : nomeLen > 38 ? 47 : nomeLen > 32 ? 52 : 58;
-  const nomeScale = nomeLen > 58 ? .82 : nomeLen > 50 ? .88 : nomeLen > 44 ? .93 : 1;
+  const nomeFont = nomeLen > 58 ? 28 : nomeLen > 50 ? 31 : nomeLen > 44 ? 34 : nomeLen > 38 ? 37 : nomeLen > 32 ? 40 : nomeLen > 27 ? 43 : 50;
   const logoInner = c?.logo_url
     ? `<img src="${x(c.logo_url)}" style="width:48px;height:48px;object-fit:contain;display:block"/>`
     : `<span style="font-size:22px;font-weight:900;color:${x(c?.cor_primaria ?? '#059669')}">${x((c?.nome??'D').charAt(0))}</span>`;
@@ -416,7 +440,7 @@ function pgCapa(d: LaudoData): string {
 
     <div class="cover-main">
       <div class="cover-badge">Avaliação fisiometabólica</div>
-      <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.02;transform:scaleX(${nomeScale});transform-origin:left center">${x(d.paciente.nome)}</h1>
+      <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.02;overflow:hidden;text-overflow:clip">${x(d.paciente.nome)}</h1>
       <div class="cover-subtitle">Relatório técnico de composição corporal, capacidades funcionais e indicadores fisiometabólicos.</div>
       <div class="cover-chip-grid">
         ${[
@@ -572,39 +596,16 @@ function pgResumo(d: LaudoData): string {
     </div>
   </div>
 
-  <!-- â”€â”€ CORPO PRINCIPAL: silhueta + gauges â”€â”€ -->
-  <div style="display:grid;grid-template-columns:190px 1fr;gap:20px;align-items:start">
+  <!-- â”€â”€ CORPO PRINCIPAL: score + capacidades â”€â”€ -->
+  <div style="display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:start">
 
-    <!-- COLUNA ESQUERDA: silhueta + mÃ©tricas corpo -->
+    <!-- COLUNA ESQUERDA: score global -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
 
       <!-- Score global grande -->
       <div style="text-align:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px 20px;width:100%">
         <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Score Global</div>
         ${gauge(d.scores.global, '', 'sm')}
-      </div>
-
-      <!-- Silhueta com card -->
-      <div style="background:#f8fafc;border:1px solid ${gorCor}33;border-radius:16px;padding:16px 12px;width:100%;display:flex;flex-direction:column;align-items:center">
-        <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">ComposiÃ§Ã£o Corporal</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:10px;min-height:150px;width:100%">
-          ${somaClass?`<div style="width:70px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:9px 8px;text-align:left;align-self:center">
-            <div style="font-size:7px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Somatotipo</div>
-            <div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.15">${x(somaClass)}</div>
-            ${somaTrio?`<div style="font-size:8px;font-weight:600;color:#64748b;margin-top:4px">${somaTrio}</div>`:''}
-          </div>`:''}
-          ${silhueta(d.paciente.sexo, pctG)}
-        </div>
-        <div style="margin-top:10px;padding:5px 16px;border-radius:100px;font-size:11px;font-weight:700;background:${gorCor}20;color:${gorCor};border:1px solid ${gorCor}44;width:100%;text-align:center">${statusLbl}</div>
-        ${barraEscala}
-      </div>
-
-      <!-- MÃ©tricas rÃ¡pidas abaixo da silhueta -->
-      <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        ${peso!=null?`<div style="background:#f8fafc;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:#0f172a">${peso}</div><div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">kg peso</div></div>`:''}
-        ${mlg!=null?`<div style="background:#f8fafc;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:#16a34a">${mlg}</div><div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">kg magra</div></div>`:''}
-        ${imc!=null?`<div style="background:#f8fafc;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:#2563eb">${imc}</div><div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">IMC</div></div>`:''}
-        ${tmb!=null?`<div style="background:#f8fafc;border-radius:10px;padding:10px;text-align:center"><div style="font-size:15px;font-weight:800;color:#7c3aed">${tmb}</div><div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">kcal TMB</div></div>`:''}
       </div>
 
     </div>
@@ -1480,11 +1481,16 @@ function pgRodape(d: LaudoData, pri: string): string {
 export function renderLaudoHTML(d: LaudoData): string {
   const m = d.modulos, ia = d.analisesIA??{};
   const pri = d.clinica?.cor_primaria ?? '#059669';
+  const footerLeft = d.clinica?.nome || 'Diagnóstico Fisiometabólico';
+  const footerCenter = [d.avaliador.nome, d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
+  const footerRight = `${d.paciente.nome}${d.paciente.cpf ? ` · CPF: ${d.paciente.cpf}` : ''}`;
 
   const pages = [
     pgCapa(d),
     pgResumo(d),
     ia.conclusao_global ? pgConclusao(d, pri) : '',
+    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia) : '',
+    m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria) : '',
     // Anamnese + Sinais Vitais â€” pÃ¡gina combinada
     (m.anamnese || m.sinais_vitais)
       ? pgSinaisAnamnese(
@@ -1499,8 +1505,6 @@ export function renderLaudoHTML(d: LaudoData): string {
           m.flexibilidade ? d.dados.flexibilidade : null, m.flexibilidade ? d.scores.flexibilidade??null : null,
           m.posturografia ? ia.posturografia : null, m.flexibilidade ? ia.flexibilidade : null, pri)
       : '',
-    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia) : '',
-    m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria) : '',
     m.forca               ? pgForca(d.dados.forca, d.scores.forca, ia.forca) : '',
     m.rml                 ? pgRML(d.dados.rml, d.scores.rml??null, d.paciente.sexo, d.paciente.idade, ia.rml, pri) : '',
     m.cardiorrespiratorio ? pgCardio(d.dados.cardiorrespiratorio, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio) : '',
@@ -1515,5 +1519,5 @@ export function renderLaudoHTML(d: LaudoData): string {
 <html lang="pt-BR"><head><meta charset="utf-8"/>
 <title>${x(d.paciente.nome)} â€” DiagnÃ³stico FisiometabÃ³lico</title>
 <style>${CSS(pri)}</style>
-</head><body>${pages}</body></html>`);
+</head><body style="--laudo-footer-left:${cssStr(footerLeft)};--laudo-footer-center:${cssStr(footerCenter)};--laudo-footer-right:${cssStr(footerRight)}">${pages}</body></html>`);
 }

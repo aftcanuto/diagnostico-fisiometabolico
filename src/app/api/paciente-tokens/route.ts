@@ -71,6 +71,8 @@ export async function GET(req: NextRequest) {
     .from('paciente_tokens')
     .select('*')
     .eq('paciente_id', pacienteId)
+    .eq('revogado', false)
+    .gt('expira_em', new Date().toISOString())
     .order('criado_em', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -744,6 +744,61 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: links revogados ocultos no painel do paciente
+
+Em 06/05/2026 foi ajustada a exibicao dos links do portal do paciente.
+
+Problema observado:
+
+- quando um link do portal era revogado, ele deixava de funcionar, mas continuava exposto na lista do painel do paciente.
+
+Correcoes aplicadas:
+
+- `src/components/ShareTokenPanel.tsx` remove o link da tela imediatamente apos a revogacao;
+- `src/components/ShareTokenPanel.tsx` mostra apenas links ativos e exibe uma mensagem simples quando nao houver link ativo;
+- `src/app/api/paciente-tokens/route.ts` passou a retornar apenas tokens nao revogados e ainda dentro do prazo de validade.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Correcao: sequencia do relatorio, capa sem rodape e site da clinica
+
+Em 06/05/2026 foram aplicados ajustes no PDF e no uso dos dados da clinica.
+
+Problemas observados:
+
+- a capa ficou visualmente boa, mas o nome do paciente ainda podia desconfigurar;
+- o resumo misturava score global com composicao corporal, deixando a leitura ruim;
+- a composicao corporal precisava vir em pagina propria apos a conclusao clinica;
+- a capa nao deveria receber rodape, pois ficava redundante e poluia o visual;
+- o site usado em previews estava incorreto;
+- o relatorio interno ainda podia usar o avaliador logado em vez do avaliador que fez a avaliacao.
+
+Correcoes aplicadas:
+
+- `src/lib/pdf/template.ts` reduziu a fonte do nome da capa de forma mais conservadora e removeu escala horizontal deformante;
+- o resumo do PDF agora mostra apenas score global e capacidades avaliadas;
+- a sequencia do PDF ficou: capa, score global/resumo, conclusao clinica, composicao corporal, antropometria e demais modulos;
+- o rodape do PDF passou a ser renderizado dentro das paginas do relatorio e nao aparece na capa;
+- `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` nao usam mais o footer global do Puppeteer;
+- `src/app/api/pdf/route.ts` passou a travar o avaliador do relatorio no `avaliador_id` da avaliacao;
+- `src/app/api/pdf/publico/route.ts` passou a priorizar o avaliador da avaliacao antes do avaliador do token;
+- `scripts/preview-laudo.ts` passou a usar `medfit.med.br` no dado de preview;
+- relatorio e dashboard continuam puxando `clinica.site` do cadastro da clinica.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Reescrita da capa do relatorio
 
 Em 06/05/2026 a capa do PDF foi refeita do zero para substituir o layout antigo que estava ficando desfigurado.
