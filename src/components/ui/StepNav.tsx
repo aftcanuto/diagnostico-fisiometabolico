@@ -12,6 +12,14 @@ export interface Step {
   done?: boolean;
 }
 
+function textoSeguro(valor: any, fallback = '-'): string {
+  if (valor == null || valor === '') return fallback;
+  if (typeof valor === 'string' || typeof valor === 'number' || typeof valor === 'boolean') return String(valor);
+  if (Array.isArray(valor)) return textoSeguro(valor[0], fallback);
+  if (typeof valor === 'object') return textoSeguro(valor.label ?? valor.nome ?? valor.key ?? valor.id, fallback);
+  return fallback;
+}
+
 export function StepNav({ steps }: { steps: Step[] }) {
   const path = usePathname();
   return (
@@ -36,14 +44,14 @@ export function StepNav({ steps }: { steps: Step[] }) {
                 >
                   <Icon className={cn('w-4 h-4', s.done && 'text-emerald-600')} />
                   <span className="text-xs text-slate-400">{String(i + 1).padStart(2, '0')}</span>
-                  <span>{s.label}</span>
+                  <span>{textoSeguro(s.label)}</span>
                   {s.done && <span className="text-[10px] font-semibold text-emerald-700 bg-white/70 border border-emerald-200 rounded-full px-1.5 py-0.5">Feito</span>}
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm border border-dashed border-slate-200 text-slate-400">
                   <Icon className="w-4 h-4" />
                   <span className="text-xs">{String(i + 1).padStart(2, '0')}</span>
-                  <span>{s.label}</span>
+                  <span>{textoSeguro(s.label)}</span>
                 </div>
               )}
             </li>

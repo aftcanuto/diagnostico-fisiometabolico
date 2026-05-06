@@ -5,6 +5,18 @@ import { StepNav } from '@/components/ui/StepNav';
 import { buildSteps } from '@/lib/steps';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
+function textoSeguro(valor: any, fallback = '-'): string {
+  if (valor == null || valor === '') return fallback;
+  if (typeof valor === 'string' || typeof valor === 'number' || typeof valor === 'boolean') return String(valor);
+  if (Array.isArray(valor)) return textoSeguro(valor[0], fallback);
+  if (typeof valor === 'object') return textoSeguro(valor.nome ?? valor.label ?? valor.tipo ?? valor.status ?? valor.id, fallback);
+  return fallback;
+}
+
+function primeiroItem(valor: any) {
+  return Array.isArray(valor) ? valor[0] : valor;
+}
+
 export default async function AvaliacaoLayout({
   params, children,
 }: { params: { id: string }; children: React.ReactNode }) {
@@ -112,20 +124,25 @@ export default async function AvaliacaoLayout({
   };
 
   const steps = buildSteps(params.id, aval.modulos_selecionados, statusMap);
-  const p = aval.pacientes;
+  const p = primeiroItem(aval.pacientes) ?? {};
+  const pacienteId = textoSeguro(p.id, '');
+  const pacienteNome = textoSeguro(p.nome, 'Paciente');
+  const pacienteSexo = textoSeguro(p.sexo, '');
+  const pacienteNascimento = textoSeguro(p.data_nascimento, '');
+  const avaliacaoTipo = textoSeguro(aval.tipo, 'avaliacao');
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <Link href={`/pacientes/${p.id}`} className="text-xs text-brand-600 hover:underline">
-            ← {p.nome}
+          <Link href={pacienteId ? `/pacientes/${pacienteId}` : '/pacientes'} className="text-xs text-brand-600 hover:underline">
+            ← {pacienteNome}
           </Link>
           <h1 className="text-xl font-bold text-slate-800 mt-1">
             Avaliação de {new Date(aval.data).toLocaleDateString('pt-BR')}
           </h1>
           <p className="text-xs text-slate-500">
-            {p.sexo === 'M' ? 'Masc' : 'Fem'} · {calcIdade(p.data_nascimento)} anos · {aval.tipo}
+            {pacienteSexo === 'M' ? 'Masc' : 'Fem'} · {pacienteNascimento ? calcIdade(pacienteNascimento) : '-'} anos · {avaliacaoTipo}
           </p>
         </div>
       </div>

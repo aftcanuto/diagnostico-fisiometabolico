@@ -18,9 +18,20 @@ export function ClinicaMembrosPanel({ clinicaId, podeGerenciar }: { clinicaId: s
 
   async function carregar() {
     const { data } = await supabase.from('clinica_membros')
-      .select('id, papel, ativo, user_id, created_at, avaliadores:user_id(nome)')
+      .select('id, papel, ativo, user_id, created_at')
       .eq('clinica_id', clinicaId);
-    setMembros(data ?? []);
+
+    const base = data ?? [];
+    const ids = Array.from(new Set(base.map((m: any) => m.user_id).filter(Boolean)));
+    const { data: avaliadores } = ids.length
+      ? await supabase.from('avaliadores').select('id,nome').in('id', ids)
+      : { data: [] as any[] };
+    const nomes = new Map((avaliadores ?? []).map((a: any) => [a.id, a.nome]));
+
+    setMembros(base.map((m: any) => ({
+      ...m,
+      avaliadores: { nome: nomes.get(m.user_id) ?? null },
+    })));
     setLoading(false);
   }
 

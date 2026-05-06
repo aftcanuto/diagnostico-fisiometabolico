@@ -24,13 +24,21 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 );
 Textarea.displayName = 'Textarea';
 
+function textoSeguro(valor: any, fallback = ''): string {
+  if (valor == null || valor === '') return fallback;
+  if (typeof valor === 'string' || typeof valor === 'number' || typeof valor === 'boolean') return String(valor);
+  if (Array.isArray(valor)) return textoSeguro(valor[0], fallback);
+  if (typeof valor === 'object') return textoSeguro(valor.label ?? valor.nome ?? valor.valor ?? valor.id, fallback);
+  return fallback;
+}
+
 export const Field = ({ label, children, hint, error }: {
-  label: string; children: React.ReactNode; hint?: string; error?: string;
+  label: any; children: React.ReactNode; hint?: any; error?: any;
 }) => (
   <div>
-    <Label>{label}</Label>
+    <Label>{textoSeguro(label)}</Label>
     {children}
-    {hint && !error && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
-    {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    {hint && !error && <p className="mt-1 text-xs text-slate-500">{textoSeguro(hint)}</p>}
+    {error && <p className="mt-1 text-xs text-red-600">{textoSeguro(error)}</p>}
   </div>
 );

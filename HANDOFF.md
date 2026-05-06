@@ -787,6 +787,32 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: clinica e abertura da avaliacao em producao
+
+Em 06/05/2026 foram aplicadas protecoes adicionais para erros em producao apos navegar para Clinica e para uma avaliacao.
+
+Problemas observados:
+
+- a aba Clinica mostrava erro 400 no console ao buscar `clinica_membros` com relacionamento direto para `avaliadores`;
+- ao entrar em uma avaliacao, a tela podia quebrar com `Minified React error #31`, indicando algum objeto sendo renderizado diretamente;
+- templates dinamicos de anamnese ou relacionamentos do Supabase poderiam chegar como objeto/lista, especialmente em producao.
+
+Correcoes aplicadas:
+
+- `src/components/ClinicaMembrosPanel.tsx` deixou de usar select relacional direto e passou a carregar membros e nomes de avaliadores em duas consultas simples;
+- `src/app/(app)/avaliacoes/[id]/layout.tsx` passou a normalizar paciente, sexo, tipo da avaliacao e dados relacionais antes de renderizar o cabecalho;
+- `src/components/ui/StepNav.tsx` passou a transformar labels inesperados em texto seguro antes de mostrar os passos;
+- `src/components/ui/Input.tsx` passou a proteger `Field`, `hint` e `error` contra objetos/listas vindos de configuracoes ou banco;
+- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` passou a proteger labels, placeholders, unidades, opcoes e valores dinamicos do template de anamnese.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: contato da clinica e rodape do PDF
 
 Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.

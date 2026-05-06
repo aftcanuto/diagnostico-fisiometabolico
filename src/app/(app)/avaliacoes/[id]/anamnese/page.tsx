@@ -29,29 +29,47 @@ interface Template {
   campos: Campo[];
 }
 
+function textoSeguro(valor: any, fallback = ''): string {
+  if (valor == null || valor === '') return fallback;
+  if (typeof valor === 'string' || typeof valor === 'number' || typeof valor === 'boolean') return String(valor);
+  if (Array.isArray(valor)) return textoSeguro(valor[0], fallback);
+  if (typeof valor === 'object') return textoSeguro(valor.label ?? valor.nome ?? valor.valor ?? valor.id, fallback);
+  return fallback;
+}
+
+function valorInput(valor: any): any {
+  if (valor == null) return '';
+  if (typeof valor === 'object') return textoSeguro(valor);
+  return valor;
+}
+
 // ─── Renderizador de campo dinâmico ─────────────────────────────────────────
 function CampoDinamico({ campo, valor, onChange }: {
   campo: Campo;
   valor: any;
   onChange: (v: any) => void;
 }) {
+  const campoLabel = textoSeguro(campo.label, 'Campo');
+  const campoPlaceholder = textoSeguro(campo.placeholder);
+  const campoUnidade = textoSeguro(campo.unidade);
+  if (typeof valor === 'object') valor = textoSeguro(valor);
   // Título de seção
   if (campo.tipo === 'secao') {
     return (
       <div className="col-span-2 pt-4 pb-1 border-b border-slate-200">
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{campo.label}</h3>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{campoLabel}</h3>
       </div>
     );
   }
 
-  const label = campo.label + (campo.obrigatorio ? ' *' : '');
+  const label = campoLabel + (campo.obrigatorio ? ' *' : '');
 
   if (campo.tipo === 'texto_longo') {
     return (
       <div className="col-span-2">
         <Field label={label}>
-          <Textarea value={valor ?? ''} onChange={e => onChange(e.target.value)}
-            placeholder={campo.placeholder} />
+          <Textarea value={valorInput(valor)} onChange={e => onChange(e.target.value)}
+            placeholder={campoPlaceholder} />
         </Field>
       </div>
     );
@@ -60,8 +78,8 @@ function CampoDinamico({ campo, valor, onChange }: {
   if (campo.tipo === 'texto') {
     return (
       <Field label={label}>
-        <Input value={valor ?? ''} onChange={e => onChange(e.target.value)}
-          placeholder={campo.placeholder} />
+        <Input value={valorInput(valor)} onChange={e => onChange(e.target.value)}
+          placeholder={campoPlaceholder} />
       </Field>
     );
   }
@@ -82,9 +100,9 @@ function CampoDinamico({ campo, valor, onChange }: {
 
   if (campo.tipo === 'numero') {
     return (
-      <Field label={`${label}${campo.unidade ? ` (${campo.unidade})` : ''}`}>
-        <Input type="number" value={valor ?? ''} onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
-          placeholder={campo.placeholder} />
+      <Field label={`${label}${campoUnidade ? ` (${campoUnidade})` : ''}`}>
+        <Input type="number" value={typeof valor === 'object' ? '' : valor ?? ''} onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
+          placeholder={campoPlaceholder} />
       </Field>
     );
   }
@@ -94,7 +112,7 @@ function CampoDinamico({ campo, valor, onChange }: {
       <Field label={label}>
         <div className="flex items-center gap-2">
           <input type="range" min={1} max={10} step={1}
-            value={valor ?? 5}
+            value={typeof valor === 'object' ? 5 : valor ?? 5}
             onChange={e => onChange(Number(e.target.value))}
             className="flex-1 accent-brand-600" />
           <span className="w-8 text-center font-bold text-brand-700 text-lg">{valor ?? '—'}</span>
@@ -107,11 +125,11 @@ function CampoDinamico({ campo, valor, onChange }: {
   }
 
   if (campo.tipo === 'selecao') {
-    const opcoes = campo.opcoes ?? [];
+    const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes.map(op => textoSeguro(op)).filter(Boolean) : [];
     return (
       <Field label={label}>
         <select className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm bg-white"
-          value={valor ?? ''}
+          value={valorInput(valor)}
           onChange={e => onChange(e.target.value)}>
           <option value="">— Selecione —</option>
           {opcoes.map(op => <option key={op} value={op}>{op}</option>)}
@@ -123,7 +141,7 @@ function CampoDinamico({ campo, valor, onChange }: {
   if (campo.tipo === 'data') {
     return (
       <Field label={label}>
-        <Input type="date" value={valor ?? ''} onChange={e => onChange(e.target.value)} />
+        <Input type="date" value={valorInput(valor)} onChange={e => onChange(e.target.value)} />
       </Field>
     );
   }
@@ -281,12 +299,12 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
         const grupos: Grupo[] = [];
         let grupoAtual: Grupo = { titulo: null, campos: [] };
 
-        for (const campo of template.campos) {
+        for (const campo of (Array.isArray(template.campos) ? template.campos : [])) {
           if (campo.tipo === 'secao') {
             if (grupoAtual.campos.length > 0 || grupoAtual.titulo) {
               grupos.push(grupoAtual);
             }
-            grupoAtual = { titulo: campo.label, campos: [] };
+            grupoAtual = { titulo: textoSeguro(campo.label, 'Seção'), campos: [] };
           } else {
             grupoAtual.campos.push(campo);
           }
@@ -306,7 +324,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {grupo.campos.map(campo => (
                   <CampoDinamico
-                    key={campo.id}
+                    key={textoSeguro(campo.id, `campo-${gi}`)}
                     campo={campo}
                     valor={respostas[campo.id]}
                     onChange={v => setResp(campo.id, v)}
