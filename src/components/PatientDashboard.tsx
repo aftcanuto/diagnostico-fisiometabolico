@@ -188,7 +188,7 @@ function MetricCard({ label, value, unit, color = '#0f172a' }: {
   return (
     <div style={{ background: '#f8fafc', borderRadius: 10,
       padding: 10, textAlign: 'center' }}>
-      <div style={{ fontSize: 18, fontWeight: 800, color, lineHeight: 1 }}>
+      <div style={{ fontSize: 18, fontWeight: 600, color, lineHeight: 1 }}>
         {value ?? '—'}{unit && <span style={{ fontSize: 11, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>{unit}</span>}
       </div>
       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase',
@@ -202,9 +202,9 @@ function MetricLine({ label, value, unit, color }: { label: string; value: any; 
   return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
       padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
-      <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25}}>{label}</div>
+      <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25}}>{label}</div>
       <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'right',whiteSpace:'nowrap'}}>
-        <span style={{fontSize:16,fontWeight:900,color:color??'#0f172a',lineHeight:1.15}}>{value??'—'}</span>
+        <span style={{fontSize:16,fontWeight:600,color:color??'#0f172a',lineHeight:1.15}}>{value??'—'}</span>
         {unit&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8'}}>{unit}</span>}
       </div>
     </div>
@@ -218,13 +218,13 @@ function PreviewMetricLine({ label, value }: { label: string; value: any }) {
     <div
       style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'flex-start',gap:12,
         padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
-      <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 140px'}}>{label}</div>
+      <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:'0 0 140px'}}>{label}</div>
       <button type="button" onClick={()=>setOpen(v=>!v)}
-        style={{fontSize:13,fontWeight:600,color:'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0,flex:1,textAlign:'left',border:0,background:'transparent',padding:0,cursor:'pointer'}}>
+        style={{fontSize:13,fontWeight:500,color:'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0,flex:1,textAlign:'left',border:0,background:'transparent',padding:0,cursor:'pointer'}}>
         {text}
       </button>
       <button type="button" aria-label="Ver texto completo" onClick={()=>setOpen(v=>!v)} style={{width:22,height:22,borderRadius:999,display:'flex',alignItems:'center',justifyContent:'center',
-        flexShrink:0,background:'#ecfdf5',border:'1px solid #bbf7d0',color:'#047857',fontSize:12,fontWeight:900,cursor:'help'}}>
+        flexShrink:0,background:'#ecfdf5',border:'1px solid #bbf7d0',color:'#047857',fontSize:12,fontWeight:700,cursor:'help'}}>
         i
       </button>
       {open && (
@@ -252,6 +252,30 @@ function formatDashboardValue(v: any): string {
   return pares.length ? pares.join('\n') : '-';
 }
 
+function valorValidado(v: any): any {
+  if (v == null || v === '') return null;
+  if (typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.find(item => item != null && item !== '') ?? null;
+  return v.media ?? v.média ?? v.validada ?? v.validado ?? v.valor ?? v.resultado ?? v.total ?? v.m3 ?? v.m2 ?? v.m1 ?? null;
+}
+
+function numeroScore(v: any): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}
+
+function ModuleScoreBadge({ score }: { score: any }) {
+  const s = numeroScore(score);
+  if (s == null) return null;
+  const cor = zoneColor(s);
+  return (
+    <div style={{ marginLeft:'auto', textAlign:'center', padding:'8px 14px', background:'#f8fafc', border:`1px solid ${cor}35`, borderRadius:14, flexShrink:0 }}>
+      <div style={{ fontSize:24, fontWeight:700, color:cor, lineHeight:1 }}>{s}</div>
+      <div style={{ fontSize:8, color:cor, textTransform:'uppercase', letterSpacing:1, marginTop:3, fontWeight:700 }}>Score</div>
+    </div>
+  );
+}
+
 function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|null; massaMagra:number|null; massaOssea:number|null; peso:number|null; altura:number|null; sexo:'M'|'F'}) {
   if(ffmi==null&&massaMagra==null)return null;
   const alturaM=altura?altura/100:null;
@@ -260,12 +284,12 @@ function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|nul
   const pct=massaMagra!=null&&massaMax?Math.max(0,Math.min(100,+((massaMagra/massaMax)*100).toFixed(1))):null;
   return (
     <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
-      <div style={{fontSize:18,fontWeight:900,marginBottom:4}}>FFMI e potencial muscular</div>
+      <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>FFMI e potencial muscular</div>
       <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Índice de massa livre de gordura e limite natural estimado</div>
       <div style={{display:'grid',gridTemplateColumns:'minmax(170px,.7fr) minmax(260px,1.3fr)',gap:20,alignItems:'center'}}>
         <div style={{padding:'18px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
-          <div style={{fontSize:10,fontWeight:900,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
-          <div style={{fontSize:52,fontWeight:950,lineHeight:.95,letterSpacing:'-1px',color:'#10b981'}}>{ffmi??'—'}</div>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
+          <div style={{fontSize:52,fontWeight:700,lineHeight:.95,letterSpacing:'-1px',color:'#10b981'}}>{ffmi??'—'}</div>
           <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginTop:8}}>Índice de massa livre de gordura</div>
         </div>
         <div>
@@ -278,10 +302,10 @@ function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|nul
           <div style={{padding:'14px 16px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
             <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'baseline',marginBottom:10}}>
               <div>
-                <div style={{fontSize:10,fontWeight:900,letterSpacing:'.7px',textTransform:'uppercase',color:'#94a3b8'}}>Potencial muscular natural</div>
-                <div style={{fontSize:13,fontWeight:800,color:'#0f172a',marginTop:2}}>Massa magra atual vs limite estimado</div>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:'.7px',textTransform:'uppercase',color:'#94a3b8'}}>Potencial muscular natural</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#0f172a',marginTop:2}}>Massa magra atual vs limite estimado</div>
               </div>
-              {pct!=null&&<div style={{fontSize:18,fontWeight:950,color:'#10b981'}}>{pct}%</div>}
+              {pct!=null&&<div style={{fontSize:18,fontWeight:700,color:'#10b981'}}>{pct}%</div>}
             </div>
             <div style={{position:'relative',height:14,borderRadius:99,background:'#e2e8f0',overflow:'hidden'}}>
               <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#06b6d4,#10b981,#f59e0b)',opacity:.22}}/>
@@ -312,13 +336,13 @@ function CompRow({ label, atual, anterior, unidade, direcao, casas = 1 }: {
     <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:14,padding:'13px 15px',minWidth:0}}>
       <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start'}}>
         <div>
-          <div style={{fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:6}}>{label}</div>
-          <div style={{fontSize:20,fontWeight:900,color:'#0f172a',lineHeight:1.05,whiteSpace:'nowrap'}}>
+          <div style={{fontSize:10,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:6}}>{label}</div>
+          <div style={{fontSize:20,fontWeight:700,color:'#0f172a',lineHeight:1.05,whiteSpace:'nowrap'}}>
             {a != null ? a.toFixed(casas) : '—'}{unidade && <span style={{fontSize:11,fontWeight:600,color:'#64748b',marginLeft:3}}>{unidade.trim()}</span>}
           </div>
         </div>
         {diff != null && (
-          <div style={{fontSize:11,fontWeight:900,color:cor,background:`${cor}14`,border:`1px solid ${cor}30`,borderRadius:999,padding:'3px 8px',whiteSpace:'nowrap'}}>
+          <div style={{fontSize:11,fontWeight:700,color:cor,background:`${cor}14`,border:`1px solid ${cor}30`,borderRadius:999,padding:'3px 8px',whiteSpace:'nowrap'}}>
             {diff > 0 ? '+' : ''}{diff}{unidade.trim() && <span style={{fontWeight:700,marginLeft:2}}>{unidade.trim()}</span>}
           </div>
         )}
@@ -441,11 +465,11 @@ function QuickModuleEditor({ avaliacaoId, label, tabela, row, onSaved }: { avali
     <div style={{border:'1px solid #e2e8f0',borderRadius:14,background:'#fff',overflow:'hidden'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'13px 16px',background:'#f8fafc',borderBottom:'1px solid #e2e8f0'}}>
         <div>
-          <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{label}</div>
+          <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>{label}</div>
           <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>Edição rápida dos campos salvos</div>
         </div>
         <button onClick={salvar} disabled={status==='saving'}
-          style={{border:'1px solid #bbf7d0',background:'#f0fdf4',color:'#047857',borderRadius:10,padding:'7px 12px',fontSize:11,fontWeight:900,cursor:'pointer'}}>
+          style={{border:'1px solid #bbf7d0',background:'#f0fdf4',color:'#047857',borderRadius:10,padding:'7px 12px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
           {status==='saving'?'Salvando...':status==='saved'?'Salvo':'Salvar'}
         </button>
       </div>
@@ -454,7 +478,7 @@ function QuickModuleEditor({ avaliacaoId, label, tabela, row, onSaved }: { avali
           const big = String(draft[f.id] ?? '').length > 80 || /observ|coment|analise|achado|texto|descricao|histor/i.test(f.id);
           return (
             <label key={f.id} style={{display:'flex',flexDirection:'column',gap:5,gridColumn:big?'1 / -1':undefined}}>
-              <span style={{fontSize:10,fontWeight:900,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px'}}>{f.label}</span>
+              <span style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px'}}>{f.label}</span>
               {f.kind === 'boolean' ? (
                 <select value={draft[f.id] ?? ''} onChange={e=>setDraft(d=>({...d,[f.id]:e.target.value}))}
                   style={{height:38,border:'1px solid #e2e8f0',borderRadius:10,padding:'0 10px',fontSize:13,fontWeight:700,color:'#0f172a',background:'#fff'}}>
@@ -512,18 +536,18 @@ function QuickAiEditor({ avaliacaoId, analises, onSaved }: { avaliacaoId: string
     <div style={{border:'1px solid #e2e8f0',borderRadius:14,background:'#fff',overflow:'hidden'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'13px 16px',background:'#f8fafc',borderBottom:'1px solid #e2e8f0'}}>
         <div>
-          <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>Análises clínicas</div>
+          <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>Análises clínicas</div>
           <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>Textos de IA e comentários revisáveis</div>
         </div>
         <button onClick={salvar} disabled={status==='saving'}
-          style={{border:'1px solid #bbf7d0',background:'#f0fdf4',color:'#047857',borderRadius:10,padding:'7px 12px',fontSize:11,fontWeight:900,cursor:'pointer'}}>
+          style={{border:'1px solid #bbf7d0',background:'#f0fdf4',color:'#047857',borderRadius:10,padding:'7px 12px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
           {status==='saving'?'Salvando...':status==='saved'?'Salvo':'Salvar'}
         </button>
       </div>
       <div style={{display:'grid',gap:10,padding:14}}>
         {entries.map(e => (
           <label key={e.tipo} style={{display:'flex',flexDirection:'column',gap:5}}>
-            <span style={{fontSize:10,fontWeight:900,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px'}}>{humanField(e.tipo)}</span>
+            <span style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px'}}>{humanField(e.tipo)}</span>
             <textarea value={draft[e.tipo] ?? ''} onChange={ev=>setDraft(d=>({...d,[e.tipo]:ev.target.value}))}
               rows={5}
               style={{border:'1px solid #e2e8f0',borderRadius:10,padding:10,fontSize:13,lineHeight:1.5,color:'#0f172a',background:'#fff'}}/>
@@ -629,7 +653,7 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
             whiteSpace: 'pre-line',
           }}
         >
-          <div style={{ fontSize: 10, fontWeight: 900, color: '#047857', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 7 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#047857', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 7 }}>
             Análise clínica
           </div>
           {textoFormatado}
@@ -662,24 +686,24 @@ function QuickEditPanel({ avaliacao, defaultOpen = false }: { avaliacao: Avaliac
     <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 22px'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14}}>
         <div>
-          <div style={{fontSize:16,fontWeight:900,color:'#0f172a'}}>Edição rápida da avaliação</div>
+          <div style={{fontSize:16,fontWeight:700,color:'#0f172a'}}>Edição rápida da avaliação</div>
           <div style={{fontSize:12,color:'#64748b',marginTop:3}}>Abra somente o módulo que deseja editar, seguindo a ordem da avaliação.</div>
         </div>
         {active&&<button onClick={()=>setSelected(null)}
-          style={{display:'inline-flex',alignItems:'center',gap:8,border:'1px solid #d1fae5',background:'#ecfdf5',color:'#047857',borderRadius:12,padding:'9px 14px',fontSize:12,fontWeight:900,cursor:'pointer'}}>
+          style={{display:'inline-flex',alignItems:'center',gap:8,border:'1px solid #d1fae5',background:'#ecfdf5',color:'#047857',borderRadius:12,padding:'9px 14px',fontSize:12,fontWeight:700,cursor:'pointer'}}>
           Fechar edição
         </button>}
       </div>
       <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:16}}>
         {modules.map(([key,label])=>(
           <button key={key} onClick={()=>setSelected(key)}
-            style={{display:'inline-flex',alignItems:'center',gap:7,border:`1px solid ${activeKey===key?'#10b981':'#e2e8f0'}`,background:activeKey===key?'#ecfdf5':'#f8fafc',color:activeKey===key?'#047857':'#334155',borderRadius:999,padding:'8px 12px',fontSize:11,fontWeight:900,cursor:'pointer'}}>
+            style={{display:'inline-flex',alignItems:'center',gap:7,border:`1px solid ${activeKey===key?'#10b981':'#e2e8f0'}`,background:activeKey===key?'#ecfdf5':'#f8fafc',color:activeKey===key?'#047857':'#334155',borderRadius:999,padding:'8px 12px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
             <Pencil size={12}/> {label}
           </button>
         ))}
         {hasAnalises&&(
           <button onClick={()=>setSelected('__analises')}
-            style={{display:'inline-flex',alignItems:'center',gap:7,border:`1px solid ${activeKey==='__analises'?'#10b981':'#e2e8f0'}`,background:activeKey==='__analises'?'#ecfdf5':'#f8fafc',color:activeKey==='__analises'?'#047857':'#334155',borderRadius:999,padding:'8px 12px',fontSize:11,fontWeight:900,cursor:'pointer'}}>
+            style={{display:'inline-flex',alignItems:'center',gap:7,border:`1px solid ${activeKey==='__analises'?'#10b981':'#e2e8f0'}`,background:activeKey==='__analises'?'#ecfdf5':'#f8fafc',color:activeKey==='__analises'?'#047857':'#334155',borderRadius:999,padding:'8px 12px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
             <Pencil size={12}/> Análises clínicas
           </button>
         )}
@@ -715,13 +739,13 @@ function BiomecanicaRunnerCompare({ ang }: { ang: Record<string, any> }) {
   const colorFor = (cls?: string) => cls === 'ideal' ? '#10b981' : cls === 'atencao' ? '#f59e0b' : '#ef4444';
   return (
     <div style={{ marginTop: 16, border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden', background: '#f8fafc' }}>
-      <div style={{ padding: '10px 12px', borderBottom: '1px solid #e2e8f0', fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: .7 }}>Régua angular - valor medido x faixa ideal</div>
+      <div style={{ padding: '10px 12px', borderBottom: '1px solid #e2e8f0', fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: .7 }}>Régua angular - valor medido x faixa ideal</div>
       {[
         ['Plano sagital', principais.slice(0, 6)],
         ['Plano posterior', principais.slice(6)],
       ].map(([plano, keys]: any) => keys.length ? (
         <div key={plano}>
-          <div style={{ padding: '12px 14px 4px', fontSize: 10, fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: .7 }}>{plano}</div>
+          <div style={{ padding: '12px 14px 4px', fontSize: 10, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: .7 }}>{plano}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 10, padding: '0 14px 12px' }}>
         {keys.map((k: string) => {
           const v = ang[k]; const c = colorFor(v?.classificacao);
@@ -735,10 +759,10 @@ function BiomecanicaRunnerCompare({ ang }: { ang: Record<string, any> }) {
           const status = v?.classificacao === 'ideal' ? 'Dentro do ideal' : v?.classificacao === 'atencao' ? 'Atenção' : 'Fora do ideal';
           return <div key={k} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#334155', lineHeight: 1.2 }}>{labels[k] ?? k}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#334155', lineHeight: 1.2 }}>{labels[k] ?? k}</div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 900, color: c, lineHeight: 1 }}>{v.valor}°</div>
-                <div style={{ fontSize: 8, fontWeight: 800, color: c, textTransform: 'uppercase', letterSpacing: .4, marginTop: 2 }}>{status}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: c, lineHeight: 1 }}>{v.valor}°</div>
+                <div style={{ fontSize: 8, fontWeight: 600, color: c, textTransform: 'uppercase', letterSpacing: .4, marginTop: 2 }}>{status}</div>
               </div>
             </div>
             <div style={{ position: 'relative', height: 18, background: '#edf2f7', borderRadius: 999, boxShadow: 'inset 0 1px 2px #0f172a18' }}>
@@ -747,7 +771,7 @@ function BiomecanicaRunnerCompare({ ang }: { ang: Record<string, any> }) {
               <div style={{ position: 'absolute', left: `${valPct}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 11, height: 11, background: '#fff', border: `3px solid ${c}`, borderRadius: '50%' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#94a3b8', marginTop: 5 }}>
-              <span>{scaleMin}°</span><span style={{ color: '#059669', fontWeight: 800 }}>ideal {v.ideal_min}°-{v.ideal_max}°</span><span>{scaleMax}°</span>
+              <span>{scaleMin}°</span><span style={{ color: '#059669', fontWeight: 600 }}>ideal {v.ideal_min}°-{v.ideal_max}°</span><span>{scaleMax}°</span>
             </div>
           </div>;
         })}
@@ -906,7 +930,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               {pacienteNome.slice(0,1).toUpperCase()}
             </div>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: -.5 }}>{pacienteNome}</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: -.5 }}>{pacienteNome}</h1>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 3 }}>
                 {pacienteSexo === 'M' ? 'Masculino' : 'Feminino'} · {pacienteNascimento !== '-' ? calcIdade(pacienteNascimento) : '-'} anos
                 {avaliadorNome !== '-' && <> · <b style={{ color: '#ffffff' }}>{avaliadorNome}</b></>}
@@ -1006,7 +1030,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             {pctG != null && (
               <div style={{ background: `${gorCor}15`, border: `1px solid ${gorCor}40`,
                 borderRadius: 12, padding: '10px 14px', width: '100%', textAlign: 'center' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: gorCor }}>{pctG}%</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: gorCor }}>{pctG}%</div>
                 <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase',
                   letterSpacing: '.5px', marginTop: 2 }}>Gordura corporal</div>
               </div>
@@ -1094,14 +1118,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   padding: '18px 20px 14px', border: '1px solid #dbe7ef', boxShadow:'inset 0 1px 0 rgba(255,255,255,.9), 0 12px 28px rgba(15,23,42,.045)' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom: 8 }}>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 900, color: '#475569',
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#475569',
                         textTransform: 'uppercase', letterSpacing: '0.7px' }}>{nome}</div>
                       <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, lineHeight: 1.35 }}>{escopo}</div>
                     </div>
                     <div style={{ width: 34, height: 6, borderRadius: 999, background: cor, boxShadow:`0 8px 18px ${cor}45` }} />
                   </div>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
-                    <span style={{ fontSize:10, fontWeight:800, color:'#334155', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:999, padding:'4px 8px' }}>Score 0-100</span>
+                    <span style={{ fontSize:10, fontWeight:600, color:'#334155', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:999, padding:'4px 8px' }}>Score 0-100</span>
                     <span style={{ fontSize:10, fontWeight:700, color:'#64748b', background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:999, padding:'4px 8px' }}>Evolução longitudinal</span>
                   </div>
                   <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.45, marginBottom: 8 }}>{leitura}</div>
@@ -1131,7 +1155,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               <div key={titulo} style={{ background: 'linear-gradient(180deg,#ffffff,#f8fafc)', borderRadius: 18,
                 padding: '22px 24px 16px', color: '#0f172a', border:'1px solid #e2e8f0', boxShadow:'0 16px 34px rgba(15,23,42,.045)' }}>
                 <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:14 }}>
-                  <div style={{ fontSize: 14, fontWeight: 900 }}>{titulo}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{titulo}</div>
                   <div style={{ display:'flex', gap:5 }}>
                     {series.map((s:any)=><span key={s.nome} style={{width:8,height:8,borderRadius:'50%',background:s.cor,boxShadow:`0 5px 12px ${s.cor}55`}} />)}
                   </div>
@@ -1143,7 +1167,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
 
           {/* Comparativo */}
           <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'22px 24px'}}>
-            <div style={{fontSize:15,fontWeight:900,color:'#0f172a',marginBottom:4}}>Comparativo: atual vs. anterior</div>
+            <div style={{fontSize:15,fontWeight:700,color:'#0f172a',marginBottom:4}}>Comparativo: atual vs. anterior</div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Principais marcadores da avaliação selecionada</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10}}>
               <CompRow label="Peso"        atual={atual.antropometria?.peso}                  anterior={anterior?.antropometria?.peso}                  unidade=" kg"        direcao="descer_bom" />
@@ -1178,7 +1202,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             {/* Anamnese */}
             {anam && (
               <div style={{ order: 20, background: 'white', borderRadius: 14, padding: '18px 20px', color: '#0f172a' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: '#94a3b8',
+                <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 9, fontWeight: 600, color: '#94a3b8',
                   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
                   Anamnese
                   <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.anamnese)} /></span>
@@ -1199,32 +1223,32 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   ❤️ Sinais Vitais
                   <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.sinais_vitais)} /></span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
                   {sv.pa_sistolica != null && sv.pa_diastolica != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>Pressão arterial</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{sv.pa_sistolica}/{sv.pa_diastolica}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{sv.pa_sistolica}/{sv.pa_diastolica}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>mmHg</div>
                     </div>
                   )}
                   {sv.fc_repouso != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>FC repouso</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#f87171' }}>{sv.fc_repouso}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: '#f87171' }}>{sv.fc_repouso}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>bpm</div>
                     </div>
                   )}
                   {sv.spo2 != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>SpO₂</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#60a5fa' }}>{sv.spo2}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: '#60a5fa' }}>{sv.spo2}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>%</div>
                     </div>
                   )}
                   {sv.freq_respiratoria != null && sv.freq_respiratoria !== '' && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>Freq. resp.</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#a78bfa' }}>{sv.freq_respiratoria}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: '#a78bfa' }}>{sv.freq_respiratoria}</div>
                       <div style={{ fontSize: 9, color: '#94a3b8' }}>irpm</div>
                     </div>
                   )}
@@ -1235,11 +1259,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             {/* Flexibilidade */}
             {flex && (
               <div style={{ order: 60, background: 'white', borderRadius: 16, padding: '24px 28px', color: '#0f172a', border:'1px solid #e2e8f0' }}>
-                <div style={{ display:'flex',alignItems:'center',gap:8,fontSize: 18, fontWeight: 900, color:'#0f172a', marginBottom: 4 }}>Flexibilidade <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.flexibilidade)} /></div>
+                <div style={{ display:'flex',alignItems:'center',gap:8,fontSize: 18, fontWeight: 700, color:'#0f172a', marginBottom: 4 }}><span>Flexibilidade</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.flexibilidade)} /><ModuleScoreBadge score={sc.flexibilidade}/></div>
                 <div style={{ fontSize: 12, color:'#94a3b8', marginBottom: 16 }}>Banco de Wells - Sit and Reach</div>
                 <div style={{display:'flex',alignItems:'center',gap:24,flexWrap:'wrap'}}>
                   <div style={{textAlign:'center',flexShrink:0,paddingRight:18,borderRight:'1px solid #f1f5f9'}}>
-                    <div style={{fontSize:44,fontWeight:800,color:corFlex,lineHeight:1}}>{flex.melhor_resultado ?? '-'}</div>
+                    <div style={{fontSize:44,fontWeight:600,color:corFlex,lineHeight:1}}>{flex.melhor_resultado ?? '-'}</div>
                     <div style={{fontSize:12,color:'#94a3b8',marginTop:2}}>cm</div>
                     <div style={{display:'inline-block',marginTop:8,padding:'3px 14px',borderRadius:100,fontSize:11,fontWeight:700,background:`${corFlex}15`,color:corFlex,border:`1px solid ${corFlex}30`}}>
                       {flex.classificacao ?? '-'}
@@ -1263,6 +1287,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
                   🧍 Posturografia
                   <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.posturografia)} /></span>
+                  <ModuleScoreBadge score={sc.postura}/>
                 </div>
                 {/* Fotos de posturografia — somente no modo clínico */}
                 {modo === 'clinico' && (
@@ -1281,11 +1306,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                           ) : (
                             <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,color:'#94a3b8'}}>
                               <Camera size={28}/>
-                              <span style={{fontSize:9,fontWeight:900,textTransform:'uppercase',letterSpacing:'.6px'}}>Foto</span>
+                              <span style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Foto</span>
                             </div>
                           )}
                         </div>
-                        <div style={{ fontSize: 10, fontWeight:800, color: '#475569', padding:'7px 6px' }}>{lbl}</div>
+                        <div style={{ fontSize: 10, fontWeight:600, color: '#475569', padding:'7px 6px' }}>{lbl}</div>
                       </div>
                     ))}
                   </div>
@@ -1322,7 +1347,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center',
                           justifyContent: 'flex-start', gap: 8 }}>
                           <span style={{ fontSize: 10, color: '#94a3b8' }}>Score postura</span>
-                          <span style={{ fontSize: 16, fontWeight: 800,
+                          <span style={{ fontSize: 16, fontWeight: 600,
                             color: zoneColor(sc.postura) }}>{sc.postura}</span>
                         </div>
                       )}
@@ -1353,8 +1378,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         if (!itens.length && !segEntries.length) return null;
         return (
           <div style={{order:45, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
-            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:900, marginBottom:4}}>
-              Bioimpedância <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.bioimpedancia)} />
+            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
+              <span>Bioimpedância</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.bioimpedancia)} /><ModuleScoreBadge score={sc.composicao_corporal}/>
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Composição corporal e dados metabólicos</div>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
@@ -1362,7 +1387,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             </div>
             {segEntries.length > 0 && (
               <div style={{marginTop:14}}>
-                <div style={{fontSize:11, fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Massa magra segmentar</div>
+                <div style={{fontSize:11, fontWeight:600, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Massa magra segmentar</div>
                 <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
                   {segEntries.map(([k,v]: any) => {
                     const valor = typeof v === 'object' && v
@@ -1380,7 +1405,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       {atual.antropometria && (() => {
         const a = atual.antropometria as any;
         const dobras = a.dobras ?? {};
-        const somaDobras = Object.values(dobras).reduce((acc: number, v: any) => acc + (Number(v) || 0), 0);
+        const somaDobras = Object.values(dobras).reduce((acc: number, v: any) => acc + (Number(valorValidado(v)) || 0), 0);
         const itens = [
           ['Peso', a.peso, 'kg', '#0f172a'],
           ['Estatura', a.estatura, 'cm', '#0f172a'],
@@ -1394,8 +1419,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         if (!itens.length && !Object.keys(dobras).length) return null;
         return (
           <div style={{order:55, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
-            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:900, marginBottom:4}}>
-              Antropometria <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.antropometria)} />
+            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
+              <span>Antropometria</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.antropometria)} /><ModuleScoreBadge score={sc.composicao_corporal}/>
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Medidas ISAK, dobras cutâneas e composição corporal</div>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
@@ -1403,9 +1428,9 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             </div>
             {Object.keys(dobras).length > 0 && (
               <div style={{marginTop:14}}>
-                <div style={{fontSize:11, fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Dobras cutâneas</div>
+                <div style={{fontSize:11, fontWeight:600, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Dobras cutâneas</div>
                 <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
-                  {Object.entries(dobras).filter(([,v]) => v != null && v !== '').map(([k,v]) => <MetricLine key={k} label={humanField(k)} value={v} unit="mm"/>)}
+                  {Object.entries(dobras).filter(([,v]) => valorValidado(v) != null && valorValidado(v) !== '').map(([k,v]) => <MetricLine key={k} label={humanField(k)} value={valorValidado(v)} unit="mm"/>)}
                 </div>
               </div>
             )}
@@ -1426,8 +1451,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         if (!itens.length) return null;
         return (
           <div style={{order:69, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
-            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:900, marginBottom:4}}>
-              Força muscular <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.forca)} />
+            <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
+              <span>Força muscular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.forca)} /><ModuleScoreBadge score={sc.forca}/>
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Preensão palmar, força relativa e assimetria</div>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
@@ -1532,7 +1557,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                       <div style={{ fontSize: 9, fontWeight: 600, color: acento,
                         textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{titulo}</div>
                       <div style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
-                        {lado.kgf && <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>
+                        {lado.kgf && <div style={{ fontSize: 20, fontWeight: 600, color: '#0f172a' }}>
                           {lado.kgf}<span style={{ fontSize: 10, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>kgf</span>
                         </div>}
                         {lado.torque_nm && <div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>
@@ -1616,7 +1641,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                         ].map(([label, valor, un]) => (
                           <div key={label} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
                             <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px', fontWeight: 700 }}>{label}</div>
-                            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                            <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>
                               {valor || '—'} <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 500 }}>{un}</span>
                             </div>
                           </div>
@@ -1733,7 +1758,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
 
       {circDisplayItems.length > 0 && (
         <div style={{order: 52, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
-          <div style={{fontSize:18,fontWeight:900,marginBottom:4}}>Circunferências corporais</div>
+          <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Circunferências corporais</div>
           <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Medidas organizadas de cima para baixo no corpo</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:8}}>
             {circDisplayItems.map(([k,l])=><MetricLine key={k} label={l} value={circ[k]} unit="cm"/>)}
@@ -1743,7 +1768,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
 
       {diamDisplayItems.length > 0 && (
         <div style={{order: 53, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
-          <div style={{fontSize:18,fontWeight:900,marginBottom:4}}>Diâmetros ósseos</div>
+          <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Diâmetros ósseos</div>
           <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Medidas antropométricas de referência ISAK</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:8}}>
             {diamDisplayItems.map(([k,l])=><MetricLine key={k} label={l} value={diam[k]} unit="cm"/>)}
@@ -1767,7 +1792,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         if (!itens.length && !cardio.protocolo) return null;
         return (
           <div style={{order: 90, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:900,marginBottom:4}}>Saude cardiovascular <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /></div>
+            <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:700,marginBottom:4}}><span>Saude cardiovascular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /><ModuleScoreBadge score={sc.cardiorrespiratorio}/></div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aerobica, sinais vitais e zonas de treinamento</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
@@ -1805,7 +1830,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
                   Resistência Muscular (RML)
                   <AnaliseInfoTooltip texto={analiseRml} />
                 </div>
@@ -1815,24 +1840,24 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               </div>
               {sc.rml != null && (
                 <div style={{ textAlign: 'center', padding: '9px 18px', background: '#f8fafc', border: '1px solid #d1fae5', borderRadius: 14 }}>
-                  <div style={{ fontSize: 28, fontWeight: 950, color: '#10b981', lineHeight: 1 }}>{sc.rml}</div>
-                  <div style={{ fontSize: 9, color: '#059669', textTransform: 'uppercase', letterSpacing: 1, marginTop: 3, fontWeight:800 }}>Score</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: '#10b981', lineHeight: 1 }}>{sc.rml}</div>
+                  <div style={{ fontSize: 9, color: '#059669', textTransform: 'uppercase', letterSpacing: 1, marginTop: 3, fontWeight:600 }}>Score</div>
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10, marginBottom: 16 }}>
               {ativos.map((t, i) => {
                 const cor = t.cls ? (COR[t.cls] ?? '#6b7280') : '#6b7280';
                 return (
                   <div key={i} style={{ display: 'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:7, minHeight:104, padding:'14px 16px', border:`1px solid ${cor}35`, borderRadius:14, background:'#f8fafc', textAlign:'center' }}>
-                    <div style={{ fontSize: 28, fontWeight: 950, color: cor, lineHeight:1 }}>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: cor, lineHeight:1 }}>
                       {t.val}
                     </div>
-                    <div style={{ fontSize: 10, fontWeight: 800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.5px' }}>{t.unit}</div>
-                    <div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a', lineHeight:1.2 }}>{t.lbl}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.5px' }}>{t.unit}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', lineHeight:1.2 }}>{t.lbl}</div>
                       {t.cls && (
-                        <span style={{ display:'inline-block', marginTop:7, padding: '3px 9px', borderRadius: 100, fontSize: 9, fontWeight: 800, background: `${cor}18`, color: cor, border:`1px solid ${cor}30` }}>
+                        <span style={{ display:'inline-block', marginTop:7, padding: '3px 9px', borderRadius: 100, fontSize: 9, fontWeight: 600, background: `${cor}18`, color: cor, border:`1px solid ${cor}30` }}>
                           {t.cls}
                         </span>
                       )}
@@ -1864,7 +1889,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 15px',
                     background: '#059669', border: '1px solid #047857', borderRadius: 999,
                     boxShadow: '0 6px 14px rgba(5,150,105,.22)',
-                    fontSize: 12, fontWeight: 800, color: 'white', textDecoration: 'none' }}>
+                    fontSize: 12, fontWeight: 600, color: 'white', textDecoration: 'none' }}>
                   ▶ Ver vídeo
                 </a>
               )}
@@ -1963,7 +1988,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     ['joelho_url', 'joelho', 'Joelho'], ['quadril_url', 'quadril', 'Quadril'], ['cotovelo_url', 'cotovelo', 'Cotovelo'],
                   ].filter(([k]) => bio.graficos[k]).map(([k, _ck, l]) => (
                     <div key={k} style={{ maxWidth: 560, width: '100%', margin: '0 auto' }}>
-                      <div style={{ fontSize: 11, color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>{l}</div>
+                      <div style={{ fontSize: 11, color: '#0f172a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>{l}</div>
                       <div style={{ width: '100%', aspectRatio: '544 / 443', background: '#050505', borderRadius: 8, border: '1px solid #1f2937', overflow: 'hidden' }}>
                         <img src={bio.graficos[k]} alt={l}
                           style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
@@ -1973,7 +1998,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 </div>
                 {bio.comentarios_graficos?.geral && (
                   <div style={{ marginTop: 10, padding: '10px 11px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>Comentário geral dos gráficos</div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>Comentário geral dos gráficos</div>
                     <div style={{ fontSize: 12, lineHeight: 1.55, color: '#334155', whiteSpace: 'pre-line' }}>{bio.comentarios_graficos.geral}</div>
                   </div>
                 )}

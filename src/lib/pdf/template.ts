@@ -373,7 +373,8 @@ function pgCapa(d: LaudoData): string {
   const c = d.clinica;
   const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
   const nomeLen = (d.paciente.nome ?? '').length;
-  const nomeFont = nomeLen > 42 ? 38 : nomeLen > 34 ? 43 : nomeLen > 28 ? 48 : 54;
+  const nomeFont = nomeLen > 50 ? 32 : nomeLen > 44 ? 36 : nomeLen > 38 ? 40 : nomeLen > 32 ? 44 : 50;
+  const nomeScale = nomeLen > 50 ? .86 : nomeLen > 44 ? .9 : nomeLen > 38 ? .94 : 1;
   const logoInner = c?.logo_url
     ? `<img src="${x(c.logo_url)}" style="width:42px;height:42px;object-fit:contain"/>`
     : `<span style="font-size:20px;font-weight:800;color:white">${(c?.nome??'F').charAt(0)}</span>`;
@@ -388,7 +389,7 @@ function pgCapa(d: LaudoData): string {
   </div>
   <div class="cover-main">
     <div class="cover-badge">AvaliaÃ§Ã£o FisiometabÃ³lica</div>
-    <h1 class="cover-name" style="font-size:${nomeFont}px;white-space:nowrap;line-height:1.05">${x(d.paciente.nome)}</h1>
+    <h1 class="cover-name" style="font-size:${nomeFont}px;white-space:nowrap;line-height:1.04;letter-spacing:-.8px;max-width:100%;transform:scaleX(${nomeScale});transform-origin:center">${x(d.paciente.nome)}</h1>
     <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
       ${[['Idade',`${d.paciente.idade} anos`],['Sexo',d.paciente.sexo==='M'?'Masculino':'Feminino'],['Data',fd(d.avaliacao.data)],['Tipo',d.avaliacao.tipo]].map(([l,v])=>`<div class="chip"><div class="chip-label">${l}</div><div class="chip-val">${v}</div></div>`).join('')}
     </div>
@@ -817,6 +818,7 @@ function pgAntro(a: any, score: number | null, ia?: any): string {
   const sexo=a._sexo??'M';
   const limMax=a.estatura?(sexo==='M'?a.estatura-100:(a.estatura-100)*0.85):null;
   const pctPot=a.massa_magra&&limMax?+((a.massa_magra/limMax)*100).toFixed(1):null;
+  const dobraValidada = (v:any) => v?.media ?? v?.média ?? v?.['mÃ©dia'] ?? v?.validada ?? v?.validado ?? v?.valor ?? v?.resultado ?? v?.m3 ?? v?.m2 ?? v?.m1 ?? v;
   return pgModulo('Antropometria', score, `
   <div class="data-grid">
     <div class="data-card"><div class="dc-label">Peso</div><div class="dc-val">${a.peso??'â€”'}<span class="dc-unit">kg</span></div></div>
@@ -835,8 +837,8 @@ function pgAntro(a: any, score: number | null, ia?: any): string {
     </div>
   </div>`:''}
   ${Object.keys(dobras).length?`<div class="sec-sub">Dobras cutÃ¢neas (mm)</div>
-  <table><thead><tr><th>Dobra</th><th>M1</th><th>M2</th><th>M3</th><th>MÃ©dia</th></tr></thead><tbody>
-    ${ord.filter(k=>dobras[k]).map(k=>{const v=dobras[k];return `<tr><td>${rot[k]??k}</td><td>${v.m1??'â€”'}</td><td>${v.m2??'â€”'}</td><td>${v.m3??'â€”'}</td><td style="font-weight:700">${v.media??'â€”'}</td></tr>`;}).join('')}
+  <table><thead><tr><th>Dobra</th><th>Medida validada</th></tr></thead><tbody>
+    ${ord.filter(k=>dobras[k]).map(k=>{const v=dobraValidada(dobras[k]);return `<tr><td>${rot[k]??k}</td><td style="font-weight:600">${v??'â€”'} mm</td></tr>`;}).join('')}
   </tbody></table>`:''}
   ${soma?`<div class="kpi-grid" style="margin-top:18px">${kpi('Endomorfia',soma.endomorfia)}${kpi('Mesomorfia',soma.mesomorfia)}${kpi('Ectomorfia',soma.ectomorfia)}${kpi('ClassificaÃ§Ã£o',soma.classificacao)}</div>`:''}
   ${(() => {
@@ -1111,8 +1113,8 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
     ${c.classificacao_vo2?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2937;font-size:10px;color:#6b7280">ClassificaÃ§Ã£o: <b style="color:#16a34a">${x(c.classificacao_vo2)}</b>${c.protocolo?` Â· ${x(c.protocolo)}`:''}${c.ponto_limiar_tempo?` Â· Limiar em ${x(c.ponto_limiar_tempo)}`:''}</div>`:''}
   </div>
   ${Object.keys(recFC).length?`<div class="sec-sub">RecuperaÃ§Ã£o da FC</div>
-  <table><thead><tr><th>Segundos</th>${[5,10,15,20,25,30,35,40,45,50,55,60].map(s=>`<th style="text-align:center">${s}s</th>`).join('')}</tr></thead>
-  <tbody><tr><td style="font-weight:600">Î” bpm</td>${[5,10,15,20,25,30,35,40,45,50,55,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:700;color:${cor}">${v??'â€”'}</td>`;}).join('')}</tr></tbody></table>
+  <table><thead><tr><th>Segundos</th>${[10,30,60].map(s=>`<th style="text-align:center">${s}s</th>`).join('')}</tr></thead>
+  <tbody><tr><td style="font-weight:600">Î” bpm</td>${[10,30,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:600;color:${cor}">${v??'â€”'}</td>`;}).join('')}</tr></tbody></table>
   ${rec60!=null?`<div style="margin-top:8px;font-size:11px;font-weight:600;color:${recCor}">Rec. 60s: ${rec60} bpm Â· ${rec60<=-20?'Boa':rec60<=-12?'Mediana':'Ruim'}</div>`:''}
   `:''}
   ${zLim.length?`<div class="sec-sub">Zonas por limiar ventilatÃ³rio</div>

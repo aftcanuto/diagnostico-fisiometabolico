@@ -175,7 +175,7 @@ function GaugePremium({value,size=250}:{value:number|null;size?:number}) {
         <text x={cx} y={cy+size*.28} textAnchor="middle" fontSize={size*.22} fontWeight="900" fill={cor} fontFamily="Inter,system-ui">{value??'—'}</text>
       </svg>
       <span style={{fontSize:11,padding:'3px 12px',borderRadius:100,marginTop:-6,
-        background:`${cor}12`,color:cor,fontWeight:800,border:`1px solid ${cor}30`}}>{zLabel(value)}</span>
+        background:`${cor}12`,color:cor,fontWeight:600,border:`1px solid ${cor}30`}}>{zLabel(value)}</span>
     </div>
   );
 }
@@ -248,10 +248,38 @@ function DeltaB({d,boa}:{d:number|null;boa:'subir'|'descer'}) {
 }
 
 /* ── Card / Secao / Metrica ── */
-function Secao({titulo,sub,children,ordem}:{titulo:string;sub?:string;children:React.ReactNode;ordem?:number}) {
+function scoreNumero(v:any): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}
+
+function ModuleScoreBadge({score}:{score?:any}) {
+  const s = scoreNumero(score);
+  if (s == null) return null;
+  const cor = zCor(s);
+  return <div style={{marginLeft:'auto',textAlign:'center',padding:'8px 14px',background:'#f8fafc',
+    border:`1px solid ${cor}35`,borderRadius:14,flexShrink:0}}>
+    <div style={{fontSize:24,fontWeight:700,color:cor,lineHeight:1}}>{s}</div>
+    <div style={{fontSize:8,color:cor,textTransform:'uppercase',letterSpacing:1,marginTop:3,fontWeight:700}}>Score</div>
+  </div>;
+}
+
+function normalizarUrl(url?: string | null) {
+  const limpo = String(url ?? '').trim();
+  if (!limpo) return '';
+  if (/^https?:\/\//i.test(limpo)) return limpo;
+  return `https://${limpo.replace(/^\/+/, '')}`;
+}
+
+function Secao({titulo,sub,children,ordem,score}:{titulo:string;sub?:string;children:React.ReactNode;ordem?:number;score?:any}) {
   return <section style={{marginBottom:28,order:ordem??900}}>
-    <h2 style={{fontSize:17,fontWeight:700,color:'#0f172a',margin:'0 0 4px'}}>{titulo}</h2>
-    {sub&&<p style={{fontSize:12,color:'#94a3b8',margin:'0 0 14px'}}>{sub}</p>}
+    <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:sub?14:12}}>
+      <div>
+        <h2 style={{fontSize:17,fontWeight:700,color:'#0f172a',margin:'0 0 4px'}}>{titulo}</h2>
+        {sub&&<p style={{fontSize:12,color:'#94a3b8',margin:0}}>{sub}</p>}
+      </div>
+      <ModuleScoreBadge score={score}/>
+    </div>
     {!sub&&<div style={{height:12}}/>}
     {children}
   </section>;
@@ -270,7 +298,7 @@ function valorParaTela(v:any): string {
     return texto||'—';
   }
   if(typeof v==='object'){
-    const alvo=v.media??v.média??v.valor??v.resultado??v.total??v.kg??v.pct;
+    const alvo=v.media??v['média']??v['mÃ©dia']??v.validada??v.validado??v.valor??v.resultado??v.total??v.kg??v.pct??v.m3??v.m2??v.m1;
     return alvo==null||alvo===''?'—':String(alvo);
   }
   return String(v);
@@ -319,7 +347,7 @@ function Metrica({label,valor,un,cor,d,dBoa}:{label:string;valor:any;un?:string;
   const precisaTooltip=valorSeguro.length>34;
   return <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',overflow:'hidden',minWidth:0}}>
     <div style={{fontSize:10,color:'#94a3b8',fontWeight:500,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{label}</div>
-    <div style={{fontSize:17,fontWeight:700,color:cor??'#0f172a',lineHeight:1.2,wordBreak:'break-word'}}>
+    <div style={{fontSize:17,fontWeight:600,color:cor??'#0f172a',lineHeight:1.2,wordBreak:'break-word'}}>
       {valorSeguro}{un&&valorSeguro!=='—'&&<span style={{fontSize:11,fontWeight:400,color:'#94a3b8',marginLeft:3}}>{un}</span>}
     </div>
     {d!=null&&dBoa&&<div style={{marginTop:5}}><DeltaB d={d} boa={dBoa}/></div>}
@@ -332,9 +360,9 @@ function MetricaHorizontal({label,valor,un,cor,d,dBoa,nowrapValor}:{label:string
   const precisaTooltip=valorSeguro.length>34;
   return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
     padding:'10px 13px',background:'#f8fafc',borderRadius:10,border:'1px solid #f1f5f9',minWidth:0}}>
-    <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:nowrapValor?'0 0 88px':'0 0 96px'}}>{label}</div>
+    <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',lineHeight:1.25,flex:nowrapValor?'0 0 88px':'0 0 96px'}}>{label}</div>
     <div style={{display:'flex',alignItems:'baseline',gap:4,minWidth:0,textAlign:'left',flex:1,justifyContent:nowrapValor?'flex-end':'flex-start'}}>
-      <span style={{fontSize:nowrapValor?14:13,fontWeight:nowrapValor?800:600,color:cor??'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:nowrapValor?'visible':'hidden',textOverflow:nowrapValor?'clip':'ellipsis',maxWidth:nowrapValor?'none':'100%'}}>{valorSeguro}</span>
+      <span style={{fontSize:nowrapValor?14:13,fontWeight:600,color:cor??'#0f172a',lineHeight:1.25,whiteSpace:'nowrap',overflow:nowrapValor?'visible':'hidden',textOverflow:nowrapValor?'clip':'ellipsis',maxWidth:nowrapValor?'none':'100%'}}>{valorSeguro}</span>
       {un&&valorSeguro!=='—'&&<span style={{fontSize:10,fontWeight:500,color:'#94a3b8',whiteSpace:'nowrap'}}>{un}</span>}
       {d!=null&&dBoa&&<DeltaB d={d} boa={dBoa}/>}
       {precisaTooltip&&<TooltipInfo texto={valorSeguro}/>}
@@ -352,8 +380,8 @@ function FfmiPotencial({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:numbe
     <Card>
       <div style={{display:'grid',gridTemplateColumns:'minmax(170px,.7fr) minmax(260px,1.3fr)',gap:20,alignItems:'center'}}>
         <div style={{padding:'18px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
-          <div style={{fontSize:10,fontWeight:900,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
-          <div style={{fontSize:52,fontWeight:950,lineHeight:.95,letterSpacing:'-1px',color:'#10b981'}}>{ffmi??'—'}</div>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
+          <div style={{fontSize:52,fontWeight:700,lineHeight:.95,letterSpacing:'-1px',color:'#10b981'}}>{ffmi??'—'}</div>
           <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginTop:8}}>Índice de massa livre de gordura</div>
         </div>
         <div>
@@ -366,10 +394,10 @@ function FfmiPotencial({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:numbe
           <div style={{padding:'14px 16px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
             <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'baseline',marginBottom:10}}>
               <div>
-                <div style={{fontSize:10,fontWeight:900,letterSpacing:'.7px',textTransform:'uppercase',color:'#94a3b8'}}>Potencial muscular natural</div>
-                <div style={{fontSize:13,fontWeight:800,color:'#0f172a',marginTop:2}}>Massa magra atual vs limite estimado</div>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:'.7px',textTransform:'uppercase',color:'#94a3b8'}}>Potencial muscular natural</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#0f172a',marginTop:2}}>Massa magra atual vs limite estimado</div>
               </div>
-              {pct!=null&&<div style={{fontSize:18,fontWeight:950,color:'#10b981'}}>{pct}%</div>}
+              {pct!=null&&<div style={{fontSize:18,fontWeight:700,color:'#10b981'}}>{pct}%</div>}
             </div>
             <div style={{position:'relative',height:14,borderRadius:99,background:'#e2e8f0',overflow:'hidden'}}>
               <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#06b6d4,#10b981,#f59e0b)',opacity:.22}}/>
@@ -393,10 +421,10 @@ function FotoPostura({src,label}:{src?:string|null;label:string}) {
         ?<img src={src} alt={label} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
         :<div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,color:'#94a3b8'}}>
           <Camera size={34}/>
-          <span style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.6px'}}>Foto {label}</span>
+          <span style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.6px'}}>Foto {label}</span>
         </div>}
     </div>
-    <div style={{padding:'8px 10px',fontSize:11,fontWeight:800,color:'#334155',textAlign:'center'}}>{label}</div>
+    <div style={{padding:'8px 10px',fontSize:11,fontWeight:600,color:'#334155',textAlign:'center'}}>{label}</div>
   </div>;
 }
 
@@ -423,10 +451,10 @@ function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentar
   const status = v?.classificacao === 'ideal' ? 'Dentro do ideal' : v?.classificacao === 'atencao' ? 'Atenção' : 'Fora do ideal';
   return <div style={{ background:'white', border:'1px solid #e2e8f0', borderRadius:12, padding:'12px 14px', minHeight:128, overflow:'hidden' }}>
     <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:12,alignItems:'flex-start',marginBottom:12}}>
-      <div style={{fontSize:12,fontWeight:900,color:'#334155',lineHeight:1.25,wordBreak:'break-word'}}>{label}</div>
+      <div style={{fontSize:12,fontWeight:700,color:'#334155',lineHeight:1.25,wordBreak:'break-word'}}>{label}</div>
       <div style={{textAlign:'right',flexShrink:0}}>
-        <div style={{fontSize:16,fontWeight:900,color:c,lineHeight:1}}>{v?.valor}°</div>
-        <div style={{fontSize:8,fontWeight:900,color:c,textTransform:'uppercase',letterSpacing:.3,marginTop:3,maxWidth:84,whiteSpace:'normal'}}>{status}</div>
+        <div style={{fontSize:16,fontWeight:700,color:c,lineHeight:1}}>{v?.valor}°</div>
+        <div style={{fontSize:8,fontWeight:700,color:c,textTransform:'uppercase',letterSpacing:.3,marginTop:3,maxWidth:84,whiteSpace:'normal'}}>{status}</div>
       </div>
     </div>
     <div style={{position:'relative',height:20,background:'#edf2f7',borderRadius:999,boxShadow:'inset 0 1px 2px #0f172a18'}}>
@@ -435,7 +463,7 @@ function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentar
       <div style={{position:'absolute',left:`${valPct}%`,top:'50%',transform:'translate(-50%,-50%)',width:11,height:11,background:'#fff',border:`3px solid ${c}`,borderRadius:'50%'}}/>
     </div>
     <div style={{display:'flex',justifyContent:'space-between',fontSize:8,color:'#94a3b8',marginTop:5}}>
-      <span>{scaleMin}°</span><span style={{color:'#059669',fontWeight:800}}>ideal {v?.ideal_min}°-{v?.ideal_max}°</span><span>{scaleMax}°</span>
+      <span>{scaleMin}°</span><span style={{color:'#059669',fontWeight:600}}>ideal {v?.ideal_min}°-{v?.ideal_max}°</span><span>{scaleMax}°</span>
     </div>
     {comentario && <div style={{marginTop:8,padding:'8px 10px',borderRadius:8,background:'#f8fafc',border:'1px solid #e2e8f0',fontSize:11,lineHeight:1.5,color:'#334155',whiteSpace:'pre-line'}}>{comentario}</div>}
   </div>;
@@ -675,7 +703,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               background:'linear-gradient(180deg,#ffffff,#f8fafc)',color:'#0f172a',
               border:'1px solid #dbeafe',boxShadow:'0 18px 42px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.9)'}}>
               <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-                <div style={{fontSize:10,fontWeight:900,textTransform:'uppercase',letterSpacing:1.4,color:'#64748b',marginBottom:2}}>Score global</div>
+                <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.4,color:'#64748b',marginBottom:2}}>Score global</div>
                 <div style={{background:'linear-gradient(180deg,#fff,#f8fafc)',borderRadius:16,padding:'8px 8px 10px',width:'100%',
                   border:'1px solid #edf2f7',boxShadow:'inset 0 1px 0 rgba(255,255,255,.8), 0 12px 28px rgba(15,23,42,.08)'}}>
                   <GaugePremium value={sc.global??null} size={260}/>
@@ -702,8 +730,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   }}>
                     <div style={{display:'grid',gridTemplateColumns:'90px minmax(80px,1fr) auto',alignItems:'center',gap:10}}>
                       <div style={{minWidth:0}}>
-                        <div style={{fontSize:12,fontWeight:900,color:'#0f172a',letterSpacing:.2}}>{s.label}</div>
-                        <div style={{fontSize:9,fontWeight:900,color:hasVal?cor:'#94a3b8',textTransform:'uppercase',letterSpacing:.7,marginTop:3}}>
+                        <div style={{fontSize:12,fontWeight:700,color:'#0f172a',letterSpacing:.2}}>{s.label}</div>
+                        <div style={{fontSize:9,fontWeight:700,color:hasVal?cor:'#94a3b8',textTransform:'uppercase',letterSpacing:.7,marginTop:3}}>
                           {s.v==null?'N/A':zLabel(s.v)}
                         </div>
                       </div>
@@ -717,7 +745,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                           </div>
                         )}
                       </div>
-                      <div style={{fontSize:24,fontWeight:900,color:hasVal?cor:'#94a3b8',lineHeight:1,textAlign:'right'}}>
+                      <div style={{fontSize:24,fontWeight:700,color:hasVal?cor:'#94a3b8',lineHeight:1,textAlign:'right'}}>
                         {hasVal?s.v:'—'}
                       </div>
                     </div>
@@ -770,7 +798,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 3. COMPOSIÇÃO CORPORAL */}
       {(pctG!=null||peso!=null)&&(
-        <Secao ordem={40} titulo="Dados corporais" sub="Composição corporal, circunferências e medidas segmentadas">
+        <Secao ordem={40} titulo="Dados corporais" sub="Composição corporal, circunferências e medidas segmentadas" score={sc.composicao_corporal}>
           <Card style={{overflowX:'auto'}}>
             <div style={{minWidth:620}}>
               <SilhuetaCircunferencias
@@ -812,7 +840,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       )}
 
       {(ffmiValor!=null||mlg!=null)&&(
-        <Secao ordem={50} titulo="FFMI e potencial muscular" sub="Índice de massa livre de gordura e limite natural estimado">
+        <Secao ordem={50} titulo="FFMI e potencial muscular" sub="Índice de massa livre de gordura e limite natural estimado" score={sc.composicao_corporal}>
           <FfmiPotencial
             ffmi={ffmiValor??null}
             massaMagra={mlg??null}
@@ -850,7 +878,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 3b. BIOIMPEDÂNCIA DETALHADA */}
       {bioImp&&(
-        <Secao ordem={45} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar">
+        <Secao ordem={45} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar" score={sc.composicao_corporal}>
           <Card style={{marginBottom:14}}>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(118px,1fr))',gap:8}}>
               {bioImp.aparelho&&<Metrica label="Aparelho" valor={bioImp.aparelho}/>}
@@ -876,7 +904,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                       const pct=typeof v==='object'?v.pct:null;
                       return <div key={s.k} style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
                         <span style={{fontWeight:700,color:'#334155'}}>{s.l}</span>
-                        <span style={{fontWeight:800,color:'#059669'}}>{kg} kg</span>
+                        <span style={{fontWeight:600,color:'#059669'}}>{kg} kg</span>
                         {pct!=null&&<span style={{fontSize:10,color:'#64748b',background:'#f0fdf4',borderRadius:999,padding:'2px 8px'}}>{pct}%</span>}
                       </div>;
                     })}
@@ -895,7 +923,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                       const pct=typeof v==='object'?v.pct:null;
                       return <div key={s.k} style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
                         <span style={{fontWeight:700,color:'#334155'}}>{s.l}</span>
-                        <span style={{fontWeight:800,color:'#f59e0b'}}>{kg} kg</span>
+                        <span style={{fontWeight:600,color:'#f59e0b'}}>{kg} kg</span>
                         {pct!=null&&<span style={{fontSize:10,color:'#64748b',background:'#fff7ed',borderRadius:999,padding:'2px 8px'}}>{pct}%</span>}
                       </div>;
                     })}
@@ -909,7 +937,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 3c. ANTROPOMETRIA DETALHADA */}
       {(atual.antropometria?.dobras||atual.antropometria?.somatotipo)&&(
-        <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares">
+        <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares" score={sc.composicao_corporal}>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
             {atual.antropometria?.dobras&&(
               <Card>
@@ -937,7 +965,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 4. CARDIOVASCULAR */}
       {(vo2!=null||sv||zonasItems.length>0)&&(
-        <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica, sinais vitais e zonas de treinamento">
+        <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica, sinais vitais e zonas de treinamento" score={sc.cardiorrespiratorio}>
           {(vo2!=null||sv)&&(
             <Card style={{marginBottom:14}}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))',gap:8}}>
@@ -952,8 +980,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               </div>
               {atual.cardiorrespiratorio?.protocolo&&(
                 <div style={{marginTop:10,padding:'11px 13px',borderRadius:10,background:'#f8fafc',border:'1px solid #f1f5f9'}}>
-                  <div style={{fontSize:10,color:'#94a3b8',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Protocolo</div>
-                  <div style={{fontSize:14,fontWeight:800,color:'#0f172a',lineHeight:1.35}}>{atual.cardiorrespiratorio.protocolo}</div>
+                  <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Protocolo</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#0f172a',lineHeight:1.35}}>{atual.cardiorrespiratorio.protocolo}</div>
                 </div>
               )}
             </Card>
@@ -970,7 +998,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 4b. CARDIO AVANÇADO */}
       {((atual.cardiorrespiratorio as any)?.rec_fc||(atual.cardiorrespiratorio as any)?.zonas_limiar?.length>0||(atual.cardiorrespiratorio as any)?.velocidades_treino?.length>0)&&(
-        <Secao ordem={91} titulo="Cardiorrespiratório avançado" sub="Recuperação de frequência cardíaca, limiares e velocidades">
+        <Secao ordem={91} titulo="Cardiorrespiratório avançado" sub="Recuperação de frequência cardíaca, limiares e velocidades" score={sc.cardiorrespiratorio}>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
             {(atual.cardiorrespiratorio as any)?.rec_fc&&(
               <Card>
@@ -989,7 +1017,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   {(atual.cardiorrespiratorio as any).velocidades_treino.map((z:any,i:number)=>(
                     <div key={i} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
                       <span style={{fontWeight:700,color:'#334155'}}>{z.nome??z.zona??`Zona ${i+1}`}</span>
-                      <span style={{fontWeight:800,color:'#059669'}}>{z.min??z.vel_min} - {z.max??z.vel_max} km/h</span>
+                      <span style={{fontWeight:600,color:'#059669'}}>{z.min??z.vel_min} - {z.max??z.vel_max} km/h</span>
                     </div>
                   ))}
                 </div>
@@ -1002,7 +1030,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   {(atual.cardiorrespiratorio as any).zonas_limiar.map((z:any,i:number)=>(
                     <div key={i} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
                       <span style={{fontWeight:700,color:'#334155'}}>{z.nome??z.zona??`Zona ${i+1}`}</span>
-                      <span style={{fontWeight:800,color:'#f59e0b'}}>{z.min??z.fc_min} - {z.max??z.fc_max} bpm</span>
+                      <span style={{fontWeight:600,color:'#f59e0b'}}>{z.min??z.fc_min} - {z.max??z.fc_max} bpm</span>
                     </div>
                   ))}
                 </div>
@@ -1014,7 +1042,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 5. FORÇA */}
       {(atual.forca?.preensao_dir_kgf||atual.forca?.preensao_esq_kgf||(atual.forca as any)?.sptech_testes?.length>0||(atual.forca as any)?.tracao_testes?.length>0)&&(
-        <Secao ordem={70} titulo="Força muscular" sub="Preensão palmar e dinamometria isométrica">
+        <Secao ordem={70} titulo="Força muscular" sub="Preensão palmar e dinamometria isométrica" score={sc.forca}>
           {(atual.forca?.preensao_dir_kgf||atual.forca?.preensao_esq_kgf)&&(
             <Card style={{marginBottom:14}}>
               <h3 style={{fontSize:13,fontWeight:600,color:'#475569',margin:'0 0 12px'}}>Preensão palmar</h3>
@@ -1115,7 +1143,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 6. FLEXIBILIDADE */}
       {flex&&(
-        <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — Sit and Reach">
+        <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — Sit and Reach" score={sc.flexibilidade}>
           <Card>
             <div style={{display:'flex',alignItems:'center',gap:24}}>
               <div style={{textAlign:'center',flexShrink:0}}>
@@ -1139,7 +1167,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 7. POSTUROGRAFIA */}
       {post&&(()=>{
         const desv=Object.entries(post.alinhamentos??{}).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' '));
-        return <Secao ordem={30} titulo="Avaliação postural">
+        return <Secao ordem={30} titulo="Avaliação postural" score={sc.postura}>
           <Card>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:10,marginBottom:14}}>
               <FotoPostura src={post.foto_anterior} label="Anterior"/>
@@ -1182,7 +1210,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         const ativos = testes.filter(t => t.val != null);
         if (!ativos.length) return null;
         return (
-          <Secao ordem={80} titulo="Resistência Muscular (RML)" sub={cat === 'jovem_ativo' ? 'Jovem / Ativo — testes dinâmicos e isométricos' : 'Idoso — Senior Fitness Test'}>
+          <Secao ordem={80} titulo="Resistência Muscular (RML)" sub={cat === 'jovem_ativo' ? 'Jovem / Ativo — testes dinâmicos e isométricos' : 'Idoso — Senior Fitness Test'} score={sc.rml}>
             <Card>
               <div style={{display:'flex', gap:12, flexWrap:'wrap', marginBottom: ativos.length ? 14 : 0}}>
                 {ativos.map((t, i) => {
@@ -1190,7 +1218,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   return (
                     <div key={i} style={{flex:'1 1 120px', minWidth:0, background:'#f8fafc', borderRadius:12,
                       padding:'12px 10px', textAlign:'center', border:`1px solid ${cor}33`}}>
-                      <div style={{fontSize:26, fontWeight:900, color:cor, lineHeight:1}}>{t.val}</div>
+                      <div style={{fontSize:26, fontWeight:700, color:cor, lineHeight:1}}>{t.val}</div>
                       <div style={{fontSize:9, color:'#94a3b8', textTransform:'uppercase', letterSpacing:0.5, margin:'3px 0 5px'}}>{t.unit}</div>
                       <div style={{fontSize:10, fontWeight:600, color:'#475569', lineHeight:1.3, wordBreak:'break-word'}}>{t.lbl}</div>
                       {t.cls && (
@@ -1239,7 +1267,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 <a href={bio.link_video} target="_blank" rel="noopener noreferrer"
                   style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:999,
                     background:'linear-gradient(135deg,#064e3b,#059669)',boxShadow:'0 10px 24px rgba(5,150,105,.22)',
-                    color:'white',fontSize:12,fontWeight:900,textDecoration:'none',marginBottom:14}}>
+                    color:'white',fontSize:12,fontWeight:700,textDecoration:'none',marginBottom:14}}>
                   <PlayCircle size={16}/> Ver vídeo da cinemática
                 </a>
               )}
@@ -1250,7 +1278,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               )}
               {achados.comentarios_risco && (
                 <div style={{marginTop:16,marginBottom:grafItems.length?16:0,padding:'10px 11px',borderRadius:8,background:'#fff7ed',border:'1px solid #fed7aa'}}>
-                  <div style={{fontSize:9,fontWeight:800,color:'#9a3412',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Pontos de atenção e risco</div>
+                  <div style={{fontSize:9,fontWeight:600,color:'#9a3412',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Pontos de atenção e risco</div>
                   <div style={{fontSize:12,lineHeight:1.55,color:'#7c2d12',whiteSpace:'pre-line'}}>{achados.comentarios_risco}</div>
                 </div>
               )}
@@ -1262,7 +1290,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:14}}>
                     {grafItems.map(([k,_ck,l]) => (
                       <div key={k} style={{width:'100%',minWidth:0}}>
-                        <div style={{fontSize:11,color:'#0f172a',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:6}}>{l}</div>
+                        <div style={{fontSize:11,color:'#0f172a',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:6}}>{l}</div>
                         <div style={{width:'100%',aspectRatio:'544 / 443',background:'#050505',borderRadius:8,border:'1px solid #1f2937',overflow:'hidden'}}>
                           <img src={grafs[k]} alt={l}
                             style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
@@ -1274,7 +1302,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               )}
               {comentGrafs.geral && (
                 <div style={{marginTop:10,padding:'10px 11px',borderRadius:8,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
-                  <div style={{fontSize:9,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Comentário geral dos gráficos</div>
+                  <div style={{fontSize:9,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Comentário geral dos gráficos</div>
                   <div style={{fontSize:12,lineHeight:1.55,color:'#334155',whiteSpace:'pre-line'}}>{comentGrafs.geral}</div>
                 </div>
               )}
@@ -1334,13 +1362,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                       padding:'18px 20px 14px',border:'1px solid #dbe7ef',boxShadow:'inset 0 1px 0 rgba(255,255,255,.9), 0 12px 28px rgba(15,23,42,.045)'}}>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:8}}>
                         <div>
-                          <div style={{fontSize:12,fontWeight:900,color:'#475569',textTransform:'uppercase',letterSpacing:'.7px'}}>{nome}</div>
+                          <div style={{fontSize:12,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'.7px'}}>{nome}</div>
                           <div style={{fontSize:11,color:'#64748b',marginTop:4,lineHeight:1.35}}>{escopo}</div>
                         </div>
                         <div style={{width:34,height:6,borderRadius:999,background:cor,boxShadow:`0 8px 18px ${cor}45`}}/>
                       </div>
                       <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10}}>
-                        <span style={{fontSize:10,fontWeight:800,color:'#334155',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Score 0-100</span>
+                        <span style={{fontSize:10,fontWeight:600,color:'#334155',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Score 0-100</span>
                         <span style={{fontSize:10,fontWeight:700,color:'#64748b',background:'#ffffff',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Evolução longitudinal</span>
                       </div>
                       <div style={{fontSize:11,color:'#64748b',lineHeight:1.45,marginBottom:8}}>{leitura}</div>
@@ -1380,7 +1408,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               {analisesPaciente.map(a=>(
                 <div key={a.k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
                   padding:'11px 13px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10}}>
-                  <div style={{fontSize:12,fontWeight:900,color:'#0f172a'}}>{a.label}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{a.label}</div>
                   <div style={{display:'flex',alignItems:'center',gap:8,minWidth:0,flex:1,justifyContent:'flex-end'}}>
                     <span style={{fontSize:12,color:'#64748b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(520px,60vw)'}}>
                       {a.texto}
@@ -1397,7 +1425,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       <Secao ordem={118} titulo="Referências">
         <Card style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
           <div>
-            <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>Base técnica e científica utilizada</div>
+            <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>Base técnica e científica utilizada</div>
             <div style={{fontSize:12,color:'#94a3b8',marginTop:3}}>Passe o mouse no ícone para ver as referências cadastradas.</div>
           </div>
           <TooltipInfo texto={referenciasTexto} label="Ver referências" placement="top"/>
@@ -1430,7 +1458,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             <div style={{display:'flex',alignItems:'center',gap:14}}>
               {clinica?.logo_url&&<img src={clinica.logo_url} alt="Logo da clínica" style={{width:48,height:48,borderRadius:12,objectFit:'contain',background:'white',border:'1px solid rgba(255,255,255,.35)'}}/>}
               <div>
-                <div style={{fontSize:16,fontWeight:900,lineHeight:1.2}}>{clinica?.nome??'Diagnóstico Fisiometabólico'}</div>
+                <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{clinica?.nome??'Diagnóstico Fisiometabólico'}</div>
                 {avaliador?.nome&&<div style={{fontSize:12,color:'rgba(255,255,255,.78)',marginTop:4}}>
                   {avaliador.nome}
                   {avaliador.especialidade&&` · ${avaliador.especialidade}`}
@@ -1441,23 +1469,23 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             </div>
             <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
               {clinica?.telefone&&<a href={`https://wa.me/${String(clinica.telefone).replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
-                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Phone size={13}/> WhatsApp
               </a>}
               {clinica?.email&&<a href={`mailto:${clinica.email}`} target="_blank" rel="noopener noreferrer"
-                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Mail size={13}/> E-mail
               </a>}
-              {clinica?.site&&<a href={clinica.site.startsWith('http')?clinica.site:`https://${clinica.site}`} target="_blank" rel="noopener noreferrer"
-                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+              {normalizarUrl(clinica?.site)&&<a href={normalizarUrl(clinica?.site)} target="_blank" rel="noopener noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Globe size={13}/> Site
               </a>}
               {clinica?.instagram&&<a href={clinica.instagram.startsWith('http')?clinica.instagram:`https://instagram.com/${clinica.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer"
-                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Instagram size={13}/> Instagram
               </a>}
               {clinica?.endereco&&<a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} target="_blank" rel="noopener noreferrer"
-                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:800,border:'1px solid rgba(255,255,255,.18)'}}>
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <MapPin size={13}/> Endereço
               </a>}
             </div>

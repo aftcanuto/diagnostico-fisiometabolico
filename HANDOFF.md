@@ -744,6 +744,36 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Refinamento: dashboards, scores por modulo e PDF
+
+Em 06/05/2026 foram iniciados ajustes de padronizacao visual solicitados apos revisao do painel e do laudo.
+
+Problemas observados:
+
+- valores dos cards estavam com peso visual excessivo, competindo com os titulos;
+- dobras cutaneas exibiam M1, M2, M3 e media, quando o painel e o PDF deveriam mostrar apenas a medida validada;
+- nem todos os modulos exibiam o score isolado no canto superior direito do dashboard;
+- botao de site no portal do paciente precisava usar estritamente o site cadastrado na clinica;
+- capa do PDF precisava manter nomes longos em uma linha de forma mais harmonica;
+- recuperacao da FC no PDF ainda mostrava intervalos de 5 em 5 segundos, mas o fluxo definido e 10s, 30s e 60s.
+
+Correcoes aplicadas:
+
+- `src/components/PatientDashboard.tsx` suavizou o peso dos valores dos cards e manteve titulos como elemento em destaque;
+- `src/components/PatientDashboard.tsx` passou a mostrar a medida validada das dobras, sem listar todas as tentativas;
+- `src/components/PatientDashboard.tsx` recebeu badges de score por modulo em flexibilidade, posturografia, bioimpedancia, antropometria, forca e cardiovascular, mantendo RML no mesmo padrao;
+- `src/components/PortalPaciente.tsx` recebeu suporte a score por secao e normalizacao do link de site da clinica;
+- `src/components/PortalPaciente.tsx` passou a resolver objetos de medida por valor validado/media antes de exibir;
+- `src/lib/pdf/template.ts` ajustou a escala de fonte da capa para nomes longos, mudou dobras para medida validada e limitou recuperacao da FC a 10s, 30s e 60s.
+
+Validacao local:
+
+- `npx tsc --noEmit` passou apos as alteracoes;
+- `npm run predeploy` passou;
+- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Ajuste: favicon e icone mobile
 
 Em 06/05/2026 foi adicionado o icone oficial do app para navegador e atalhos mobile.
