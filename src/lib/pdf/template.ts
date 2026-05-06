@@ -188,11 +188,27 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .page:last-child { page-break-after: auto; }
 
 /* Cover */
-.cover { min-height: 286mm; height: 286mm; background: linear-gradient(135deg, #052e16 0%, #065f46 50%, #059669 100%); color: white; padding: 40px; display: flex; flex-direction: column; }
-.cover-logo { width: 58px; height: 58px; background:#e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; flex-shrink: 0; }
-.cover-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 64px 0 48px; }
-.cover-badge { background:rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4); padding: 8px 22px; border-radius: 100px; font-size: 11px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 28px; }
-.cover-name { font-size: 54px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 36px; }
+.cover { min-height: 286mm; height: 286mm; color: white; padding: 34px 38px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.cover::before { content:''; position:absolute; inset:0; background:
+  radial-gradient(circle at 18% 14%, rgba(255,255,255,.22), transparent 28%),
+  radial-gradient(circle at 84% 12%, rgba(255,255,255,.14), transparent 24%),
+  radial-gradient(circle at 78% 82%, rgba(255,255,255,.12), transparent 30%);
+  pointer-events:none;
+}
+.cover::after { content:''; position:absolute; right:-90px; top:120px; width:430px; height:430px; border-radius:50%; border:1px solid rgba(255,255,255,.18); box-shadow: inset 0 0 0 34px rgba(255,255,255,.035), inset 0 0 0 92px rgba(255,255,255,.028); pointer-events:none; }
+.cover-shell { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; }
+.cover-top { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:26px; border-bottom:1px solid rgba(255,255,255,.16); }
+.cover-brand { display:flex; align-items:center; gap:14px; min-width:0; }
+.cover-logo { width: 58px; height: 58px; background:rgba(255,255,255,.96); border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.5); flex-shrink: 0; box-shadow:0 18px 45px rgba(15,23,42,.18); overflow:hidden; }
+.cover-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 48px 0 42px; max-width: 690px; }
+.cover-badge { width:max-content; background:rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.34); padding: 8px 18px; border-radius: 100px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 28px; backdrop-filter: blur(8px); }
+.cover-name { font-weight: 850; letter-spacing: -1.2px; color:#ffffff; text-transform: uppercase; margin-bottom: 18px; text-wrap: nowrap; white-space: nowrap; max-width: 100%; }
+.cover-subtitle { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,.76); max-width: 610px; margin-bottom: 34px; }
+.cover-chip-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; max-width: 650px; }
+.cover-signature { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; align-items:stretch; padding-top:22px; border-top:1px solid rgba(255,255,255,.16); }
+.cover-sign-card { border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.11); border-radius:18px; padding:16px 18px; backdrop-filter: blur(10px); }
+.cover-label { font-size:8.5px; font-weight:800; color:rgba(255,255,255,.58); text-transform:uppercase; letter-spacing:1.6px; margin-bottom:7px; }
+.cover-value { font-size:14px; font-weight:650; color:#ffffff; line-height:1.35; }
 .chip { background:rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); padding: 12px 22px; border-radius: 12px; text-align: center; min-width: 95px; }
 .chip-label { font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
 .chip-val { font-size: 15px; font-weight: 700; color: #ffffff; }
@@ -373,30 +389,56 @@ function pgCapa(d: LaudoData): string {
   const c = d.clinica;
   const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
   const nomeLen = (d.paciente.nome ?? '').length;
-  const nomeFont = nomeLen > 50 ? 32 : nomeLen > 44 ? 36 : nomeLen > 38 ? 40 : nomeLen > 32 ? 44 : 50;
-  const nomeScale = nomeLen > 50 ? .86 : nomeLen > 44 ? .9 : nomeLen > 38 ? .94 : 1;
+  const nomeFont = nomeLen > 58 ? 34 : nomeLen > 50 ? 38 : nomeLen > 44 ? 42 : nomeLen > 38 ? 47 : nomeLen > 32 ? 52 : 58;
+  const nomeScale = nomeLen > 58 ? .82 : nomeLen > 50 ? .88 : nomeLen > 44 ? .93 : 1;
   const logoInner = c?.logo_url
-    ? `<img src="${x(c.logo_url)}" style="width:42px;height:42px;object-fit:contain"/>`
-    : `<span style="font-size:20px;font-weight:800;color:white">${(c?.nome??'F').charAt(0)}</span>`;
-  const contato = [c?.telefone, c?.email, c?.site].filter(Boolean).join(' Â· ');
-  return `<section class="page cover" style="background:linear-gradient(135deg,${g1} 0%,${g2} 50%,${g3} 100%)">
-  <div style="display:flex;align-items:center;gap:14px">
-    <div class="cover-logo">${logoInner}</div>
-    <div>
-      <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.95)">${x(c?.nome ?? 'DiagnÃ³stico FisiometabÃ³lico')}</div>
-      ${contato ? `<div style="font-size:10px;color:rgba(255,255,255,.65);margin-top:2px">${x(contato)}</div>` : ''}
+    ? `<img src="${x(c.logo_url)}" style="width:48px;height:48px;object-fit:contain;display:block"/>`
+    : `<span style="font-size:22px;font-weight:900;color:${x(c?.cor_primaria ?? '#059669')}">${x((c?.nome??'D').charAt(0))}</span>`;
+  const clinicaNome = c?.nome ?? 'Diagnóstico Fisiometabólico';
+  const contato = [c?.telefone, c?.email, c?.site].filter(Boolean).join(' · ');
+  const avaliadorLinha = [d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
+  const pacienteMeta = `${d.paciente.sexo==='M'?'Masculino':'Feminino'} · ${d.paciente.idade} anos · ${fd(d.avaliacao.data)}`;
+  return `<section class="page cover" style="background:linear-gradient(135deg,${g1} 0%,${g2} 52%,${g3} 100%)">
+  <div class="cover-shell">
+    <div class="cover-top">
+      <div class="cover-brand">
+        <div class="cover-logo">${logoInner}</div>
+        <div style="min-width:0">
+          <div style="font-size:16px;font-weight:750;color:rgba(255,255,255,.96);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px">${x(clinicaNome)}</div>
+          ${contato ? `<div style="font-size:9.5px;color:rgba(255,255,255,.62);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">${x(contato)}</div>` : ''}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="cover-label" style="margin-bottom:5px">Emissão</div>
+        <div style="font-size:13px;font-weight:700;color:#ffffff">${new Date().toLocaleDateString('pt-BR')}</div>
+      </div>
     </div>
-  </div>
-  <div class="cover-main">
-    <div class="cover-badge">AvaliaÃ§Ã£o FisiometabÃ³lica</div>
-    <h1 class="cover-name" style="font-size:${nomeFont}px;white-space:nowrap;line-height:1.04;letter-spacing:-.8px;max-width:100%;transform:scaleX(${nomeScale});transform-origin:center">${x(d.paciente.nome)}</h1>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-      ${[['Idade',`${d.paciente.idade} anos`],['Sexo',d.paciente.sexo==='M'?'Masculino':'Feminino'],['Data',fd(d.avaliacao.data)],['Tipo',d.avaliacao.tipo]].map(([l,v])=>`<div class="chip"><div class="chip-label">${l}</div><div class="chip-val">${v}</div></div>`).join('')}
+
+    <div class="cover-main">
+      <div class="cover-badge">Avaliação fisiometabólica</div>
+      <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.02;transform:scaleX(${nomeScale});transform-origin:left center">${x(d.paciente.nome)}</h1>
+      <div class="cover-subtitle">Relatório técnico de composição corporal, capacidades funcionais e indicadores fisiometabólicos.</div>
+      <div class="cover-chip-grid">
+        ${[
+          ['Paciente', d.paciente.sexo==='M'?'Masculino':'Feminino'],
+          ['Idade', `${d.paciente.idade} anos`],
+          ['Avaliação', fd(d.avaliacao.data)],
+          ['Tipo', d.avaliacao.tipo],
+        ].map(([l,v])=>`<div class="chip" style="min-width:0;padding:13px 14px;text-align:left;border-radius:16px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.26)"><div class="chip-label">${x(l)}</div><div class="chip-val" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(v)}</div></div>`).join('')}
+      </div>
     </div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:28px;border-top:1px solid rgba(255,255,255,.1)">
-    <div><div style="font-size:9px;font-weight:500;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Avaliador</div><div style="font-size:14px;font-weight:500;color:#ffffff">${x(d.avaliador.nome)}</div></div>
-    <div style="text-align:right"><div style="font-size:9px;font-weight:500;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">EmissÃ£o</div><div style="font-size:14px;font-weight:500;color:#0f172a">${new Date().toLocaleDateString('pt-BR')}</div></div>
+
+    <div class="cover-signature">
+      <div class="cover-sign-card">
+        <div class="cover-label">Avaliador responsável</div>
+        <div class="cover-value">${x(d.avaliador.nome)}</div>
+        ${avaliadorLinha ? `<div style="font-size:10.5px;color:rgba(255,255,255,.66);margin-top:4px">${x(avaliadorLinha)}</div>` : ''}
+      </div>
+      <div class="cover-sign-card">
+        <div class="cover-label">Identificação</div>
+        <div class="cover-value" style="font-size:13px">${x(pacienteMeta)}</div>
+      </div>
+    </div>
   </div>
 </section>`;
 }
@@ -409,6 +451,11 @@ function pgResumo(d: LaudoData): string {
   const imc    = ant?.imc ?? bio?.imc;
   const tmb    = bio?.taxa_metabolica_basal_kcal;
   const gordV  = bio?.gordura_visceral_nivel;
+  const soma   = ant?.somatotipo;
+  const somaClass = soma?.classificacao;
+  const somaTrio = soma?.endomorfia != null
+    ? `${x(soma.endomorfia)}-${x(soma.mesomorfia ?? 'â€”')}-${x(soma.ectomorfia ?? 'â€”')}`
+    : '';
   const msg    = d.analisesIA?.conclusao_global?.texto_editado ?? d.analisesIA?.conclusao_global?.mensagem_paciente ?? '';
 
   const gorCor = pctG == null ? '#10b981' : d.paciente.sexo === 'M'
@@ -526,7 +573,7 @@ function pgResumo(d: LaudoData): string {
   </div>
 
   <!-- â”€â”€ CORPO PRINCIPAL: silhueta + gauges â”€â”€ -->
-  <div style="display:grid;grid-template-columns:160px 1fr;gap:20px;align-items:start">
+  <div style="display:grid;grid-template-columns:190px 1fr;gap:20px;align-items:start">
 
     <!-- COLUNA ESQUERDA: silhueta + mÃ©tricas corpo -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
@@ -540,7 +587,12 @@ function pgResumo(d: LaudoData): string {
       <!-- Silhueta com card -->
       <div style="background:#f8fafc;border:1px solid ${gorCor}33;border-radius:16px;padding:16px 12px;width:100%;display:flex;flex-direction:column;align-items:center">
         <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">ComposiÃ§Ã£o Corporal</div>
-        <div style="display:flex;align-items:flex-end;justify-content:center;min-height:150px">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;min-height:150px;width:100%">
+          ${somaClass?`<div style="width:70px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:9px 8px;text-align:left;align-self:center">
+            <div style="font-size:7px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Somatotipo</div>
+            <div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.15">${x(somaClass)}</div>
+            ${somaTrio?`<div style="font-size:8px;font-weight:600;color:#64748b;margin-top:4px">${somaTrio}</div>`:''}
+          </div>`:''}
           ${silhueta(d.paciente.sexo, pctG)}
         </div>
         <div style="margin-top:10px;padding:5px 16px;border-radius:100px;font-size:11px;font-weight:700;background:${gorCor}20;color:${gorCor};border:1px solid ${gorCor}44;width:100%;text-align:center">${statusLbl}</div>

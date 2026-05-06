@@ -142,6 +142,10 @@ export function SilhuetaCircunferencias({ sexo, dados: dadosProp, circunferencia
   const dadosEsq = [
     pctGorduraTotal!= null && { label: 'Gordura corporal', valor: `${pctGorduraTotal}%`, unidade: '', delta: deltaMap.pctGordura, boa: 'descer' as const, cor },
     d.metabolismo_basal!=null&&{ label: 'Metabolismo basal', valor: d.metabolismo_basal, unidade: 'kcal', delta: null, boa: 'subir' as const },
+    d.somatotipo?.classificacao && { label: 'Somatotipo', valor: d.somatotipo.classificacao, unidade: '', delta: null, boa: 'subir' as const,
+      extra: d.somatotipo.endomorfia != null
+        ? `${d.somatotipo.endomorfia} ? ${d.somatotipo.mesomorfia} ? ${d.somatotipo.ectomorfia}`
+        : undefined },
     d.rcq != null && { label: 'RCQ', valor: d.rcq, unidade: '', delta: null, boa: 'descer' as const },
   ].filter(Boolean) as any[];
 
@@ -154,10 +158,6 @@ export function SilhuetaCircunferencias({ sexo, dados: dadosProp, circunferencia
     d.massa_muscular != null && { label: 'Massa muscular', valor: d.massa_muscular, unidade: 'kg', delta: null, boa: 'subir' as const },
     d.agua_corporal != null && { label: 'Agua corporal', valor: `${d.agua_corporal}%`, unidade: '', delta: null, boa: 'subir' as const },
     d.gordura_visceral != null && { label: 'Gordura visceral', valor: d.gordura_visceral, unidade: '', delta: null, boa: 'descer' as const },
-    d.somatotipo?.classificacao && { label: 'Somatotipo', valor: d.somatotipo.classificacao, unidade: '', delta: null, boa: 'subir' as const,
-      extra: d.somatotipo.endomorfia != null
-        ? `${d.somatotipo.endomorfia} ? ${d.somatotipo.mesomorfia} ? ${d.somatotipo.ectomorfia}`
-        : undefined },
   ].filter(Boolean) as any[];
 
   const SubTitulo = ({ txt }: { txt: string }) => (

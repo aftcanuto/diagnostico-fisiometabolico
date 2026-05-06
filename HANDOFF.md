@@ -744,6 +744,51 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Reescrita da capa do relatorio
+
+Em 06/05/2026 a capa do PDF foi refeita do zero para substituir o layout antigo que estava ficando desfigurado.
+
+Correcoes aplicadas:
+
+- `src/lib/pdf/template.ts` recebeu uma nova capa com visual mais premium e sofisticado;
+- a capa agora tem topo institucional com logotipo/nome da clinica e data de emissao;
+- o nome do paciente usa reducao automatica de fonte e escala horizontal controlada para caber em uma linha;
+- os dados principais da avaliacao ficam em cards discretos e alinhados;
+- avaliador responsavel, conselho/especialidade e identificacao do paciente ficam em uma faixa inferior refinada;
+- foram removidas decisoes visuais antigas que deixavam contraste ruim e quebravam a composicao.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Ajuste: somatotipo ao lado esquerdo da silhueta
+
+Em 06/05/2026 foi ajustada a posicao do somatotipo nos dashboards e no relatorio.
+
+Pedido aplicado:
+
+- o somatotipo nao fica mais na coluna "Demais dados" ao lado direito da silhueta;
+- nos dashboards clinico e do paciente, o somatotipo agora aparece em "Indicadores principais", do lado esquerdo da silhueta;
+- no resumo do PDF, quando houver somatotipo cadastrado, ele aparece dentro do card de composicao corporal, posicionado a esquerda da silhueta;
+- o relatorio mantem os demais dados corporais na coluna direita, preservando a leitura visual do painel.
+
+Arquivos alterados:
+
+- `src/components/ui/SilhuetaCircunferencias.tsx`;
+- `src/lib/pdf/template.ts`.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Refinamento: dashboards, scores por modulo e PDF
 
 Em 06/05/2026 foram iniciados ajustes de padronizacao visual solicitados apos revisao do painel e do laudo.
