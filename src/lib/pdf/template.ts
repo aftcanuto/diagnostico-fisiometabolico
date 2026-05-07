@@ -1205,6 +1205,14 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   const comentGraf: any = b.comentarios_graficos ?? {};
   const comentAng: any = b.comentarios_angulos ?? {};
   const videoUrl = b.link_video ?? b.linkVideo ?? b.video_url ?? b.videoUrl ?? b.link_cinematica ?? b.link_video_cinematica ?? '';
+  const videoPosteriorUrl = b.link_video_posterior ?? b.linkVideoPosterior ?? b.video_posterior_url ?? b.videoPosteriorUrl ?? '';
+  const sagitalImgs = [
+    ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
+  ].filter(([k]) => graf[k]);
+  const posteriorImgs = [
+    ['posterior_1_url', 'Imagem posterior 1'], ['posterior_2_url', 'Imagem posterior 2'], ['posterior_3_url', 'Imagem posterior 3'],
+    ['posterior_4_url', 'Imagem posterior 4'], ['posterior_5_url', 'Imagem posterior 5'], ['posterior_6_url', 'Imagem posterior 6'],
+  ].filter(([k]) => graf[k]);
 
   const metaAngs: Record<string, string> = {
     cabeca: 'Alinhamento da cabeça',
@@ -1292,7 +1300,10 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
         CinemÃ¡tica 2D â€” ${x(b.movimento ?? 'Corrida')} Â· ${b.velocidade_kmh ?? 'â€”'} km/h
       </div>
     </div>
-    ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px ${pri}33">Ver video da cinematica</a>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px ${pri}33">Ver video analise cinematica plano sagital</a>` : ''}
+      ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:#0f766e;text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px #0f766e33">Ver video analise cinematica plano posterior</a>` : ''}
+    </div>
   </div>
   <div style="display:grid;grid-template-columns:${b.foto_frame_url ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:18px">
     ${b.foto_frame_url ? `<div>
@@ -1310,6 +1321,18 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
       </div>
     </div>
   </div>
+  ${sagitalImgs.length ? `<div class="sec-sub">Imagens do plano sagital</div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px">
+    ${sagitalImgs.map(([k,l]) => `<div style="width:100%;aspect-ratio:9/14;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <img src="${x(graf[k])}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/>
+    </div>`).join('')}
+  </div>` : ''}
+  ${posteriorImgs.length ? `<div class="sec-sub">Imagens do plano posterior</div>
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px">
+    ${posteriorImgs.map(([k,l]) => `<div style="width:100%;aspect-ratio:16/9;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <img src="${x(graf[k])}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/>
+    </div>`).join('')}
+  </div>` : ''}
   ${comparativoRunner()}
   ${aiBlock(ia)}
 </section>`;
@@ -1379,15 +1402,17 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
 
   // PÃ¡gina 3: GrÃ¡ficos cinemÃ¡ticos
   const grafUrls = [
-    ['joelho_url',   'joelho',   'Joelho'],
-    ['quadril_url',  'quadril',  'Quadril'],
+    ['ombro_url',    'ombro',    'Ombro'],
     ['cotovelo_url', 'cotovelo', 'Cotovelo'],
+    ['quadril_url',  'quadril',  'Quadril'],
+    ['joelho_url',   'joelho',   'Joelho'],
+    ['tornozelo_url','tornozelo','Tornozelo'],
   ].filter(([k]) => graf[k]);
 
   const pg3 = grafUrls.length ? `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head"><h2 class="mod-title">GrÃ¡ficos cinemÃ¡ticos</h2></div>
   <div class="sec-sub" style="margin-top:0">GrÃ¡ficos cinemÃ¡ticos</div>
-  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;align-items:start">
     ${grafUrls.map(([k, ck, lbl]) => `<div style="width:100%;min-width:0">
       <div style="font-size:11px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${lbl}</div>
       <div style="width:100%;aspect-ratio:544/443;background:#050505;border-radius:8px;border:1px solid #1f2937;overflow:hidden">

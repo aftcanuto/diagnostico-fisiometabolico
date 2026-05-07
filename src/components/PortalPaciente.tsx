@@ -1248,6 +1248,15 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         const comentGrafs = bio.comentarios_graficos ?? {};
         const comentAngs = bio.comentarios_angulos ?? {};
         const achados = bio.achados ?? {};
+        const videoSagital = bio.link_video ?? bio.linkVideo ?? '';
+        const videoPosterior = bio.link_video_posterior ?? bio.linkVideoPosterior ?? '';
+        const sagitalImgs = [
+          ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
+        ].filter(([k]) => grafs[k]);
+        const posteriorImgs = [
+          ['posterior_1_url', 'Imagem posterior 1'], ['posterior_2_url', 'Imagem posterior 2'], ['posterior_3_url', 'Imagem posterior 3'],
+          ['posterior_4_url', 'Imagem posterior 4'], ['posterior_5_url', 'Imagem posterior 5'], ['posterior_6_url', 'Imagem posterior 6'],
+        ].filter(([k]) => grafs[k]);
         const labels: Record<string,string> = {
           cabeca:'Cabeça', tronco:'Tronco', aterrissagem_passada:'Aterrissagem',
           joelho_frente_contato:'Joelho frente', joelho_posterior_contato:'Joelho posterior',
@@ -1257,19 +1266,45 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         };
         const keys = Object.keys(labels).filter(k => ang[k]);
         const grafItems = [
-          ['joelho_url','joelho','Joelho'], ['quadril_url','quadril','Quadril'], ['cotovelo_url','cotovelo','Cotovelo'],
+          ['ombro_url','ombro','Ombro'], ['cotovelo_url','cotovelo','Cotovelo'], ['quadril_url','quadril','Quadril'], ['joelho_url','joelho','Joelho'], ['tornozelo_url','tornozelo','Tornozelo'],
         ].filter(([k]) => grafs[k]);
-        if (!keys.length && !grafItems.length && !bio.link_video) return null;
+        if (!keys.length && !grafItems.length && !videoSagital && !videoPosterior && !sagitalImgs.length && !posteriorImgs.length) return null;
         return (
           <Secao ordem={100} titulo="Biomecânica da corrida" sub="Cinemática 2D e ângulos articulares">
             <Card>
-              {bio.link_video && (
-                <a href={bio.link_video} target="_blank" rel="noopener noreferrer"
+              {videoSagital && (
+                <a href={videoSagital} target="_blank" rel="noopener noreferrer"
                   style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:999,
                     background:'linear-gradient(135deg,#064e3b,#059669)',boxShadow:'0 10px 24px rgba(5,150,105,.22)',
                     color:'white',fontSize:12,fontWeight:700,textDecoration:'none',marginBottom:14}}>
-                  <PlayCircle size={16}/> Ver vídeo da cinemática
+                  <PlayCircle size={16}/> Ver vídeo análise cinemática plano sagital
                 </a>
+              )}
+              {videoPosterior && (
+                <a href={videoPosterior} target="_blank" rel="noopener noreferrer"
+                  style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:999,
+                    background:'linear-gradient(135deg,#115e59,#0f766e)',boxShadow:'0 10px 24px rgba(15,118,110,.18)',
+                    color:'white',fontSize:12,fontWeight:700,textDecoration:'none',marginBottom:14,marginLeft:8}}>
+                  <PlayCircle size={16}/> Ver vídeo análise cinemática plano posterior
+                </a>
+              )}
+              {sagitalImgs.length > 0 && (
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:14,marginBottom:16}}>
+                  {sagitalImgs.map(([k,l]) => (
+                    <div key={k} style={{width:'100%',aspectRatio:'9 / 14',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0',overflow:'hidden'}}>
+                      <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {posteriorImgs.length > 0 && (
+                <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:14,marginBottom:16}}>
+                  {posteriorImgs.map(([k,l]) => (
+                    <div key={k} style={{width:'100%',aspectRatio:'16 / 9',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0',overflow:'hidden'}}>
+                      <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                    </div>
+                  ))}
+                </div>
               )}
               {keys.length > 0 && (
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12,marginBottom:grafItems.length?16:0}}>
@@ -1287,7 +1322,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:10}}>
                     Gráficos cinemáticos
                   </div>
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:14}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14}}>
                     {grafItems.map(([k,_ck,l]) => (
                       <div key={k} style={{width:'100%',minWidth:0}}>
                         <div style={{fontSize:11,color:'#0f172a',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:6}}>{l}</div>

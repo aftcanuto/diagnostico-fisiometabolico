@@ -37,6 +37,29 @@ const CLS_COLOR = { ideal: 'text-emerald-600', atencao: 'text-amber-600', fora: 
 const CLS_BG    = { ideal: 'bg-emerald-50 border-emerald-200', atencao: 'bg-amber-50 border-amber-200', fora: 'bg-red-50 border-red-200' };
 const CLS_LABEL = { ideal: 'Ideal ✓', atencao: 'Atenção', fora: 'Fora do ideal' };
 
+const GRAFICOS_CINEMATICOS = [
+  ['ombro_url', 'Grafico 1 - Ombro'],
+  ['cotovelo_url', 'Grafico 2 - Cotovelo'],
+  ['quadril_url', 'Grafico 3 - Quadril'],
+  ['joelho_url', 'Grafico 4 - Joelho'],
+  ['tornozelo_url', 'Grafico 5 - Tornozelo'],
+] as const;
+
+const IMAGENS_SAGITAL = [
+  ['sagital_1_url', 'Imagem sagital 1'],
+  ['sagital_2_url', 'Imagem sagital 2'],
+  ['sagital_3_url', 'Imagem sagital 3'],
+] as const;
+
+const IMAGENS_POSTERIOR = [
+  ['posterior_1_url', 'Imagem posterior 1'],
+  ['posterior_2_url', 'Imagem posterior 2'],
+  ['posterior_3_url', 'Imagem posterior 3'],
+  ['posterior_4_url', 'Imagem posterior 4'],
+  ['posterior_5_url', 'Imagem posterior 5'],
+  ['posterior_6_url', 'Imagem posterior 6'],
+] as const;
+
 export default function BiomecanicaPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const supabase = createClient();
@@ -45,6 +68,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
   const [velocidade, setVelocidade] = useState('');
   const [movimento,  setMovimento]  = useState('Corrida em esteira');
   const [linkVideo,  setLinkVideo]  = useState('');
+  const [linkVideoPosterior, setLinkVideoPosterior] = useState('');
   const [fotoFrame,  setFotoFrame]  = useState('');
 
   const [metricas, setMetricas] = useState({
@@ -77,7 +101,10 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
   });
 
   const [graficos, setGraficos] = useState({
-    joelho_url: '', quadril_url: '', cotovelo_url: '',
+    ombro_url: '', cotovelo_url: '', quadril_url: '', joelho_url: '', tornozelo_url: '',
+    sagital_1_url: '', sagital_2_url: '', sagital_3_url: '',
+    posterior_1_url: '', posterior_2_url: '', posterior_3_url: '',
+    posterior_4_url: '', posterior_5_url: '', posterior_6_url: '',
   });
 
   const [comentarioGraficos, setComentarioGraficos] = useState('');
@@ -92,6 +119,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
         setVelocidade(d.velocidade_kmh?.toString() ?? '');
         setMovimento(d.movimento ?? 'Corrida em esteira');
         setLinkVideo(d.link_video ?? '');
+        setLinkVideoPosterior(d.link_video_posterior ?? '');
         setFotoFrame(d.foto_frame_url ?? '');
         if (d.metricas) {
           const m = d.metricas as any;
@@ -111,7 +139,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
         if (d.comentarios_angulos) setComentariosAngulos(c => ({ ...c, ...(d.comentarios_angulos as any) }));
         if (d.comentarios_graficos) {
           const cg = d.comentarios_graficos as any;
-          setComentarioGraficos(cg.geral ?? [cg.joelho, cg.quadril, cg.cotovelo].filter(Boolean).join('\n\n'));
+          setComentarioGraficos(cg.geral ?? [cg.ombro, cg.cotovelo, cg.quadril, cg.joelho, cg.tornozelo].filter(Boolean).join('\n\n'));
         }
       }
     })();
@@ -143,7 +171,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
     setGraficos(g => ({ ...g, [key]: data.url }));
   }
 
-  const autoSaveValue = { velocidade, movimento, linkVideo, fotoFrame, metricas, angulos, comentariosAngulos, achados, recomendacoes, graficos, comentarioGraficos };
+  const autoSaveValue = { velocidade, movimento, linkVideo, linkVideoPosterior, fotoFrame, metricas, angulos, comentariosAngulos, achados, recomendacoes, graficos, comentarioGraficos };
 
   const salvar = async (v = autoSaveValue) => {
     const met: any = {};
@@ -153,7 +181,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
     }
     return upsertModulo('biomecanica_corrida', params.id, {
       velocidade_kmh: parseFloat(v.velocidade) || null,
-      movimento: v.movimento, link_video: v.linkVideo, foto_frame_url: v.fotoFrame,
+      movimento: v.movimento, link_video: v.linkVideo, link_video_posterior: v.linkVideoPosterior, foto_frame_url: v.fotoFrame,
       metricas: met, angulos: buildAngulos(v.angulos),
       comentarios_angulos: v.comentariosAngulos,
       achados: v.achados, recomendacoes: v.recomendacoes, graficos: v.graficos,
@@ -194,7 +222,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
                 </Select>
               </Field>
             </div>
-            <Field label="Link do vídeo (Google Drive / YouTube)">
+            <Field label="Link do video plano sagital">
               <div className="flex gap-2">
                 <Input value={linkVideo} onChange={e => setLinkVideo(e.target.value)}
                   placeholder="https://drive.google.com/..." className="flex-1" />
@@ -208,6 +236,21 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
               </div>
             </Field>
             <Field label="URL do frame anotado (imagem com ângulos marcados)">
+              <div className="mb-4">
+                <Field label="Link do video plano posterior">
+                  <div className="flex gap-2">
+                    <Input value={linkVideoPosterior} onChange={e => setLinkVideoPosterior(e.target.value)}
+                      placeholder="https://drive.google.com/..." className="flex-1" />
+                    {linkVideoPosterior && (
+                      <a href={linkVideoPosterior} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="secondary" type="button">
+                          <ExternalLink className="w-3 h-3" /> Ver
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </Field>
+              </div>
               <Input value={fotoFrame} onChange={e => setFotoFrame(e.target.value)}
                 placeholder="URL da imagem no Storage ou Drive" />
               {fotoFrame && (
@@ -253,6 +296,29 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
             <p className="text-xs text-slate-500 mt-1">Insira o valor medido — classificação automática vs faixa ideal da literatura</p>
           </CardHeader>
           <CardBody className="space-y-3">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wide text-slate-500 mt-2 mb-2">Imagens do plano sagital</div>
+              <div className="grid grid-cols-3 gap-3">
+                {IMAGENS_SAGITAL.map(([key, label]) => (
+                  <div key={key} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="text-xs font-semibold text-slate-600">{label}</div>
+                    <Input type="file" accept="image/*"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadGrafico(key as keyof typeof graficos, file);
+                      }} />
+                    <Input value={(graficos as any)[key]}
+                      onChange={e => setGraficos(g => ({ ...g, [key]: e.target.value }))}
+                      placeholder="Ou cole a URL da imagem" />
+                    {(graficos as any)[key] && (
+                      <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-950" style={{ aspectRatio: '9 / 14' }}>
+                        <img src={(graficos as any)[key]} alt={label} className="h-full w-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
             {(Object.entries(ANGULOS_REF) as [string, {plano:string;label:string;min:number;max:number}][]).map(([key, ref], index, all) => {
               const val = parseFloat(angulos[key]);
               const cls = !isNaN(val) ? classAngle(val, ref.min, ref.max) : null;
@@ -260,6 +326,28 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
               return (
                 <div key={key}>
                   {showPlano && <div className="text-xs font-bold uppercase tracking-wide text-slate-500 mt-2 mb-2">{ref.plano}</div>}
+                  {showPlano && ref.plano === 'Plano posterior' && (
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      {IMAGENS_POSTERIOR.map(([imgKey, label]) => (
+                        <div key={imgKey} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                          <div className="text-xs font-semibold text-slate-600">{label}</div>
+                          <Input type="file" accept="image/*"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadGrafico(imgKey as keyof typeof graficos, file);
+                            }} />
+                          <Input value={(graficos as any)[imgKey]}
+                            onChange={e => setGraficos(g => ({ ...g, [imgKey]: e.target.value }))}
+                            placeholder="Ou cole a URL da imagem" />
+                          {(graficos as any)[imgKey] && (
+                            <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-950" style={{ aspectRatio: '16 / 9' }}>
+                              <img src={(graficos as any)[imgKey]} alt={label} className="h-full w-full object-contain" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className={`rounded-lg p-3 border transition-colors ${cls ? CLS_BG[cls] : 'border-slate-100 bg-slate-50/50'}`}>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
@@ -352,9 +440,11 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
           </CardHeader>
           <CardBody className="space-y-3">
             {([
-              ['joelho_url',   'Gráfico 1 — Joelho'],
-              ['quadril_url',  'Gráfico 2 — Quadril'],
-              ['cotovelo_url', 'Gráfico 3 — Cotovelo'],
+              ['ombro_url', 'Grafico 1 - Ombro'],
+              ['cotovelo_url', 'Grafico 2 - Cotovelo'],
+              ['quadril_url', 'Grafico 3 - Quadril'],
+              ['joelho_url', 'Grafico 4 - Joelho'],
+              ['tornozelo_url', 'Grafico 5 - Tornozelo'],
             ] as [string, string][]).map(([key, label]) => (
               <Field key={key} label={label}>
                 <div className="space-y-2">

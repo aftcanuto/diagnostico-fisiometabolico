@@ -773,6 +773,36 @@ Validacao local:
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`;
 - `npm run build` foi tentado localmente, mas o ambiente bloqueou processos internos do Next com `spawn EPERM`; o aviso de configuracao invalida que aparecia antes foi corrigido.
 
+## Evolucao: biomecanica com imagens por plano e dois videos
+
+Em 07/05/2026 o modulo de biomecanica da corrida foi ampliado para suportar mais materiais visuais.
+
+Solicitacoes atendidas:
+
+- graficos cinematicos agora seguem a ordem `Ombro`, `Cotovelo`, `Quadril`, `Joelho` e `Tornozelo`;
+- o formulario passou a aceitar 3 imagens do plano sagital, exibidas lado a lado;
+- o formulario passou a aceitar 6 imagens do plano posterior, exibidas em 2 colunas por 3 linhas;
+- os campos de video foram separados em `Link do video plano sagital` e `Link do video plano posterior`;
+- dashboards e relatorio exibem os botoes como `Ver vídeo análise cinemática plano sagital` e `Ver vídeo análise cinemática plano posterior`;
+- dashboards e relatorio exibem as imagens inseridas nos planos sagital e posterior;
+- foi criada a migration `029_biomecanica_video_posterior.sql` para armazenar `link_video_posterior` na tabela `biomecanica_corrida`.
+
+Arquivos alterados:
+
+- `src/app/(app)/avaliacoes/[id]/biomecanica/page.tsx`;
+- `src/components/PatientDashboard.tsx`;
+- `src/components/PortalPaciente.tsx`;
+- `src/lib/pdf/template.ts`;
+- `supabase/migrations/029_biomecanica_video_posterior.sql`.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 29 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: rodape interno do PDF e quebras de pagina
 
 Em 07/05/2026 foi revisada a estrutura de paginas do relatorio em PDF.

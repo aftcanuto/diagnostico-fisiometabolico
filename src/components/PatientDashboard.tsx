@@ -1875,6 +1875,16 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         const bio = atual.biomecanica_corrida as any;
         const ang = bio.angulos ?? {};
         const met = bio.metricas ?? {};
+        const grafs = bio.graficos ?? {};
+        const videoSagital = bio.link_video ?? bio.linkVideo ?? '';
+        const videoPosterior = bio.link_video_posterior ?? bio.linkVideoPosterior ?? '';
+        const sagitalImgs = [
+          ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
+        ].filter(([k]) => grafs[k]);
+        const posteriorImgs = [
+          ['posterior_1_url', 'Imagem posterior 1'], ['posterior_2_url', 'Imagem posterior 2'], ['posterior_3_url', 'Imagem posterior 3'],
+          ['posterior_4_url', 'Imagem posterior 4'], ['posterior_5_url', 'Imagem posterior 5'], ['posterior_6_url', 'Imagem posterior 6'],
+        ].filter(([k]) => grafs[k]);
         return (
           <div style={{ order: 100, background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px 28px', color: '#0f172a' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid #f1f5f9' }}>
@@ -1884,13 +1894,22 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   Cinemática 2D · {bio.movimento ?? 'Corrida'} · {bio.velocidade_kmh ?? '—'} km/h
                 </div>
               </div>
-              {bio.link_video && (
-                <a href={bio.link_video} target="_blank" rel="noopener noreferrer"
+              {videoSagital && (
+                <a href={videoSagital} target="_blank" rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 15px',
                     background: '#059669', border: '1px solid #047857', borderRadius: 999,
                     boxShadow: '0 6px 14px rgba(5,150,105,.22)',
                     fontSize: 12, fontWeight: 600, color: 'white', textDecoration: 'none' }}>
-                  ▶ Ver vídeo
+                    ▶ Ver vídeo análise cinemática plano sagital
+                </a>
+              )}
+              {videoPosterior && (
+                <a href={videoPosterior} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 15px',
+                    background: '#0f766e', border: '1px solid #0f766e', borderRadius: 999,
+                    boxShadow: '0 6px 14px rgba(15,118,110,.18)',
+                    fontSize: 12, fontWeight: 600, color: 'white', textDecoration: 'none', marginLeft: 8 }}>
+                    ▶ Ver vídeo análise cinemática plano posterior
                 </a>
               )}
             </div>
@@ -1934,6 +1953,30 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 {/* Angulos cinematicos */}
                 {Object.keys(ang).length > 0 && (
                   <div>
+                    {sagitalImgs.length > 0 && (
+                      <div style={{margin:'0 0 14px'}}>
+                        <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:10}}>Imagens do plano sagital</div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:14}}>
+                          {sagitalImgs.map(([k,l]) => (
+                            <div key={k} style={{width:'100%',aspectRatio:'9 / 14',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,overflow:'hidden'}}>
+                              <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {posteriorImgs.length > 0 && (
+                      <div style={{margin:'0 0 14px'}}>
+                        <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:10}}>Imagens do plano posterior</div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:14}}>
+                          {posteriorImgs.map(([k,l]) => (
+                            <div key={k} style={{width:'100%',aspectRatio:'16 / 9',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,overflow:'hidden'}}>
+                              <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <BiomecanicaRunnerCompare ang={ang} />
                     {bio.comentarios_angulos && Object.values(bio.comentarios_angulos).some(Boolean) && (
                       <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
@@ -1985,7 +2028,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px,1fr))', gap: 14 }}>
                   {[
-                    ['joelho_url', 'joelho', 'Joelho'], ['quadril_url', 'quadril', 'Quadril'], ['cotovelo_url', 'cotovelo', 'Cotovelo'],
+                    ['ombro_url', 'ombro', 'Ombro'], ['cotovelo_url', 'cotovelo', 'Cotovelo'], ['quadril_url', 'quadril', 'Quadril'], ['joelho_url', 'joelho', 'Joelho'], ['tornozelo_url', 'tornozelo', 'Tornozelo'],
                   ].filter(([k]) => bio.graficos[k]).map(([k, _ck, l]) => (
                     <div key={k} style={{ maxWidth: 560, width: '100%', margin: '0 auto' }}>
                       <div style={{ fontSize: 11, color: '#0f172a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>{l}</div>
