@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { LineChart } from '@/components/ui/LineChart';
 import { BarChart } from '@/components/ui/BarChart';
 import { ZonasChart } from '@/components/ui/ZonasChart';
@@ -37,8 +37,16 @@ function zoneLabel(v: number | null) {
   return 'Ótimo';
 }
 
+function dataCurtaBR(data?: string | null) {
+  const iso = String(data ?? '').slice(0, 10);
+  const [ano, mes, dia] = iso.split('-').map(Number);
+  if (!ano || !mes || !dia) return '';
+  return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+}
+
 /* ── Gauge SVG — mesmo estilo do PDF ──────────────────── */
 function GaugeSVG({ value, label, size = 'sm' }: { value: number | null; label: string; size?: 'lg' | 'sm' }) {
+  const reactId = useId().replace(/:/g, '');
   const isLg = size === 'lg';
   const vw = isLg ? 200 : 160;
   const vh = isLg ? 168 : 118;
@@ -47,7 +55,7 @@ function GaugeSVG({ value, label, size = 'sm' }: { value: number | null; label: 
   const sw = isLg ? 14 : 11;
   const tw = isLg ? 9  : 7;
   const tl = isLg ? 14 : 11;
-  const gid = `dg${size}${value ?? 'N'}${Math.random().toString(36).slice(2,5)}`;
+  const gid = `dg-${reactId}-${size}-${value ?? 'N'}`;
   const pct = Math.max(0, Math.min(100, value ?? 0));
   const rot = (pct - 100) * 1.8;
   const rOuter = r + sw / 2 + 3;
@@ -955,7 +963,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     outline: 'none', cursor: 'pointer', minWidth: 200 }}>
                   {hist.ordenadas.slice().reverse().map(a => (
                     <option key={a.id} value={a.id} style={{ background: '#065f46' }}>
-                      {new Date(a.data).toLocaleDateString('pt-BR')} · {a.tipo}
+                      {dataCurtaBR(a.data)} · {a.tipo}
                     </option>
                   ))}
                 </select>
@@ -994,11 +1002,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           <div>
             <div style={{ fontSize: 10, fontWeight: 500, color: '#94a3b8',
               textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 6 }}>
-              Resumo da avaliação · {new Date(atual.data).toLocaleDateString('pt-BR')}
+              Resumo da avaliação · {dataCurtaBR(atual.data)}
             </div>
             {anterior && (
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                Comparado com {new Date(anterior.data).toLocaleDateString('pt-BR')}
+                Comparado com {dataCurtaBR(anterior.data)}
               </div>
             )}
           </div>
@@ -2085,7 +2093,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>
-                      {new Date(a.data).toLocaleDateString('pt-BR')}
+                      {dataCurtaBR(a.data)}
                     </span>
                     <span style={{
                       fontSize: 10, padding: '2px 10px', borderRadius: 100, fontWeight: 600,

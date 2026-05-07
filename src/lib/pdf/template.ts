@@ -1297,20 +1297,30 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     </div>`;
   };
 
-  const reguaPlano = (titulo: string, keys: string[]) => {
+  const reguaGrupo = (titulo: string, keys: string[]) => {
     const itens = keys.filter(k => ang[k]);
     if (!itens.length) return '';
+    return `<div style="break-inside:avoid;page-break-inside:avoid;margin-bottom:12px">
+        <div style="padding:10px 14px 4px;font-size:10px;font-weight:900;color:#0f172a;text-transform:uppercase;letter-spacing:.7px">${x(titulo)}</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0 14px 12px">${itens.map(k => angleRuler(k, ang[k])).join('')}</div>
+      </div>`;
+  };
+
+  const reguaPlanos = () => {
+    const sagital = reguaGrupo('Plano sagital', sagitalKeys);
+    const posterior = reguaGrupo('Plano posterior', posteriorKeys);
+    if (!sagital && !posterior) return '';
     return `<section class="page module" style="display:flex;flex-direction:column">
       <div class="mod-head">
         <div>
           <h2 class="mod-title">Biomecânica da corrida</h2>
-          <div style="font-size:12px;color:#64748b;margin-top:4px">Régua angular - ${x(titulo)}</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px">Régua angular - valor medido x faixa ideal</div>
         </div>
       </div>
       <div style="margin:4px 0 18px;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#f8fafc">
-        <div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.7px">Valor medido x faixa ideal</div>
-        <div style="padding:12px 14px 4px;font-size:10px;font-weight:900;color:#0f172a;text-transform:uppercase;letter-spacing:.7px">${x(titulo)}</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 14px 14px">${itens.map(k => angleRuler(k, ang[k])).join('')}</div>
+        <div style="padding:11px 14px;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.7px">Valor medido x faixa ideal</div>
+        ${sagital}
+        ${posterior}
       </div>
     </section>`;
   };
@@ -1363,8 +1373,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
 
   const sagitalKeys = ['cabeca','tronco','aterrissagem_passada','joelho_frente_contato','joelho_posterior_contato','bracos'];
   const posteriorKeys = ['queda_pelve_esq','queda_pelve_dir','alinhamento_joelho_esq','alinhamento_joelho_dir','pronacao_supinacao_esq','pronacao_supinacao_dir'];
-  const pgReguaSagital = reguaPlano('Plano sagital', sagitalKeys);
-  const pgReguaPosterior = reguaPlano('Plano posterior', posteriorKeys);
+  const pgReguaAngular = reguaPlanos();
 
   // PÃ¡gina 2: AnÃ¡lise cinemÃ¡tica + achados + recomendaÃ§Ãµes
   const angItems = Object.entries(ang).map(([key, v]: any) => {
@@ -1455,7 +1464,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   </div>
 </section>` : '';
 
-  return [pg1, pgReguaSagital, pgReguaPosterior, pg2, pg3].filter(Boolean).join('\n');
+  return [pg1, pgReguaAngular, pg2, pg3].filter(Boolean).join('\n');
 }
 
 

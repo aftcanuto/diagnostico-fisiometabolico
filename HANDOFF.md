@@ -58,6 +58,20 @@ Observacao importante: `NEXT_PUBLIC_SUPABASE_URL` deve ser sem `/rest/v1`.
 
 Ja foram aplicadas correcoes visuais e funcionais no relatorio, dashboard clinico e dashboard do paciente.
 
+### Atualizacao 2026-05-07 - correcao de erro ao entrar na avaliacao
+
+- Corrigido erro de hidratacao do React no dashboard da avaliacao/paciente.
+- Removido identificador aleatorio (`Math.random`) do velocimetro do `PatientDashboard`, substituindo por `useId`, estavel entre servidor e navegador.
+- Padronizada a exibicao de datas do `PatientDashboard` sem depender do fuso horario do navegador/servidor.
+- Corrigido o painel de links do portal do paciente para nao renderizar `window.location` antes da pagina carregar, evitando divergencia entre HTML da Vercel e HTML do Chrome.
+- O painel de links agora continua exibindo apenas links ativos e usa data curta estavel.
+
+### Atualizacao 2026-05-07 - reguas da biomecanica no PDF
+
+- Ajustado o template do PDF para colocar as reguas angulares do plano sagital e do plano posterior na mesma pagina.
+- A pagina agora mantem o titulo "Biomecanica da corrida" e separa os dois grupos internamente, com cards mais compactos e protegidos contra quebra no meio.
+- A ordem do PDF da biomecanica ficou: imagens/metricas, regua angular unica, achados/recomendacoes e graficos cinematicos.
+
 Principais pontos ja feitos:
 
 - Relatorio PDF premium com velocimetros refinados.

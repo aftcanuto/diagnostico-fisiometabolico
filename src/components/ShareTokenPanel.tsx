@@ -4,14 +4,23 @@ import { Card, CardBody, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { Copy, Link2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 
+function dataCurtaBR(data?: string | null) {
+  const iso = String(data ?? '').slice(0, 10);
+  const [ano, mes, dia] = iso.split('-').map(Number);
+  if (!ano || !mes || !dia) return '';
+  return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+}
+
 export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
   const [tokens, setTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(true);
   const [copiado, setCopiado] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [origin, setOrigin] = useState('');
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     fetch(`/api/paciente-tokens?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' })
       .then(async (res) => {
         const body = await res.json().catch(() => ({}));
@@ -101,12 +110,12 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
               {linksVisiveis.map(t => {
                 const vencido = new Date(t.expira_em) <= new Date();
                 const inativo = vencido;
-                const url = typeof window !== 'undefined' ? `${window.location.origin}/p/${t.token}` : '';
+                const url = origin ? `${origin}/p/${t.token}` : `/p/${t.token}`;
                 return (
                   <div key={t.token} className={`rounded-lg border p-3 flex flex-col md:flex-row md:items-center gap-2 ${inativo ? 'bg-slate-50 opacity-70' : 'bg-white'}`}>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs text-slate-500">
-                        Criado em {new Date(t.criado_em).toLocaleDateString('pt-BR')} · Expira em {new Date(t.expira_em).toLocaleDateString('pt-BR')}
+                        Criado em {dataCurtaBR(t.criado_em)} · Expira em {dataCurtaBR(t.expira_em)}
                         {t.revogado && <span className="ml-2 text-red-600 font-medium">REVOGADO</span>}
                         {vencido && !t.revogado && <span className="ml-2 text-amber-600 font-medium">VENCIDO</span>}
                       </div>
