@@ -744,6 +744,35 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: capa, rodape numerado e continuidade do PDF
+
+Em 07/05/2026 foram refinados a capa, os rodapes e as quebras de pagina do relatorio PDF.
+
+Problemas observados:
+
+- a capa ainda repetia o bloco de identificacao no final, embora sexo, idade e data ja aparecessem no miolo da capa;
+- o rodape havia sido removido junto da capa, mas deveria permanecer em todas as paginas internas;
+- paginas de continuacao de modulo precisavam repetir o titulo do modulo com sinalizacao discreta de continuidade;
+- o link do video da cinematica nao aparecia de forma robusta na secao de biomecanica.
+
+Correcoes aplicadas:
+
+- `src/lib/pdf/template.ts` removeu o card final de identificacao da capa, mantendo apenas o avaliador responsavel;
+- `src/lib/pdf/template.ts` trocou o rodape antigo por dados seguros no `body`, para que o rodape seja montado depois da paginacao;
+- `src/lib/pdf/pagination.ts` passou a inserir rodape real em todas as paginas internas, com avaliador, registro/especialidade quando houver, paciente, CPF e numeracao da pagina;
+- `src/lib/pdf/pagination.ts` tambem repete o cabecalho do modulo nas paginas de continuacao, adicionando uma etiqueta discreta `continuação`;
+- `src/lib/pdf/template.ts` passou a aceitar diferentes nomes de campo para o link de video da biomecanica e renderiza o botao `Ver video da cinematica` quando o link existir.
+- `next.config.js` moveu `outputFileTracingIncludes` para dentro de `experimental`, eliminando o aviso de configuracao invalida do Next 14.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`;
+- `npm run build` foi tentado localmente, mas o ambiente bloqueou processos internos do Next com `spawn EPERM`; o aviso de configuracao invalida que aparecia antes foi corrigido.
+
 ## Correcao: rodape interno do PDF e quebras de pagina
 
 Em 07/05/2026 foi revisada a estrutura de paginas do relatorio em PDF.

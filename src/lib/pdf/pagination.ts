@@ -7,6 +7,7 @@ export async function prepararPaginacaoLaudo(page: any) {
     function alturaConteudo(el: HTMLElement) {
       return Array.from(el.children).reduce((max, child) => {
         const item = child as HTMLElement;
+        if (item.classList.contains('pdf-footer')) return max;
         const st = window.getComputedStyle(item);
         const mb = Number.parseFloat(st.marginBottom || '0') || 0;
         return Math.max(max, item.offsetTop + item.offsetHeight + mb);
@@ -24,37 +25,42 @@ export async function prepararPaginacaoLaudo(page: any) {
       clone.style.breakAfter = 'avoid';
       clone.style.pageBreakAfter = 'avoid';
       clone.style.marginBottom = continuacao ? '18px' : clone.style.marginBottom;
+
       if (continuacao) {
         clone.style.opacity = '0.78';
         clone.style.background = 'linear-gradient(90deg, rgba(248,250,252,.92), rgba(255,255,255,0))';
         clone.style.borderRadius = '10px';
         clone.style.paddingLeft = '12px';
         clone.style.boxShadow = '0 10px 28px rgba(15,23,42,.05)';
+
         const titulo = clone.querySelector('.mod-title') as HTMLElement | null;
         if (titulo) {
           titulo.style.color = '#334155';
           titulo.style.textShadow = '0 1px 0 #fff';
         }
+
         if (!clone.querySelector('[data-continuacao="true"]')) {
           const tag = document.createElement('span');
           tag.dataset.continuacao = 'true';
           tag.textContent = 'continuação';
           tag.style.cssText = [
             'margin-left:10px',
-            'padding:4px 10px',
+            'padding:2px 8px',
             'border-radius:999px',
-            'background:#f1f5f9',
-            'border:1px solid #e2e8f0',
+            'background:#f8fafc',
+            'border:1px solid #edf2f7',
             'color:#64748b',
-            'font-size:10px',
-            'font-weight:800',
-            'letter-spacing:.6px',
-            'text-transform:uppercase',
+            'font-size:8.5px',
+            'font-weight:600',
+            'font-style:italic',
+            'letter-spacing:.3px',
+            'text-transform:none',
+            'opacity:.68',
           ].join(';');
-          const titulo = clone.querySelector('.mod-title');
           titulo?.appendChild(tag);
         }
       }
+
       return clone;
     }
 
@@ -72,7 +78,7 @@ export async function prepararPaginacaoLaudo(page: any) {
     }
 
     function montarBlocos(section: HTMLElement, header: Element) {
-      const filhos = Array.from(section.children).filter(child => child !== header);
+      const filhos = Array.from(section.children).filter(child => child !== header && !(child as HTMLElement).classList.contains('pdf-footer'));
       const blocos: HTMLElement[] = [];
       let i = 0;
 
@@ -117,10 +123,8 @@ export async function prepararPaginacaoLaudo(page: any) {
       if (!header) continue;
 
       const filhos = montarBlocos(section, header);
-      const paginas: HTMLElement[] = [];
       let atual = novaPagina(section, header, false);
       section.parentNode?.insertBefore(atual, section);
-      paginas.push(atual);
 
       for (const child of filhos) {
         atual.appendChild(child);
@@ -128,12 +132,36 @@ export async function prepararPaginacaoLaudo(page: any) {
           atual.removeChild(child);
           atual = novaPagina(section, header, true);
           section.parentNode?.insertBefore(atual, section);
-          paginas.push(atual);
           atual.appendChild(child);
         }
       }
 
       section.remove();
     }
+
+    const footerLeft = document.body.getAttribute('data-footer-left') ?? '';
+    const footerCenter = document.body.getAttribute('data-footer-center') ?? '';
+    const footerRight = document.body.getAttribute('data-footer-right') ?? '';
+    const paginasComRodape = Array.from(document.querySelectorAll('section.page:not(.cover)')) as HTMLElement[];
+    const total = paginasComRodape.length;
+
+    paginasComRodape.forEach((sec, index) => {
+      sec.querySelectorAll(':scope > .pdf-footer').forEach((old) => old.remove());
+
+      const footer = document.createElement('div');
+      footer.className = 'pdf-footer';
+
+      const main = document.createElement('div');
+      main.className = 'pdf-footer-main';
+      main.textContent = [footerLeft, footerCenter, footerRight].filter(Boolean).join('   •   ');
+
+      const pagina = document.createElement('div');
+      pagina.className = 'pdf-footer-page';
+      pagina.textContent = `${index + 1}/${total}`;
+
+      footer.appendChild(main);
+      footer.appendChild(pagina);
+      sec.appendChild(footer);
+    });
   });
 }

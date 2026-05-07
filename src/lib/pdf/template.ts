@@ -38,8 +38,8 @@ export interface LaudoData {
 
 // â”€â”€â”€ Utils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const x = (s: any) => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const xa = (s: any) => x(s).replace(/"/g,'&quot;');
 const fd = (iso: string) => { try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; } };
-const cssStr = (s: any) => `"${String(s ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ').trim()}"`;
 function limparTextoHTML(html: string): string {
   const pares: [string, string][] = [
     ['ÃƒÂ¡','á'], ['ÃƒÂ ','à'], ['ÃƒÂ¢','â'], ['ÃƒÂ£','ã'], ['ÃƒÂ©','é'], ['ÃƒÂª','ê'], ['ÃƒÂ­','í'], ['ÃƒÂ³','ó'], ['ÃƒÂ´','ô'], ['ÃƒÂµ','õ'], ['ÃƒÂº','ú'], ['ÃƒÂ§','ç'],
@@ -206,7 +206,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .cover-name { font-weight: 850; letter-spacing: -1.2px; color:#ffffff; text-transform: uppercase; margin-bottom: 18px; text-wrap: nowrap; white-space: nowrap; max-width: 100%; }
 .cover-subtitle { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,.76); max-width: 610px; margin-bottom: 34px; }
 .cover-chip-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; max-width: 650px; }
-.cover-signature { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; align-items:stretch; padding-top:22px; border-top:1px solid rgba(255,255,255,.16); }
+.cover-signature { display:flex; align-items:stretch; padding-top:22px; border-top:1px solid rgba(255,255,255,.16); }
 .cover-sign-card { border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.11); border-radius:18px; padding:16px 18px; backdrop-filter: blur(10px); }
 .cover-label { font-size:8.5px; font-weight:800; color:rgba(255,255,255,.58); text-transform:uppercase; letter-spacing:1.6px; margin-bottom:7px; }
 .cover-value { font-size:14px; font-weight:650; color:#ffffff; line-height:1.35; }
@@ -215,8 +215,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .chip-val { font-size: 15px; font-weight: 700; color: #ffffff; }
 
 .page:not(.cover) { min-height: 297mm; height: 297mm; padding-bottom: 70px !important; }
-.page:not(.cover)::after {
-  content: var(--laudo-footer-left) "   •   " var(--laudo-footer-center) "   •   " var(--laudo-footer-right);
+.pdf-footer {
   position:absolute;
   left:36px;
   right:36px;
@@ -237,6 +236,8 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
   text-overflow:ellipsis;
   padding:0 16px;
 }
+.pdf-footer-main { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; opacity:.78; }
+.pdf-footer-page { flex:0 0 auto; margin-left:12px; padding:4px 10px; border-radius:999px; background:${pri}10; border:1px solid ${pri}33; color:${pri}; font-weight:800; }
 
 /* Summary */
 .summary { background: #ffffff; color: #0f172a; padding: 30px 36px 28px; }
@@ -421,7 +422,6 @@ function pgCapa(d: LaudoData): string {
   const clinicaNome = c?.nome ?? 'Diagnóstico Fisiometabólico';
   const contato = [c?.telefone, c?.email, c?.site].filter(Boolean).join(' · ');
   const avaliadorLinha = [d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
-  const pacienteMeta = `${d.paciente.sexo==='M'?'Masculino':'Feminino'} · ${d.paciente.idade} anos · ${fd(d.avaliacao.data)}`;
   return `<section class="page cover" style="background:linear-gradient(135deg,${g1} 0%,${g2} 52%,${g3} 100%)">
   <div class="cover-shell">
     <div class="cover-top">
@@ -453,14 +453,10 @@ function pgCapa(d: LaudoData): string {
     </div>
 
     <div class="cover-signature">
-      <div class="cover-sign-card">
+      <div class="cover-sign-card" style="width:100%">
         <div class="cover-label">Avaliador responsável</div>
         <div class="cover-value">${x(d.avaliador.nome)}</div>
         ${avaliadorLinha ? `<div style="font-size:10.5px;color:rgba(255,255,255,.66);margin-top:4px">${x(avaliadorLinha)}</div>` : ''}
-      </div>
-      <div class="cover-sign-card">
-        <div class="cover-label">Identificação</div>
-        <div class="cover-value" style="font-size:13px">${x(pacienteMeta)}</div>
       </div>
     </div>
   </div>
@@ -1208,6 +1204,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   const graf: any = b.graficos ?? {};
   const comentGraf: any = b.comentarios_graficos ?? {};
   const comentAng: any = b.comentarios_angulos ?? {};
+  const videoUrl = b.link_video ?? b.linkVideo ?? b.video_url ?? b.videoUrl ?? b.link_cinematica ?? b.link_video_cinematica ?? '';
 
   const metaAngs: Record<string, string> = {
     cabeca: 'Alinhamento da cabeça',
@@ -1295,7 +1292,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
         CinemÃ¡tica 2D â€” ${x(b.movimento ?? 'Corrida')} Â· ${b.velocidade_kmh ?? 'â€”'} km/h
       </div>
     </div>
-    ${b.link_video ? `<a href="${x(b.link_video)}" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px ${pri}33">Ver video</a>` : ''}
+    ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px ${pri}33">Ver video da cinematica</a>` : ''}
   </div>
   <div style="display:grid;grid-template-columns:${b.foto_frame_url ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:18px">
     ${b.foto_frame_url ? `<div>
@@ -1519,5 +1516,5 @@ export function renderLaudoHTML(d: LaudoData): string {
 <html lang="pt-BR"><head><meta charset="utf-8"/>
 <title>${x(d.paciente.nome)} â€” DiagnÃ³stico FisiometabÃ³lico</title>
 <style>${CSS(pri)}</style>
-</head><body style="--laudo-footer-left:${cssStr(footerLeft)};--laudo-footer-center:${cssStr(footerCenter)};--laudo-footer-right:${cssStr(footerRight)}">${pages}</body></html>`);
+</head><body data-footer-left="${xa(footerLeft)}" data-footer-center="${xa(footerCenter)}" data-footer-right="${xa(footerRight)}">${pages}</body></html>`);
 }
