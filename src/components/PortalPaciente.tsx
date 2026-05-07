@@ -439,6 +439,17 @@ function humanLabel(k:string){
   return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 }
 
+function anamnesePublica(row:any){
+  if (!row || typeof row !== 'object') return [];
+  const respostas = row.respostas && typeof row.respostas === 'object' ? row.respostas : row;
+  const permitidos = Array.isArray(respostas.__campos_publicos_relatorio) ? respostas.__campos_publicos_relatorio : [];
+  if (!permitidos.length) return [];
+  return Object.entries(respostas)
+    .filter(([k,v]) => k !== '__campos_publicos_relatorio' && permitidos.includes(k) && v != null && v !== '')
+    .map(([k,v]) => ({ label: humanLabel(k), valor: fmtValor(v) }))
+    .filter(i => i.valor);
+}
+
 function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentario?: string }) {
   const c = v?.classificacao === 'ideal' ? '#10b981' : v?.classificacao === 'atencao' ? '#f59e0b' : '#ef4444';
   const scaleMin = Math.min(0, v?.ideal_min ?? 0, v?.valor ?? 0);
@@ -568,12 +579,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
   const corFlex=flex?.classificacao==='Excelente'?'#16a34a':flex?.classificacao==='Bom'?'#10b981'
     :flex?.classificacao==='Médio'?'#f59e0b':flex?.classificacao==='Regular'?'#f97316':'#ef4444';
-  const camposOcultosAnamnese=new Set(['id','avaliacao_id','created_at','updated_at','clinica_id','paciente_id','avaliador_id']);
-  const anamneseItems=anamnese
-    ?Object.entries(anamnese)
-      .filter(([k])=>!camposOcultosAnamnese.has(k))
-      .map(([k,v])=>({label:humanLabel(k),valor:fmtValor(v)})).filter(i=>i.valor)
-    :[];
+  const anamneseItems=anamnesePublica(anamnese);
   const anamneseTopLabels=['Objetivo','Queixa Principal','Historico Lesoes','Histórico Lesões'];
   const anamneseFullLabels=['Historia Familiar','História Familiar'];
   const anamneseTop=anamneseItems.filter(i=>anamneseTopLabels.includes(i.label));
@@ -1254,8 +1260,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
         ].filter(([k]) => grafs[k]);
         const posteriorImgs = [
-          ['posterior_1_url', 'Imagem posterior 1'], ['posterior_2_url', 'Imagem posterior 2'], ['posterior_3_url', 'Imagem posterior 3'],
-          ['posterior_4_url', 'Imagem posterior 4'], ['posterior_5_url', 'Imagem posterior 5'], ['posterior_6_url', 'Imagem posterior 6'],
+          ['posterior_1_url', 'Nível Pelve lado esquerdo'], ['posterior_2_url', 'Nível Pelve lado direito'], ['posterior_3_url', 'Alinhamento Joelho Esquerdo'],
+          ['posterior_4_url', 'Alinhamento Joelho direito'], ['posterior_5_url', 'Análise pé esquerdo'], ['posterior_6_url', 'Análise pé direito'],
         ].filter(([k]) => grafs[k]);
         const labels: Record<string,string> = {
           cabeca:'Cabeça', tronco:'Tronco', aterrissagem_passada:'Aterrissagem',
@@ -1300,8 +1306,11 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               {posteriorImgs.length > 0 && (
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:14,marginBottom:16}}>
                   {posteriorImgs.map(([k,l]) => (
-                    <div key={k} style={{width:'100%',aspectRatio:'16 / 9',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0',overflow:'hidden'}}>
-                      <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                    <div key={k} style={{width:'100%',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0',overflow:'hidden'}}>
+                      <div style={{width:'100%',aspectRatio:'16 / 9'}}>
+                        <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                      </div>
+                      <div style={{fontSize:10,fontWeight:700,color:'#334155',textAlign:'center',padding:'5px 6px',background:'#fff',borderTop:'1px solid #e2e8f0'}}>{l}</div>
                     </div>
                   ))}
                 </div>

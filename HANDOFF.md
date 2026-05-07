@@ -1178,3 +1178,31 @@ Validacao local:
 - smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Ajuste: biomecanica posterior, privacidade da anamnese e regua angular
+
+Em 07/05/2026 foram aplicados ajustes solicitados no modulo de biomecanica e na exposicao de dados sensiveis da anamnese.
+
+Problemas observados:
+
+- as seis imagens do plano posterior apareciam com nomes genericos, dificultando identificar qual achado cada imagem representava;
+- a anamnese nao deveria entrar automaticamente no relatorio nem no portal do paciente por conter dados sensiveis;
+- a regua angular da biomecanica perdeu espaco no PDF apos a inclusao das imagens dos planos sagital e posterior, com risco de conteudo ser cortado ou ficar comprimido.
+
+Correcoes aplicadas:
+
+- `src/app/(app)/avaliacoes/[id]/biomecanica/page.tsx` renomeou os slots posteriores para: Nivel Pelve lado esquerdo, Nivel Pelve lado direito, Alinhamento Joelho Esquerdo, Alinhamento Joelho direito, Analise pe esquerdo e Analise pe direito;
+- `src/components/PatientDashboard.tsx`, `src/components/PortalPaciente.tsx` e `src/lib/pdf/template.ts` passaram a exibir esses nomes abaixo das imagens posteriores nos dashboards e no relatorio;
+- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` adicionou uma caixa de marcacao em cada campo para autorizar exibicao no relatorio e no portal do paciente;
+- a autorizacao e salva dentro de `anamnese.respostas.__campos_publicos_relatorio`, evitando nova coluna no banco e mantendo compatibilidade com dados antigos;
+- `src/components/PortalPaciente.tsx` e `src/lib/pdf/template.ts` passaram a filtrar a anamnese, exibindo somente campos autorizados;
+- `src/components/PatientDashboard.tsx` continua exibindo a anamnese completa no painel clinico, mas agora interpreta corretamente respostas salvas em JSON;
+- `src/lib/pdf/template.ts` separou a regua angular em paginas proprias para plano sagital e plano posterior, preservando os cards de valor medido x faixa ideal sem disputar espaco com as imagens.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 29 migrations, 22 tabelas com RLS e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.

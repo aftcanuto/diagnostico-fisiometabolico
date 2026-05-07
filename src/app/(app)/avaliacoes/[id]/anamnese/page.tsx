@@ -29,6 +29,13 @@ interface Template {
   campos: Campo[];
 }
 
+const CAMPOS_PUBLICOS_KEY = '__campos_publicos_relatorio';
+
+function camposPublicos(respostas: Record<string, any>): string[] {
+  const valor = respostas?.[CAMPOS_PUBLICOS_KEY];
+  return Array.isArray(valor) ? valor.filter(v => typeof v === 'string') : [];
+}
+
 function textoSeguro(valor: any, fallback = ''): string {
   if (valor == null || valor === '') return fallback;
   if (typeof valor === 'string' || typeof valor === 'number' || typeof valor === 'boolean') return String(valor);
@@ -43,17 +50,33 @@ function valorInput(valor: any): any {
   return valor;
 }
 
+function PublicarCheckbox({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <label className="mt-2 inline-flex items-start gap-2 text-xs text-slate-500">
+      <input
+        type="checkbox"
+        className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-brand-600"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+      />
+      <span>Exibir este dado no relatório e no portal do paciente</span>
+    </label>
+  );
+}
+
 // ─── Renderizador de campo dinâmico ─────────────────────────────────────────
-function CampoDinamico({ campo, valor, onChange }: {
+function CampoDinamico({ campo, valor, onChange, publicar, onPublicarChange }: {
   campo: Campo;
   valor: any;
   onChange: (v: any) => void;
+  publicar: boolean;
+  onPublicarChange: (checked: boolean) => void;
 }) {
   const campoLabel = textoSeguro(campo.label, 'Campo');
   const campoPlaceholder = textoSeguro(campo.placeholder);
   const campoUnidade = textoSeguro(campo.unidade);
   if (typeof valor === 'object') valor = textoSeguro(valor);
-  // Título de seção
+
   if (campo.tipo === 'secao') {
     return (
       <div className="col-span-2 pt-4 pb-1 border-b border-slate-200">
@@ -63,13 +86,14 @@ function CampoDinamico({ campo, valor, onChange }: {
   }
 
   const label = campoLabel + (campo.obrigatorio ? ' *' : '');
+  const privacidade = <PublicarCheckbox checked={publicar} onChange={onPublicarChange} />;
 
   if (campo.tipo === 'texto_longo') {
     return (
       <div className="col-span-2">
         <Field label={label}>
-          <Textarea value={valorInput(valor)} onChange={e => onChange(e.target.value)}
-            placeholder={campoPlaceholder} />
+          <Textarea value={valorInput(valor)} onChange={e => onChange(e.target.value)} placeholder={campoPlaceholder} />
+          {privacidade}
         </Field>
       </div>
     );
@@ -78,8 +102,8 @@ function CampoDinamico({ campo, valor, onChange }: {
   if (campo.tipo === 'texto') {
     return (
       <Field label={label}>
-        <Input value={valorInput(valor)} onChange={e => onChange(e.target.value)}
-          placeholder={campoPlaceholder} />
+        <Input value={valorInput(valor)} onChange={e => onChange(e.target.value)} placeholder={campoPlaceholder} />
+        {privacidade}
       </Field>
     );
   }
@@ -87,22 +111,30 @@ function CampoDinamico({ campo, valor, onChange }: {
   if (campo.tipo === 'boolean') {
     return (
       <Field label={label}>
-        <select className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm bg-white"
+        <select
+          className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm bg-white"
           value={valor === true ? 'sim' : valor === false ? 'nao' : ''}
-          onChange={e => onChange(e.target.value === 'sim' ? true : e.target.value === 'nao' ? false : null)}>
-          <option value="">— Selecione —</option>
+          onChange={e => onChange(e.target.value === 'sim' ? true : e.target.value === 'nao' ? false : null)}
+        >
+          <option value="">-- Selecione --</option>
           <option value="sim">Sim</option>
-          <option value="nao">Não</option>
+          <option value="nao">Nao</option>
         </select>
+        {privacidade}
       </Field>
     );
   }
 
   if (campo.tipo === 'numero') {
     return (
-      <Field label={`${label}${campoUnidade ? ` (${campoUnidade})` : ''}`}>
-        <Input type="number" value={typeof valor === 'object' ? '' : valor ?? ''} onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
-          placeholder={campoPlaceholder} />
+      <Field label={label + (campoUnidade ? ' (' + campoUnidade + ')' : '')}>
+        <Input
+          type="number"
+          value={typeof valor === 'object' ? '' : valor ?? ''}
+          onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
+          placeholder={campoPlaceholder}
+        />
+        {privacidade}
       </Field>
     );
   }
@@ -111,15 +143,21 @@ function CampoDinamico({ campo, valor, onChange }: {
     return (
       <Field label={label}>
         <div className="flex items-center gap-2">
-          <input type="range" min={1} max={10} step={1}
+          <input
+            type="range"
+            min={1}
+            max={10}
+            step={1}
             value={typeof valor === 'object' ? 5 : valor ?? 5}
             onChange={e => onChange(Number(e.target.value))}
-            className="flex-1 accent-brand-600" />
-          <span className="w-8 text-center font-bold text-brand-700 text-lg">{valor ?? '—'}</span>
+            className="flex-1 accent-brand-600"
+          />
+          <span className="w-8 text-center font-bold text-brand-700 text-lg">{valor ?? '-'}</span>
         </div>
         <div className="flex justify-between text-xs text-slate-400 mt-1">
-          <span>1 (mínimo)</span><span>10 (máximo)</span>
+          <span>1 minimo</span><span>10 maximo</span>
         </div>
+        {privacidade}
       </Field>
     );
   }
@@ -128,12 +166,15 @@ function CampoDinamico({ campo, valor, onChange }: {
     const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes.map(op => textoSeguro(op)).filter(Boolean) : [];
     return (
       <Field label={label}>
-        <select className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm bg-white"
+        <select
+          className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm bg-white"
           value={valorInput(valor)}
-          onChange={e => onChange(e.target.value)}>
-          <option value="">— Selecione —</option>
+          onChange={e => onChange(e.target.value)}
+        >
+          <option value="">-- Selecione --</option>
           {opcoes.map(op => <option key={op} value={op}>{op}</option>)}
         </select>
+        {privacidade}
       </Field>
     );
   }
@@ -142,6 +183,7 @@ function CampoDinamico({ campo, valor, onChange }: {
     return (
       <Field label={label}>
         <Input type="date" value={valorInput(valor)} onChange={e => onChange(e.target.value)} />
+        {privacidade}
       </Field>
     );
   }
@@ -149,8 +191,12 @@ function CampoDinamico({ campo, valor, onChange }: {
   return null;
 }
 
-// ─── Fallback: anamnese básica sem template ──────────────────────────────────
-function AnamnesesFallback({ respostas, onChange }: { respostas: any; onChange: (k: string, v: any) => void }) {
+function AnamnesesFallback({ respostas, onChange, publicar, onPublicarChange }: {
+  respostas: any;
+  onChange: (k: string, v: any) => void;
+  publicar: (k: string) => boolean;
+  onPublicarChange: (k: string, checked: boolean) => void;
+}) {
   return (
     <>
       <Card>
@@ -158,20 +204,24 @@ function AnamnesesFallback({ respostas, onChange }: { respostas: any; onChange: 
         <CardBody className="space-y-4">
           <Field label="Queixa principal">
             <Textarea value={respostas.queixa_principal ?? ''} onChange={e => onChange('queixa_principal', e.target.value)} />
+            <PublicarCheckbox checked={publicar('queixa_principal')} onChange={checked => onPublicarChange('queixa_principal', checked)} />
           </Field>
           <Field label="Objetivos">
             <Textarea value={respostas.objetivos ?? ''} onChange={e => onChange('objetivos', e.target.value)} />
+            <PublicarCheckbox checked={publicar('objetivos')} onChange={checked => onPublicarChange('objetivos', checked)} />
           </Field>
         </CardBody>
       </Card>
       <Card>
-        <CardHeader><CardTitle>Atividade física</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Atividade fisica</CardTitle></CardHeader>
         <CardBody className="grid grid-cols-2 gap-4">
           <Field label="Tipo de atividade">
             <Input value={respostas.tipo_atividade ?? ''} onChange={e => onChange('tipo_atividade', e.target.value)} />
+            <PublicarCheckbox checked={publicar('tipo_atividade')} onChange={checked => onPublicarChange('tipo_atividade', checked)} />
           </Field>
-          <Field label="Frequência (dias/sem)">
+          <Field label="Frequencia (dias/sem)">
             <Input type="number" min={0} max={7} value={respostas.freq_semanal ?? ''} onChange={e => onChange('freq_semanal', e.target.value)} />
+            <PublicarCheckbox checked={publicar('freq_semanal')} onChange={checked => onPublicarChange('freq_semanal', checked)} />
           </Field>
         </CardBody>
       </Card>
@@ -179,7 +229,6 @@ function AnamnesesFallback({ respostas, onChange }: { respostas: any; onChange: 
   );
 }
 
-// ─── Página principal ────────────────────────────────────────────────────────
 export default function AnamnesePage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const router = useRouter();
@@ -268,6 +317,16 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
   const setResp = (id: string, val: any) =>
     setRespostas(prev => ({ ...prev, [id]: val }));
 
+  const publicarCampo = (id: string) => camposPublicos(respostas).includes(id);
+  const setPublicarCampo = (id: string, checked: boolean) =>
+    setRespostas(prev => {
+      const atual = camposPublicos(prev);
+      const prox = checked
+        ? Array.from(new Set([...atual, id]))
+        : atual.filter(campoId => campoId !== id);
+      return { ...prev, [CAMPOS_PUBLICOS_KEY]: prox };
+    });
+
   // Navegação
   const steps = aval ? buildSteps(params.id, aval.modulos_selecionados) : [];
   const idx = steps.findIndex(s => s.key === 'anamnese');
@@ -288,7 +347,12 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
               Criar agora →
             </a>
           </div>
-          <AnamnesesFallback respostas={respostas} onChange={setResp} />
+          <AnamnesesFallback
+            respostas={respostas}
+            onChange={setResp}
+            publicar={publicarCampo}
+            onPublicarChange={setPublicarCampo}
+          />
         </>
       )}
 
@@ -328,6 +392,8 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
                     campo={campo}
                     valor={respostas[campo.id]}
                     onChange={v => setResp(campo.id, v)}
+                    publicar={publicarCampo(campo.id)}
+                    onPublicarChange={checked => setPublicarCampo(campo.id, checked)}
                   />
                 ))}
               </div>

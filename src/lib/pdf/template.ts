@@ -672,7 +672,11 @@ function pgAnamnese(a: any, ia?: any): string {
 
   // â”€â”€ Modo dinÃ¢mico: quando hÃ¡ respostas + template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (a.respostas && typeof a.respostas === 'object' && Object.keys(a.respostas).length > 0) {
-    const resps = a.respostas;
+    const permitidos = Array.isArray(a.respostas.__campos_publicos_relatorio) ? a.respostas.__campos_publicos_relatorio : [];
+    const resps = Object.fromEntries(Object.entries(a.respostas).filter(([k, v]) =>
+      k !== '__campos_publicos_relatorio' && permitidos.includes(k) && v !== null && v !== undefined && v !== ''
+    ));
+    if (!Object.keys(resps).length) return '';
     const campos: Array<{id:string;tipo:string;label:string;unidade?:string}> =
       Array.isArray(a._campos) ? a._campos : [];
 
@@ -752,28 +756,30 @@ function pgSinais(s: any, ia?: any): string {
 function pgSinaisAnamnese(a: any, s: any, iaA: any, iaS: any, pri = '#059669'): string {
   if (!a && !s) return '';
   const pri2 = '#059669'; // fallback â€” serÃ¡ sobrescrito pelo pri do caller
+  const anamneseHtml = a ? pgAnamnese(a, iaA) : '';
+  if (!anamneseHtml && !s) return '';
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
     <h2 class="mod-title">Anamnese &amp; Sinais Vitais</h2>
   </div>
 
   <!-- â”€â”€ METADE SUPERIOR: Anamnese â”€â”€ -->
-  <div style="padding:20px 0 18px;border-bottom:2px dashed #e5e7eb">
+  ${anamneseHtml ? `<div style="padding:20px 0 18px;border-bottom:2px dashed #e5e7eb">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Anamnese
     </div>
-    ${a ? pgAnamnese(a, iaA) : '<p style="color:#9ca3af;font-size:13px">NÃ£o realizada</p>'}
-  </div>
+    ${anamneseHtml}
+  </div>` : ''}
 
   <!-- â”€â”€ METADE INFERIOR: Sinais Vitais â”€â”€ -->
-  <div style="padding:20px 0 0">
+  ${s ? `<div style="padding:20px 0 0">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Sinais Vitais
     </div>
-    ${s ? pgSinais(s, iaS) : '<p style="color:#9ca3af;font-size:13px">NÃ£o realizado</p>'}
-  </div>
+    ${pgSinais(s, iaS)}
+  </div>` : ''}
 </section>`;
 }
 
@@ -1210,8 +1216,8 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
   ].filter(([k]) => graf[k]);
   const posteriorImgs = [
-    ['posterior_1_url', 'Imagem posterior 1'], ['posterior_2_url', 'Imagem posterior 2'], ['posterior_3_url', 'Imagem posterior 3'],
-    ['posterior_4_url', 'Imagem posterior 4'], ['posterior_5_url', 'Imagem posterior 5'], ['posterior_6_url', 'Imagem posterior 6'],
+    ['posterior_1_url', 'Nível Pelve lado esquerdo'], ['posterior_2_url', 'Nível Pelve lado direito'], ['posterior_3_url', 'Alinhamento Joelho Esquerdo'],
+    ['posterior_4_url', 'Alinhamento Joelho direito'], ['posterior_5_url', 'Análise pé esquerdo'], ['posterior_6_url', 'Análise pé direito'],
   ].filter(([k]) => graf[k]);
 
   const metaAngs: Record<string, string> = {
@@ -1291,6 +1297,24 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     </div>`;
   };
 
+  const reguaPlano = (titulo: string, keys: string[]) => {
+    const itens = keys.filter(k => ang[k]);
+    if (!itens.length) return '';
+    return `<section class="page module" style="display:flex;flex-direction:column">
+      <div class="mod-head">
+        <div>
+          <h2 class="mod-title">Biomecânica da corrida</h2>
+          <div style="font-size:12px;color:#64748b;margin-top:4px">Régua angular - ${x(titulo)}</div>
+        </div>
+      </div>
+      <div style="margin:4px 0 18px;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#f8fafc">
+        <div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.7px">Valor medido x faixa ideal</div>
+        <div style="padding:12px 14px 4px;font-size:10px;font-weight:900;color:#0f172a;text-transform:uppercase;letter-spacing:.7px">${x(titulo)}</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 14px 14px">${itens.map(k => angleRuler(k, ang[k])).join('')}</div>
+      </div>
+    </section>`;
+  };
+
   // PÃ¡gina 1: Frame anotado + mÃ©tricas
   const pg1 = `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head">
@@ -1329,13 +1353,18 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   </div>` : ''}
   ${posteriorImgs.length ? `<div class="sec-sub">Imagens do plano posterior</div>
   <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px">
-    ${posteriorImgs.map(([k,l]) => `<div style="width:100%;aspect-ratio:16/9;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
-      <img src="${x(graf[k])}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/>
+    ${posteriorImgs.map(([k,l]) => `<div style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <div style="width:100%;aspect-ratio:16/9"><img src="${x(graf[k])}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/></div>
+      <div style="font-size:9px;font-weight:700;color:#334155;text-align:center;padding:5px 6px;background:#fff;border-top:1px solid #e2e8f0">${x(l)}</div>
     </div>`).join('')}
   </div>` : ''}
-  ${comparativoRunner()}
   ${aiBlock(ia)}
 </section>`;
+
+  const sagitalKeys = ['cabeca','tronco','aterrissagem_passada','joelho_frente_contato','joelho_posterior_contato','bracos'];
+  const posteriorKeys = ['queda_pelve_esq','queda_pelve_dir','alinhamento_joelho_esq','alinhamento_joelho_dir','pronacao_supinacao_esq','pronacao_supinacao_dir'];
+  const pgReguaSagital = reguaPlano('Plano sagital', sagitalKeys);
+  const pgReguaPosterior = reguaPlano('Plano posterior', posteriorKeys);
 
   // PÃ¡gina 2: AnÃ¡lise cinemÃ¡tica + achados + recomendaÃ§Ãµes
   const angItems = Object.entries(ang).map(([key, v]: any) => {
@@ -1426,7 +1455,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   </div>
 </section>` : '';
 
-  return [pg1, pg2, pg3].filter(Boolean).join('\n');
+  return [pg1, pgReguaSagital, pgReguaPosterior, pg2, pg3].filter(Boolean).join('\n');
 }
 
 

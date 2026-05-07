@@ -52,12 +52,12 @@ const IMAGENS_SAGITAL = [
 ] as const;
 
 const IMAGENS_POSTERIOR = [
-  ['posterior_1_url', 'Imagem posterior 1'],
-  ['posterior_2_url', 'Imagem posterior 2'],
-  ['posterior_3_url', 'Imagem posterior 3'],
-  ['posterior_4_url', 'Imagem posterior 4'],
-  ['posterior_5_url', 'Imagem posterior 5'],
-  ['posterior_6_url', 'Imagem posterior 6'],
+  ['posterior_1_url', 'Nível Pelve lado esquerdo'],
+  ['posterior_2_url', 'Nível Pelve lado direito'],
+  ['posterior_3_url', 'Alinhamento Joelho Esquerdo'],
+  ['posterior_4_url', 'Alinhamento Joelho direito'],
+  ['posterior_5_url', 'Análise pé esquerdo'],
+  ['posterior_6_url', 'Análise pé direito'],
 ] as const;
 
 export default function BiomecanicaPage({ params }: { params: { id: string } }) {

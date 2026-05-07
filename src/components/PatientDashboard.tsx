@@ -365,6 +365,11 @@ function rotuloCirc(k: string): string {
 
 function cleanModulo(row: any) {
   if (!row || typeof row !== 'object') return {};
+  if (row.respostas && typeof row.respostas === 'object') {
+    return Object.fromEntries(Object.entries(row.respostas).filter(([k, v]) =>
+      k !== '__campos_publicos_relatorio' && v != null && v !== ''
+    ));
+  }
   const omit = new Set(['id','avaliacao_id','created_at','updated_at','clinica_id','paciente_id','avaliador_id']);
   return Object.fromEntries(Object.entries(row).filter(([k]) => !omit.has(k)));
 }
@@ -1882,8 +1887,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
         ].filter(([k]) => grafs[k]);
         const posteriorImgs = [
-          ['posterior_1_url', 'Imagem posterior 1'], ['posterior_2_url', 'Imagem posterior 2'], ['posterior_3_url', 'Imagem posterior 3'],
-          ['posterior_4_url', 'Imagem posterior 4'], ['posterior_5_url', 'Imagem posterior 5'], ['posterior_6_url', 'Imagem posterior 6'],
+          ['posterior_1_url', 'Nível Pelve lado esquerdo'], ['posterior_2_url', 'Nível Pelve lado direito'], ['posterior_3_url', 'Alinhamento Joelho Esquerdo'],
+          ['posterior_4_url', 'Alinhamento Joelho direito'], ['posterior_5_url', 'Análise pé esquerdo'], ['posterior_6_url', 'Análise pé direito'],
         ].filter(([k]) => grafs[k]);
         return (
           <div style={{ order: 100, background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px 28px', color: '#0f172a' }}>
@@ -1970,8 +1975,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                         <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:10}}>Imagens do plano posterior</div>
                         <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:14}}>
                           {posteriorImgs.map(([k,l]) => (
-                            <div key={k} style={{width:'100%',aspectRatio:'16 / 9',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,overflow:'hidden'}}>
-                              <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                            <div key={k} style={{width:'100%',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,overflow:'hidden'}}>
+                              <div style={{width:'100%',aspectRatio:'16 / 9'}}>
+                                <img src={grafs[k]} alt={l} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                              </div>
+                              <div style={{fontSize:10,fontWeight:700,color:'#334155',textAlign:'center',padding:'5px 6px',background:'#fff',borderTop:'1px solid #e2e8f0'}}>{l}</div>
                             </div>
                           ))}
                         </div>
