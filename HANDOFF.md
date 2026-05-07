@@ -744,6 +744,28 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: upload de imagens da biomecanica em producao
+
+Em 07/05/2026 foi corrigido o erro `Bucket not found` ao enviar imagens no modulo de biomecanica.
+
+Problema observado:
+
+- em producao, o bucket `biomecanica` do Supabase Storage nao existia, causando erro 400 no endpoint `/api/uploads/biomecanica`.
+
+Correcao aplicada:
+
+- `src/app/api/uploads/biomecanica/route.ts` agora verifica se o bucket `biomecanica` existe antes do upload;
+- se o bucket nao existir, a rota tenta cria-lo automaticamente como publico, com limite de 10 MB e MIME types `image/jpeg`, `image/png` e `image/webp`;
+- a correcao evita travar o usuario quando o Storage de producao ainda nao recebeu a migration do bucket.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: capa, rodape numerado e continuidade do PDF
 
 Em 07/05/2026 foram refinados a capa, os rodapes e as quebras de pagina do relatorio PDF.

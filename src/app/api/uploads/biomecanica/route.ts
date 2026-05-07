@@ -38,6 +38,23 @@ async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) 
   return !!membro;
 }
 
+async function garantirBucketBiomecanica(admin: any) {
+  const { data: buckets, error: listError } = await admin.storage.listBuckets();
+  if (listError) return { error: listError };
+
+  const existe = Array.isArray(buckets) && buckets.some((bucket: any) => bucket?.id === 'biomecanica' || bucket?.name === 'biomecanica');
+  if (existe) return { error: null };
+
+  const { error } = await admin.storage.createBucket('biomecanica', {
+    public: true,
+    fileSizeLimit: 10485760,
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  });
+
+  if (!error || error.message?.toLowerCase?.().includes('already exists')) return { error: null };
+  return { error };
+}
+
 export async function POST(req: NextRequest) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
@@ -54,6 +71,9 @@ export async function POST(req: NextRequest) {
   if (!permitido) return NextResponse.json({ error: 'Sem permissao para esta avaliacao' }, { status: 403 });
 
   const admin = createAdminClient();
+  const { error: bucketError } = await garantirBucketBiomecanica(admin);
+  if (bucketError) return NextResponse.json({ error: bucketError.message ?? 'Nao foi possivel preparar o bucket de biomecanica' }, { status: 400 });
+
   const bucket = admin.storage.from('biomecanica');
   const ext = file.name.split('.').pop() || 'png';
   const safeKey = key.replace(/[^a-z0-9_-]/gi, '');
