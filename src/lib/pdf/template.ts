@@ -183,13 +183,13 @@ const CSS = (pri: string) => `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @page { size: A4; margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 210mm; }
+html, body { width: 210mm; min-height: 297mm; }
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.page { width: 210mm; position: relative; page-break-after: always; break-after: page; display: block; overflow: visible; }
+.page { width: 210mm; min-height: 297mm; position: relative; page-break-after: always; break-after: page; display: block; overflow: hidden; }
 .page:last-child { page-break-after: auto; }
 
 /* Cover */
-.cover { min-height: 286mm; height: 286mm; color: white; padding: 34px 38px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.cover { min-height: 297mm; height: 297mm; color: white; padding: 34px 38px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 .cover::before { content:''; position:absolute; inset:0; background:
   radial-gradient(circle at 18% 14%, rgba(255,255,255,.22), transparent 28%),
   radial-gradient(circle at 84% 12%, rgba(255,255,255,.14), transparent 24%),
@@ -214,14 +214,14 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .chip-label { font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
 .chip-val { font-size: 15px; font-weight: 700; color: #ffffff; }
 
-.page:not(.cover) { padding-bottom: 58px !important; }
+.page:not(.cover) { min-height: 297mm; height: 297mm; padding-bottom: 70px !important; }
 .page:not(.cover)::after {
   content: var(--laudo-footer-left) "   •   " var(--laudo-footer-center) "   •   " var(--laudo-footer-right);
   position:absolute;
   left:36px;
   right:36px;
-  bottom:12px;
-  min-height:28px;
+  bottom:14px;
+  height:30px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -235,7 +235,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  padding:0 14px;
+  padding:0 16px;
 }
 
 /* Summary */
@@ -257,7 +257,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .leg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 
 /* Modules */
-.module { background: #ffffff; color: #111827; padding: 30px 36px 28px; position: relative; overflow: visible; }
+.module { background: #ffffff; color: #111827; padding: 30px 36px 70px; position: relative; overflow: hidden; }
 .module::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, ${pri}, ${pri}aa); }
 .mod-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; margin-bottom: 22px; break-after: avoid; page-break-after: avoid; }
 .mod-title { font-size: 26px; font-weight: 700; color: #111827; }

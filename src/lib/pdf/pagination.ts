@@ -1,7 +1,17 @@
 export async function prepararPaginacaoLaudo(page: any) {
   await page.evaluate(() => {
     const PX_POR_MM = 96 / 25.4;
-    const ALTURA_UTIL = Math.floor(286 * PX_POR_MM) - 6;
+    const ALTURA_PAGINA = Math.floor(297 * PX_POR_MM);
+    const LIMITE_CONTEUDO = ALTURA_PAGINA - 58;
+
+    function alturaConteudo(el: HTMLElement) {
+      return Array.from(el.children).reduce((max, child) => {
+        const item = child as HTMLElement;
+        const st = window.getComputedStyle(item);
+        const mb = Number.parseFloat(st.marginBottom || '0') || 0;
+        return Math.max(max, item.offsetTop + item.offsetHeight + mb);
+      }, 0);
+    }
 
     function ehModuloPaginavel(section: Element) {
       return section.classList.contains('module')
@@ -53,6 +63,10 @@ export async function prepararPaginacaoLaudo(page: any) {
       pageSection.className = base.className;
       pageSection.setAttribute('style', base.getAttribute('style') ?? '');
       pageSection.classList.add('pdf-page-fragment');
+      pageSection.style.minHeight = '297mm';
+      pageSection.style.height = '297mm';
+      pageSection.style.overflow = 'hidden';
+      pageSection.style.paddingBottom = '70px';
       pageSection.appendChild(prepararCabecalho(header, continuacao));
       return pageSection;
     }
@@ -97,7 +111,7 @@ export async function prepararPaginacaoLaudo(page: any) {
     const secoes = Array.from(document.querySelectorAll('section.page')).filter(ehModuloPaginavel) as HTMLElement[];
 
     for (const section of secoes) {
-      if (section.scrollHeight <= ALTURA_UTIL) continue;
+      if (alturaConteudo(section) <= LIMITE_CONTEUDO) continue;
 
       const header = section.querySelector(':scope > .mod-head');
       if (!header) continue;
@@ -110,7 +124,7 @@ export async function prepararPaginacaoLaudo(page: any) {
 
       for (const child of filhos) {
         atual.appendChild(child);
-        if (atual.scrollHeight > ALTURA_UTIL && atual.children.length > 2) {
+        if (alturaConteudo(atual) > LIMITE_CONTEUDO && atual.children.length > 2) {
           atual.removeChild(child);
           atual = novaPagina(section, header, true);
           section.parentNode?.insertBefore(atual, section);

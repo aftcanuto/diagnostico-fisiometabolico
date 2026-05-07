@@ -744,6 +744,32 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: rodape interno do PDF e quebras de pagina
+
+Em 07/05/2026 foi revisada a estrutura de paginas do relatorio em PDF.
+
+Problemas observados:
+
+- o rodape havia sido removido de todas as paginas, quando deveria sair apenas da capa;
+- paginas internas nao tinham altura fisica fixa de A4, fazendo o rodape se comportar como fim de conteudo;
+- a medicao de pagina estava baseada na altura total do elemento, o que podia partir blocos e cabecalhos em locais ruins.
+
+Correcoes aplicadas:
+
+- `src/lib/pdf/template.ts` voltou a renderizar o rodape nas paginas internas usando `page:not(.cover)::after`;
+- a capa continua sem rodape;
+- paginas internas agora usam altura A4 fixa (`297mm`) e reservam area inferior para o rodape;
+- `src/lib/pdf/pagination.ts` passou a medir a posicao real do ultimo bloco de conteudo, em vez de usar `scrollHeight` da pagina fixa;
+- a paginacao agora considera a area reservada do rodape antes de quebrar uma secao, reduzindo o risco de cards/tabelas serem cortados no meio.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
 ## Correcao: links revogados ocultos no painel do paciente
 
 Em 06/05/2026 foi ajustada a exibicao dos links do portal do paciente.
