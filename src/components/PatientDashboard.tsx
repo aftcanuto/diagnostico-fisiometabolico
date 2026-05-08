@@ -219,6 +219,34 @@ function MetricLine({ label, value, unit, color }: { label: string; value: any; 
   );
 }
 
+function TimelineChip({ label, value }: { label: string; value: any }) {
+  const n = value == null || value === '' ? null : Number(value);
+  const color = n == null || !Number.isFinite(n) ? '#64748b' : zoneColor(n);
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 9px',
+      borderRadius: 999, border: '1px solid #e2e8f0', background: '#ffffff',
+      fontSize: 11, color: '#475569', whiteSpace: 'nowrap',
+    }}>
+      <b style={{ color: '#0f172a', fontWeight: 600 }}>{label}</b>
+      <span style={{ color, fontWeight: 700 }}>{n == null || !Number.isFinite(n) ? '—' : Math.round(n)}</span>
+    </span>
+  );
+}
+
+function TimelineDelta({ atual, anterior }: { atual: any; anterior: any }) {
+  const a = Number(atual);
+  const b = Number(anterior);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return <span style={{ color: '#94a3b8' }}>sem comparativo anterior</span>;
+  const diff = Math.round(a - b);
+  if (diff === 0) return <span style={{ color: '#64748b' }}>sem alteraÃ§Ã£o no score</span>;
+  return (
+    <span style={{ color: diff > 0 ? '#059669' : '#ef4444', fontWeight: 600 }}>
+      {diff > 0 ? `+${diff}` : diff} pontos vs. anterior
+    </span>
+  );
+}
+
 function PreviewMetricLine({ label, value }: { label: string; value: any }) {
   const text = formatDashboardValue(value);
   const [open, setOpen] = useState(false);
@@ -1372,6 +1400,58 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           </div>
         );
       })()}
+
+      <div style={{ order: 119, background: 'white', borderRadius: 18, padding: '24px 28px', color: '#0f172a',
+        border: '1px solid #e2e8f0', boxShadow: '0 16px 38px rgba(15,23,42,.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>Linha do tempo do paciente</div>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>Historico cronologico com scores e evolucao entre avaliacoes</div>
+          </div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>{hist.ordenadas.length} avaliacao(oes)</div>
+        </div>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {hist.ordenadas.slice().reverse().map(a => {
+            const pos = hist.ordenadas.findIndex(item => item.id === a.id);
+            const prev = pos > 0 ? hist.ordenadas[pos - 1] : null;
+            const emAndamento = a.status !== 'finalizada';
+            return (
+              <div key={`timeline-${a.id}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(180px,220px) minmax(0,1fr) auto',
+                gap: 14, alignItems: 'center', padding: 14, border: '1px solid #e2e8f0',
+                borderRadius: 14, background: a.id === atual.id ? '#f8fafc' : '#ffffff' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{dataCurtaBR(a.data)}</div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {a.tipo} - {emAndamento ? 'Em andamento' : 'Concluida'}
+                  </div>
+                  <div style={{ fontSize: 11, marginTop: 6 }}>
+                    <TimelineDelta atual={a.scores?.global} anterior={prev?.scores?.global} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, minWidth: 0 }}>
+                  <TimelineChip label="Global" value={a.scores?.global} />
+                  <TimelineChip label="Postura" value={a.scores?.postura} />
+                  <TimelineChip label="Composicao" value={a.scores?.composicao_corporal} />
+                  <TimelineChip label="Forca" value={a.scores?.forca} />
+                  <TimelineChip label="Flex." value={a.scores?.flexibilidade} />
+                  <TimelineChip label="Cardio" value={a.scores?.cardiorrespiratorio} />
+                  {a.scores?.rml != null && <TimelineChip label="RML" value={a.scores.rml} />}
+                </div>
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  {a.id !== atual.id ? (
+                    <button onClick={() => setAvaliacaoSel(a.id)} style={btnStyle('rgba(255,255,255,.1)')}>Ver</button>
+                  ) : (
+                    <span style={{ alignSelf: 'center', fontSize: 10, fontWeight: 700, color: '#059669',
+                      background: '#ecfdf5', border: '1px solid #bbf7d0', borderRadius: 999, padding: '5px 10px' }}>
+                      Atual
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {atual.bioimpedancia && (() => {
         const bio = atual.bioimpedancia as any;

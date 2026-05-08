@@ -14,7 +14,7 @@ import {
   scoreComposicaoCorporal, scoreCardio, scoreForca,
   scorePostura, scoreGlobal
 } from '@/lib/scores';
-import { FileDown, CheckCircle2, Loader2, Dumbbell } from 'lucide-react';
+import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export default function RevisaoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -25,19 +25,26 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   const [aval, setAval] = useState<any>(null);
   const [temMultiplas, setTemMultiplas] = useState(false);
   const [limiteNatural, setLimiteNatural] = useState<any>(null);
+  const [checklist, setChecklist] = useState<any[]>([]);
+  const [confirmarAlertas, setConfirmarAlertas] = useState(false);
 
   useEffect(() => { (async () => {
     const { data: av } = await supabase.from('avaliacoes')
       .select('*, pacientes(*)').eq('id', params.id).single();
     setAval(av);
 
-    const [antData, bioData, foData, crData, pgData, flData, outras] = await Promise.all([
+    const [anData, svData, antData, bioData, foData, crData, pgData, flData, rmlData, biomecData, analisesData, outras] = await Promise.all([
+      buscarModulo('anamnese', params.id).catch(() => null),
+      buscarModulo('sinais_vitais', params.id).catch(() => null),
       buscarModulo('antropometria', params.id).catch(() => null),
       buscarModulo('bioimpedancia', params.id).catch(() => null),
       buscarModulo('forca', params.id).catch(() => null),
       buscarModulo('cardiorrespiratorio', params.id).catch(() => null),
       buscarModulo('posturografia', params.id).catch(() => null),
       buscarModulo('flexibilidade', params.id).catch(() => null),
+      buscarModulo('rml', params.id).catch(() => null),
+      buscarModulo('biomecanica_corrida', params.id).catch(() => null),
+      supabase.from('analises_ia').select('tipo').eq('avaliacao_id', params.id),
       supabase.from('avaliacoes').select('id', { count: 'exact' })
         .eq('paciente_id', av!.paciente_id).eq('status', 'finalizada'),
     ]);
@@ -61,6 +68,18 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     const result = { postura, composicao_corporal: composicao, forca, flexibilidade, cardiorrespiratorio: cardio, global };
     setScores(result);
+    setChecklist(montarChecklist(av, {
+      anamnese: anData,
+      sinais_vitais: svData,
+      posturografia: pgData,
+      bioimpedancia: bioData,
+      antropometria: antData,
+      flexibilidade: flData,
+      forca: foData,
+      rml: rmlData,
+      cardiorrespiratorio: crData,
+      biomecanica_corrida: biomecData,
+    }, result, analisesData.data ?? []));
 
     try {
       await upsertScores(params.id, result);
@@ -84,6 +103,16 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
   async function finalizar() {
     setMessage(null);
+    const criticos = checklist.filter(i => i.nivel === 'critico');
+    const alertas = checklist.filter(i => i.nivel === 'alerta');
+    if (criticos.length) {
+      setMessage({ type: 'error', text: 'Existem pendências críticas no checklist antes de finalizar.' });
+      return;
+    }
+    if (alertas.length && !confirmarAlertas) {
+      setMessage({ type: 'error', text: 'Revise os alertas do checklist e marque a confirmação para finalizar.' });
+      return;
+    }
     setState('finalizing');
     try {
       await finalizarAvaliacao(params.id);
@@ -180,6 +209,48 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
         </Card>
       )}
 
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <ShieldCheck className="inline w-4 h-4 mr-1 text-brand-600" />
+            Checklist de segurança antes de finalizar
+          </CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-3">
+          {checklist.length === 0 ? (
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              Nenhuma pendência crítica ou alerta encontrado.
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                {checklist.map((item, i) => (
+                  <div key={`${item.modulo}-${i}`} className={`rounded-lg border px-3 py-2 text-sm ${
+                    item.nivel === 'critico'
+                      ? 'border-red-200 bg-red-50 text-red-800'
+                      : 'border-amber-200 bg-amber-50 text-amber-800'
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                      <div>
+                        <div className="font-semibold">{item.titulo}</div>
+                        <div>{item.descricao}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {checklist.some(i => i.nivel === 'alerta') && !checklist.some(i => i.nivel === 'critico') && (
+                <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={confirmarAlertas} onChange={e => setConfirmarAlertas(e.target.checked)} />
+                  Revisei os alertas não críticos e confirmo a finalização.
+                </label>
+              )}
+            </>
+          )}
+        </CardBody>
+      </Card>
+
       <AnalisesIAPanel
         avaliacaoId={params.id}
         modulosDisponiveis={aval.modulos_selecionados}
@@ -249,6 +320,97 @@ function calcularScoreForca(dados: any, sexo: any, idade: number): number | null
 
   const mediaAssimetria = assimetrias.reduce((sum, v) => sum + v, 0) / assimetrias.length;
   return Math.max(0, Math.min(100, Math.round(85 - mediaAssimetria * 2)));
+}
+
+function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: any, analises: any[]) {
+  const itens: any[] = [];
+  const mods = aval?.modulos_selecionados ?? {};
+  const labels: Record<string, string> = {
+    anamnese: 'Anamnese',
+    sinais_vitais: 'Sinais vitais',
+    posturografia: 'Posturografia',
+    bioimpedancia: 'Bioimpedância',
+    antropometria: 'Antropometria',
+    flexibilidade: 'Flexibilidade',
+    forca: 'Força',
+    rml: 'RML',
+    cardiorrespiratorio: 'Cardiorrespiratório',
+    biomecanica_corrida: 'Biomecânica da corrida',
+  };
+
+  Object.entries(mods).forEach(([modulo, ativo]) => {
+    if (!ativo || modulo === 'revisao') return;
+    const dados = modulosDados[modulo];
+    if (!temDadosModulo(dados)) {
+      itens.push({
+        nivel: 'critico',
+        modulo,
+        titulo: `${labels[modulo] ?? modulo} sem dados`,
+        descricao: 'O módulo foi selecionado, mas ainda não possui informações salvas.',
+      });
+    }
+  });
+
+  if (mods.posturografia && modulosDados.posturografia) {
+    const fotos = ['foto_frente_url', 'foto_costas_url', 'foto_lateral_dir_url', 'foto_lateral_esq_url'];
+    const faltando = fotos.filter(k => !modulosDados.posturografia?.[k]);
+    if (faltando.length) {
+      itens.push({
+        nivel: 'alerta',
+        modulo: 'posturografia',
+        titulo: 'Fotos de posturografia incompletas',
+        descricao: `${faltando.length} foto(s) não foram anexadas. O laudo pode sair com espaço reservado.`,
+      });
+    }
+  }
+
+  const scoresCriticos = Object.entries(scores ?? {})
+    .filter(([k, v]) => k !== 'global' && (v == null || Number(v) === 0))
+    .map(([k]) => labels[k] ?? k.replace(/_/g, ' '));
+  if (scoresCriticos.length) {
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'scores',
+      titulo: 'Scores ausentes ou zerados',
+      descricao: `Revise: ${scoresCriticos.join(', ')}.`,
+    });
+  }
+
+  const tiposGerados = new Set((analises ?? []).map((a: any) => a.tipo));
+  const analisesFaltantes = Object.entries(mods)
+    .filter(([modulo, ativo]) => ativo && modulo !== 'revisao' && !tiposGerados.has(modulo))
+    .map(([modulo]) => labels[modulo] ?? modulo);
+  if (!tiposGerados.has('conclusao_global')) analisesFaltantes.push('Conclusão global');
+  if (analisesFaltantes.length) {
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'ia',
+      titulo: 'Análises clínicas ausentes',
+      descricao: `Ainda não há análise de IA/revisada para: ${analisesFaltantes.join(', ')}.`,
+    });
+  }
+
+  const publicos = modulosDados.anamnese?.respostas?.__campos_publicos_relatorio;
+  if (publicos && Object.values(publicos).some(Boolean)) {
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'anamnese',
+      titulo: 'Anamnese com campos liberados ao paciente',
+      descricao: 'Confirme se os campos marcados não contêm informações sensíveis antes de finalizar.',
+    });
+  }
+
+  return itens;
+}
+
+function temDadosModulo(dados: any) {
+  if (!dados) return false;
+  return Object.entries(dados).some(([k, v]) => {
+    if (['id', 'avaliacao_id', 'created_at', 'updated_at'].includes(k)) return false;
+    if (v == null || v === '') return false;
+    if (typeof v === 'object') return Object.keys(v as any).length > 0;
+    return true;
+  });
 }
 
 function Stat({ label, value, sub }: { label: string; value: any; sub?: string }) {

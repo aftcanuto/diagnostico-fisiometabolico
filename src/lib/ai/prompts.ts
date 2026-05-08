@@ -25,13 +25,22 @@ Personalize as recomendações ao perfil acima. Considere diferenças fisiológi
 
 Retorne APENAS JSON válido com este schema:
 {
+  "resumo_clinico": string,
   "achados": string[],
+  "principais_achados": string[],
   "interpretacao": string,
   "riscos": string[],
+  "riscos_atencoes": string[],
   "beneficios": string[],
   "recomendacoes": string[],
+  "recomendacoes_praticas": string[],
+  "encaminhamento": string,
+  "limitacoes": string,
+  "versao_paciente": string,
   "alertas": string[]
-}`;
+}
+
+Não inclua perguntas para próxima consulta. Não inclua lista de referências na resposta. A versão_paciente deve ser curta, clara, sem tom alarmista e segura para ser exibida ao paciente.`;
 
 export function promptAnamnese(ctx: PacienteContexto, dados: any) {
   return {

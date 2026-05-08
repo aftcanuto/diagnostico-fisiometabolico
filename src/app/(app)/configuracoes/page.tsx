@@ -3,6 +3,8 @@ import { PdfConfigForm } from '@/components/forms/PdfConfigForm';
 import { Card, CardBody } from '@/components/ui/Card';
 import { BookOpen, Shield } from 'lucide-react';
 import { AvaliadorPerfilForm } from '@/components/forms/AvaliadorPerfilForm';
+import { ConsentimentosConfigPanel } from '@/components/forms/ConsentimentosConfigPanel';
+import { ProtocolosConfigPanel } from '@/components/forms/ProtocolosConfigPanel';
 
 export default async function ConfiguracoesPage() {
   const supabase = createClient();
@@ -70,10 +72,14 @@ export default async function ConfiguracoesPage() {
       </Card>
 
       {isAdmin && (
-        <PdfConfigForm
-          clinicaId={clinicaId}
-          config={config ?? null}
-        />
+        <>
+          <ConsentimentosConfigPanel clinicaId={clinicaId} />
+          <ProtocolosConfigPanel clinicaId={clinicaId} />
+          <PdfConfigForm
+            clinicaId={clinicaId}
+            config={config ?? null}
+          />
+        </>
       )}
     </div>
   );

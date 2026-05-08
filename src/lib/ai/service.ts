@@ -54,8 +54,12 @@ async function registrarUso(clinicaId: string, avaliacaoId: string, tipo: string
 
 async function persistir(avaliacaoId: string, tipo: TipoAnalise, conteudo: any, modelo: string) {
   const sb = createAdminClient();
+  const conteudoPaciente = conteudo?.versao_paciente
+    ? { texto: conteudo.versao_paciente }
+    : null;
   await sb.from('analises_ia').upsert({
     avaliacao_id: avaliacaoId, tipo, conteudo,
+    ...(conteudoPaciente ? { conteudo_paciente: conteudoPaciente } : {}),
     gerado_em: new Date().toISOString(), gerado_por: 'ia', modelo_ia: modelo,
   }, { onConflict: 'avaliacao_id,tipo' });
 }

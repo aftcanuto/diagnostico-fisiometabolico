@@ -758,6 +758,159 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Implementacao: links de consentimento digital e TCLE
+
+Em 08/05/2026 foi iniciada a etapa de aceite digital de termos, mantendo o mesmo padrao de seguranca usado na anamnese pre-atendimento.
+
+Mudancas aplicadas:
+
+- criada a migration `supabase/migrations/031_consentimento_links.sql` com a tabela `consentimento_links`, vinculada a clinica, paciente, avaliacao opcional, modelo de termo, token, expiracao, revogacao e data de aceite;
+- todas as policies da nova tabela usam `DROP POLICY IF EXISTS` antes de `CREATE POLICY` e mantem isolamento por `current_clinica_id()`;
+- adicionada a API autenticada `src/app/api/consentimento-links/route.ts` para listar, gerar e revogar links de termo/TCLE por paciente;
+- adicionada a API publica `src/app/api/consentimento-publico/route.ts` para registrar aceite por token, salvando paciente, modelo, versao do texto, texto aceito, IP e user agent em `consentimento_aceites`;
+- criada a pagina publica `src/app/pre-atendimento/consentimento/[token]/page.tsx` para o paciente ler e aceitar o termo digitalmente;
+- criado o componente `src/components/PublicConsentimentoAccept.tsx` com confirmacao explicita de leitura e registro do aceite;
+- `src/components/PatientEngagementPanel.tsx` passou a exibir uma area "Enviar termo/TCLE", com selecao de modelo ativo, geracao de link, copia e revogacao;
+- `scripts/audit-db.js` passou a validar a existencia da tabela `consentimento_links`.
+
+Pendencias esperadas:
+
+- conectar envio real por e-mail/WhatsApp; por enquanto o painel gera e copia o link seguro;
+- apos aplicar a migration no Supabase, testar o aceite publico em ambiente de producao com um termo ativo.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 31 migrations, 29 tabelas com RLS, 67 policies e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Implementacao: linha do tempo do paciente nos dashboards
+
+Em 08/05/2026 foi iniciada a linha do tempo visual do paciente, reaproveitando o historico consolidado das avaliacoes.
+
+Mudancas aplicadas:
+
+- `src/components/PatientDashboard.tsx` recebeu uma secao "Linha do tempo do paciente" com data, tipo/produto, status, score global, principais scores por modulo e delta em relacao a avaliacao anterior;
+- a linha do tempo do dashboard clinico permite alternar rapidamente a avaliacao exibida pelo botao "Ver";
+- `src/components/PortalPaciente.tsx` recebeu a mesma estrutura visual de linha do tempo, limitada ao conjunto de avaliacoes entregue ao portal, que ja vem filtrado por token/finalizacao;
+- foram criados chips visuais de score por modulo e indicador textual de evolucao.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 31 migrations, 29 tabelas com RLS, 67 policies e buckets criticos presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Base: engajamento do paciente, produtos livres e IA estruturada
+
+Em 08/05/2026 foi iniciada a rodada de evolucao solicitada para linha do tempo, plano de acao, consentimentos, protocolos, anamnese pre-atendimento, produtos livres e IA com versoes tecnica/paciente.
+
+Escopo implementado nesta fatia:
+
+- criada a migration `supabase/migrations/030_patient_engagement_and_action_plan.sql`;
+- `produtos` recebeu suporte a `produto_livre`, `anamnese_obrigatoria` e `imagem_url`;
+- `analises_ia` recebeu campos para `conteudo_paciente`, `texto_paciente_editado` e `plano_acao`;
+- `avaliacoes` recebeu campos para checklist de finalizacao;
+- criadas tabelas novas com RLS para:
+  - `consentimento_modelos`;
+  - `consentimento_aceites`;
+  - `protocolo_recomendacoes`;
+  - `protocolo_envios`;
+  - `paciente_anamnese_links`;
+  - `paciente_anamnese_respostas`;
+- criado bucket `produto-imagens` e policies de Storage com `DROP POLICY IF EXISTS` antes de `CREATE POLICY`;
+- `src/components/forms/ProdutoForm.tsx` passou a permitir produto livre sem modulos, anamnese opcional e imagem ilustrativa via Storage;
+- `src/app/(app)/avaliacoes/nova/page.tsx` passou a respeitar modulos do produto sem forcar anamnese e abre a avaliacao no primeiro modulo realmente selecionado; se o produto nao tiver modulos, abre em revisao;
+- `src/lib/ai/prompts.ts` passou a orientar a IA a devolver resposta estruturada com resumo clinico, achados, riscos, recomendacoes, encaminhamento, limitacoes e versao simplificada para paciente;
+- `src/lib/ai/service.ts` persiste `conteudo_paciente` quando a IA retorna `versao_paciente`;
+- `src/app/api/ia/editar/route.ts` aceita edicao da versao tecnica, versao paciente e plano de acao;
+- `src/components/AnalisesIAPanel.tsx` passou a carregar e editar versoes tecnica e paciente da analise.
+
+Pendencias importantes:
+
+- construir as telas completas em Configuracoes para consentimentos/TCLE e protocolos;
+- implementar envio real por e-mail dos links de anamnese, termos e recomendacoes;
+- criar o modo apresentacao dedicado;
+- transformar o checklist de finalizacao em UI completa no modulo Revisao;
+- inserir plano de acao editavel e comparativo antes/depois nos dashboards e PDF;
+- expor linha do tempo premium no dashboard clinico e portal do paciente;
+- incluir textos educativos ocultaveis no portal do paciente.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 30 migrations, 28 tabelas com RLS e 64 policies;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+- `npm run build` ainda nao conclui neste ambiente local por `spawn EPERM` do worker do Next/Windows, antes de acusar erro de codigo;
+- `npm audit --audit-level=moderate` nao retornou relatorio porque o endpoint do npm falhou.
+
+## Implementacao: configuracoes, pre-atendimento e checklist
+
+Em 08/05/2026 foi aplicada a segunda fatia da rodada de evolucao, transformando parte da base criada em fluxo usavel dentro do app.
+
+Correcoes e implementacoes:
+
+- `src/components/forms/ConsentimentosConfigPanel.tsx` adiciona gerenciamento de modelos de Consentimento Informado e TCLE em Configuracoes;
+- `src/components/forms/ProtocolosConfigPanel.tsx` adiciona biblioteca de Protocolos e recomendacoes pre-teste por modulo em Configuracoes;
+- `src/app/(app)/configuracoes/page.tsx` passa a exibir os novos paineis para usuarios admin/owner;
+- `src/lib/api/permissions.ts` centraliza verificacao de usuario, clinica e permissao de acesso ao paciente para APIs novas;
+- `src/app/api/anamnese-links/route.ts` cria/lista/revoga links seguros de anamnese pre-atendimento;
+- `src/app/api/anamnese-publica/route.ts` salva respostas enviadas pelo paciente por token valido;
+- `src/app/pre-atendimento/anamnese/[token]/page.tsx` cria a tela publica da anamnese pre-atendimento;
+- `src/components/PublicAnamneseForm.tsx` renderiza o formulario dinamico da anamnese publica com campos do template;
+- `src/app/api/protocolo-envios/route.ts` registra envios de recomendacoes pre-teste e preserva historico;
+- `src/components/PatientEngagementPanel.tsx` adiciona na ficha do paciente botoes para gerar link de anamnese e registrar recomendacoes pre-teste;
+- `src/app/(app)/pacientes/[id]/page.tsx` exibe o painel de pre-atendimento abaixo do link do portal do paciente;
+- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` adiciona checklist de seguranca antes da finalizacao com bloqueio para pendencias criticas e confirmacao para alertas;
+- `scripts/audit-db.js` agora valida as novas tabelas de engajamento e o bucket `produto-imagens`.
+
+Limites atuais:
+
+- o envio por e-mail/WhatsApp ainda esta registrado como historico, mas nao dispara mensagem real porque ainda nao existe provedor SMTP/WhatsApp configurado no projeto;
+- o aceite digital de termos ja tem cadastro de modelos e tabela de aceite, mas ainda falta a tela publica de aceite por link;
+- plano de acao visual, modo apresentacao dedicado e linha do tempo premium ainda ficam como proximas fatias.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 30 migrations, 28 tabelas com RLS, 64 policies e bucket `produto-imagens` validado;
+- smoke test gerou novamente previews de relatorio, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Auditoria: ordem cronologica do PDF e seguranca da IA
+
+Em 08/05/2026 foi iniciada uma auditoria completa do sistema antes de novos deploys.
+
+Problemas observados:
+
+- o PDF ainda montava algumas paginas fora da ordem cronologica real dos modulos da avaliacao;
+- Posturografia e Flexibilidade estavam acopladas em uma unica pagina do template, o que podia gerar titulo incorreto ou bloco de modulo nao realizado quando apenas um dos dois estivesse presente;
+- a rota de geracao de IA validava login e clinica ativa, mas antes de chamar o servico com cliente administrativo precisava validar explicitamente que a avaliacao solicitada pertence a clinica atual.
+
+Correcoes aplicadas:
+
+- `src/lib/pdf/template.ts` reorganizou o relatorio para seguir a ordem dos modulos: anamnese/sinais vitais, posturografia, bioimpedancia, antropometria, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica, conclusao e evolucao;
+- `src/lib/pdf/template.ts` tornou a pagina de Posturografia/Flexibilidade flexivel, exibindo titulo e conteudo corretos quando apenas um dos modulos estiver presente;
+- `src/app/api/ia/gerar/route.ts` passou a checar a avaliacao com o cliente autenticado e a `clinica_id` atual antes de executar qualquer geracao de IA.
+
+Validacao local:
+
+- `npm run predeploy` passou apos os ajustes;
+- auditoria do banco passou com 29 migrations, 22 tabelas com RLS, 46 policies e buckets `posturografia`, `branding` e `biomecanica` presentes;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`;
+- a checagem estrutural confirmou que os dashboards usam ordenacao visual por modulo e que o PDF agora segue a sequencia cronologica corrigida.
+- `npm audit --audit-level=moderate` nao conseguiu consultar o endpoint do registry neste ambiente, retornando erro do proprio endpoint;
+- `npm run build` foi tentado localmente, mas o Windows bloqueou o spawn dos workers do Next com `EPERM`; a validacao de TypeScript/predeploy passou e a build de producao deve ser confirmada no ambiente Vercel.
+
 ## Correcao: upload de imagens da biomecanica em producao
 
 Em 07/05/2026 foi corrigido o erro `Bucket not found` ao enviar imagens no modulo de biomecanica.

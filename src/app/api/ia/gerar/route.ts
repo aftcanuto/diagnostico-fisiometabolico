@@ -24,6 +24,17 @@ export async function POST(req: NextRequest) {
   const tipo = body.tipo ?? body.modulo;
   if (!avaliacaoId || !tipo) return NextResponse.json({ error: 'parâmetros faltando' }, { status: 400 });
 
+  const { error: acessoError } = await supabase
+    .from('avaliacoes')
+    .select('id')
+    .eq('id', avaliacaoId)
+    .eq('clinica_id', clinicaId)
+    .single();
+
+  if (acessoError) {
+    return NextResponse.json({ error: 'sem permissao para esta avaliacao' }, { status: 403 });
+  }
+
   try {
     let conteudo: any;
     if (tipo === 'conclusao_global') conteudo = await gerarConclusaoGlobal(avaliacaoId);

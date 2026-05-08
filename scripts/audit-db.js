@@ -27,6 +27,13 @@ const expectedTables = [
   'ia_uso',
   'paciente_tokens',
   'pdf_config',
+  'consentimento_modelos',
+  'consentimento_links',
+  'consentimento_aceites',
+  'protocolo_recomendacoes',
+  'protocolo_envios',
+  'paciente_anamnese_links',
+  'paciente_anamnese_respostas',
 ];
 
 const expectedAiTypes = [
@@ -91,6 +98,7 @@ function audit() {
   const hasPosturaBucket = /['"]posturografia['"]/i.test(sql);
   const hasBrandingBucket = /['"]branding['"]/i.test(sql);
   const hasBiomecanicaBucket = /['"]biomecanica['"]/i.test(sql);
+  const hasProdutoImagensBucket = /['"]produto-imagens['"]/i.test(sql);
 
   const hasTracao = /tracao_testes/i.test(sql);
   const hasModeloDinamometria = /modelo_dinamometria/i.test(sql);
@@ -116,6 +124,7 @@ function audit() {
     !hasPosturaBucket && 'Bucket posturografia nao encontrado nas migrations',
     !hasBrandingBucket && 'Bucket branding nao encontrado nas migrations',
     !hasBiomecanicaBucket && 'Bucket biomecanica nao encontrado nas migrations',
+    !hasProdutoImagensBucket && 'Bucket produto-imagens nao encontrado nas migrations',
     !hasSptech && 'Campos SPTech nao encontrados nas migrations',
     !hasModeloDinamometria && 'Campo modelo_dinamometria nao encontrado nas migrations',
     !hasTracao && 'Campo tracao_testes nao encontrado nas migrations',
@@ -134,6 +143,7 @@ function audit() {
       posturografia: hasPosturaBucket,
       branding: hasBrandingBucket,
       biomecanica: hasBiomecanicaBucket,
+      produto_imagens: hasProdutoImagensBucket,
     },
     criticalFields: {
       sptech_testes: hasSptech,

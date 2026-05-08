@@ -5,11 +5,11 @@ import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Textarea, Label } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, ImageIcon, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
 
 const MODULOS = [
-  { k: 'anamnese',            label: 'Anamnese',             obrig: true },
+  { k: 'anamnese',            label: 'Anamnese' },
   { k: 'sinais_vitais',       label: 'Sinais vitais' },
   { k: 'posturografia',       label: 'Posturografia' },
   { k: 'bioimpedancia',       label: 'Bioimpedância' },
@@ -22,13 +22,15 @@ const MODULOS = [
 ];
 
 const TODOS_MODULOS = Object.fromEntries(MODULOS.map(m => [m.k, true]));
+const NENHUM_MODULO = Object.fromEntries(MODULOS.map(m => [m.k, false]));
 
 export function ProdutoForm({ id }: { id?: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [form, setForm] = useState<any>({
     nome: '', descricao: '', duracao_minutos: '', preco: '',
-    ativo: true, padrao: false,
+    ativo: true, padrao: false, produto_livre: false, anamnese_obrigatoria: true,
+    imagem_url: '',
     modulos: TODOS_MODULOS,
   });
   const [loading, setLoading] = useState(!!id);
@@ -40,7 +42,10 @@ export function ProdutoForm({ id }: { id?: string }) {
     supabase.from('produtos').select('*').eq('id', id).single().then(({ data }) => {
       if (data) setForm({
         ...data,
-        modulos: { ...TODOS_MODULOS, ...(data.modulos ?? {}) },
+        modulos: { ...NENHUM_MODULO, ...(data.modulos ?? {}) },
+        produto_livre: !!data.produto_livre,
+        anamnese_obrigatoria: data.anamnese_obrigatoria ?? !!data.modulos?.anamnese,
+        imagem_url: data.imagem_url ?? '',
         duracao_minutos: data.duracao_minutos ?? '',
         preco: data.preco ?? '',
       });
@@ -51,12 +56,19 @@ export function ProdutoForm({ id }: { id?: string }) {
 
   async function salvar() {
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
     const { data: clinicaId } = await supabase.rpc('current_clinica_id');
+    const modulosPayload = form.produto_livre
+      ? NENHUM_MODULO
+      : {
+          ...NENHUM_MODULO,
+          ...(form.modulos ?? {}),
+          anamnese: !!form.anamnese_obrigatoria,
+        };
     const payload = {
       ...form,
-      modulos: { ...TODOS_MODULOS, ...(form.modulos ?? {}), anamnese: true },
+      modulos: modulosPayload,
       clinica_id: clinicaId,
+      imagem_url: form.imagem_url || null,
       duracao_minutos: form.duracao_minutos === '' ? null : Number(form.duracao_minutos),
       preco: form.preco === '' ? null : Number(form.preco),
     };
@@ -76,6 +88,26 @@ export function ProdutoForm({ id }: { id?: string }) {
     const { error } = await supabase.from('produtos').delete().eq('id', id);
     if (error) { alert(error.message); return; }
     router.push('/produtos');
+  }
+
+  async function uploadImagem(file: File) {
+    const { data: clinicaId } = await supabase.rpc('current_clinica_id');
+    if (!clinicaId) {
+      alert('Clínica não encontrada para enviar a imagem.');
+      return;
+    }
+    const ext = file.name.split('.').pop() || 'png';
+    const safeName = `${clinicaId}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('produto-imagens').upload(safeName, file, {
+      upsert: true,
+      contentType: file.type || 'image/png',
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    const { data } = supabase.storage.from('produto-imagens').getPublicUrl(safeName);
+    setForm((f: any) => ({ ...f, imagem_url: data.publicUrl }));
   }
 
   if (loading) return <p className="text-slate-500">Carregando…</p>;
@@ -98,6 +130,34 @@ export function ProdutoForm({ id }: { id?: string }) {
           <Field label="Descrição">
             <Textarea value={form.descricao ?? ''} onChange={e => setForm((f: any) => ({ ...f, descricao: e.target.value }))} />
           </Field>
+          <Field label="Imagem ilustrativa">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
+              {form.imagem_url ? (
+                <div className="flex items-center gap-3">
+                  <img src={form.imagem_url} alt="Imagem do produto" className="h-16 w-16 rounded-lg object-cover border border-slate-200 bg-white" />
+                  <Input value={form.imagem_url} onChange={e => setForm((f: any) => ({ ...f, imagem_url: e.target.value }))} />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <ImageIcon className="h-4 w-4" />
+                  Nenhuma imagem configurada.
+                </div>
+              )}
+              <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                <Upload className="h-4 w-4" />
+                Enviar imagem
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadImagem(file);
+                  }}
+                />
+              </label>
+            </div>
+          </Field>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Duração (min)">
               <Input type="number" value={form.duracao_minutos} onChange={e => setForm((f: any) => ({ ...f, duracao_minutos: e.target.value }))} />
@@ -115,6 +175,19 @@ export function ProdutoForm({ id }: { id?: string }) {
               <input type="checkbox" checked={form.padrao} onChange={e => setForm((f: any) => ({ ...f, padrao: e.target.checked }))} />
               Produto padrão
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={!!form.produto_livre}
+                onChange={e => setForm((f: any) => ({
+                  ...f,
+                  produto_livre: e.target.checked,
+                  modulos: e.target.checked ? NENHUM_MODULO : f.modulos,
+                  anamnese_obrigatoria: e.target.checked ? false : f.anamnese_obrigatoria,
+                }))}
+              />
+              Produto livre
+            </label>
           </div>
         </CardBody>
       </Card>
@@ -122,16 +195,35 @@ export function ProdutoForm({ id }: { id?: string }) {
       <Card>
         <CardHeader><CardTitle>Módulos incluídos</CardTitle></CardHeader>
         <CardBody>
+          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={!!form.anamnese_obrigatoria}
+                disabled={!!form.produto_livre}
+                onChange={e => setForm((f: any) => ({
+                  ...f,
+                  anamnese_obrigatoria: e.target.checked,
+                  modulos: { ...f.modulos, anamnese: e.target.checked },
+                }))}
+              />
+              <span>
+                <span className="font-medium text-slate-800">Exigir anamnese neste produto</span>
+                <span className="block text-xs text-slate-500">Quando desmarcado, a avaliação pode iniciar direto no primeiro módulo selecionado.</span>
+              </span>
+            </label>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {MODULOS.map(m => (
               <label key={m.k} className="flex items-center gap-2 p-2 rounded hover:bg-slate-50">
                 <input
                   type="checkbox"
-                  checked={!!form.modulos[m.k]}
-                  disabled={m.obrig}
+                  checked={m.k === 'anamnese' ? !!form.anamnese_obrigatoria : !!form.modulos[m.k]}
+                  disabled={!!form.produto_livre || m.k === 'anamnese'}
                   onChange={e => setForm((f: any) => ({ ...f, modulos: { ...f.modulos, [m.k]: e.target.checked } }))}
                 />
-                <span>{m.label}{m.obrig && <span className="text-xs text-slate-400 ml-1">(obrigatório)</span>}</span>
+                <span>{m.label}{m.k === 'anamnese' && <span className="text-xs text-slate-400 ml-1">(controlada acima)</span>}</span>
               </label>
             ))}
           </div>

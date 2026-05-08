@@ -40,6 +40,28 @@ function dataLongaBR(data?: string | null) {
   return `${p.dia} de ${MESES[p.mes - 1]} de ${p.ano}`;
 }
 
+function TimelineChipPortal({ label, value }: { label: string; value: any }) {
+  const n = value == null || value === '' ? null : Number(value);
+  const color = n == null || !Number.isFinite(n) ? '#64748b' : zCor(n);
+  return (
+    <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 9px',
+      borderRadius:999,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,
+      color:'#475569',whiteSpace:'nowrap'}}>
+      <b style={{color:'#0f172a',fontWeight:600}}>{label}</b>
+      <span style={{color,fontWeight:700}}>{n==null||!Number.isFinite(n)?'—':Math.round(n)}</span>
+    </span>
+  );
+}
+
+function TimelineDeltaPortal({ atual, anterior }: { atual: any; anterior: any }) {
+  const a = Number(atual);
+  const b = Number(anterior);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return <span style={{color:'#94a3b8'}}>primeira avaliação comparável</span>;
+  const diff = Math.round(a - b);
+  if (diff === 0) return <span style={{color:'#64748b'}}>score estável</span>;
+  return <span style={{color:diff>0?'#059669':'#ef4444',fontWeight:600}}>{diff>0?`+${diff}`:diff} pontos vs. anterior</span>;
+}
+
 /* ── Velocímetro HDR ── */
 function Gauge({value,label,size=150}:{value:number|null;label:string;size?:number}) {
   const v=Math.max(0,Math.min(100,value??0));
@@ -1473,6 +1495,48 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             <div style={{fontSize:12,color:'#94a3b8',marginTop:3}}>Passe o mouse no ícone para ver as referências cadastradas.</div>
           </div>
           <TooltipInfo texto={referenciasTexto} label="Ver referências" placement="top"/>
+        </Card>
+      </Secao>
+
+      <Secao ordem={119} titulo="Linha do tempo do paciente" sub="Evolucao das avaliacoes finalizadas">
+        <Card>
+          <div style={{display:'grid',gap:12}}>
+            {hist.ordenadas.slice().reverse().map(a=>{
+              const pos=hist.ordenadas.findIndex(item=>item.id===a.id);
+              const prev=pos>0?hist.ordenadas[pos-1]:null;
+              return (
+                <div key={`timeline-${a.id}`} style={{display:'grid',gridTemplateColumns:'minmax(150px,190px) minmax(0,1fr) auto',
+                  gap:12,alignItems:'center',padding:12,border:'1px solid #e2e8f0',borderRadius:14,
+                  background:a.id===atual.id?'#f8fafc':'#fff'}}>
+                  <div style={{minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>{dataLongaBR(a.data)}</div>
+                    <div style={{fontSize:11,color:'#94a3b8',marginTop:3}}>{a.tipo} - Concluida</div>
+                    <div style={{fontSize:11,marginTop:6}}>
+                      <TimelineDeltaPortal atual={a.scores?.global} anterior={prev?.scores?.global}/>
+                    </div>
+                  </div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:7,minWidth:0}}>
+                    <TimelineChipPortal label="Global" value={a.scores?.global}/>
+                    <TimelineChipPortal label="Postura" value={a.scores?.postura}/>
+                    <TimelineChipPortal label="Composicao" value={a.scores?.composicao_corporal}/>
+                    <TimelineChipPortal label="Forca" value={a.scores?.forca}/>
+                    <TimelineChipPortal label="Flex." value={a.scores?.flexibilidade}/>
+                    <TimelineChipPortal label="Cardio" value={a.scores?.cardiorrespiratorio}/>
+                    {a.scores?.rml!=null&&<TimelineChipPortal label="RML" value={a.scores.rml}/>}
+                  </div>
+                  {a.id!==atual.id?(
+                    <button onClick={()=>setSel(a.id)}
+                      style={{border:'1px solid #e2e8f0',background:'#fff',borderRadius:8,padding:'7px 12px',fontSize:12,fontWeight:600,color:'#0f172a',cursor:'pointer'}}>
+                      Ver
+                    </button>
+                  ):(
+                    <span style={{fontSize:10,fontWeight:700,color:'#059669',background:'#ecfdf5',
+                      border:'1px solid #bbf7d0',borderRadius:999,padding:'5px 10px'}}>Atual</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </Card>
       </Secao>
 

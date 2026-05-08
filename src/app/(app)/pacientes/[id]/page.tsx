@@ -4,6 +4,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/Button';
 import { PatientDashboard } from '@/components/PatientDashboard';
 import { ShareTokenPanel } from '@/components/ShareTokenPanel';
+import { PatientEngagementPanel } from '@/components/PatientEngagementPanel';
 import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw } from 'lucide-react';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
@@ -190,6 +191,8 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
 
       {/* Portal do paciente */}
       <ShareTokenPanel pacienteId={p.id} />
+
+      <PatientEngagementPanel pacienteId={p.id} />
 
       {/* Dashboard com avaliações finalizadas */}
       {avaliacoes.length > 0 ? (

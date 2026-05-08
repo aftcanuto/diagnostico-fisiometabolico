@@ -33,9 +33,10 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   const [loading, setLoading] = useState<string | null>(null);
   const [editando, setEditando] = useState<string | null>(null);
   const [rascunho, setRascunho] = useState<string>('');
+  const [rascunhoPaciente, setRascunhoPaciente] = useState<string>('');
 
   useEffect(() => {
-    supabase.from('analises_ia').select('tipo, conteudo, texto_editado, modelo_ia, gerado_em')
+    supabase.from('analises_ia').select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, modelo_ia, gerado_em')
       .eq('avaliacao_id', avaliacaoId).then(({ data }) => {
         const map: Record<string, any> = {};
         (data ?? []).forEach(a => { map[a.tipo] = a; });
@@ -61,10 +62,10 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   async function salvarEdicao(tipo: string) {
     await fetch('/api/ia/editar', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avaliacaoId, tipo, textoEditado: rascunho }),
+      body: JSON.stringify({ avaliacaoId, tipo, textoEditado: rascunho, textoPacienteEditado: rascunhoPaciente }),
     });
-    setAnalises(a => ({ ...a, [tipo]: { ...a[tipo], texto_editado: rascunho } }));
-    setEditando(null); setRascunho('');
+    setAnalises(a => ({ ...a, [tipo]: { ...a[tipo], texto_editado: rascunho, texto_paciente_editado: rascunhoPaciente } }));
+    setEditando(null); setRascunho(''); setRascunhoPaciente('');
   }
 
   function isDisponivel(tipo: string) {
@@ -104,6 +105,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                     <Button size="sm" variant="ghost" onClick={() => {
                       setEditando(m.tipo);
                       setRascunho(a.texto_editado || renderizarTextoBase(a.conteudo));
+                      setRascunhoPaciente(a.texto_paciente_editado || renderizarTextoBase(a.conteudo_paciente) || resumirParaPaciente(a.texto_editado || renderizarTextoBase(a.conteudo)));
                     }}><Edit3 className="w-3 h-3" /></Button>
                   )}
                   <Button size="sm" variant="secondary" onClick={() => gerar(m.tipo)} disabled={loading === m.tipo}>
@@ -115,9 +117,16 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
 
               {ed && (
                 <div className="mt-3 space-y-2">
-                  <Textarea value={rascunho} onChange={e => setRascunho(e.target.value)} className="min-h-[160px] text-sm" />
+                  <div>
+                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Versão técnica do avaliador</div>
+                    <Textarea value={rascunho} onChange={e => setRascunho(e.target.value)} className="min-h-[160px] text-sm" />
+                  </div>
+                  <div>
+                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Versão simplificada para paciente/PDF</div>
+                    <Textarea value={rascunhoPaciente} onChange={e => setRascunhoPaciente(e.target.value)} className="min-h-[120px] text-sm" />
+                  </div>
                   <div className="flex gap-2 justify-end">
-                    <Button size="sm" variant="ghost" onClick={() => { setEditando(null); setRascunho(''); }}><X className="w-3 h-3" /> Cancelar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditando(null); setRascunho(''); setRascunhoPaciente(''); }}><X className="w-3 h-3" /> Cancelar</Button>
                     <Button size="sm" onClick={() => salvarEdicao(m.tipo)}><Save className="w-3 h-3" /> Salvar</Button>
                   </div>
                 </div>
@@ -133,8 +142,20 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
 }
 
 function AnaliseConteudo({ a }: { a: any }) {
+  const textoPaciente = a.texto_paciente_editado || renderizarTextoBase(a.conteudo_paciente);
   if (a.texto_editado) {
-    return <div className="mt-3 text-sm text-slate-700 whitespace-pre-wrap">{a.texto_editado}</div>;
+    return (
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-3">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Versão técnica</div>
+          <div className="text-sm text-slate-700 whitespace-pre-wrap">{a.texto_editado}</div>
+        </div>
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">Versão paciente</div>
+          <div className="text-sm text-slate-700 whitespace-pre-wrap">{textoPaciente || resumirParaPaciente(a.texto_editado)}</div>
+        </div>
+      </div>
+    );
   }
   const c = a.conteudo || {};
   return (
@@ -142,11 +163,17 @@ function AnaliseConteudo({ a }: { a: any }) {
       {c.resumo_executivo && (
         <div className="rounded bg-brand-50 p-2 text-slate-700"><b>Resumo:</b> {c.resumo_executivo}</div>
       )}
+      {c.resumo_clinico && (
+        <div className="rounded bg-brand-50 p-2 text-slate-700"><b>Resumo clínico:</b> {c.resumo_clinico}</div>
+      )}
       {c.interpretacao && (
         <div className="text-slate-700"><b>Interpretação:</b> {c.interpretacao}</div>
       )}
       {Array.isArray(c.achados) && c.achados.length > 0 && (
         <ListItem titulo="Achados" itens={c.achados} />
+      )}
+      {Array.isArray(c.principais_achados) && c.principais_achados.length > 0 && (
+        <ListItem titulo="Principais achados" itens={c.principais_achados} />
       )}
       {Array.isArray(c.pontos_fortes) && c.pontos_fortes.length > 0 && (
         <ListItem titulo="Pontos fortes" itens={c.pontos_fortes} cor="emerald" />
@@ -157,11 +184,23 @@ function AnaliseConteudo({ a }: { a: any }) {
       {Array.isArray(c.riscos) && c.riscos.length > 0 && (
         <ListItem titulo="Riscos" itens={c.riscos} cor="red" />
       )}
+      {Array.isArray(c.riscos_atencoes) && c.riscos_atencoes.length > 0 && (
+        <ListItem titulo="Riscos e atenções" itens={c.riscos_atencoes} cor="red" />
+      )}
       {Array.isArray(c.beneficios) && c.beneficios.length > 0 && (
         <ListItem titulo="Benefícios da correção" itens={c.beneficios} cor="emerald" />
       )}
       {Array.isArray(c.recomendacoes) && c.recomendacoes.length > 0 && (
         <ListItem titulo="Recomendações" itens={c.recomendacoes} cor="brand" />
+      )}
+      {Array.isArray(c.recomendacoes_praticas) && c.recomendacoes_praticas.length > 0 && (
+        <ListItem titulo="Recomendações práticas" itens={c.recomendacoes_praticas} cor="brand" />
+      )}
+      {c.encaminhamento && (
+        <div className="rounded bg-amber-50 p-2 text-amber-800"><b>Encaminhamento:</b> {c.encaminhamento}</div>
+      )}
+      {c.limitacoes && (
+        <div className="rounded bg-slate-50 p-2 text-slate-600"><b>Limitações:</b> {c.limitacoes}</div>
       )}
       {Array.isArray(c.alertas) && c.alertas.length > 0 && (
         <ListItem titulo="⚠️ Alertas" itens={c.alertas} cor="amber" />
@@ -216,13 +255,20 @@ function ListItem({ titulo, itens, cor = 'slate' }: { titulo: string; itens: str
 function renderizarTextoBase(c: any): string {
   if (!c) return '';
   if (typeof c === 'string') return c;
+  if (c.texto) return c.texto;
   const partes: string[] = [];
   if (c.resumo_executivo) partes.push('RESUMO:\n' + c.resumo_executivo);
+  if (c.resumo_clinico) partes.push('RESUMO CLÍNICO:\n' + c.resumo_clinico);
   if (c.interpretacao) partes.push('INTERPRETAÇÃO:\n' + c.interpretacao);
   if (Array.isArray(c.achados)) partes.push('ACHADOS:\n' + c.achados.map((x: string) => '• ' + x).join('\n'));
+  if (Array.isArray(c.principais_achados)) partes.push('PRINCIPAIS ACHADOS:\n' + c.principais_achados.map((x: string) => '• ' + x).join('\n'));
   if (Array.isArray(c.riscos)) partes.push('RISCOS:\n' + c.riscos.map((x: string) => '• ' + x).join('\n'));
+  if (Array.isArray(c.riscos_atencoes)) partes.push('RISCOS E ATENÇÕES:\n' + c.riscos_atencoes.map((x: string) => '• ' + x).join('\n'));
   if (Array.isArray(c.beneficios)) partes.push('BENEFÍCIOS:\n' + c.beneficios.map((x: string) => '• ' + x).join('\n'));
   if (Array.isArray(c.recomendacoes)) partes.push('RECOMENDAÇÕES:\n' + c.recomendacoes.map((x: string) => '• ' + x).join('\n'));
+  if (Array.isArray(c.recomendacoes_praticas)) partes.push('RECOMENDAÇÕES PRÁTICAS:\n' + c.recomendacoes_praticas.map((x: string) => '• ' + x).join('\n'));
+  if (c.encaminhamento) partes.push('ENCAMINHAMENTO:\n' + c.encaminhamento);
+  if (c.limitacoes) partes.push('LIMITAÇÕES:\n' + c.limitacoes);
   if (Array.isArray(c.alertas)) partes.push('ALERTAS:\n' + c.alertas.map((x: string) => '• ' + x).join('\n'));
   if (Array.isArray(c.pontos_fortes)) partes.push('PONTOS FORTES:\n' + c.pontos_fortes.map((x: string) => '• ' + x).join('\n'));
   if (Array.isArray(c.pontos_criticos)) partes.push('PONTOS CRÍTICOS:\n' + c.pontos_criticos.map((x: string) => '• ' + x).join('\n'));
@@ -235,4 +281,15 @@ function renderizarTextoBase(c: any): string {
   }
   if (c.mensagem_paciente) partes.push('MENSAGEM AO PACIENTE:\n' + c.mensagem_paciente);
   return partes.join('\n\n');
+}
+
+function resumirParaPaciente(texto: string): string {
+  if (!texto) return '';
+  return texto
+    .replace(/\bdiagn[oó]stico\b/gi, 'avaliação')
+    .replace(/\bcr[ií]tico(s)?\b/gi, 'pontos de atenção')
+    .split('\n')
+    .filter(Boolean)
+    .slice(0, 8)
+    .join('\n');
 }

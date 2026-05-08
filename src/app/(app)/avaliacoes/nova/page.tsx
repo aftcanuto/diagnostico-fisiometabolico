@@ -20,6 +20,33 @@ const modulosMeta = [
   { k: 'biomecanica_corrida',label: 'Biomecânica da corrida', desc: 'Cinemática 2D — análise da passada (opcional)' },
 ] as const;
 
+const MODULOS_INICIAIS: Record<string, boolean> = {
+  anamnese: true, sinais_vitais: true, posturografia: true,
+  bioimpedancia: false, antropometria: true, flexibilidade: true,
+  forca: true, cardiorrespiratorio: true, rml: false,
+  biomecanica_corrida: false,
+};
+
+const NENHUM_MODULO = Object.fromEntries(modulosMeta.map(m => [m.k, false])) as Record<string, boolean>;
+
+const ROTAS_MODULOS: Record<string, string> = {
+  anamnese: 'anamnese',
+  sinais_vitais: 'sinais-vitais',
+  posturografia: 'posturografia',
+  bioimpedancia: 'bioimpedancia',
+  antropometria: 'antropometria',
+  flexibilidade: 'flexibilidade',
+  forca: 'forca',
+  rml: 'rml',
+  cardiorrespiratorio: 'cardiorrespiratorio',
+  biomecanica_corrida: 'biomecanica',
+};
+
+function primeiraRotaSelecionada(modulos: Record<string, boolean>) {
+  const primeiro = modulosMeta.find(m => modulos[m.k]);
+  return primeiro ? ROTAS_MODULOS[primeiro.k] : 'revisao';
+}
+
 export default function NovaAvaliacaoPage() {
   const router = useRouter();
   const params = useSearchParams();
@@ -30,11 +57,7 @@ export default function NovaAvaliacaoPage() {
   const [produtoId, setProdutoId] = useState<string>('');
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
   const [tipo, setTipo] = useState<'completo' | 'personalizado'>('completo');
-  const [modulos, setModulos] = useState<Record<string, boolean>>({
-    anamnese: true, sinais_vitais: true, posturografia: true,
-    bioimpedancia: false, antropometria: true, flexibilidade: true,
-    forca: true, cardiorrespiratorio: true, rml: false,
-  });
+  const [modulos, setModulos] = useState<Record<string, boolean>>(MODULOS_INICIAIS);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { (async () => {
@@ -47,7 +70,8 @@ export default function NovaAvaliacaoPage() {
     const padrao = (prods ?? []).find((p: any) => p.padrao);
     if (padrao) {
       setProdutoId(padrao.id);
-      setModulos(padrao.modulos);
+      setModulos({ ...NENHUM_MODULO, ...(padrao.modulos ?? {}) });
+      setTipo('personalizado');
     }
   })(); }, [supabase]);
 
@@ -56,7 +80,7 @@ export default function NovaAvaliacaoPage() {
     if (!id) return;
     const p = produtos.find(x => x.id === id);
     if (p) {
-      setModulos({ ...p.modulos, anamnese: true });
+      setModulos({ ...NENHUM_MODULO, ...(p.modulos ?? {}) });
       setTipo('personalizado');
     }
   }
@@ -64,13 +88,13 @@ export default function NovaAvaliacaoPage() {
   function toggleTipo(t: 'completo' | 'personalizado') {
     setTipo(t);
     if (t === 'completo') {
-      setModulos({ anamnese: true, sinais_vitais: true, posturografia: true, bioimpedancia: false, antropometria: true, flexibilidade: true, forca: true, cardiorrespiratorio: true, rml: false });
+      setModulos(MODULOS_INICIAIS);
       setProdutoId('');
     }
   }
 
   function toggleMod(k: string) {
-    if (k === 'anamnese' || tipo === 'completo') return;
+    if (tipo === 'completo') return;
     setModulos(m => ({ ...m, [k]: !m[k] }));
   }
 
@@ -85,7 +109,7 @@ export default function NovaAvaliacaoPage() {
       produto_id: produtoId || null,
     }).select('id').single();
     if (error) { alert(error.message); setLoading(false); return; }
-    router.push(`/avaliacoes/${aval!.id}/anamnese`);
+    router.push(`/avaliacoes/${aval!.id}/${primeiraRotaSelecionada(modulos)}`);
   }
 
   return (
@@ -134,8 +158,8 @@ export default function NovaAvaliacaoPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {modulosMeta.map(m => {
               const checked = !!modulos[m.k];
-              const obrigatorio = 'obrig' in m && m.obrig;
-              const locked = obrigatorio || tipo === 'completo';
+              const obrigatorio = false;
+              const locked = tipo === 'completo';
               return (
                 <button key={m.k} onClick={() => toggleMod(m.k)} disabled={locked}
                         className={cn(

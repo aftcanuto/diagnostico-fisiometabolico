@@ -8,12 +8,15 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const { avaliacaoId, tipo, conteudo, textoEditado } = await req.json();
+  const { avaliacaoId, tipo, conteudo, textoEditado, conteudoPaciente, textoPacienteEditado, planoAcao } = await req.json();
   if (!avaliacaoId || !tipo) return NextResponse.json({ error: 'parâmetros faltando' }, { status: 400 });
 
   const payload: any = { avaliacao_id: avaliacaoId, tipo };
   if (conteudo !== undefined) payload.conteudo = conteudo;
   if (textoEditado !== undefined) payload.texto_editado = textoEditado;
+  if (conteudoPaciente !== undefined) payload.conteudo_paciente = conteudoPaciente;
+  if (textoPacienteEditado !== undefined) payload.texto_paciente_editado = textoPacienteEditado;
+  if (planoAcao !== undefined) payload.plano_acao = planoAcao;
   payload.revisado_por = user.id;
   payload.revisado_em = new Date().toISOString();
 

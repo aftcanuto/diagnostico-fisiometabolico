@@ -799,38 +799,39 @@ function pgPostura(p: any, score: number | null, ia?: any): string {
     ${aiBlock(ia)}`;
 }
 
-// PÃ¡gina combinada: Posturografia (metade sup) + Flexibilidade (metade inf)
+// Pagina flexivel: pode renderizar Posturografia, Flexibilidade ou ambos.
 function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null, iaP: any, iaF: any, pri = '#059669'): string {
   if (!p && !f) return '';
   const corF = f?.classificacao==='Excelente'?'#16a34a':f?.classificacao==='Bom'?'#10b981':f?.classificacao==='MÃ©dio'?'#f59e0b':f?.classificacao==='Regular'?'#f97316':'#ef4444';
+  const titulo = p && f ? 'Posturografia &amp; Flexibilidade' : p ? 'Posturografia' : 'Flexibilidade';
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
-    <h2 class="mod-title">Posturografia &amp; Flexibilidade</h2>
+    <h2 class="mod-title">${titulo}</h2>
   </div>
 
-  <!-- â”€â”€ METADE SUPERIOR: Posturografia â”€â”€ -->
-  <div style="padding:20px 0 18px;border-bottom:2px dashed #e5e7eb">
+  ${p ? `<!-- Posturografia -->
+  <div style="padding:20px 0 18px;${f ? 'border-bottom:2px dashed #e5e7eb' : ''}">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Posturografia
     </div>
-    ${p ? pgPostura(p, scoreP, iaP) : '<p style="color:#9ca3af;font-size:13px">NÃ£o realizada</p>'}
-  </div>
+    ${pgPostura(p, scoreP, iaP)}
+  </div>` : ''}
 
-  <!-- â”€â”€ METADE INFERIOR: Flexibilidade â”€â”€ -->
-  <div style="padding:20px 0 0">
+  ${f ? `<!-- Flexibilidade -->
+  <div style="padding:${p ? '20px' : '0'} 0 0">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Flexibilidade ${scoreF!=null?`<span style="margin-left:auto;padding:4px 12px;background:linear-gradient(135deg,${pri},${pri}cc);border-radius:100px;color:#0f172a;font-weight:700;font-size:12px">Score: ${scoreF}</span>`:''}
     </div>
-    ${f ? `<div class="kpi-grid">
+    <div class="kpi-grid">
       ${kpi('Tentativa 1',f.tentativa_1,'cm')}${kpi('Tentativa 2',f.tentativa_2,'cm')}${kpi('Tentativa 3',f.tentativa_3,'cm')}
       ${f.melhor_resultado!=null?`<div class="kpi" style="border-color:${corF}"><div class="kpi-label">Melhor resultado</div><div class="kpi-val" style="color:${corF}">${f.melhor_resultado}<span class="kpi-unit"> cm</span></div><div style="font-size:11px;font-weight:700;color:${corF};margin-top:4px">${x(f.classificacao??'')}</div></div>`:''}
     </div>
     <p style="font-size:11px;color:#9ca3af;margin-top:4px">Protocolo: Banco de Wells â€” Sit and Reach (ACSM)</p>
     ${f.observacoes?`<p style="font-size:12px;color:#374151;margin-top:10px;line-height:1.6">${x(f.observacoes)}</p>`:''}
-    ${aiBlock(iaF)}` : '<p style="color:#9ca3af;font-size:13px">NÃ£o realizada</p>'}
-  </div>
+    ${aiBlock(iaF)}
+  </div>` : ''}
 </section>`;
 }
 
@@ -1548,27 +1549,32 @@ export function renderLaudoHTML(d: LaudoData): string {
   const pages = [
     pgCapa(d),
     pgResumo(d),
-    ia.conclusao_global ? pgConclusao(d, pri) : '',
-    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia) : '',
-    m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria) : '',
-    // Anamnese + Sinais Vitais â€” pÃ¡gina combinada
+    // Ordem cronologica dos modulos da avaliacao
     (m.anamnese || m.sinais_vitais)
       ? pgSinaisAnamnese(
           m.anamnese      ? d.dados.anamnese      : null,
           m.sinais_vitais ? d.dados.sinais_vitais : null,
           ia.anamnese, ia.sinais_vitais, pri)
       : '',
-    // Posturografia + Flexibilidade — página combinada única
-    (m.posturografia || m.flexibilidade)
+    m.posturografia
       ? pgPosturaFlex(
           m.posturografia  ? d.dados.posturografia : null, m.posturografia ? d.scores.postura : null,
+          null, null,
+          m.posturografia ? ia.posturografia : null, null, pri)
+      : '',
+    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia) : '',
+    m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria) : '',
+    m.flexibilidade
+      ? pgPosturaFlex(
+          null, null,
           m.flexibilidade ? d.dados.flexibilidade : null, m.flexibilidade ? d.scores.flexibilidade??null : null,
-          m.posturografia ? ia.posturografia : null, m.flexibilidade ? ia.flexibilidade : null, pri)
+          null, m.flexibilidade ? ia.flexibilidade : null, pri)
       : '',
     m.forca               ? pgForca(d.dados.forca, d.scores.forca, ia.forca) : '',
     m.rml                 ? pgRML(d.dados.rml, d.scores.rml??null, d.paciente.sexo, d.paciente.idade, ia.rml, pri) : '',
     m.cardiorrespiratorio ? pgCardio(d.dados.cardiorrespiratorio, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio) : '',
     m.biomecanica_corrida ? pgBiomecanica(d.dados.biomecanica_corrida, ia.biomecanica_corrida, pri) : '',
+    ia.conclusao_global ? pgConclusao(d, pri) : '',
     ia.evolucao           ? pgModulo('Evolução longitudinal', null,
       '<p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.</p>',
       ia.evolucao) : '',
