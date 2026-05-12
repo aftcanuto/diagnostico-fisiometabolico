@@ -33,15 +33,22 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
   const [itens, setItens] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<any>(VAZIO);
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   async function carregar() {
-    const { data } = await supabase
+    setErro(null);
+    const { data, error } = await supabase
       .from('protocolo_recomendacoes')
       .select('*')
       .eq('clinica_id', clinicaId)
       .order('modulo')
       .order('padrao', { ascending: false })
       .order('titulo');
+    if (error) {
+      setErro(`NÃ£o foi possÃ­vel carregar as recomendaÃ§Ãµes: ${error.message}`);
+      setItens([]);
+      return;
+    }
     setItens(data ?? []);
   }
 
@@ -49,6 +56,7 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
 
   async function salvar() {
     setSalvando(true);
+    setErro(null);
     const payload = { ...selecionado, clinica_id: clinicaId };
     const query = selecionado.id
       ? supabase.from('protocolo_recomendacoes').update(payload).eq('id', selecionado.id)
@@ -56,7 +64,7 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
     const { error } = await query;
     setSalvando(false);
     if (error) {
-      alert(error.message);
+      setErro(`NÃ£o foi possÃ­vel salvar a recomendaÃ§Ã£o: ${error.message}`);
       return;
     }
     setSelecionado(VAZIO);
@@ -67,7 +75,7 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
     if (!selecionado.id || !confirm('Excluir esta recomendação?')) return;
     const { error } = await supabase.from('protocolo_recomendacoes').delete().eq('id', selecionado.id);
     if (error) {
-      alert(error.message);
+      setErro(`NÃ£o foi possÃ­vel excluir a recomendaÃ§Ã£o: ${error.message}`);
       return;
     }
     setSelecionado(VAZIO);
@@ -107,6 +115,11 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
         </div>
 
         <div className="space-y-4">
+          {erro && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {erro}
+            </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Módulo">
               <Select value={selecionado.modulo} onChange={e => setSelecionado((s: any) => ({ ...s, modulo: e.target.value }))}>

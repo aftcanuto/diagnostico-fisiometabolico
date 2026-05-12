@@ -34,6 +34,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   const [editando, setEditando] = useState<string | null>(null);
   const [rascunho, setRascunho] = useState<string>('');
   const [rascunhoPaciente, setRascunhoPaciente] = useState<string>('');
+  const [rascunhoPlano, setRascunhoPlano] = useState<string>('');
 
   useEffect(() => {
     supabase.from('analises_ia').select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, modelo_ia, gerado_em')
@@ -62,10 +63,24 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   async function salvarEdicao(tipo: string) {
     await fetch('/api/ia/editar', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avaliacaoId, tipo, textoEditado: rascunho, textoPacienteEditado: rascunhoPaciente }),
+      body: JSON.stringify({
+        avaliacaoId,
+        tipo,
+        textoEditado: rascunho,
+        textoPacienteEditado: rascunhoPaciente,
+        planoAcao: tipo === 'conclusao_global' ? rascunhoPlano : undefined,
+      }),
     });
-    setAnalises(a => ({ ...a, [tipo]: { ...a[tipo], texto_editado: rascunho, texto_paciente_editado: rascunhoPaciente } }));
-    setEditando(null); setRascunho(''); setRascunhoPaciente('');
+    setAnalises(a => ({
+      ...a,
+      [tipo]: {
+        ...a[tipo],
+        texto_editado: rascunho,
+        texto_paciente_editado: rascunhoPaciente,
+        plano_acao: tipo === 'conclusao_global' ? rascunhoPlano : a[tipo]?.plano_acao,
+      },
+    }));
+    setEditando(null); setRascunho(''); setRascunhoPaciente(''); setRascunhoPlano('');
   }
 
   function isDisponivel(tipo: string) {
@@ -106,6 +121,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                       setEditando(m.tipo);
                       setRascunho(a.texto_editado || renderizarTextoBase(a.conteudo));
                       setRascunhoPaciente(a.texto_paciente_editado || renderizarTextoBase(a.conteudo_paciente) || resumirParaPaciente(a.texto_editado || renderizarTextoBase(a.conteudo)));
+                      setRascunhoPlano(a.plano_acao || '');
                     }}><Edit3 className="w-3 h-3" /></Button>
                   )}
                   <Button size="sm" variant="secondary" onClick={() => gerar(m.tipo)} disabled={loading === m.tipo}>
@@ -125,8 +141,19 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                     <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Versão simplificada para paciente/PDF</div>
                     <Textarea value={rascunhoPaciente} onChange={e => setRascunhoPaciente(e.target.value)} className="min-h-[120px] text-sm" />
                   </div>
+                  {m.tipo === 'conclusao_global' && (
+                    <div>
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Plano de aÃ§Ã£o pÃ³s-laudo</div>
+                      <Textarea
+                        value={rascunhoPlano}
+                        onChange={e => setRascunhoPlano(e.target.value)}
+                        placeholder="Prioridades clÃ­nicas, metas de 30/60/90 dias, recomendaÃ§Ãµes por Ã¡rea e alertas de encaminhamento."
+                        className="min-h-[150px] text-sm"
+                      />
+                    </div>
+                  )}
                   <div className="flex gap-2 justify-end">
-                    <Button size="sm" variant="ghost" onClick={() => { setEditando(null); setRascunho(''); setRascunhoPaciente(''); }}><X className="w-3 h-3" /> Cancelar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditando(null); setRascunho(''); setRascunhoPaciente(''); setRascunhoPlano(''); }}><X className="w-3 h-3" /> Cancelar</Button>
                     <Button size="sm" onClick={() => salvarEdicao(m.tipo)}><Save className="w-3 h-3" /> Salvar</Button>
                   </div>
                 </div>
@@ -143,6 +170,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
 
 function AnaliseConteudo({ a }: { a: any }) {
   const textoPaciente = a.texto_paciente_editado || renderizarTextoBase(a.conteudo_paciente);
+  const planoAcao = typeof a.plano_acao === 'string' ? a.plano_acao : renderizarTextoBase(a.plano_acao);
   if (a.texto_editado) {
     return (
       <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -230,6 +258,15 @@ function AnaliseConteudo({ a }: { a: any }) {
       {c.mensagem_paciente && (
         <div className="rounded bg-emerald-50 p-2 text-emerald-800 italic">💬 {c.mensagem_paciente}</div>
       )}
+    </div>
+  );
+}
+
+function PlanoAcaoBox({ texto }: { texto: string }) {
+  return (
+    <div className="rounded-lg border border-cyan-100 bg-cyan-50 p-3">
+      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-cyan-800">Plano de a????o p??s-laudo</div>
+      <div className="text-sm text-slate-700 whitespace-pre-wrap">{texto}</div>
     </div>
   );
 }

@@ -21,14 +21,21 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
   const [modelos, setModelos] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<any>(MODELO_VAZIO);
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   async function carregar() {
-    const { data } = await supabase
+    setErro(null);
+    const { data, error } = await supabase
       .from('consentimento_modelos')
       .select('*')
       .eq('clinica_id', clinicaId)
       .order('padrao', { ascending: false })
       .order('nome');
+    if (error) {
+      setErro(`NÃ£o foi possÃ­vel carregar os modelos: ${error.message}`);
+      setModelos([]);
+      return;
+    }
     setModelos(data ?? []);
   }
 
@@ -36,9 +43,11 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
 
   async function salvar() {
     setSalvando(true);
+    setErro(null);
     const payload = {
       ...selecionado,
       clinica_id: clinicaId,
+      tipo: normalizarTipo(selecionado.tipo),
       texto: selecionado.texto || textoPadrao(selecionado.tipo),
     };
     const query = selecionado.id
@@ -47,7 +56,7 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
     const { error } = await query;
     setSalvando(false);
     if (error) {
-      alert(error.message);
+      setErro(`NÃ£o foi possÃ­vel salvar o modelo: ${error.message}`);
       return;
     }
     setSelecionado(MODELO_VAZIO);
@@ -58,7 +67,7 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
     if (!selecionado.id || !confirm('Excluir este modelo?')) return;
     const { error } = await supabase.from('consentimento_modelos').delete().eq('id', selecionado.id);
     if (error) {
-      alert(error.message);
+      setErro(`NÃ£o foi possÃ­vel excluir o modelo: ${error.message}`);
       return;
     }
     setSelecionado(MODELO_VAZIO);
@@ -98,6 +107,11 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
         </div>
 
         <div className="space-y-4">
+          {erro && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {erro}
+            </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Tipo">
               <Select value={selecionado.tipo} onChange={e => setSelecionado((s: any) => ({ ...s, tipo: e.target.value }))}>
@@ -149,4 +163,12 @@ function textoPadrao(tipo: string) {
     return 'Declaro que recebi informações claras sobre os procedimentos da avaliação, seus objetivos, possíveis desconfortos e limites. Minha participação é voluntária e posso retirar meu consentimento a qualquer momento.';
   }
   return 'Declaro que fui informado(a) sobre os procedimentos da avaliação fisiometabólica, compreendi seus objetivos e autorizo a realização dos testes descritos pelo avaliador responsável.';
+}
+
+
+function normalizarTipo(tipo: string) {
+  if (tipo === 'tcle') return 'tcle';
+  if (tipo === 'uso_imagem') return 'uso_imagem';
+  if (tipo === 'consentimento') return 'consentimento_informado';
+  return 'consentimento_informado';
 }

@@ -79,10 +79,31 @@ export default function AnamneseTemplatesPage() {
   const [loading, setLoading]     = useState(true);
   const [salvando, setSalvando]   = useState(false);
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
+  const [clinicaId, setClinicaId] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
 
   async function carregar() {
     setLoading(true);
-    const { data } = await supabase.from('anamnese_templates').select('*').order('created_at');
+    setErro(null);
+    const { data: cid, error: clinicaError } = await supabase.rpc('current_clinica_id');
+    if (clinicaError || !cid) {
+      setErro(clinicaError?.message ?? 'NÃ£o foi possÃ­vel identificar a clÃ­nica atual.');
+      setTemplates([]);
+      setLoading(false);
+      return;
+    }
+    setClinicaId(cid);
+    const { data, error } = await supabase
+      .from('anamnese_templates')
+      .select('*')
+      .eq('clinica_id', cid)
+      .order('created_at');
+    if (error) {
+      setErro(error.message);
+      setTemplates([]);
+      setLoading(false);
+      return;
+    }
     setTemplates(data ?? []);
     setLoading(false);
   }
@@ -90,37 +111,64 @@ export default function AnamneseTemplatesPage() {
   useEffect(() => { carregar(); }, []);
 
   async function salvar() {
-    if (!editando) return;
+    if (!editando || !clinicaId) return;
+    setErro(null);
     setSalvando(true);
+    const payload = {
+      nome: editando.nome,
+      descricao: editando.descricao,
+      campos: editando.campos,
+      padrao: editando.padrao,
+      ativo: editando.ativo,
+      clinica_id: clinicaId,
+    };
+    let error;
     if (editando.id) {
-      await supabase.from('anamnese_templates')
-        .update({ nome: editando.nome, descricao: editando.descricao,
-          campos: editando.campos, ativo: editando.ativo })
-        .eq('id', editando.id);
+      ({ error } = await supabase.from('anamnese_templates')
+        .update({ nome: payload.nome, descricao: payload.descricao,
+          campos: payload.campos, ativo: payload.ativo, padrao: payload.padrao })
+        .eq('id', editando.id));
+      if (!error && payload.padrao) {
+        const { error: padraoError } = await supabase.from('anamnese_templates')
+          .update({ padrao: false })
+          .eq('clinica_id', clinicaId)
+          .neq('id', editando.id);
+        error = padraoError ?? error;
+      }
     } else {
-      await supabase.from('anamnese_templates')
-        .insert({ nome: editando.nome, descricao: editando.descricao,
-          campos: editando.campos, padrao: editando.padrao, ativo: editando.ativo });
+      ({ error } = await supabase.from('anamnese_templates').insert(payload));
     }
     setSalvando(false);
+    if (error) {
+      setErro(`NÃ£o foi possÃ­vel salvar o template: ${error.message}`);
+      return;
+    }
     setEditando(null);
     carregar();
   }
 
   async function definirPadrao(id: string) {
-    await supabase.from('anamnese_templates').update({ padrao: false }).neq('id', id);
-    await supabase.from('anamnese_templates').update({ padrao: true }).eq('id', id);
+    if (!clinicaId) return;
+    setErro(null);
+    const { error: e1 } = await supabase.from('anamnese_templates').update({ padrao: false }).eq('clinica_id', clinicaId).neq('id', id);
+    const { error: e2 } = await supabase.from('anamnese_templates').update({ padrao: true }).eq('id', id).eq('clinica_id', clinicaId);
+    if (e1 || e2) setErro(`NÃ£o foi possÃ­vel definir o padrÃ£o: ${(e1 ?? e2)?.message}`);
     carregar();
   }
 
   async function excluir(id: string) {
     if (!confirm('Excluir este template?')) return;
-    await supabase.from('anamnese_templates').delete().eq('id', id);
+    setErro(null);
+    const { error } = await supabase.from('anamnese_templates').delete().eq('id', id);
+    if (error) {
+      setErro(`NÃ£o foi possÃ­vel excluir o template: ${error.message}`);
+      return;
+    }
     carregar();
   }
 
   function novoTemplate() {
-    setEditando({ ...TEMPLATE_PADRAO, id: '' } as Template);
+    setEditando({ ...TEMPLATE_PADRAO, id: '', padrao: templates.length === 0 } as Template);
   }
 
   function duplicar(t: Template) {
@@ -160,6 +208,11 @@ export default function AnamneseTemplatesPage() {
             </Button>
           </div>
         </div>
+        {erro && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {erro}
+          </div>
+        )}
 
         <Card>
           <CardBody className="space-y-4">
@@ -246,6 +299,11 @@ export default function AnamneseTemplatesPage() {
         </div>
         <Button onClick={novoTemplate}><Plus className="w-4 h-4" /> Novo template</Button>
       </div>
+      {erro && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {erro}
+        </div>
+      )}
 
       {templates.length === 0 ? (
         <Card>

@@ -758,6 +758,40 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Correcao: salvamento de anamnese, termos e protocolos
+
+Em 12/05/2026 foi aplicada uma rodada de correcoes na area de Configuracoes, apos erro no salvamento de modelos de consentimento e suspeita de template de anamnese nao persistido.
+
+Problemas observados:
+
+- o banco em producao podia ter uma constraint divergente em `consentimento_modelos.tipo`, recusando o tipo enviado pela tela;
+- as tabelas de protocolos/engajamento podiam estar ausentes em bancos onde a migration anterior foi aplicada parcialmente;
+- a tela de templates de anamnese nao tratava erro do Supabase, entao o usuario podia achar que salvou quando o insert/update falhou;
+- o cadastro de template de anamnese nao enviava `clinica_id` explicitamente, ficando dependente de comportamento implicito/RLS.
+
+Correcoes aplicadas:
+
+- criada a migration `supabase/migrations/032_configuracoes_anamnese_termos_protocolos_fix.sql`;
+- a migration garante/realinha `consentimento_modelos`, `protocolo_recomendacoes`, `protocolo_envios` e `consentimento_links`;
+- a constraint de `consentimento_modelos.tipo` agora aceita os tipos usados/legados: `consentimento_informado`, `consentimento`, `uso_imagem` e `tcle`;
+- a constraint de `protocolo_recomendacoes.modulo` foi realinhada aos modulos atuais, incluindo `biomecanica` legado e `biomecanica_corrida`;
+- policies RLS foram recriadas com `DROP POLICY IF EXISTS` antes de `CREATE POLICY`;
+- `src/app/(app)/configuracoes/anamnese-templates/page.tsx` agora busca `current_clinica_id`, grava `clinica_id` no insert, filtra templates pela clinica e mostra erro visivel quando o Supabase recusa salvar;
+- `src/components/forms/ConsentimentosConfigPanel.tsx` passou a normalizar o tipo antes de salvar e exibir erro persistente na propria tela;
+- `src/components/forms/ProtocolosConfigPanel.tsx` passou a exibir erros de carregamento, salvamento e exclusao na propria tela.
+
+Validacao local:
+
+- `npm run predeploy` passou;
+- auditoria do banco passou com 32 migrations;
+- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
+- TypeScript passou;
+- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+Observacao adicional:
+
+- `src/components/AnalisesIAPanel.tsx` tambem recebeu o campo editavel de plano de acao na conclusao global, enviando `planoAcao` para `/api/ia/editar` e exibindo o conteudo salvo dentro do painel de analises.
+
 ## Implementacao: links de consentimento digital e TCLE
 
 Em 08/05/2026 foi iniciada a etapa de aceite digital de termos, mantendo o mesmo padrao de seguranca usado na anamnese pre-atendimento.
