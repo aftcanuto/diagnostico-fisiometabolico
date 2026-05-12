@@ -156,12 +156,15 @@ export default function AnamneseTemplatesPage() {
     carregar();
   }
 
-  async function excluir(id: string) {
-    if (!confirm('Excluir este template?')) return;
+  async function excluir(template: Template) {
+    const avisoPadrao = template.padrao
+      ? '\n\nEste template esta marcado como padrao. Se excluir, escolha outro template padrao depois.'
+      : '';
+    if (!confirm(`Excluir o template "${template.nome}"?${avisoPadrao}`)) return;
     setErro(null);
-    const { error } = await supabase.from('anamnese_templates').delete().eq('id', id);
+    const { error } = await supabase.from('anamnese_templates').delete().eq('id', template.id);
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel excluir o template: ${error.message}`);
+      setErro(`Nao foi possivel excluir o template: ${error.message}`);
       return;
     }
     carregar();
@@ -353,11 +356,9 @@ export default function AnamneseTemplatesPage() {
                     <Button size="sm" variant="secondary" onClick={() => setEditando(t)}>
                       Editar
                     </Button>
-                    {!t.padrao && (
-                      <Button size="sm" variant="ghost" onClick={() => excluir(t.id)}>
-                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                      </Button>
-                    )}
+                    <Button size="sm" variant="ghost" title="Excluir template" onClick={() => excluir(t)}>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </Button>
                   </div>
                 </div>
               </CardBody>

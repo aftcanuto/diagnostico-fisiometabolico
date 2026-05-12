@@ -791,6 +791,7 @@ Validacao local:
 Observacao adicional:
 
 - `src/components/AnalisesIAPanel.tsx` tambem recebeu o campo editavel de plano de acao na conclusao global, enviando `planoAcao` para `/api/ia/editar` e exibindo o conteudo salvo dentro do painel de analises.
+- `src/app/(app)/configuracoes/anamnese-templates/page.tsx` agora exibe o botao de excluir para todos os templates, inclusive o template padrao, com confirmacao especial quando ele for padrao.
 
 ## Implementacao: links de consentimento digital e TCLE
 
