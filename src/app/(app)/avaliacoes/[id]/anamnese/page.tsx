@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -230,7 +230,7 @@ function AnamnesesFallback({ respostas, onChange, publicar, onPublicarChange }: 
 }
 
 export default function AnamnesePage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
   const [template, setTemplate] = useState<Template | null>(null);
@@ -300,7 +300,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
 
       setLoaded(true);
     })();
-  }, [params.id]);
+  }, [params.id, supabase]);
 
   async function salvarAnamnese(v = { respostas, template_id: templateId }) {
     if (!loaded) return;

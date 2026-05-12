@@ -104,6 +104,9 @@ function audit() {
   const hasModeloDinamometria = /modelo_dinamometria/i.test(sql);
   const hasSptech = /sptech_testes/i.test(sql) && /sptech_relacoes/i.test(sql);
   const hasBiomecanicaComentarios = /comentarios_graficos/i.test(sql) && /comentarios_angulos/i.test(sql);
+  const hasAnamneseSingleUse = /paciente_anamnese_links[\s\S]*respondido_em/i.test(sql);
+  const hasConsentimentoSingleUse = /consentimento_links[\s\S]*aceito_em/i.test(sql);
+  const hasProtocolosStatus = /protocolo_envios[\s\S]*status/i.test(sql);
 
   const hasBioZRemoval = /drop\s+column\s+if\s+exists\s+impedancias/i.test(sql)
     && /drop\s+column\s+if\s+exists\s+impedancia_z/i.test(sql)
@@ -129,6 +132,9 @@ function audit() {
     !hasModeloDinamometria && 'Campo modelo_dinamometria nao encontrado nas migrations',
     !hasTracao && 'Campo tracao_testes nao encontrado nas migrations',
     !hasBiomecanicaComentarios && 'Campos de comentarios da biomecanica nao encontrados nas migrations',
+    !hasAnamneseSingleUse && 'Controle de resposta unica da anamnese publica nao encontrado nas migrations',
+    !hasConsentimentoSingleUse && 'Controle de aceite unico de consentimento nao encontrado nas migrations',
+    !hasProtocolosStatus && 'Status de envios de protocolo nao encontrado nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',
     ...missingAiTypes.map(type => `Tipo de IA ausente no check: ${type}`),
   ].filter(Boolean);
@@ -151,6 +157,9 @@ function audit() {
       tracao_testes: hasTracao,
       comentarios_biomecanica: hasBiomecanicaComentarios,
       bioimpedancia_z_removida: hasBioZRemoval,
+      anamnese_publica_resposta_unica: hasAnamneseSingleUse,
+      consentimento_publico_aceite_unico: hasConsentimentoSingleUse,
+      protocolo_envio_status: hasProtocolosStatus,
     },
     aiTypes: expectedAiTypes.length - missingAiTypes.length,
     errors,

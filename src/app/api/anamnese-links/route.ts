@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getClinicaId, getUserId, usuarioPodeAcessarPaciente } from '@/lib/api/permissions';
+import { getClinicaId, getUserId, templateAnamneseAtivoDaClinica, usuarioPodeAcessarPaciente } from '@/lib/api/permissions';
 
 export const runtime = 'nodejs';
 
@@ -43,6 +43,11 @@ export async function POST(req: NextRequest) {
   if (!clinicaId) return NextResponse.json({ error: 'Clinica nao encontrada' }, { status: 403 });
 
   const admin = createAdminClient();
+  const template = await templateAnamneseAtivoDaClinica(templateId, clinicaId);
+  if (!template) {
+    return NextResponse.json({ error: 'Template nao encontrado, inativo ou fora da clinica' }, { status: 404 });
+  }
+
   const { data, error } = await admin
     .from('paciente_anamnese_links')
     .insert({

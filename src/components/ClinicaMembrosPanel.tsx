@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select } from '@/components/ui/Input';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { UserPlus, Copy, Check, Trash2, Shield } from 'lucide-react';
 
 export function ClinicaMembrosPanel({ clinicaId, podeGerenciar }: { clinicaId: string; podeGerenciar: boolean }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [membros, setMembros] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ export function ClinicaMembrosPanel({ clinicaId, podeGerenciar }: { clinicaId: s
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
 
-  async function carregar() {
+  const carregar = useCallback(async () => {
     const { data } = await supabase.from('clinica_membros')
       .select('id, papel, ativo, user_id, created_at')
       .eq('clinica_id', clinicaId);
@@ -33,9 +33,9 @@ export function ClinicaMembrosPanel({ clinicaId, podeGerenciar }: { clinicaId: s
       avaliadores: { nome: nomes.get(m.user_id) ?? null },
     })));
     setLoading(false);
-  }
+  }, [clinicaId, supabase]);
 
-  useEffect(() => { carregar(); }, [clinicaId]);
+  useEffect(() => { carregar(); }, [carregar]);
 
   async function convidar() {
     setConvitando(true);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -12,7 +12,7 @@ function dataBR(valor?: string | null) {
 }
 
 export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [templates, setTemplates] = useState<any[]>([]);
   const [protocolos, setProtocolos] = useState<any[]>([]);
   const [modelosTermo, setModelosTermo] = useState<any[]>([]);
@@ -26,12 +26,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
   const [copiado, setCopiado] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    setOrigin(window.location.origin);
-    carregar();
-  }, [pacienteId]);
-
-  async function carregar() {
+  const carregar = useCallback(async () => {
     const [{ data: tpls }, { data: recs }, { data: termos }] = await Promise.all([
       supabase.from('anamnese_templates').select('id,nome,ativo').eq('ativo', true).order('nome'),
       supabase.from('protocolo_recomendacoes').select('*').eq('ativo', true).order('modulo').order('titulo'),
@@ -54,7 +49,12 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setLinks(linksBody.data ?? []);
     setEnvios(enviosBody.data ?? []);
     setLinksTermo(linksTermoBody.data ?? []);
-  }
+  }, [pacienteId, supabase]);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+    carregar();
+  }, [carregar]);
 
   async function gerarAnamnese() {
     setMsg(null);

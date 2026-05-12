@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -73,7 +73,7 @@ function novoCampo(): Campo {
 }
 
 export default function AnamneseTemplatesPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [editando, setEditando]   = useState<Template | null>(null);
   const [loading, setLoading]     = useState(true);
@@ -82,7 +82,7 @@ export default function AnamneseTemplatesPage() {
   const [clinicaId, setClinicaId] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  async function carregar() {
+  const carregar = useCallback(async () => {
     setLoading(true);
     setErro(null);
     const { data: cid, error: clinicaError } = await supabase.rpc('current_clinica_id');
@@ -106,9 +106,9 @@ export default function AnamneseTemplatesPage() {
     }
     setTemplates(data ?? []);
     setLoading(false);
-  }
+  }, [supabase]);
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => { carregar(); }, [carregar]);
 
   async function salvar() {
     if (!editando || !clinicaId) return;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getClinicaId, getUserId, usuarioPodeAcessarPaciente } from '@/lib/api/permissions';
+import { getClinicaId, getUserId, recomendacoesAtivasDaClinica, usuarioPodeAcessarPaciente } from '@/lib/api/permissions';
 
 export const runtime = 'nodejs';
 
@@ -43,6 +43,11 @@ export async function POST(req: NextRequest) {
   if (!clinicaId) return NextResponse.json({ error: 'Clinica nao encontrada' }, { status: 403 });
 
   const admin = createAdminClient();
+  const recomendacoesValidas = await recomendacoesAtivasDaClinica(recomendacoesIds, clinicaId);
+  if (recomendacoesValidas.length !== new Set(recomendacoesIds).size) {
+    return NextResponse.json({ error: 'Ha recomendacoes invalidas, inativas ou fora da clinica' }, { status: 400 });
+  }
+
   const { data: paciente } = await admin
     .from('pacientes')
     .select('email')
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest) {
       destino: paciente?.email ?? null,
       status: 'registrado',
       enviado_por: userId,
-      observacao: 'Envio registrado. Provedor de e-mail/WhatsApp ainda nao configurado.',
+      observacao: 'Registro criado. O envio automatico por e-mail/WhatsApp ainda nao esta configurado.',
     })
     .select('*')
     .single();

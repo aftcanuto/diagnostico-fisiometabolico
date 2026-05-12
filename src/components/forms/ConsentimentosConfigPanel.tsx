@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -17,13 +17,13 @@ const MODELO_VAZIO = {
 };
 
 export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [modelos, setModelos] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<any>(MODELO_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  async function carregar() {
+  const carregar = useCallback(async () => {
     setErro(null);
     const { data, error } = await supabase
       .from('consentimento_modelos')
@@ -37,9 +37,9 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
       return;
     }
     setModelos(data ?? []);
-  }
+  }, [clinicaId, supabase]);
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => { carregar(); }, [carregar]);
 
   async function salvar() {
     setSalvando(true);

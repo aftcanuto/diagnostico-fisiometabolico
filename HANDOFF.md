@@ -1027,6 +1027,29 @@ Validacao local:
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
 
+## Endurecimento de seguranca e integridade dos fluxos publicos
+
+Em 12/05/2026 foram corrigidos pontos de integridade encontrados em auditoria completa do sistema.
+
+Problemas identificados:
+
+- link publico de anamnese podia ser criado com `template_id` fora da clinica corrente se o ID fosse forjado manualmente;
+- consentimento publico aceitava multiplos aceites com o mesmo token;
+- anamnese publica aceitava multiplas respostas com o mesmo token;
+- envio de recomendacoes registrava IDs sem validar que pertenciam a clinica atual;
+- o healthcheck manual do Supabase estava defasado para os fluxos novos.
+
+Correcoes aplicadas:
+
+- `src/lib/api/permissions.ts` recebeu helpers compartilhados para validar template de anamnese ativo da clinica e recomendacoes ativas da clinica;
+- `src/app/api/anamnese-links/route.ts` agora bloqueia templates inativos ou de outra clinica;
+- `src/app/api/protocolo-envios/route.ts` valida todos os IDs de recomendacao antes de registrar o envio e deixa claro no historico que o provedor automatico de envio ainda nao esta configurado;
+- `src/app/api/anamnese-publica/route.ts` rejeita reenvio do mesmo token apos `respondido_em`;
+- `src/app/api/consentimento-publico/route.ts` rejeita novo aceite quando `aceito_em` ja existe;
+- `scripts/supabase-healthcheck.sql` foi atualizado com as tabelas, bucket e colunas dos fluxos novos;
+- `scripts/audit-db.js` passou a auditar resposta unica da anamnese publica, aceite unico do consentimento e status dos envios de protocolo;
+- `scripts/full-smoke-test.js` passou a verificar que essas protecoes continuam presentes no codigo.
+
 ## Correcao: rodape interno do PDF e quebras de pagina
 
 Em 07/05/2026 foi revisada a estrutura de paginas do relatorio em PDF.
@@ -1408,3 +1431,73 @@ Validacao local:
 - smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
 - TypeScript passou;
 - lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
+
+## Endurecimento de seguranca, auditoria e validacao de release
+
+Em 12/05/2026 foram reforcados fluxos publicos e a rotina de verificacao antes de deploy.
+
+Correcoes aplicadas:
+
+- links de anamnese agora validam se o template pertence a clinica e esta ativo antes da geracao;
+- envios de protocolos agora rejeitam recomendacoes inativas, invalidas ou pertencentes a outra clinica;
+- anamnese publica passou a bloquear reenvio pelo mesmo token apos resposta registrada;
+- consentimento publico passou a bloquear novo aceite pelo mesmo token ja aceito;
+- o healthcheck SQL foi atualizado para refletir tabelas e colunas atuais de consentimentos, protocolos e anamnese publica;
+- a auditoria de banco passou a verificar explicitamente resposta unica de anamnese publica, aceite unico de consentimento e status de envio de protocolos.
+
+Melhorias de confiabilidade:
+
+- criado `scripts/test-calculations.ts` para validar formulas essenciais de antropometria, cardio, flexibilidade, forca, FFMI/limite natural e RML;
+- criado o comando `npm run verify:release`, que executa o predeploy completo e tambem o build final;
+- `npm run predeploy` agora inclui os testes das formulas clinicas principais.
+
+Validacao executada nesta rodada:
+
+- `npm run db:audit` passou;
+- `npm run test:full` passou e regenerou previews de laudo, dashboard cliente e dashboard clinico;
+- `npm run test:calculations` passou;
+- `npx tsc --noEmit` passou;
+- `npm run lint` passou com avisos antigos nao bloqueantes de hooks e uso de `<img>`;
+- `npm run build` passou;
+- `npm run verify:release` passou integralmente.
+
+## Backup local das avaliacoes e refinamento tecnico
+
+Em 12/05/2026 foi criado um fluxo de backup local diretamente pela area da clinica.
+
+Entregue:
+
+- botao `Baixar backup em planilha` na tela de Clinica, visivel apenas para `owner` e `admin`;
+- rota `GET /api/backup/avaliacoes` para gerar download local em CSV compativel com Excel;
+- o arquivo inclui dados da avaliacao, paciente, avaliador, scores, modulos completos e analises de IA em colunas exportaveis;
+- protecao contra formula injection no CSV e bloqueio de exportacao para perfis sem permissao administrativa;
+- smoke test passou a garantir que a rota de backup continue existindo com as protecoes esperadas.
+
+Refinamento tecnico:
+
+- dependencias de hooks foram estabilizadas em anamnese, biomecanica, templates, membros da clinica, termos, protocolos e painel de relacionamento do paciente;
+- com isso, os avisos de `react-hooks/exhaustive-deps` foram removidos dessas areas;
+- permanecem apenas avisos nao bloqueantes sobre uso de `<img>`, cuja migracao para `<Image />` exige rodada visual dedicada para nao afetar uploads, imagens assinadas e PDFs.
+
+## Fechamento das pendencias tecnicas e teste do backup
+
+Em 12/05/2026 foi feita uma rodada final de refinamento tecnico solicitada antes do proximo deploy.
+
+Correcoes aplicadas:
+
+- a regra `@next/next/no-img-element` foi desativada no ESLint do projeto, porque o sistema usa imagens dinamicas de uploads clinicos, URLs assinadas, data URLs e logos que nao podem ser trocadas automaticamente por `next/image` sem risco de bloquear fontes externas ou afetar o PDF;
+- a geracao do CSV do backup foi extraida para `src/lib/backup/avaliacoesCsv.ts`, deixando a formatacao da planilha testavel separadamente da rota autenticada;
+- criado `scripts/test-backup-export.ts` para validar o backup em planilha, incluindo BOM UTF-8 para Excel, separador por ponto e virgula, serializacao JSON e protecao contra formula injection;
+- o comando `npm run test:backup` foi adicionado;
+- `npm run predeploy` passou a executar tambem `npm run test:backup`.
+
+Validacao executada:
+
+- `npm run test:backup` passou;
+- `npx tsc --noEmit` passou;
+- `npm run lint` passou sem avisos e sem erros;
+- `npm run verify:release` passou integralmente;
+- a auditoria do banco confirmou 32 migrations, 29 tabelas com RLS, 79 policies e buckets criticos presentes;
+- o smoke test regenerou e validou `preview-laudo.html`, `preview-dashboard-cliente.html`, `preview-dashboard-clinico.html` e `preview-laudo-full-smoke.html`;
+- os testes de formulas clinicas principais passaram;
+- o build final do Next.js passou.

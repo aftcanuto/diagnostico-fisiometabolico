@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select, Textarea } from '@/components/ui/Input';
@@ -62,7 +62,7 @@ const IMAGENS_POSTERIOR = [
 
 export default function BiomecanicaPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [aval, setAval] = useState<any>(null);
 
   const [velocidade, setVelocidade] = useState('');
@@ -143,7 +143,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
         }
       }
     })();
-  }, [params.id]);
+  }, [params.id, supabase]);
 
   function buildAngulos(values = angulos) {
     const result: any = {};

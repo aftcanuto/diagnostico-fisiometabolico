@@ -19,6 +19,9 @@ export async function POST(req: NextRequest) {
   if (linkError || !link) {
     return NextResponse.json({ error: 'Link invalido ou expirado' }, { status: 404 });
   }
+  if (link.aceito_em) {
+    return NextResponse.json({ error: 'Este termo ja foi aceito' }, { status: 409 });
+  }
 
   const modelo = Array.isArray(link.consentimento_modelos)
     ? link.consentimento_modelos[0]

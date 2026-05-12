@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
   if (linkError || !link) {
     return NextResponse.json({ error: 'Link invalido ou expirado' }, { status: 404 });
   }
+  if (link.respondido_em) {
+    return NextResponse.json({ error: 'Esta anamnese ja foi enviada' }, { status: 409 });
+  }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const userAgent = req.headers.get('user-agent');

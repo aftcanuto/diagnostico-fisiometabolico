@@ -43,3 +43,31 @@ export async function usuarioPodeAcessarPaciente(userId: string, pacienteId: str
 
   return !erroMembro && !!membro;
 }
+
+export async function templateAnamneseAtivoDaClinica(templateId: string, clinicaId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('anamnese_templates')
+    .select('id, clinica_id, ativo')
+    .eq('id', templateId)
+    .eq('clinica_id', clinicaId)
+    .eq('ativo', true)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
+export async function recomendacoesAtivasDaClinica(recomendacoesIds: string[], clinicaId: string) {
+  const ids = [...new Set(recomendacoesIds.filter(Boolean))];
+  if (ids.length === 0) return [];
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('protocolo_recomendacoes')
+    .select('id')
+    .in('id', ids)
+    .eq('clinica_id', clinicaId)
+    .eq('ativo', true);
+
+  return data ?? [];
+}

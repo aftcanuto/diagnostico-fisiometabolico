@@ -9,7 +9,10 @@ with expected_tables(table_name) as (
     ('sinais_vitais'), ('posturografia'), ('bioimpedancia'), ('antropometria'),
     ('flexibilidade'), ('forca'), ('rml'), ('cardiorrespiratorio'),
     ('biomecanica_corrida'), ('scores'), ('analises_ia'), ('ia_uso'),
-    ('paciente_tokens'), ('pdf_config')
+    ('paciente_tokens'), ('pdf_config'), ('consentimento_modelos'),
+    ('consentimento_links'), ('consentimento_aceites'),
+    ('protocolo_recomendacoes'), ('protocolo_envios'),
+    ('paciente_anamnese_links'), ('paciente_anamnese_respostas')
 )
 select
   '01_tabelas_esperadas' as check_name,
@@ -28,7 +31,10 @@ with expected_tables(table_name) as (
     ('sinais_vitais'), ('posturografia'), ('bioimpedancia'), ('antropometria'),
     ('flexibilidade'), ('forca'), ('rml'), ('cardiorrespiratorio'),
     ('biomecanica_corrida'), ('scores'), ('analises_ia'), ('ia_uso'),
-    ('paciente_tokens'), ('pdf_config')
+    ('paciente_tokens'), ('pdf_config'), ('consentimento_modelos'),
+    ('consentimento_links'), ('consentimento_aceites'),
+    ('protocolo_recomendacoes'), ('protocolo_envios'),
+    ('paciente_anamnese_links'), ('paciente_anamnese_respostas')
 )
 select
   '02_rls_habilitado' as check_name,
@@ -72,6 +78,14 @@ select
 from storage.buckets
 where id in ('posturografia', 'branding', 'biomecanica')
 order by id;
+
+select
+  '05b_bucket_produto_imagens' as check_name,
+  id as bucket_id,
+  public,
+  file_size_limit
+from storage.buckets
+where id = 'produto-imagens';
 
 select
   '06_storage_policies' as check_name,
@@ -139,3 +153,20 @@ select
 from pg_constraint
 where conrelid = 'public.analises_ia'::regclass
   and contype = 'c';
+
+select
+  '11_colunas_fluxo_publico' as check_name,
+  expected.table_name,
+  expected.column_name,
+  case when c.column_name is null then 'FALTA' else 'OK' end as status
+from (values
+  ('paciente_anamnese_links', 'respondido_em'),
+  ('consentimento_links', 'aceito_em'),
+  ('consentimento_modelos', 'versao'),
+  ('protocolo_envios', 'status')
+) as expected(table_name, column_name)
+left join information_schema.columns c
+  on c.table_schema = 'public'
+ and c.table_name = expected.table_name
+ and c.column_name = expected.column_name
+order by expected.table_name, expected.column_name;

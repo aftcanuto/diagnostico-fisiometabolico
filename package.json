@@ -10,7 +10,10 @@
     "env:check": "node scripts/check-env.js",
     "db:audit": "node scripts/audit-db.js",
     "test:full": "node scripts/full-smoke-test.js",
-    "predeploy": "npm run db:audit && npm run test:full && npx tsc --noEmit && npm run lint"
+    "test:calculations": "tsx scripts/test-calculations.ts",
+    "test:backup": "tsx scripts/test-backup-export.ts",
+    "predeploy": "npm run db:audit && npm run test:full && npm run test:calculations && npm run test:backup && npx tsc --noEmit && npm run lint",
+    "verify:release": "npm run predeploy && npm run build"
   },
   "dependencies": {
     "@sparticuz/chromium": "^131.0.1",

@@ -145,6 +145,13 @@ function testarPrompts() {
   }
 }
 
+function assertCodigoContem(file, trechos) {
+  const conteudo = fs.readFileSync(path.join(root, file), 'utf8');
+  for (const trecho of trechos) {
+    assert(conteudo.includes(trecho), `${file}: faltou validacao "${trecho}"`);
+  }
+}
+
 function main() {
   assert((dadosLaudo.dados.posturografia?.foto_anterior ?? '').startsWith('data:image'), 'Posturografia sem foto anterior simulada');
   assert((dadosLaudo.dados.posturografia?.foto_posterior ?? '').startsWith('data:image'), 'Posturografia sem foto posterior simulada');
@@ -188,6 +195,28 @@ function main() {
 
   const aiBlockCount = (laudo.match(/Análise clínica/g) ?? []).length;
   assert(aiBlockCount >= 10, `Laudo deveria ter análises clínicas em todos os módulos; encontrou ${aiBlockCount}`);
+
+  assertCodigoContem('src/app/api/anamnese-links/route.ts', [
+    'templateAnamneseAtivoDaClinica',
+    'Template nao encontrado, inativo ou fora da clinica',
+  ]);
+  assertCodigoContem('src/app/api/protocolo-envios/route.ts', [
+    'recomendacoesAtivasDaClinica',
+    'Ha recomendacoes invalidas, inativas ou fora da clinica',
+  ]);
+  assertCodigoContem('src/app/api/anamnese-publica/route.ts', [
+    'link.respondido_em',
+    'Esta anamnese ja foi enviada',
+  ]);
+  assertCodigoContem('src/app/api/consentimento-publico/route.ts', [
+    'link.aceito_em',
+    'Este termo ja foi aceito',
+  ]);
+  assertCodigoContem('src/app/api/backup/avaliacoes/route.ts', [
+    'Apenas administradores podem exportar o backup',
+    'text/csv; charset=utf-8',
+    'backup-avaliacoes-',
+  ]);
 
   console.log(JSON.stringify({
     ok: true,
