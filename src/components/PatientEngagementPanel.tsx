@@ -19,6 +19,8 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
   const [links, setLinks] = useState<any[]>([]);
   const [linksTermo, setLinksTermo] = useState<any[]>([]);
   const [envios, setEnvios] = useState<any[]>([]);
+  const [respostasAnamnese, setRespostasAnamnese] = useState<any[]>([]);
+  const [aceites, setAceites] = useState<any[]>([]);
   const [templateId, setTemplateId] = useState('');
   const [termoId, setTermoId] = useState('');
   const [selecionados, setSelecionados] = useState<Record<string, boolean>>({});
@@ -38,10 +40,12 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setModelosTermo(termos ?? []);
     setTermoId((termos ?? [])[0]?.id ?? '');
 
-    const [linksRes, enviosRes, linksTermoRes] = await Promise.all([
+    const [linksRes, enviosRes, linksTermoRes, respostasRes, aceitesRes] = await Promise.all([
       fetch(`/api/anamnese-links?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' }),
       fetch(`/api/protocolo-envios?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' }),
       fetch(`/api/consentimento-links?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' }),
+      supabase.from('paciente_anamnese_respostas').select('id,enviado_em,template_id,avaliacao_id').eq('paciente_id', pacienteId).order('enviado_em', { ascending: false }).limit(10),
+      supabase.from('consentimento_aceites').select('id,aceito_em,modelo_id,modelo_versao').eq('paciente_id', pacienteId).order('aceito_em', { ascending: false }).limit(10),
     ]);
     const linksBody = await linksRes.json().catch(() => ({}));
     const enviosBody = await enviosRes.json().catch(() => ({}));
@@ -49,6 +53,8 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setLinks(linksBody.data ?? []);
     setEnvios(enviosBody.data ?? []);
     setLinksTermo(linksTermoBody.data ?? []);
+    setRespostasAnamnese(respostasRes.data ?? []);
+    setAceites(aceitesRes.data ?? []);
   }, [pacienteId, supabase]);
 
   useEffect(() => {
@@ -140,6 +146,12 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
         </CardTitle>
       </CardHeader>
       <CardBody className="space-y-5">
+        <div className="grid gap-3 md:grid-cols-4">
+          <CentralStat label="Anamneses respondidas" value={respostasAnamnese.length} />
+          <CentralStat label="Termos aceitos" value={aceites.length} />
+          <CentralStat label="Recomendacoes enviadas" value={envios.length} />
+          <CentralStat label="Links ativos" value={[...links, ...linksTermo].filter(l => !l.revogado && !l.aceito_em && !l.respondido_em).length} />
+        </div>
         {msg && (
           <div className="rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-800">
             {msg}
@@ -186,6 +198,14 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
                   </div>
                 );
               })}
+            </div>
+          )}
+          {respostasAnamnese.length > 0 && (
+            <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Anamneses respondidas</div>
+              {respostasAnamnese.slice(0, 4).map(r => (
+                <div key={r.id}>Respondida em {dataBR(r.enviado_em)} {r.avaliacao_id ? '· vinculada a avaliacao' : ''}</div>
+              ))}
             </div>
           )}
         </div>
@@ -239,6 +259,14 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
               })}
             </div>
           )}
+          {aceites.length > 0 && (
+            <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Termos aceitos</div>
+              {aceites.slice(0, 4).map(a => (
+                <div key={a.id}>Aceito em {dataBR(a.aceito_em)} · versao {a.modelo_versao ?? '-'}</div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rounded-xl border border-slate-200 p-4">
@@ -287,5 +315,14 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
         </div>
       </CardBody>
     </Card>
+  );
+}
+
+function CentralStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+      <div className="text-2xl font-bold text-slate-800">{value}</div>
+      <div className="text-xs text-slate-500">{label}</div>
+    </div>
   );
 }

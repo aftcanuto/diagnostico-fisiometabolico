@@ -12,7 +12,8 @@ with expected_tables(table_name) as (
     ('paciente_tokens'), ('pdf_config'), ('consentimento_modelos'),
     ('consentimento_links'), ('consentimento_aceites'),
     ('protocolo_recomendacoes'), ('protocolo_envios'),
-    ('paciente_anamnese_links'), ('paciente_anamnese_respostas')
+    ('paciente_anamnese_links'), ('paciente_anamnese_respostas'),
+    ('plano_acao_modelos'), ('plano_alimentar_modelos'), ('plano_alimentar_avaliacoes')
 )
 select
   '01_tabelas_esperadas' as check_name,
@@ -34,7 +35,8 @@ with expected_tables(table_name) as (
     ('paciente_tokens'), ('pdf_config'), ('consentimento_modelos'),
     ('consentimento_links'), ('consentimento_aceites'),
     ('protocolo_recomendacoes'), ('protocolo_envios'),
-    ('paciente_anamnese_links'), ('paciente_anamnese_respostas')
+    ('paciente_anamnese_links'), ('paciente_anamnese_respostas'),
+    ('plano_acao_modelos'), ('plano_alimentar_modelos'), ('plano_alimentar_avaliacoes')
 )
 select
   '02_rls_habilitado' as check_name,
@@ -164,6 +166,9 @@ from (values
   ('consentimento_links', 'aceito_em'),
   ('consentimento_modelos', 'versao'),
   ('protocolo_envios', 'status')
+  ,('plano_acao_modelos', 'metas_30_dias')
+  ,('plano_alimentar_modelos', 'proteina_g_kg')
+  ,('plano_alimentar_avaliacoes', 'vet_kcal')
 ) as expected(table_name, column_name)
 left join information_schema.columns c
   on c.table_schema = 'public'

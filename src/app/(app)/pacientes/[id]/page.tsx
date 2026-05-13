@@ -50,7 +50,7 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
         admin.from('flexibilidade').select('*').in('avaliacao_id', ids),
         admin.from('rml').select('*').in('avaliacao_id', ids),
         admin.from('biomecanica_corrida').select('*').in('avaliacao_id', ids),
-        admin.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado').in('avaliacao_id', ids),
+        admin.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado,conteudo_paciente,texto_paciente_editado,plano_acao').in('avaliacao_id', ids),
       ]);
       bios?.forEach((b: any) => { bioMap[b.avaliacao_id] = b; });
       flexs?.forEach((f: any) => { flexMap[f.avaliacao_id] = f; });
@@ -58,7 +58,7 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
       biomecs?.forEach((b: any) => { biomecMap[b.avaliacao_id] = b; });
       analises?.forEach((a: any) => {
         analisesMap[a.avaliacao_id] ??= {};
-        analisesMap[a.avaliacao_id][a.tipo] = { conteudo: a.conteudo, texto_editado: a.texto_editado };
+        analisesMap[a.avaliacao_id][a.tipo] = a;
       });
     }
   } catch {}
@@ -94,9 +94,16 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
         <Link href="/pacientes" className="text-sm text-brand-600 hover:underline inline-flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" /> Pacientes
         </Link>
+        <div className="flex gap-2">
+          {avaliacoes.length > 0 && (
+            <Link href={`/pacientes/${p.id}/apresentacao`}>
+              <Button variant="secondary"><Eye className="w-4 h-4" /> Modo apresentacao</Button>
+            </Link>
+          )}
         <Link href={`/avaliacoes/nova?pacienteId=${p.id}`}>
           <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>
         </Link>
+        </div>
       </div>
 
       {/* Info do paciente */}

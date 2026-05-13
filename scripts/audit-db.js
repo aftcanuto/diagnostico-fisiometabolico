@@ -34,6 +34,9 @@ const expectedTables = [
   'protocolo_envios',
   'paciente_anamnese_links',
   'paciente_anamnese_respostas',
+  'plano_acao_modelos',
+  'plano_alimentar_modelos',
+  'plano_alimentar_avaliacoes',
 ];
 
 const expectedAiTypes = [
@@ -107,6 +110,9 @@ function audit() {
   const hasAnamneseSingleUse = /paciente_anamnese_links[\s\S]*respondido_em/i.test(sql);
   const hasConsentimentoSingleUse = /consentimento_links[\s\S]*aceito_em/i.test(sql);
   const hasProtocolosStatus = /protocolo_envios[\s\S]*status/i.test(sql);
+  const hasPlanoAcaoTemplates = /plano_acao_modelos[\s\S]*metas_30_dias/i.test(sql);
+  const hasPlanoAlimentarTemplates = /plano_alimentar_modelos[\s\S]*proteina_g_kg/i.test(sql)
+    && /plano_alimentar_modelos[\s\S]*agua_ml_kg/i.test(sql);
 
   const hasBioZRemoval = /drop\s+column\s+if\s+exists\s+impedancias/i.test(sql)
     && /drop\s+column\s+if\s+exists\s+impedancia_z/i.test(sql)
@@ -135,6 +141,8 @@ function audit() {
     !hasAnamneseSingleUse && 'Controle de resposta unica da anamnese publica nao encontrado nas migrations',
     !hasConsentimentoSingleUse && 'Controle de aceite unico de consentimento nao encontrado nas migrations',
     !hasProtocolosStatus && 'Status de envios de protocolo nao encontrado nas migrations',
+    !hasPlanoAcaoTemplates && 'Modelos de plano de acao nao encontrados nas migrations',
+    !hasPlanoAlimentarTemplates && 'Templates de plano alimentar nao encontrados nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',
     ...missingAiTypes.map(type => `Tipo de IA ausente no check: ${type}`),
   ].filter(Boolean);
@@ -160,6 +168,8 @@ function audit() {
       anamnese_publica_resposta_unica: hasAnamneseSingleUse,
       consentimento_publico_aceite_unico: hasConsentimentoSingleUse,
       protocolo_envio_status: hasProtocolosStatus,
+      plano_acao_modelos: hasPlanoAcaoTemplates,
+      plano_alimentar_modelos: hasPlanoAlimentarTemplates,
     },
     aiTypes: expectedAiTypes.length - missingAiTypes.length,
     errors,

@@ -12,7 +12,8 @@
     "test:full": "node scripts/full-smoke-test.js",
     "test:calculations": "tsx scripts/test-calculations.ts",
     "test:backup": "tsx scripts/test-backup-export.ts",
-    "predeploy": "npm run db:audit && npm run test:full && npm run test:calculations && npm run test:backup && npx tsc --noEmit && npm run lint",
+    "test:nutrition": "tsx scripts/test-nutrition.ts",
+    "predeploy": "npm run db:audit && npm run test:full && npm run test:calculations && npm run test:backup && npm run test:nutrition && npx tsc --noEmit && npm run lint",
     "verify:release": "npm run predeploy && npm run build"
   },
   "dependencies": {

@@ -635,6 +635,16 @@ function textoAnaliseClinica(v: any): string {
   return String(v.texto_editado ?? v.texto ?? renderAiText(v.conteudo ?? v) ?? '').trim();
 }
 
+function textoPlanoAcao(v: any, modo: 'clinico' | 'publico') {
+  if (!v) return '';
+  const bruto = typeof v === 'string'
+    ? v
+    : String(v.plano_acao ?? v.planoAcao ?? '').trim();
+  if (bruto) return bruto;
+  if (modo === 'publico') return String(v.texto_paciente_editado ?? renderAiText(v.conteudo_paciente) ?? '').trim();
+  return textoAnaliseClinica(v);
+}
+
 function formatAnaliseLeitura(texto: string) {
   return texto
     .replace(/\s+(Achados:|Alertas:|Beneficios:|Benef?cios:|Riscos:|Prioridades:|Pontos Fortes:|Pontos Criticos:|Pontos Cr?ticos:)/g, '\n\n$1')
@@ -2148,6 +2158,25 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       })()}
 
       {/* ══ LISTA DE AVALIAÇÕES ══ */}
+      {(() => {
+        const plano = textoPlanoAcao(atual.analises_ia?.conclusao_global, modo);
+        if (!plano) return null;
+        return (
+          <div style={{ order: 118, background: 'white', borderRadius: 18, padding: '24px 28px', color: '#0f172a',
+            border: '1px solid #d1fae5', boxShadow: '0 18px 44px rgba(16,185,129,.08)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
+              <span>Plano de acao</span>
+              <AnaliseInfoTooltip texto={plano} />
+            </div>
+            <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>Prioridades, metas e recomendacoes para a proxima etapa</div>
+            <div style={{ borderLeft:'4px solid #10b981', background:'#ecfdf5', borderRadius:12, padding:'14px 16px',
+              fontSize:13, lineHeight:1.65, color:'#334155', whiteSpace:'pre-line' }}>
+              {formatAnaliseLeitura(plano).slice(0, 900)}{plano.length > 900 ? '...' : ''}
+            </div>
+          </div>
+        );
+      })()}
+
       <div style={{ order: 120, background: 'white', borderRadius: 16, padding: '24px 28px', color: '#0f172a' }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Todas as avaliações</div>
         <div>

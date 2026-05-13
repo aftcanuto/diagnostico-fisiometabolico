@@ -1501,3 +1501,37 @@ Validacao executada:
 - o smoke test regenerou e validou `preview-laudo.html`, `preview-dashboard-cliente.html`, `preview-dashboard-clinico.html` e `preview-laudo-full-smoke.html`;
 - os testes de formulas clinicas principais passaram;
 - o build final do Next.js passou.
+
+## Planos, central do paciente, checklist e modo apresentacao
+
+Em 13/05/2026 foi implementada uma nova rodada de evolucao do microSaaS para acompanhamento pos-laudo, fluxo multidisciplinar e seguranca antes da finalizacao.
+
+Entregue:
+
+- migration `033_planos_acao_alimentar.sql` criando `plano_acao_modelos`, `plano_alimentar_modelos` e `plano_alimentar_avaliacoes`, todas com RLS por clinica e policies com `DROP POLICY IF EXISTS`;
+- tela de Configuracoes recebeu `PlanosTemplatesPanel`, permitindo cadastrar modelos de plano de acao por objetivo e templates de plano alimentar com fator de atividade, ajuste calorico, proteina g/kg, gordura %, agua ml/kg, fibras, refeicoes, observacoes e referencias;
+- criado `src/lib/nutrition/planoAlimentar.ts` com calculo de TMB por prioridade: bioimpedancia, antropometria e fallback por Mifflin-St Jeor; o VET considera fator de atividade e ajuste calorico; macronutrientes e agua sao calculados de forma rastreavel;
+- criado `scripts/test-nutrition.ts` e comando `npm run test:nutrition`;
+- `npm run predeploy` agora inclui o teste de nutricao;
+- o checklist do modulo Revisao agora grava `checklist_finalizacao`, confirma alertas em `checklist_alertas_confirmados`, aponta valores fisiologicamente incoerentes e identifica analises de IA geradas mas ainda nao revisadas;
+- o dashboard clinico passou a ter rota dedicada de modo apresentacao em `/pacientes/[id]/apresentacao`, usando visual limpo sem botoes de edicao;
+- a ficha do paciente ganhou botao para abrir o modo apresentacao;
+- `PatientEngagementPanel` passou a funcionar como Central do paciente, com contadores de anamneses respondidas, termos aceitos, recomendacoes enviadas e links ativos;
+- `PatientDashboard` passou a exibir o plano de acao quando a conclusao global tiver `plano_acao`;
+- o PDF tambem ganhou pagina propria de Plano de acao logo depois da conclusao clinica;
+- auditoria de banco e healthcheck foram atualizados para validar as novas tabelas e colunas criticas.
+
+Validacao executada:
+
+- `npm run db:audit` passou;
+- `npm run test:full` passou e regenerou previews;
+- `npm run test:calculations` passou;
+- `npm run test:backup` passou;
+- `npm run test:nutrition` passou;
+- `npx tsc --noEmit` passou;
+- `npm run lint` passou sem avisos;
+- `npm run verify:release` passou integralmente com build final do Next.js.
+
+Observacao:
+
+- foi mantida a abordagem multidisciplinar dos templates de plano alimentar, sem rotular a funcionalidade como apenas orientativa na interface.

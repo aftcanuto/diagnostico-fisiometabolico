@@ -18,6 +18,9 @@ export interface AnaliseIA {
   mensagem_paciente?: string; tendencias?: string[]; progressos?: string[];
   regressoes?: string[]; proximos_passos?: string[];
   texto_editado?: string | null;
+  texto_paciente_editado?: string | null;
+  conteudo_paciente?: any;
+  plano_acao?: any;
 }
 export interface LaudoData {
   clinica?: ClinicaBranding | null;
@@ -1202,6 +1205,16 @@ function pgConclusao(d: LaudoData, pri: string): string {
   `}`);
 }
 
+function pgPlanoAcao(d: LaudoData, pri: string): string {
+  const c = d.analisesIA?.conclusao_global;
+  const plano = typeof c?.plano_acao === 'string' ? c.plano_acao.trim() : '';
+  if (!plano) return '';
+  return pgModulo('Plano de acao', null, `
+    <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">Prioridades, metas e recomendacoes para a proxima etapa.</p>
+    <div style="background:#ecfdf5;border-left:4px solid ${pri};border-radius:0 12px 12px 0;padding:16px 18px;font-size:12px;line-height:1.75;color:#334155;white-space:pre-line">${x(plano)}</div>
+  `);
+}
+
 function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   if (!b) return '';
   const met: any = b.metricas ?? {};
@@ -1575,6 +1588,7 @@ export function renderLaudoHTML(d: LaudoData): string {
     m.cardiorrespiratorio ? pgCardio(d.dados.cardiorrespiratorio, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio) : '',
     m.biomecanica_corrida ? pgBiomecanica(d.dados.biomecanica_corrida, ia.biomecanica_corrida, pri) : '',
     ia.conclusao_global ? pgConclusao(d, pri) : '',
+    ia.conclusao_global ? pgPlanoAcao(d, pri) : '',
     ia.evolucao           ? pgModulo('Evolução longitudinal', null,
       '<p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.</p>',
       ia.evolucao) : '',

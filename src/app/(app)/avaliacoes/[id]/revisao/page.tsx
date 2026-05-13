@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,7 @@ import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck }
 
 export default function RevisaoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [state, setState] = useState<'loading' | 'ready' | 'finalizing'>('loading');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [scores, setScores] = useState<any>(null);
@@ -44,7 +44,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       buscarModulo('flexibilidade', params.id).catch(() => null),
       buscarModulo('rml', params.id).catch(() => null),
       buscarModulo('biomecanica_corrida', params.id).catch(() => null),
-      supabase.from('analises_ia').select('tipo').eq('avaliacao_id', params.id),
+      supabase.from('analises_ia').select('tipo, texto_editado, texto_paciente_editado, conteudo, conteudo_paciente').eq('avaliacao_id', params.id),
       supabase.from('avaliacoes').select('id', { count: 'exact' })
         .eq('paciente_id', av!.paciente_id).eq('status', 'finalizada'),
     ]);
@@ -68,7 +68,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     const result = { postura, composicao_corporal: composicao, forca, flexibilidade, cardiorrespiratorio: cardio, global };
     setScores(result);
-    setChecklist(montarChecklist(av, {
+    const checklistGerado = montarChecklist(av, {
       anamnese: anData,
       sinais_vitais: svData,
       posturografia: pgData,
@@ -79,10 +79,15 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       rml: rmlData,
       cardiorrespiratorio: crData,
       biomecanica_corrida: biomecData,
-    }, result, analisesData.data ?? []));
+    }, result, analisesData.data ?? []);
+    setChecklist(checklistGerado);
 
     try {
       await upsertScores(params.id, result);
+      await supabase
+        .from('avaliacoes')
+        .update({ checklist_finalizacao: { itens: checklistGerado, gerado_em: new Date().toISOString() } })
+        .eq('id', params.id);
     } catch (error) {
       console.error('[Revisao] Nao foi possivel persistir scores', error);
     }
@@ -115,6 +120,10 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
     }
     setState('finalizing');
     try {
+      await supabase
+        .from('avaliacoes')
+        .update({ checklist_finalizacao: { itens: checklist, confirmado_em: new Date().toISOString() }, checklist_alertas_confirmados: confirmarAlertas })
+        .eq('id', params.id);
       await finalizarAvaliacao(params.id);
       setAval((a: any) => ({ ...a, status: 'finalizada' }));
       setMessage({ type: 'success', text: 'Avaliação finalizada com sucesso.' });
@@ -364,6 +373,16 @@ function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: a
     }
   }
 
+  const incoerencias = checarValoresIncoerentes(modulosDados, aval);
+  if (incoerencias.length) {
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'valores',
+      titulo: 'Valores fora da faixa esperada',
+      descricao: incoerencias.join(' | '),
+    });
+  }
+
   const scoresCriticos = Object.entries(scores ?? {})
     .filter(([k, v]) => k !== 'global' && (v == null || Number(v) === 0))
     .map(([k]) => labels[k] ?? k.replace(/_/g, ' '));
@@ -390,6 +409,18 @@ function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: a
     });
   }
 
+  const analisesNaoRevisadas = (analises ?? [])
+    .filter((a: any) => a?.tipo && (a.conteudo || a.conteudo_paciente) && !a.texto_editado && !a.texto_paciente_editado)
+    .map((a: any) => labels[a.tipo] ?? a.tipo);
+  if (analisesNaoRevisadas.length) {
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'ia',
+      titulo: 'Analises de IA ainda nao revisadas',
+      descricao: `Revise ou edite as analises antes da entrega: ${analisesNaoRevisadas.join(', ')}.`,
+    });
+  }
+
   const publicos = modulosDados.anamnese?.respostas?.__campos_publicos_relatorio;
   if (publicos && Object.values(publicos).some(Boolean)) {
     itens.push({
@@ -411,6 +442,36 @@ function temDadosModulo(dados: any) {
     if (typeof v === 'object') return Object.keys(v as any).length > 0;
     return true;
   });
+}
+
+function checarValoresIncoerentes(modulosDados: Record<string, any>, aval: any) {
+  const avisos: string[] = [];
+  const sv = modulosDados.sinais_vitais ?? {};
+  const bio = modulosDados.bioimpedancia ?? {};
+  const ant = modulosDados.antropometria ?? {};
+  const cardio = modulosDados.cardiorrespiratorio ?? {};
+  const flex = modulosDados.flexibilidade ?? {};
+  const idade = aval?.pacientes?.data_nascimento ? calcIdade(aval.pacientes.data_nascimento) : null;
+
+  addRange(avisos, 'FC repouso', sv.fc_repouso, 30, 220, 'bpm');
+  addRange(avisos, 'SpO2', sv.spo2, 70, 100, '%');
+  addRange(avisos, 'Temperatura', sv.temperatura, 30, 43, 'C');
+  addRange(avisos, 'Frequencia respiratoria', sv.fr, 4, 60, 'irpm');
+  addRange(avisos, 'Peso', ant.peso ?? bio.peso_kg, 25, 350, 'kg');
+  addRange(avisos, 'Estatura', ant.estatura ?? bio.altura_cm, 100, 230, 'cm');
+  addRange(avisos, 'IMC', ant.imc ?? bio.imc, 10, 80, '');
+  addRange(avisos, 'Gordura corporal', ant.percentual_gordura ?? bio.percentual_gordura, 3, 70, '%');
+  addRange(avisos, 'VO2max', cardio.vo2max, 5, 90, 'ml/kg/min');
+  addRange(avisos, 'Flexibilidade Banco de Wells', flex.melhor_resultado, -40, 80, 'cm');
+  if (idade != null && (idade < 5 || idade > 110)) avisos.push(`Idade calculada fora do esperado: ${idade} anos`);
+  return avisos;
+}
+
+function addRange(avisos: string[], label: string, valor: any, min: number, max: number, unidade: string) {
+  if (valor == null || valor === '') return;
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return;
+  if (n < min || n > max) avisos.push(`${label}: ${n}${unidade ? ` ${unidade}` : ''}`);
 }
 
 function Stat({ label, value, sub }: { label: string; value: any; sub?: string }) {

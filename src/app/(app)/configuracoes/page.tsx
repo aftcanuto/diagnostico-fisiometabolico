@@ -5,6 +5,7 @@ import { BookOpen, Shield } from 'lucide-react';
 import { AvaliadorPerfilForm } from '@/components/forms/AvaliadorPerfilForm';
 import { ConsentimentosConfigPanel } from '@/components/forms/ConsentimentosConfigPanel';
 import { ProtocolosConfigPanel } from '@/components/forms/ProtocolosConfigPanel';
+import { PlanosTemplatesPanel } from '@/components/forms/PlanosTemplatesPanel';
 
 export default async function ConfiguracoesPage() {
   const supabase = createClient();
@@ -75,6 +76,7 @@ export default async function ConfiguracoesPage() {
         <>
           <ConsentimentosConfigPanel clinicaId={clinicaId} />
           <ProtocolosConfigPanel clinicaId={clinicaId} />
+          <PlanosTemplatesPanel clinicaId={clinicaId} />
           <PdfConfigForm
             clinicaId={clinicaId}
             config={config ?? null}
