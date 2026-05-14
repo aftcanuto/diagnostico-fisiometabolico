@@ -80,7 +80,10 @@ export async function GET(req: NextRequest) {
       aval.clinica_id
         ? admin.from('clinicas').select('*').eq('id', aval.clinica_id).single()
         : Promise.resolve({ data: null, error: null }),
-      admin.from('analises_ia').select('tipo, conteudo, texto_editado').eq('avaliacao_id', avaliacaoId),
+      admin
+        .from('analises_ia')
+        .select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao')
+        .eq('avaliacao_id', avaliacaoId),
     ]);
 
     // pdf_config separado — tabela pode ainda não existir se migration 013 não foi aplicada
@@ -101,7 +104,13 @@ export async function GET(req: NextRequest) {
     // Mapa de análises IA
     const analisesMap: Record<string, any> = {};
     (analises.data ?? []).forEach((a: any) => {
-      analisesMap[a.tipo] = { ...a.conteudo, texto_editado: a.texto_editado };
+      analisesMap[a.tipo] = {
+        ...a.conteudo,
+        texto_editado: a.texto_editado,
+        conteudo_paciente: a.conteudo_paciente,
+        texto_paciente_editado: a.texto_paciente_editado,
+        plano_acao: a.plano_acao,
+      };
     });
 
     // Renderizar HTML

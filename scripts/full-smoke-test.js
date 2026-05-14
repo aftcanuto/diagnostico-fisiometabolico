@@ -217,6 +217,33 @@ function main() {
     'text/csv; charset=utf-8',
     'backup-avaliacoes-',
   ]);
+  assertCodigoContem('src/app/api/pdf/route.ts', [
+    'conteudo_paciente',
+    'texto_paciente_editado',
+    'plano_acao',
+  ]);
+  assertCodigoContem('src/app/api/pdf/publico/route.ts', [
+    "aval.status !== 'finalizada'",
+    'conteudo_paciente',
+    'texto_paciente_editado',
+    'plano_acao',
+    'Cache-Control',
+  ]);
+  assertCodigoContem('src/app/api/ia/gerar/route.ts', [
+    'usuarioPodeAcessarAvaliacao',
+    'TIPOS_IA',
+    'IA nao habilitada para sua clinica',
+  ]);
+  assertCodigoContem('src/app/api/ia/editar/route.ts', [
+    'usuarioPodeAcessarAvaliacao',
+    'TIPOS_IA',
+    'createAdminClient',
+  ]);
+  assertCodigoContem('src/app/p/[token]/page.tsx', [
+    'conteudo_paciente',
+    'texto_paciente_editado',
+    'plano_acao',
+  ]);
 
   console.log(JSON.stringify({
     ok: true,

@@ -37,7 +37,7 @@ export default async function PortalPacientePage({ params }: { params: { token: 
         sinais_vitais(*),
         anamnese(*),
         biomecanica_corrida(*),
-        analises_ia(tipo, conteudo, texto_editado, gerado_em)
+        analises_ia(tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, gerado_em)
       `)
       .eq('paciente_id', tok.paciente_id)
       .eq('status', 'finalizada')
@@ -60,7 +60,14 @@ export default async function PortalPacientePage({ params }: { params: { token: 
     const analises = Array.isArray(a.analises_ia)
       ? Object.fromEntries(a.analises_ia.map((ia: any) => [
           ia.tipo,
-          { conteudo: ia.conteudo, texto_editado: ia.texto_editado, gerado_em: ia.gerado_em },
+          {
+            conteudo: ia.conteudo,
+            texto_editado: ia.texto_editado,
+            conteudo_paciente: ia.conteudo_paciente,
+            texto_paciente_editado: ia.texto_paciente_editado,
+            plano_acao: ia.plano_acao,
+            gerado_em: ia.gerado_em,
+          },
         ]))
       : {};
 

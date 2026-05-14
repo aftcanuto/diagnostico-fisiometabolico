@@ -1535,3 +1535,33 @@ Validacao executada:
 Observacao:
 
 - foi mantida a abordagem multidisciplinar dos templates de plano alimentar, sem rotular a funcionalidade como apenas orientativa na interface.
+
+## Auditoria completa, IA no PDF/portal e seguranca do PDF publico
+
+Em 14/05/2026 foi executada uma auditoria criteriosa do fluxo de avaliacao, dashboards, PDF, IA, backup, banco e seguranca.
+
+Correcoes aplicadas:
+
+- o PDF autenticado agora carrega tambem `conteudo_paciente`, `texto_paciente_editado` e `plano_acao` das analises de IA, garantindo que a versao revisada/simplificada e o plano de acao cheguem ao relatorio;
+- o PDF publico por token passou a bloquear avaliacoes que nao estejam `finalizada`, evitando exposicao de laudo em andamento por link de paciente;
+- o PDF publico tambem passou a enviar `Cache-Control: no-store, private`;
+- o portal do paciente passou a receber `conteudo_paciente`, `texto_paciente_editado` e `plano_acao` nas avaliacoes finalizadas;
+- o smoke test passou a validar esses campos nos fluxos de PDF autenticado, PDF publico e portal do paciente, alem da trava de status finalizado no PDF publico.
+
+Validacao executada:
+
+- `npm run verify:release` passou integralmente antes das correcoes e sera mantido como validacao obrigatoria apos cada mudanca;
+- `npm audit --omit=dev --json` nao pode ser concluido neste ambiente por bloqueio de rede ao registry do npm; repetir em ambiente com internet liberada antes de deploy critico;
+- busca local por chaves e secrets fora de `.env.local` nao encontrou exposicao de `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, anon key ou tokens sensiveis em arquivos versionados.
+
+## Correcao de permissao na geracao e edicao de IA
+
+Em 14/05/2026 foi corrigido o erro `sem permissao para esta avaliacao` ao gerar analises de IA pela revisao.
+
+Correcoes aplicadas:
+
+- a validacao de acesso a uma avaliacao foi centralizada em `src/lib/api/permissions.ts`, aceitando avaliador responsavel, membro ativo da clinica ou visibilidade por RLS;
+- `POST /api/ia/gerar` deixou de depender apenas de `current_clinica_id()` e passou a validar acesso pela avaliacao real antes de checar se a IA esta habilitada na clinica;
+- `POST /api/ia/editar` recebeu a mesma validacao explicita de permissao e passou a usar `service_role` somente depois da permissao confirmada;
+- a geracao e a edicao de IA agora validam o tipo contra a lista oficial de 12 analises: anamnese, sinais vitais, posturografia, bioimpedancia, antropometria, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica da corrida, conclusao global e evolucao;
+- o smoke test passou a garantir que as rotas de IA usem a permissao centralizada e a lista oficial de tipos.

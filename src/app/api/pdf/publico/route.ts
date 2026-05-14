@@ -53,6 +53,9 @@ export async function GET(req: NextRequest) {
   if (!aval || aval.paciente_id !== tok.paciente_id) {
     return NextResponse.json({ error: 'acesso negado' }, { status: 403 });
   }
+  if (aval.status !== 'finalizada') {
+    return NextResponse.json({ error: 'avaliacao ainda nao liberada' }, { status: 403 });
+  }
 
   const [anamnese, sinais_vitais, posturografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
     supabase.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -69,12 +72,21 @@ export async function GET(req: NextRequest) {
     supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', tok.avaliador_id).maybeSingle(),
     supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).maybeSingle(),
     aval.clinica_id ? supabase.from('clinicas').select('*').eq('id', aval.clinica_id).single() : Promise.resolve({ data: null }),
-    supabase.from('analises_ia').select('tipo, conteudo, texto_editado').eq('avaliacao_id', avaliacaoId),
+    supabase
+      .from('analises_ia')
+      .select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao')
+      .eq('avaliacao_id', avaliacaoId),
   ]);
 
   const analisesMap: Record<string, any> = {};
   (analises.data ?? []).forEach((a: any) => {
-    analisesMap[a.tipo] = { ...a.conteudo, texto_editado: a.texto_editado };
+    analisesMap[a.tipo] = {
+      ...a.conteudo,
+      texto_editado: a.texto_editado,
+      conteudo_paciente: a.conteudo_paciente,
+      texto_paciente_editado: a.texto_paciente_editado,
+      plano_acao: a.plano_acao,
+    };
   });
 
   const dadosLaudo = {
@@ -115,6 +127,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(Buffer.from(pdf), {
       headers: {
         'Content-Type': 'application/pdf',
+        'Cache-Control': 'no-store, private',
         'Content-Disposition': `inline; filename="laudo-${aval.pacientes.nome.replace(/\s+/g, '_')}-${aval.data}.pdf"`,
       },
     });

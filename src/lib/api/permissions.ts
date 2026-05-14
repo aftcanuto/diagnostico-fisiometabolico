@@ -44,6 +44,60 @@ export async function usuarioPodeAcessarPaciente(userId: string, pacienteId: str
   return !erroMembro && !!membro;
 }
 
+export async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) {
+  const supabase = createClient();
+  const { data: avaliacaoVisivel } = await supabase
+    .from('avaliacoes')
+    .select('id')
+    .eq('id', avaliacaoId)
+    .maybeSingle();
+
+  if (avaliacaoVisivel?.id) return true;
+
+  const admin = createAdminClient();
+  const { data: avaliacao, error: erroAvaliacao } = await admin
+    .from('avaliacoes')
+    .select('id, clinica_id, avaliador_id, paciente_id')
+    .eq('id', avaliacaoId)
+    .maybeSingle();
+
+  if (erroAvaliacao || !avaliacao) return false;
+  if (avaliacao.avaliador_id === userId) return true;
+
+  if (avaliacao.clinica_id) {
+    const { data: membro, error: erroMembro } = await admin
+      .from('clinica_membros')
+      .select('id')
+      .eq('clinica_id', avaliacao.clinica_id)
+      .eq('user_id', userId)
+      .eq('ativo', true)
+      .maybeSingle();
+
+    if (!erroMembro && !!membro) return true;
+  }
+
+  if (!avaliacao.paciente_id) return false;
+  const { data: paciente, error: erroPaciente } = await admin
+    .from('pacientes')
+    .select('avaliador_id, clinica_id')
+    .eq('id', avaliacao.paciente_id)
+    .maybeSingle();
+
+  if (erroPaciente || !paciente) return false;
+  if (paciente.avaliador_id === userId) return true;
+
+  if (!paciente.clinica_id) return false;
+  const { data: membroPaciente, error: erroMembroPaciente } = await admin
+    .from('clinica_membros')
+    .select('id')
+    .eq('clinica_id', paciente.clinica_id)
+    .eq('user_id', userId)
+    .eq('ativo', true)
+    .maybeSingle();
+
+  return !erroMembroPaciente && !!membroPaciente;
+}
+
 export async function templateAnamneseAtivoDaClinica(templateId: string, clinicaId: string) {
   const admin = createAdminClient();
   const { data } = await admin
