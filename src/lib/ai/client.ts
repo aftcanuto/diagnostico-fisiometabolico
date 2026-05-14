@@ -37,6 +37,50 @@ const CLAUDE_FALLBACKS = [
   'claude-3-5-haiku-20241022',
 ];
 
+const ANALISE_JSON_TOOL = {
+  name: 'emitir_analise_json',
+  description: 'Retorna a analise clinica em JSON estruturado para o sistema.',
+  input_schema: {
+    type: 'object',
+    additionalProperties: true,
+    properties: {
+      resumo_clinico: { type: 'string' },
+      resumo_executivo: { type: 'string' },
+      interpretacao: { type: 'string' },
+      achados: { type: 'array', items: { type: 'string' } },
+      principais_achados: { type: 'array', items: { type: 'string' } },
+      pontos_fortes: { type: 'array', items: { type: 'string' } },
+      pontos_criticos: { type: 'array', items: { type: 'string' } },
+      riscos: { type: 'array', items: { type: 'string' } },
+      riscos_atencoes: { type: 'array', items: { type: 'string' } },
+      beneficios: { type: 'array', items: { type: 'string' } },
+      recomendacoes: { type: 'array', items: { type: 'string' } },
+      recomendacoes_praticas: { type: 'array', items: { type: 'string' } },
+      encaminhamento: { type: 'string' },
+      limitacoes: { type: 'string' },
+      versao_paciente: { type: 'string' },
+      mensagem_paciente: { type: 'string' },
+      alertas: { type: 'array', items: { type: 'string' } },
+      prioridades: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            titulo: { type: 'string' },
+            acao: { type: 'string' },
+            prazo: { type: 'string' },
+          },
+        },
+      },
+      tendencias: { type: 'array', items: { type: 'string' } },
+      progressos: { type: 'array', items: { type: 'string' } },
+      regressoes: { type: 'array', items: { type: 'string' } },
+      proximos_passos: { type: 'array', items: { type: 'string' } },
+    },
+  },
+};
+
 function normalizarModeloClaude(modelo?: string) {
   if (!modelo || modelo === 'claude-sonnet-4-5') return CLAUDE_DEFAULT;
   return modelo;
@@ -96,6 +140,12 @@ async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LL
     temperature: opts.temperature ?? 0.4,
     system,
     messages: [{ role: 'user', content: opts.user }],
+    ...(opts.json
+      ? {
+          tools: [ANALISE_JSON_TOOL],
+          tool_choice: { type: 'tool', name: ANALISE_JSON_TOOL.name },
+        }
+      : {}),
   };
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -119,7 +169,13 @@ async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LL
   }
   const data = await res.json();
 
-  const text = data.content?.[0]?.text ?? '';
+  const toolUse = Array.isArray(data.content)
+    ? data.content.find((item: any) => item?.type === 'tool_use' && item?.name === ANALISE_JSON_TOOL.name)
+    : null;
+  const textBlock = Array.isArray(data.content)
+    ? data.content.find((item: any) => item?.type === 'text' && item?.text)
+    : null;
+  const text = toolUse?.input ? JSON.stringify(toolUse.input) : (textBlock?.text ?? '');
   const tokensIn = data.usage?.input_tokens ?? 0;
   const tokensOut = data.usage?.output_tokens ?? 0;
   const price = (PRICING as any)[modelo] ?? PRICING[CLAUDE_DEFAULT];

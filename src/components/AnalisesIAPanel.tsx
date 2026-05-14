@@ -4,7 +4,6 @@ import { Card, CardBody, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Input';
 import { Sparkles, Loader2, Check, Edit3, Save, X } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 const MODULOS: { tipo: string; label: string }[] = [
   { tipo: 'anamnese', label: 'Anamnese' },
@@ -28,7 +27,6 @@ interface Props {
 }
 
 export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasAvaliacoes }: Props) {
-  const supabase = createClient();
   const [analises, setAnalises] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<string | null>(null);
   const [editando, setEditando] = useState<string | null>(null);
@@ -37,13 +35,21 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   const [rascunhoPlano, setRascunhoPlano] = useState<string>('');
 
   useEffect(() => {
-    supabase.from('analises_ia').select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, modelo_ia, gerado_em')
-      .eq('avaliacao_id', avaliacaoId).then(({ data }) => {
+    fetch(`/api/ia/editar?avaliacaoId=${encodeURIComponent(avaliacaoId)}`, { cache: 'no-store' })
+      .then(async res => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error ?? 'Erro ao carregar analises');
+        return json.data ?? [];
+      })
+      .then((data: any[]) => {
         const map: Record<string, any> = {};
         (data ?? []).forEach(a => { map[a.tipo] = a; });
         setAnalises(map);
+      })
+      .catch((error) => {
+        console.error('[AnalisesIAPanel] Nao foi possivel carregar analises', error);
       });
-  }, [avaliacaoId, supabase]);
+  }, [avaliacaoId]);
 
   async function gerar(tipo: string) {
     setLoading(tipo);
@@ -61,7 +67,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   }
 
   async function salvarEdicao(tipo: string) {
-    await fetch('/api/ia/editar', {
+    const res = await fetch('/api/ia/editar', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         avaliacaoId,
@@ -71,6 +77,11 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
         planoAcao: tipo === 'conclusao_global' ? rascunhoPlano : undefined,
       }),
     });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(json.error ?? 'Erro ao salvar analise');
+      return;
+    }
     setAnalises(a => ({
       ...a,
       [tipo]: {
@@ -121,7 +132,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                       setEditando(m.tipo);
                       setRascunho(a.texto_editado || renderizarTextoBase(a.conteudo));
                       setRascunhoPaciente(a.texto_paciente_editado || renderizarTextoBase(a.conteudo_paciente) || resumirParaPaciente(a.texto_editado || renderizarTextoBase(a.conteudo)));
-                      setRascunhoPlano(a.plano_acao || '');
+                      setRascunhoPlano(renderizarTextoBase(a.plano_acao));
                     }}><Edit3 className="w-3 h-3" /></Button>
                   )}
                   <Button size="sm" variant="secondary" onClick={() => gerar(m.tipo)} disabled={loading === m.tipo}>

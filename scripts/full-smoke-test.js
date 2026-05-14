@@ -249,6 +249,25 @@ function main() {
     'usuarioPodeAcessarAvaliacao',
     'TIPOS_IA',
     'createAdminClient',
+    'export async function GET',
+  ]);
+  assertCodigoContem('src/lib/ai/client.ts', [
+    'emitir_analise_json',
+    'tool_choice',
+    'tool_use',
+  ]);
+  assertCodigoContem('src/components/AnalisesIAPanel.tsx', [
+    '/api/ia/editar?avaliacaoId=',
+  ]);
+  assertCodigoContem('src/app/(app)/avaliacoes/[id]/revisao/page.tsx', [
+    "method: 'PATCH'",
+    "method: 'POST'",
+    'checklistFinalizacao',
+  ]);
+  assertCodigoContem('supabase/migrations/034_ia_revisao_schema_alignment.sql', [
+    'conteudo_paciente jsonb',
+    'checklist_finalizacao jsonb',
+    'analises_ia_avaliacao_tipo_uidx',
   ]);
   assertCodigoContem('src/app/p/[token]/page.tsx', [
     'conteudo_paciente',

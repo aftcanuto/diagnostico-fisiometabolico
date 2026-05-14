@@ -1576,3 +1576,24 @@ Correcoes aplicadas:
 - a chamada Claude passou a reforcar explicitamente que a resposta deve ser apenas um objeto JSON valido;
 - o parser de IA agora aceita JSON puro, JSON dentro de markdown, JSON embutido em texto e, se a IA retornar texto livre, converte esse conteudo em uma analise revisavel em vez de quebrar com erro 500;
 - o smoke test passou a validar os quatro cenarios do parser, incluindo fallback para texto livre.
+
+## IA estruturada e revisao sem escrita direta no Supabase
+
+Em 14/05/2026 foi aplicada uma segunda correcao no modulo Revisao apos aparecerem erros `400 Bad Request` ao carregar analises, salvar revisao de IA e finalizar avaliacao.
+
+Correcoes aplicadas:
+
+- `src/lib/ai/client.ts` passou a usar `tool_choice` com a ferramenta `emitir_analise_json` nas chamadas Claude quando a resposta precisa ser JSON, reduzindo drasticamente respostas em texto livre e mantendo o retorno em objeto estruturado;
+- a resposta `tool_use` da Claude agora e convertida para string JSON antes de entrar no parser, preservando os campos clinicos usados por dashboards e PDF;
+- `GET /api/ia/editar` foi criado para carregar analises de IA via rota segura com validacao de acesso, evitando leitura direta de `analises_ia` pelo navegador;
+- `AnalisesIAPanel` passou a carregar analises por `/api/ia/editar?avaliacaoId=...` e a validar erro ao salvar edicoes;
+- o campo `plano_acao` passou a ser persistido como JSONB `{ texto }`, evitando erro de tipo no Supabase;
+- `PATCH /api/avaliacoes/[id]/finalizar` foi criado para salvar o checklist de finalizacao sem `PATCH` direto em `avaliacoes` pelo client;
+- o botao Finalizar agora envia checklist e confirmacao de alertas pela rota segura `POST /api/avaliacoes/[id]/finalizar`;
+- criada migration `034_ia_revisao_schema_alignment.sql` garantindo colunas de IA revisada, checklist de finalizacao e indice unico para `analises_ia(avaliacao_id, tipo)`.
+
+Validacao esperada:
+
+- aplicar a migration `034_ia_revisao_schema_alignment.sql` no Supabase antes do redeploy;
+- rodar `npm run verify:release`;
+- testar na Revisao: carregar analises, gerar IA, editar/salvar uma analise e finalizar avaliacao sem erros 400 no console.

@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Gauge } from '@/components/ui/Gauge';
 import { AnalisesIAPanel } from '@/components/AnalisesIAPanel';
-import { buscarModulo, finalizarAvaliacao, upsertScores } from '@/lib/modulos';
+import { buscarModulo, upsertScores } from '@/lib/modulos';
 import { createClient } from '@/lib/supabase/client';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
@@ -33,6 +33,17 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       .select('*, pacientes(*)').eq('id', params.id).single();
     setAval(av);
 
+    const analisesPromise = fetch(`/api/ia/editar?avaliacaoId=${encodeURIComponent(params.id)}`, { cache: 'no-store' })
+      .then(async res => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error ?? 'Erro ao carregar analises');
+        return { data: json.data ?? [] };
+      })
+      .catch((error) => {
+        console.error('[Revisao] Nao foi possivel carregar analises', error);
+        return { data: [] };
+      });
+
     const [anData, svData, antData, bioData, foData, crData, pgData, flData, rmlData, biomecData, analisesData, outras] = await Promise.all([
       buscarModulo('anamnese', params.id).catch(() => null),
       buscarModulo('sinais_vitais', params.id).catch(() => null),
@@ -44,7 +55,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       buscarModulo('flexibilidade', params.id).catch(() => null),
       buscarModulo('rml', params.id).catch(() => null),
       buscarModulo('biomecanica_corrida', params.id).catch(() => null),
-      supabase.from('analises_ia').select('tipo, texto_editado, texto_paciente_editado, conteudo, conteudo_paciente').eq('avaliacao_id', params.id),
+      analisesPromise,
       supabase.from('avaliacoes').select('id', { count: 'exact' })
         .eq('paciente_id', av!.paciente_id).eq('status', 'finalizada'),
     ]);
@@ -84,10 +95,13 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     try {
       await upsertScores(params.id, result);
-      await supabase
-        .from('avaliacoes')
-        .update({ checklist_finalizacao: { itens: checklistGerado, gerado_em: new Date().toISOString() } })
-        .eq('id', params.id);
+      await fetch(`/api/avaliacoes/${params.id}/finalizar`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          checklistFinalizacao: { itens: checklistGerado, gerado_em: new Date().toISOString() },
+        }),
+      });
     } catch (error) {
       console.error('[Revisao] Nao foi possivel persistir scores', error);
     }
@@ -120,11 +134,16 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
     }
     setState('finalizing');
     try {
-      await supabase
-        .from('avaliacoes')
-        .update({ checklist_finalizacao: { itens: checklist, confirmado_em: new Date().toISOString() }, checklist_alertas_confirmados: confirmarAlertas })
-        .eq('id', params.id);
-      await finalizarAvaliacao(params.id);
+      const res = await fetch(`/api/avaliacoes/${params.id}/finalizar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          checklistFinalizacao: { itens: checklist, confirmado_em: new Date().toISOString() },
+          checklistAlertasConfirmados: confirmarAlertas,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel finalizar a avaliacao.');
       setAval((a: any) => ({ ...a, status: 'finalizada' }));
       setMessage({ type: 'success', text: 'Avaliação finalizada com sucesso.' });
       router.refresh();
