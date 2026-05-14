@@ -1,9 +1,7 @@
 /**
- * Cliente de IA unificado. Detecta automaticamente qual provedor usar
- * com base nas variáveis de ambiente:
- *   - ANTHROPIC_API_KEY  → usa Claude
- *   - OPENAI_API_KEY     → usa GPT
- * Se nenhum estiver configurado, lança erro claro.
+ * Cliente de IA unificado. Detecta automaticamente qual provedor usar:
+ * - ANTHROPIC_API_KEY usa Claude
+ * - OPENAI_API_KEY usa GPT
  */
 
 export interface LLMOptions {
@@ -88,11 +86,15 @@ async function callClaude(opts: LLMOptions): Promise<LLMResponse> {
 }
 
 async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LLMResponse> {
+  const system = opts.system + (opts.json
+    ? '\n\nResponda APENAS com um objeto JSON valido. Nao use markdown, nao use ``` e nao escreva texto antes ou depois do JSON.'
+    : '');
+
   const body: any = {
     model: modelo,
     max_tokens: opts.maxTokens ?? 1500,
     temperature: opts.temperature ?? 0.4,
-    system: opts.system + (opts.json ? '\n\nResponda APENAS com JSON válido, sem markdown, sem explicações.' : ''),
+    system,
     messages: [{ role: 'user', content: opts.user }],
   };
 
@@ -133,7 +135,7 @@ async function callOpenAI(opts: LLMOptions): Promise<LLMResponse> {
     max_tokens: opts.maxTokens ?? 1500,
     temperature: opts.temperature ?? 0.4,
     messages: [
-      { role: 'system', content: opts.system + (opts.json ? '\n\nResponda APENAS com JSON válido.' : '') },
+      { role: 'system', content: opts.system + (opts.json ? '\n\nResponda APENAS com JSON valido.' : '') },
       { role: 'user', content: opts.user },
     ],
     ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
@@ -159,14 +161,64 @@ async function callOpenAI(opts: LLMOptions): Promise<LLMResponse> {
   return { text, modelo, tokensIn, tokensOut, custoUsd };
 }
 
-/** Extrai JSON do texto retornado (lida com possíveis fences markdown). */
 export function parseJSON(txt: string): any {
-  const clean = txt.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
+  const clean = txt.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+  if (!clean) throw new Error('Resposta da IA vazia');
+
   try { return JSON.parse(clean); }
-  catch { 
-    // tenta achar o primeiro { ... } válido
-    const m = clean.match(/\{[\s\S]*\}/);
-    if (m) return JSON.parse(m[0]);
-    throw new Error('Resposta da IA não é JSON válido');
+  catch {
+    const bloco = extrairBlocoJson(clean);
+    if (bloco) {
+      try { return JSON.parse(bloco); } catch {}
+    }
+
+    return {
+      resumo_clinico: 'A IA retornou uma analise em texto livre. Revise o conteudo antes de liberar ao paciente.',
+      achados: [],
+      principais_achados: [],
+      interpretacao: clean,
+      riscos: [],
+      riscos_atencoes: [],
+      beneficios: [],
+      recomendacoes: [],
+      recomendacoes_praticas: [],
+      encaminhamento: '',
+      limitacoes: 'Resposta convertida automaticamente porque o modelo nao retornou JSON estruturado.',
+      versao_paciente: 'A analise foi gerada e deve ser revisada pelo avaliador antes da liberacao.',
+      alertas: ['Revisar e salvar a analise antes de finalizar o laudo.'],
+    };
   }
+}
+
+function extrairBlocoJson(txt: string) {
+  const inicio = txt.search(/[\{\[]/);
+  if (inicio < 0) return null;
+
+  const abre = txt[inicio];
+  const fecha = abre === '{' ? '}' : ']';
+  let profundidade = 0;
+  let emString = false;
+  let escape = false;
+
+  for (let i = inicio; i < txt.length; i += 1) {
+    const ch = txt[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      emString = !emString;
+      continue;
+    }
+    if (emString) continue;
+    if (ch === abre) profundidade += 1;
+    if (ch === fecha) profundidade -= 1;
+    if (profundidade === 0) return txt.slice(inicio, i + 1);
+  }
+
+  return null;
 }

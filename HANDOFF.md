@@ -1565,3 +1565,14 @@ Correcoes aplicadas:
 - `POST /api/ia/editar` recebeu a mesma validacao explicita de permissao e passou a usar `service_role` somente depois da permissao confirmada;
 - a geracao e a edicao de IA agora validam o tipo contra a lista oficial de 12 analises: anamnese, sinais vitais, posturografia, bioimpedancia, antropometria, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica da corrida, conclusao global e evolucao;
 - o smoke test passou a garantir que as rotas de IA usem a permissao centralizada e a lista oficial de tipos.
+
+## Robustez para respostas de IA fora de JSON
+
+Em 14/05/2026 foi corrigido o erro `Resposta da IA nao e JSON valido`.
+
+Correcoes aplicadas:
+
+- `src/lib/ai/client.ts` foi normalizado para evitar caracteres corrompidos em mensagens internas;
+- a chamada Claude passou a reforcar explicitamente que a resposta deve ser apenas um objeto JSON valido;
+- o parser de IA agora aceita JSON puro, JSON dentro de markdown, JSON embutido em texto e, se a IA retornar texto livre, converte esse conteudo em uma analise revisavel em vez de quebrar com erro 500;
+- o smoke test passou a validar os quatro cenarios do parser, incluindo fallback para texto livre.

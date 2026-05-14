@@ -38,6 +38,7 @@ require('./preview-dashboard-cliente.tsx');
 require('./preview-dashboard-clinico.tsx');
 const { renderLaudoHTML } = require('../src/lib/pdf/template.ts');
 const P = require('../src/lib/ai/prompts.ts');
+const { parseJSON } = require('../src/lib/ai/client.ts');
 
 const tipos = [
   'anamnese',
@@ -145,6 +146,15 @@ function testarPrompts() {
   }
 }
 
+function testarParserIA() {
+  assert(parseJSON('{"ok":true}').ok === true, 'Parser IA falhou com JSON puro');
+  assert(parseJSON('```json\n{"ok":true}\n```').ok === true, 'Parser IA falhou com fence markdown');
+  assert(parseJSON('Texto antes {"ok":true} texto depois').ok === true, 'Parser IA falhou ao extrair JSON embutido');
+  const fallback = parseJSON('Analise textual sem JSON estruturado.');
+  assert(fallback.interpretacao.includes('Analise textual'), 'Parser IA deveria converter texto livre em analise revisavel');
+  assert(Array.isArray(fallback.alertas) && fallback.alertas.length > 0, 'Parser IA deveria sinalizar revisao em texto livre');
+}
+
 function assertCodigoContem(file, trechos) {
   const conteudo = fs.readFileSync(path.join(root, file), 'utf8');
   for (const trecho of trechos) {
@@ -161,6 +171,7 @@ function main() {
   assert((dadosLaudo.dados.forca?.tracao_testes ?? []).length >= 7, 'Tração deveria cobrir todos os testes de referência simulados');
 
   testarPrompts();
+  testarParserIA();
 
   const fullData = { ...dadosLaudo, analisesIA };
   const fullHtml = renderLaudoHTML(fullData);
