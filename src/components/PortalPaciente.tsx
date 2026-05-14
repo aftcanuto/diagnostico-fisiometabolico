@@ -289,6 +289,8 @@ function ModuleScoreBadge({score}:{score?:any}) {
 function normalizarUrl(url?: string | null) {
   const limpo = String(url ?? '').trim();
   if (!limpo) return '';
+  const semProtocolo = limpo.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/g, '').toLowerCase();
+  if (semProtocolo === 'medfit.com.br') return 'https://medfit.med.br';
   if (/^https?:\/\//i.test(limpo)) return limpo;
   return `https://${limpo.replace(/^\/+/, '')}`;
 }

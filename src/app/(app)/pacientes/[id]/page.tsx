@@ -95,14 +95,9 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
           <ArrowLeft className="w-4 h-4" /> Pacientes
         </Link>
         <div className="flex gap-2">
-          {avaliacoes.length > 0 && (
-            <Link href={`/pacientes/${p.id}/apresentacao`}>
-              <Button variant="secondary"><Eye className="w-4 h-4" /> Modo apresentacao</Button>
-            </Link>
-          )}
-        <Link href={`/avaliacoes/nova?pacienteId=${p.id}`}>
-          <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>
-        </Link>
+          <Link href={`/avaliacoes/nova?pacienteId=${p.id}`}>
+            <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>
+          </Link>
         </div>
       </div>
 

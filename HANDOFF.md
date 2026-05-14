@@ -1597,3 +1597,41 @@ Validacao esperada:
 - aplicar a migration `034_ia_revisao_schema_alignment.sql` no Supabase antes do redeploy;
 - rodar `npm run verify:release`;
 - testar na Revisao: carregar analises, gerar IA, editar/salvar uma analise e finalizar avaliacao sem erros 400 no console.
+
+## Correcao do link de site no portal do paciente
+
+Em 14/05/2026 foi corrigido o botao `Site` do portal do paciente para nao direcionar mais ao dominio legado `medfit.com.br`.
+
+Correcoes aplicadas:
+
+- `PortalPaciente` agora normaliza registros antigos de `medfit.com.br` ou `www.medfit.com.br` para `https://medfit.med.br`;
+- criada migration `035_fix_medfit_site_domain.sql` para atualizar no banco cadastros de clinica que ainda estejam com o dominio legado;
+- o smoke test passou a validar que o portal e a migration contem a correcao do dominio.
+
+Validacao esperada:
+
+- aplicar a migration `035_fix_medfit_site_domain.sql` no Supabase;
+- fazer redeploy e abrir um link do portal do paciente;
+- passar o mouse/clicar no botao `Site` e confirmar destino `https://medfit.med.br`.
+
+## Remocao do modo apresentacao da ficha do paciente
+
+Em 14/05/2026 foi removido o botao `Modo apresentacao` da ficha do paciente.
+
+Motivo:
+
+- o modo ficou redundante com o portal/painel do paciente, que ja e a visualizacao adequada para mostrar resultados durante a devolutiva;
+- o usuario relatou instabilidade nesse modo dedicado e preferiu centralizar a apresentacao no painel do paciente.
+
+Correcoes aplicadas:
+
+- removido o atalho visual da pagina `src/app/(app)/pacientes/[id]/page.tsx`;
+- removida a pagina dedicada `src/app/(app)/pacientes/[id]/apresentacao/page.tsx`, encerrando o modo redundante tambem por URL direta;
+- mantido o icone `Eye` porque ele ainda e usado no botao `Ver` das avaliacoes finalizadas;
+- a criacao de nova avaliacao e o painel do paciente permanecem inalterados.
+
+Validacao executada:
+
+- `npm run verify:release` passou apos a remocao do botao;
+- `npm run verify:release` passou novamente apos remover a rota dedicada;
+- abrir a ficha de um paciente e confirmar que resta apenas o botao `Nova avaliacao` no topo.

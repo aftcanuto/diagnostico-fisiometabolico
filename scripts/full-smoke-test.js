@@ -274,6 +274,14 @@ function main() {
     'texto_paciente_editado',
     'plano_acao',
   ]);
+  assertCodigoContem('src/components/PortalPaciente.tsx', [
+    'medfit.com.br',
+    'medfit.med.br',
+  ]);
+  assertCodigoContem('supabase/migrations/035_fix_medfit_site_domain.sql', [
+    "site = 'medfit.med.br'",
+    'medfit.com.br',
+  ]);
 
   console.log(JSON.stringify({
     ok: true,
