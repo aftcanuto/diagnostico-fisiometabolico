@@ -10,9 +10,9 @@ export async function middleware(request: NextRequest) {
       cookies: {
         get: (n: string) => request.cookies.get(n)?.value,
         set: (n: string, v: string, o: any) => response.cookies.set({ name: n, value: v, ...o }),
-        remove: (n: string, o: any) => response.cookies.set({ name: n, value: '', ...o })
-      }
-    }
+        remove: (n: string, o: any) => response.cookies.set({ name: n, value: '', ...o }),
+      },
+    },
   );
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -22,8 +22,11 @@ export async function middleware(request: NextRequest) {
     isAuthPage ||
     url.pathname.startsWith('/_next') ||
     url.pathname === '/' ||
-    url.pathname.startsWith('/p/') ||            // portal público do paciente
-    url.pathname.startsWith('/api/pdf/publico'); // PDF público via token
+    url.pathname.startsWith('/p/') ||
+    url.pathname.startsWith('/pre-atendimento/') ||
+    url.pathname.startsWith('/api/consentimento-publico') ||
+    url.pathname.startsWith('/api/anamnese-publica') ||
+    url.pathname.startsWith('/api/pdf/publico');
 
   if (!user && !isPublic) {
     url.pathname = '/login';
@@ -37,5 +40,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api/pdf|_next/static|_next/image|favicon.ico).*)']
+  matcher: ['/((?!api/pdf|_next/static|_next/image|favicon.ico).*)'],
 };

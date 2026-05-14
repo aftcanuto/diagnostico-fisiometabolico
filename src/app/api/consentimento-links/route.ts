@@ -24,8 +24,30 @@ export async function GET(req: NextRequest) {
     .gt('expira_em', new Date().toISOString())
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ data: data ?? [] });
+  if (error) {
+    const tabelaAusente = /schema cache|does not exist|not found|Could not find the table/i.test(error.message);
+    if (tabelaAusente) {
+      return NextResponse.json({
+        data: [],
+        aceites: [],
+        setupPending: true,
+        message: 'Estrutura de consentimentos ainda nao encontrada no banco.',
+      });
+    }
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  const { data: aceites, error: aceitesError } = await admin
+    .from('consentimento_aceites')
+    .select('id,aceito_em,modelo_id,modelo_nome,modelo_tipo,texto_versao,ip,user_agent,token')
+    .eq('paciente_id', pacienteId)
+    .order('aceito_em', { ascending: false })
+    .limit(20);
+
+  return NextResponse.json({
+    data: data ?? [],
+    aceites: aceitesError ? [] : aceites ?? [],
+  });
 }
 
 export async function POST(req: NextRequest) {

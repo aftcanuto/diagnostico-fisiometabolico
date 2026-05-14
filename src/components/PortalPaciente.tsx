@@ -346,6 +346,7 @@ function TooltipInfo({ texto, label='Ver detalhes', placement='bottom' }: { text
   const [open,setOpen]=useState(false);
   if(!texto)return null;
   const popupPos = placement === 'top' ? { right: 0, bottom: 30 } : { right: 0, top: 30 };
+  const partes = formatarTextoAnalise(texto);
   return (
     <span style={{position:'relative',display:'inline-flex',alignItems:'center',flexShrink:0}}
       onBlur={()=>setOpen(false)}>
@@ -358,12 +359,29 @@ function TooltipInfo({ texto, label='Ver detalhes', placement='bottom' }: { text
           maxHeight:320,overflowY:'auto',
           padding:'14px 16px',borderRadius:12,background:'#ffffff',border:'1px solid #dbe7ef',
           boxShadow:'0 24px 60px rgba(15,23,42,.18)',fontSize:12,lineHeight:1.55,color:'#334155',
-          whiteSpace:'pre-line',textAlign:'left',overflowWrap:'anywhere'}}>
-          {texto}
+          textAlign:'left',overflowWrap:'anywhere'}}>
+          {partes.map((parte, idx)=>(
+            <p key={`${parte.slice(0,20)}-${idx}`} style={{margin:idx===0?'0 0 10px':'12px 0 0'}}>
+              {parte.replace(/^([A-Za-zÀ-ÿ ]{3,28}:)\s*/, '') !== parte && (
+                <strong style={{display:'block',fontWeight:700,color:'#0f172a',marginBottom:3}}>
+                  {parte.match(/^([A-Za-zÀ-ÿ ]{3,28}:)/)?.[1]}
+                </strong>
+              )}
+              <span>{parte.replace(/^([A-Za-zÀ-ÿ ]{3,28}:)\s*/, '')}</span>
+            </p>
+          ))}
         </div>
       )}
     </span>
   );
+}
+
+function formatarTextoAnalise(texto: string) {
+  const normalizado = texto
+    .replace(/\s+(Resumo clinico:|Resumo clínico:|Principais achados:|Achados:|Riscos e atencoes:|Riscos e atenções:|Riscos:|Alertas:|Beneficios:|Benefícios:|Recomendacoes praticas:|Recomendações práticas:|Recomendacoes:|Recomendações:|Limitacoes:|Limitações:|Encaminhamento:|Prioridades:|Pontos fortes:|Pontos criticos:|Pontos críticos:)/gi, '\n\n$1')
+    .replace(/,\s+(?=(Resumo clinico|Resumo clínico|Principais achados|Achados|Riscos e atencoes|Riscos e atenções|Riscos|Alertas|Beneficios|Benefícios|Recomendacoes praticas|Recomendações práticas|Recomendacoes|Recomendações|Limitacoes|Limitações|Encaminhamento|Prioridades|Pontos fortes|Pontos criticos|Pontos críticos):)/gi, '\n\n')
+    .trim();
+  return normalizado.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean);
 }
 
 function Metrica({label,valor,un,cor,d,dBoa}:{label:string;valor:any;un?:string;cor?:string;d?:number|null;dBoa?:'subir'|'descer'}) {

@@ -3,10 +3,24 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 
-export function PublicConsentimentoAccept({ token }: { token: string }) {
+type ComprovanteAceite = {
+  aceito_em?: string | null;
+  ip?: string | null;
+  user_agent?: string | null;
+  modelo_nome?: string | null;
+  texto_versao?: number | null;
+};
+
+function dataHora(valor?: string | null) {
+  if (!valor) return 'Registro indisponivel';
+  return new Date(valor).toLocaleString('pt-BR');
+}
+
+export function PublicConsentimentoAccept({ token, aceiteInicial }: { token: string; aceiteInicial?: ComprovanteAceite | null }) {
   const [aceito, setAceito] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [concluido, setConcluido] = useState(false);
+  const [concluido, setConcluido] = useState(!!aceiteInicial);
+  const [comprovante, setComprovante] = useState<ComprovanteAceite | null>(aceiteInicial ?? null);
   const [erro, setErro] = useState<string | null>(null);
 
   async function confirmar() {
@@ -24,17 +38,30 @@ export function PublicConsentimentoAccept({ token }: { token: string }) {
     const body = await res.json().catch(() => ({}));
     setEnviando(false);
     if (!res.ok) {
+      if (res.status === 409 && body.aceite) {
+        setComprovante(body.aceite);
+        setConcluido(true);
+        return;
+      }
       setErro(body.error ?? 'Nao foi possivel registrar o aceite.');
       return;
     }
+    setComprovante(body.aceite ?? null);
     setConcluido(true);
   }
 
   if (concluido) {
     return (
-      <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-8 text-center">
+      <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6">
         <h2 className="text-xl font-bold text-emerald-900">Termo aceito</h2>
-        <p className="mt-2 text-sm text-emerald-800">Seu aceite foi registrado com seguranca.</p>
+        <p className="mt-2 text-sm text-emerald-800">Este comprovante registra o aceite digital do termo.</p>
+        <div className="mt-5 grid gap-3 rounded-xl border border-emerald-100 bg-white/70 p-4 text-sm text-emerald-900 md:grid-cols-2">
+          <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Data e hora</span>{dataHora(comprovante?.aceito_em)}</div>
+          <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Versao do termo</span>{comprovante?.texto_versao ?? '-'}</div>
+          <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">IP registrado</span>{comprovante?.ip ?? 'Nao registrado'}</div>
+          <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Token</span><span className="font-mono text-xs">{token}</span></div>
+          <div className="md:col-span-2"><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Dispositivo/navegador</span>{comprovante?.user_agent ?? 'Nao registrado'}</div>
+        </div>
       </div>
     );
   }

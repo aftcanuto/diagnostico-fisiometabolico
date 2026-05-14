@@ -22,6 +22,14 @@ export default async function ConsentimentoPreAtendimentoPage({ params }: { para
   const paciente = Array.isArray(link.pacientes) ? link.pacientes[0] : link.pacientes;
   if (!modelo) notFound();
 
+  const { data: aceite } = await admin
+    .from('consentimento_aceites')
+    .select('aceito_em,ip,user_agent,modelo_nome,texto_versao')
+    .eq('token', params.token)
+    .order('aceito_em', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
@@ -37,7 +45,7 @@ export default async function ConsentimentoPreAtendimentoPage({ params }: { para
           <div className="prose prose-slate max-w-none whitespace-pre-wrap text-sm leading-7 text-slate-700">
             {modelo.texto}
           </div>
-          <PublicConsentimentoAccept token={params.token} />
+          <PublicConsentimentoAccept token={params.token} aceiteInicial={aceite ?? (link.aceito_em ? { aceito_em: link.aceito_em, texto_versao: modelo.versao, modelo_nome: modelo.nome } : null)} />
         </div>
       </div>
     </main>

@@ -20,7 +20,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Link invalido ou expirado' }, { status: 404 });
   }
   if (link.aceito_em) {
-    return NextResponse.json({ error: 'Este termo ja foi aceito' }, { status: 409 });
+    const { data: aceite } = await admin
+      .from('consentimento_aceites')
+      .select('aceito_em,ip,user_agent,modelo_nome,texto_versao')
+      .eq('token', token)
+      .order('aceito_em', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return NextResponse.json({ error: 'Este termo ja foi aceito', aceite }, { status: 409 });
   }
 
   const modelo = Array.isArray(link.consentimento_modelos)
@@ -56,5 +63,14 @@ export async function POST(req: NextRequest) {
     .update({ aceito_em: aceitoEm })
     .eq('id', link.id);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    aceite: {
+      aceito_em: aceitoEm,
+      ip,
+      user_agent: userAgent,
+      modelo_nome: modelo.nome,
+      texto_versao: modelo.versao,
+    },
+  });
 }

@@ -1635,3 +1635,28 @@ Validacao executada:
 - `npm run verify:release` passou apos a remocao do botao;
 - `npm run verify:release` passou novamente apos remover a rota dedicada;
 - abrir a ficha de um paciente e confirmar que resta apenas o botao `Nova avaliacao` no topo.
+
+## Refinamento dos popups de analise e comprovantes de consentimento
+
+Em 14/05/2026 foram corrigidos dois pontos vistos na ficha do paciente e no portal:
+
+- os textos longos de analises clinicas deixaram de aparecer em bloco unico nos popups;
+- os topicos como `Riscos`, `Achados`, `Alertas`, `Recomendacoes`, `Limitacoes` e similares agora ganham respiro visual, com paragrafos separados;
+- o link publico de termo/TCLE foi liberado no middleware, sem exigir login para o paciente aceitar ou consultar o comprovante;
+- quando um termo ja foi aceito, o mesmo link passa a exibir um comprovante de aceite em vez de pedir novo aceite;
+- o comprovante mostra data/hora, versao do termo, token, IP e navegador/dispositivo quando disponiveis;
+- a ficha do paciente passou a listar comprovantes de termos aceitos e permitir copiar o link do comprovante;
+- as consultas opcionais de anamnese pre-atendimento e consentimento passaram a usar rotas seguras, reduzindo chamadas diretas quebradas pelo navegador.
+
+Banco:
+
+- criada a migration `036_pre_atendimento_tables_repair.sql` para garantir as tabelas `paciente_anamnese_links`, `paciente_anamnese_respostas` e os campos de auditoria de `consentimento_aceites`;
+- se a tabela de anamnese ainda nao existir no Supabase, a API retorna uma mensagem controlada em vez de erro tecnico cru.
+
+Observacao tecnica:
+
+- navegador nao permite capturar MAC address do dispositivo por seguranca; a trilha viavel e registrada e IP, data/hora, user agent, token, versao e texto aceito.
+
+Validacao executada:
+
+- `npm run verify:release` passou com auditoria do banco, smoke test, testes de calculo, backup, nutricao, TypeScript, lint e build.

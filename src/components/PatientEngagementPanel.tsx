@@ -40,12 +40,10 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setModelosTermo(termos ?? []);
     setTermoId((termos ?? [])[0]?.id ?? '');
 
-    const [linksRes, enviosRes, linksTermoRes, respostasRes, aceitesRes] = await Promise.all([
+    const [linksRes, enviosRes, linksTermoRes] = await Promise.all([
       fetch(`/api/anamnese-links?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' }),
       fetch(`/api/protocolo-envios?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' }),
       fetch(`/api/consentimento-links?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' }),
-      supabase.from('paciente_anamnese_respostas').select('id,enviado_em,template_id,avaliacao_id').eq('paciente_id', pacienteId).order('enviado_em', { ascending: false }).limit(10),
-      supabase.from('consentimento_aceites').select('id,aceito_em,modelo_id,modelo_versao').eq('paciente_id', pacienteId).order('aceito_em', { ascending: false }).limit(10),
     ]);
     const linksBody = await linksRes.json().catch(() => ({}));
     const enviosBody = await enviosRes.json().catch(() => ({}));
@@ -53,8 +51,8 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setLinks(linksBody.data ?? []);
     setEnvios(enviosBody.data ?? []);
     setLinksTermo(linksTermoBody.data ?? []);
-    setRespostasAnamnese(respostasRes.data ?? []);
-    setAceites(aceitesRes.data ?? []);
+    setRespostasAnamnese(linksBody.respostas ?? []);
+    setAceites(linksTermoBody.aceites ?? []);
   }, [pacienteId, supabase]);
 
   useEffect(() => {
@@ -260,6 +258,32 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
             </div>
           )}
           {aceites.length > 0 && (
+            <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Comprovantes de aceite</div>
+              <div className="space-y-2">
+                {aceites.slice(0, 6).map(a => {
+                  const comprovanteUrl = a.token ? `${origin}/pre-atendimento/consentimento/${a.token}` : '';
+                  return (
+                    <div key={`novo-${a.id}`} className="flex flex-col gap-2 rounded-lg bg-emerald-50 px-3 py-2 md:flex-row md:items-center">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-emerald-900">{a.modelo_nome ?? 'Termo aceito'}</div>
+                        <div className="text-xs text-emerald-800">
+                          Aceito em {dataBR(a.aceito_em)} · versão {a.texto_versao ?? '-'} · IP {a.ip ?? 'não registrado'}
+                        </div>
+                        {a.user_agent && <div className="truncate text-[11px] text-emerald-700">Dispositivo/navegador: {a.user_agent}</div>}
+                      </div>
+                      {comprovanteUrl && (
+                        <Button size="sm" variant="secondary" onClick={() => copiar(comprovanteUrl, a.id)}>
+                          <Copy className="h-3 w-3" /> {copiado === a.id ? 'Copiado' : 'Comprovante'}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {false && aceites.length > 0 && (
             <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Termos aceitos</div>
               {aceites.slice(0, 4).map(a => (

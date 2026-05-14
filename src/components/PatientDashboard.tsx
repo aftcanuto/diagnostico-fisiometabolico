@@ -647,9 +647,12 @@ function textoPlanoAcao(v: any, modo: 'clinico' | 'publico') {
 
 function formatAnaliseLeitura(texto: string) {
   return texto
-    .replace(/\s+(Achados:|Alertas:|Beneficios:|Benef?cios:|Riscos:|Prioridades:|Pontos Fortes:|Pontos Criticos:|Pontos Cr?ticos:)/g, '\n\n$1')
-    .replace(/,\s+(?=[A-Z???????????][a-z???????????]+:)/g, '\n')
-    .trim();
+    .replace(/\s+(Resumo clinico:|Resumo clínico:|Principais achados:|Achados:|Riscos e atencoes:|Riscos e atenções:|Riscos:|Alertas:|Beneficios:|Benefícios:|Recomendacoes praticas:|Recomendações práticas:|Recomendacoes:|Recomendações:|Limitacoes:|Limitações:|Encaminhamento:|Prioridades:|Pontos fortes:|Pontos Fortes:|Pontos criticos:|Pontos críticos:|Pontos Criticos:)/gi, '\n\n$1')
+    .replace(/,\s+(?=(Resumo clinico|Resumo clínico|Principais achados|Achados|Riscos e atencoes|Riscos e atenções|Riscos|Alertas|Beneficios|Benefícios|Recomendacoes praticas|Recomendações práticas|Recomendacoes|Recomendações|Limitacoes|Limitações|Encaminhamento|Prioridades|Pontos fortes|Pontos Fortes|Pontos criticos|Pontos críticos|Pontos Criticos):)/gi, '\n\n')
+    .trim()
+    .split(/\n{2,}/)
+    .map(p => p.trim())
+    .filter(Boolean);
 }
 
 function AnaliseInfoTooltip({ texto }: { texto: string }) {
@@ -700,14 +703,22 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
             color: '#14532d',
             fontSize: 12,
             lineHeight: 1.75,
-            fontWeight: 500,
-            whiteSpace: 'pre-line',
+            fontWeight: 400,
           }}
         >
           <div style={{ fontSize: 10, fontWeight: 700, color: '#047857', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 7 }}>
             Análise clínica
           </div>
-          {textoFormatado}
+          {textoFormatado.map((parte, idx) => {
+            const titulo = parte.match(/^([A-Za-zÀ-ÿ ]{3,32}:)\s*/)?.[1] ?? '';
+            const corpo = titulo ? parte.replace(/^([A-Za-zÀ-ÿ ]{3,32}:)\s*/, '') : parte;
+            return (
+              <p key={`${parte.slice(0, 24)}-${idx}`} style={{ margin: idx === 0 ? '0 0 10px' : '13px 0 0' }}>
+                {titulo && <strong style={{ display: 'block', marginBottom: 4, color: '#064e3b', fontWeight: 700 }}>{titulo}</strong>}
+                <span>{corpo}</span>
+              </p>
+            );
+          })}
         </div>
       )}
     </span>

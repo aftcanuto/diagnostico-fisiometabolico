@@ -24,8 +24,30 @@ export async function GET(req: NextRequest) {
     .gt('expira_em', new Date().toISOString())
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ data: data ?? [] });
+  if (error) {
+    const tabelaAusente = /schema cache|does not exist|not found|Could not find the table/i.test(error.message);
+    if (tabelaAusente) {
+      return NextResponse.json({
+        data: [],
+        respostas: [],
+        setupPending: true,
+        message: 'Estrutura de anamnese pre-atendimento ainda nao encontrada no banco.',
+      });
+    }
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  const { data: respostas, error: respostasError } = await admin
+    .from('paciente_anamnese_respostas')
+    .select('id,enviado_em,template_id,avaliacao_id')
+    .eq('paciente_id', pacienteId)
+    .order('enviado_em', { ascending: false })
+    .limit(10);
+
+  return NextResponse.json({
+    data: data ?? [],
+    respostas: respostasError ? [] : respostas ?? [],
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -61,7 +83,14 @@ export async function POST(req: NextRequest) {
     .select('*, anamnese_templates(nome)')
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    const tabelaAusente = /schema cache|does not exist|not found|Could not find the table/i.test(error.message);
+    return NextResponse.json({
+      error: tabelaAusente
+        ? 'A estrutura de anamnese pre-atendimento ainda precisa ser criada no Supabase.'
+        : error.message,
+    }, { status: 400 });
+  }
   return NextResponse.json({ data });
 }
 
