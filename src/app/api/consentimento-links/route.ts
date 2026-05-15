@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const { data: aceites, error: aceitesError } = await admin
     .from('consentimento_aceites')
-    .select('id,aceito_em,modelo_id,modelo_nome,modelo_tipo,texto_versao,ip,user_agent,token')
+    .select('id,aceito_em,modelo_id,modelo_nome,modelo_tipo,texto_versao,ip,user_agent,token,revogado,revogado_em,motivo_revogacao')
     .eq('paciente_id', pacienteId)
     .order('aceito_em', { ascending: false })
     .limit(20);
@@ -98,10 +98,47 @@ export async function PATCH(req: NextRequest) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
 
-  const { token } = await req.json();
-  if (!token) return NextResponse.json({ error: 'Token invalido' }, { status: 400 });
+  const { token, aceiteId, revogarAceite, motivo } = await req.json();
+  if (!token && !aceiteId) return NextResponse.json({ error: 'Token ou aceite invalido' }, { status: 400 });
 
   const admin = createAdminClient();
+  if (revogarAceite && aceiteId) {
+    const { data: aceite } = await admin
+      .from('consentimento_aceites')
+      .select('id,paciente_id,token')
+      .eq('id', aceiteId)
+      .maybeSingle();
+
+    if (!aceite?.paciente_id) return NextResponse.json({ error: 'Aceite nao encontrado' }, { status: 404 });
+    if (!(await usuarioPodeAcessarPaciente(userId, aceite.paciente_id))) {
+      return NextResponse.json({ error: 'Sem permissao para este paciente' }, { status: 403 });
+    }
+
+    const revogadoEm = new Date().toISOString();
+    const { error } = await admin
+      .from('consentimento_aceites')
+      .update({
+        revogado: true,
+        revogado_em: revogadoEm,
+        revogado_por: userId,
+        motivo_revogacao: motivo || 'Revogado a pedido do paciente/responsavel.',
+      })
+      .eq('id', aceiteId);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    if (aceite.token) {
+      await admin
+        .from('consentimento_links')
+        .update({ revogado: true })
+        .eq('token', aceite.token);
+    }
+
+    return NextResponse.json({ ok: true, revogado_em: revogadoEm });
+  }
+
+  if (!token) return NextResponse.json({ error: 'Token invalido' }, { status: 400 });
+
   const { data: atual } = await admin
     .from('consentimento_links')
     .select('token,paciente_id')

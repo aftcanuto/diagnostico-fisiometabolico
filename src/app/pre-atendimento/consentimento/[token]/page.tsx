@@ -13,8 +13,6 @@ export default async function ConsentimentoPreAtendimentoPage({ params }: { para
     .from('consentimento_links')
     .select('*, pacientes(nome), consentimento_modelos(nome,descricao,tipo,versao,texto)')
     .eq('token', params.token)
-    .eq('revogado', false)
-    .gt('expira_em', new Date().toISOString())
     .maybeSingle();
 
   if (!link) notFound();
@@ -24,11 +22,13 @@ export default async function ConsentimentoPreAtendimentoPage({ params }: { para
 
   const { data: aceite } = await admin
     .from('consentimento_aceites')
-    .select('aceito_em,ip,user_agent,modelo_nome,texto_versao')
+    .select('aceito_em,ip,user_agent,modelo_nome,texto_versao,revogado,revogado_em,motivo_revogacao')
     .eq('token', params.token)
     .order('aceito_em', { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (!aceite && (link.revogado || new Date(link.expira_em).getTime() < Date.now())) notFound();
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8">

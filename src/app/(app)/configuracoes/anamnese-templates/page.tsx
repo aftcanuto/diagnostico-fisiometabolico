@@ -47,6 +47,7 @@ const TEMPLATE_PADRAO: Omit<Template, 'id'> = {
     { id: 'queixa', tipo: 'texto_longo', label: 'Queixa principal', obrigatorio: true },
     { id: 'historia', tipo: 'texto_longo', label: 'História da doença atual', obrigatorio: false },
     { id: 'sec_medico', tipo: 'secao', label: 'Histórico médico', obrigatorio: false },
+    { id: 'historia_familiar', tipo: 'texto_longo', label: 'Histórico de doença na família', obrigatorio: false },
     { id: 'hipertensao', tipo: 'boolean', label: 'Hipertensão arterial', obrigatorio: false },
     { id: 'diabetes', tipo: 'boolean', label: 'Diabetes', obrigatorio: false },
     { id: 'cardiopatia', tipo: 'boolean', label: 'Cardiopatia', obrigatorio: false },
@@ -63,7 +64,6 @@ const TEMPLATE_PADRAO: Omit<Template, 'id'> = {
     { id: 'tipo_exercicio', tipo: 'texto', label: 'Tipo de exercício praticado', obrigatorio: false },
     { id: 'freq_semanal', tipo: 'numero', label: 'Frequência semanal', obrigatorio: false, unidade: 'dias/sem' },
     { id: 'tempo_sessao', tipo: 'numero', label: 'Duração da sessão', obrigatorio: false, unidade: 'min' },
-    { id: 'historia_familiar', tipo: 'texto_longo', label: 'História familiar', obrigatorio: false },
     { id: 'objetivos', tipo: 'texto_longo', label: 'Objetivos', obrigatorio: true },
   ],
 };

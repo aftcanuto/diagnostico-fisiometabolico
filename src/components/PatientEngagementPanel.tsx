@@ -11,6 +11,53 @@ function dataBR(valor?: string | null) {
   return new Date(valor).toLocaleDateString('pt-BR');
 }
 
+function dataHoraBR(valor?: string | null) {
+  if (!valor) return '';
+  return new Date(valor).toLocaleString('pt-BR');
+}
+
+function valorLegivel(valor: any): string {
+  if (valor === null || valor === undefined || valor === '') return 'Nao informado';
+  if (typeof valor === 'boolean') return valor ? 'Sim' : 'Nao';
+  if (Array.isArray(valor)) return valor.map(valorLegivel).join(', ');
+  if (typeof valor === 'object') {
+    return Object.entries(valor)
+      .filter(([, v]) => v !== null && v !== undefined && v !== '')
+      .map(([k, v]) => `${humanizarChave(k)}: ${valorLegivel(v)}`)
+      .join('; ') || 'Nao informado';
+  }
+  return String(valor);
+}
+
+function humanizarChave(chave: string) {
+  return chave
+    .replace(/^__/, '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, letra => letra.toUpperCase());
+}
+
+function camposAnamnese(resposta: any) {
+  const respostas = resposta?.respostas ?? {};
+  const template = Array.isArray(resposta?.anamnese_templates)
+    ? resposta.anamnese_templates[0]
+    : resposta?.anamnese_templates;
+  const campos = Array.isArray(template?.campos) ? template.campos : [];
+  const labels = new Map<string, string>(
+    campos
+      .filter((campo: any) => campo?.id)
+      .map((campo: any) => [String(campo.id), String(campo.label ?? humanizarChave(String(campo.id)))])
+  );
+  const ocultas = new Set(['avaliacao_id', 'clinica_id', 'paciente_id', 'template_id', 'created_at', 'updated_at']);
+
+  return Object.entries(respostas)
+    .filter(([chave, valor]) => !chave.startsWith('__') && !ocultas.has(chave) && valor !== undefined && valor !== null && valor !== '')
+    .map(([chave, valor]) => ({
+      chave,
+      label: labels.get(chave) ?? humanizarChave(chave),
+      valor: valorLegivel(valor),
+    }));
+}
+
 export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
   const supabase = useMemo(() => createClient(), []);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -27,6 +74,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
   const [origin, setOrigin] = useState('');
   const [copiado, setCopiado] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [anamnesesAbertas, setAnamnesesAbertas] = useState<Record<string, boolean>>({});
 
   const carregar = useCallback(async () => {
     const [{ data: tpls }, { data: recs }, { data: termos }] = await Promise.all([
@@ -112,6 +160,31 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     if (res.ok) setLinksTermo(l => l.filter(x => x.token !== token));
   }
 
+  async function revogarAceite(aceiteId: string) {
+    const motivo = prompt('Informe o motivo da revogacao/cancelamento do aceite:', 'Revogado a pedido do paciente/responsavel.');
+    if (motivo === null) return;
+    const tokenAceite = aceites.find(a => a.id === aceiteId)?.token;
+
+    const res = await fetch('/api/consentimento-links', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aceiteId, revogarAceite: true, motivo }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(body.error ?? 'Nao foi possivel revogar o aceite.');
+      return;
+    }
+
+    setAceites(lista => lista.map(a => (
+      a.id === aceiteId
+        ? { ...a, revogado: true, revogado_em: body.revogado_em, motivo_revogacao: motivo || 'Revogado a pedido do paciente/responsavel.' }
+        : a
+    )));
+    if (tokenAceite) setLinksTermo(lista => lista.filter(l => l.token !== tokenAceite));
+    setMsg('Aceite revogado e mantido como historico auditavel.');
+  }
+
   async function registrarEnvioProtocolos() {
     const recomendacoesIds = Object.entries(selecionados).filter(([, v]) => v).map(([id]) => id);
     setMsg(null);
@@ -146,7 +219,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
       <CardBody className="space-y-5">
         <div className="grid gap-3 md:grid-cols-4">
           <CentralStat label="Anamneses respondidas" value={respostasAnamnese.length} />
-          <CentralStat label="Termos aceitos" value={aceites.length} />
+          <CentralStat label="Termos aceitos" value={aceites.filter(a => !a.revogado).length} />
           <CentralStat label="Recomendacoes enviadas" value={envios.length} />
           <CentralStat label="Links ativos" value={[...links, ...linksTermo].filter(l => !l.revogado && !l.aceito_em && !l.respondido_em).length} />
         </div>
@@ -201,9 +274,47 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
           {respostasAnamnese.length > 0 && (
             <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Anamneses respondidas</div>
-              {respostasAnamnese.slice(0, 4).map(r => (
-                <div key={r.id}>Respondida em {dataBR(r.enviado_em)} {r.avaliacao_id ? '· vinculada a avaliacao' : ''}</div>
-              ))}
+              <div className="space-y-3">
+                {respostasAnamnese.map(r => {
+                  const template = Array.isArray(r.anamnese_templates) ? r.anamnese_templates[0] : r.anamnese_templates;
+                  const campos = camposAnamnese(r);
+                  const aberta = !!anamnesesAbertas[r.id];
+                  return (
+                    <div key={r.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                      <button
+                        type="button"
+                        onClick={() => setAnamnesesAbertas(atual => ({ ...atual, [r.id]: !atual[r.id] }))}
+                        className="flex w-full items-center justify-between gap-3 text-left"
+                      >
+                        <span>
+                          <span className="block font-medium text-slate-800">{template?.nome ?? 'Anamnese respondida'}</span>
+                          <span className="text-xs text-slate-500">
+                            Respondida em {dataHoraBR(r.enviado_em)} {r.avaliacao_id ? '· vinculada a avaliacao' : ''}
+                          </span>
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+                          {aberta ? 'Ocultar respostas' : `Ver ${campos.length} resposta(s)`}
+                        </span>
+                      </button>
+                      {aberta && (
+                        <div className="mt-3 grid gap-2 md:grid-cols-2">
+                          {campos.map(campo => (
+                            <div key={campo.chave} className="rounded-lg bg-slate-50 px-3 py-2">
+                              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{campo.label}</div>
+                              <div className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{campo.valor}</div>
+                            </div>
+                          ))}
+                          {campos.length === 0 && (
+                            <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                              Nenhuma resposta preenchida foi encontrada neste envio.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -261,34 +372,39 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
             <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Comprovantes de aceite</div>
               <div className="space-y-2">
-                {aceites.slice(0, 6).map(a => {
+                {aceites.slice(0, 8).map(a => {
                   const comprovanteUrl = a.token ? `${origin}/pre-atendimento/consentimento/${a.token}` : '';
+                  const revogado = !!a.revogado;
                   return (
-                    <div key={`novo-${a.id}`} className="flex flex-col gap-2 rounded-lg bg-emerald-50 px-3 py-2 md:flex-row md:items-center">
+                    <div key={`novo-${a.id}`} className={`flex flex-col gap-2 rounded-lg px-3 py-2 md:flex-row md:items-center ${revogado ? 'bg-amber-50' : 'bg-emerald-50'}`}>
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium text-emerald-900">{a.modelo_nome ?? 'Termo aceito'}</div>
-                        <div className="text-xs text-emerald-800">
+                        <div className={`font-medium ${revogado ? 'text-amber-900' : 'text-emerald-900'}`}>
+                          {a.modelo_nome ?? 'Termo aceito'} {revogado ? '· revogado' : ''}
+                        </div>
+                        <div className={`text-xs ${revogado ? 'text-amber-800' : 'text-emerald-800'}`}>
                           Aceito em {dataBR(a.aceito_em)} · versão {a.texto_versao ?? '-'} · IP {a.ip ?? 'não registrado'}
                         </div>
-                        {a.user_agent && <div className="truncate text-[11px] text-emerald-700">Dispositivo/navegador: {a.user_agent}</div>}
+                        {revogado && (
+                          <div className="text-xs text-amber-800">
+                            Revogado em {dataBR(a.revogado_em)} · {a.motivo_revogacao ?? 'sem motivo informado'}
+                          </div>
+                        )}
+                        {a.user_agent && <div className={`truncate text-[11px] ${revogado ? 'text-amber-700' : 'text-emerald-700'}`}>Dispositivo/navegador: {a.user_agent}</div>}
                       </div>
                       {comprovanteUrl && (
                         <Button size="sm" variant="secondary" onClick={() => copiar(comprovanteUrl, a.id)}>
                           <Copy className="h-3 w-3" /> {copiado === a.id ? 'Copiado' : 'Comprovante'}
                         </Button>
                       )}
+                      {!revogado && (
+                        <Button size="sm" variant="ghost" onClick={() => revogarAceite(a.id)} title="Revogar aceite">
+                          <X className="h-3 w-3" /> Revogar aceite
+                        </Button>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            </div>
-          )}
-          {false && aceites.length > 0 && (
-            <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Termos aceitos</div>
-              {aceites.slice(0, 4).map(a => (
-                <div key={a.id}>Aceito em {dataBR(a.aceito_em)} · versao {a.modelo_versao ?? '-'}</div>
-              ))}
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -10,7 +10,7 @@ import { useAutoSave } from '@/lib/useAutoSave';
 import { buildSteps } from '@/lib/steps';
 import { buscarModulo, upsertModulo } from '@/lib/modulos';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type TipoCampo = 'texto' | 'texto_longo' | 'boolean' | 'numero' | 'escala' | 'selecao' | 'data' | 'secao';
 
 interface Campo {
@@ -59,12 +59,12 @@ function PublicarCheckbox({ checked, onChange }: { checked: boolean; onChange: (
         checked={checked}
         onChange={e => onChange(e.target.checked)}
       />
-      <span>Exibir este dado no relatório e no portal do paciente</span>
+      <span>Exibir este dado no relatÃ³rio e no portal do paciente</span>
     </label>
   );
 }
 
-// ─── Renderizador de campo dinâmico ─────────────────────────────────────────
+// â”€â”€â”€ Renderizador de campo dinÃ¢mico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CampoDinamico({ campo, valor, onChange, publicar, onPublicarChange }: {
   campo: Campo;
   valor: any;
@@ -241,7 +241,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     (async () => {
-      // 1. Buscar avaliação para saber a clínica e modulos
+      // 1. Buscar avaliaÃ§Ã£o para saber a clÃ­nica e modulos
       const { data: av } = await supabase.from('avaliacoes')
         .select('modulos_selecionados, clinica_id')
         .eq('id', params.id)
@@ -251,39 +251,20 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
       // 2. Buscar dados salvos de anamnese
       const an = await buscarModulo('anamnese', params.id);
 
-      // 3. Buscar template da clínica (padrão ou o salvo na anamnese)
-      const clinicaId = av?.clinica_id;
+      // 3. Buscar template da clÃ­nica (padrÃ£o ou o salvo na anamnese)
       let tpl: Template | null = null;
 
-      if (clinicaId) {
-        // Usar template_id salvo, ou buscar o padrão
-        const templateBuscaId = an?.template_id;
-        if (templateBuscaId) {
-          const { data: t } = await supabase.from('anamnese_templates')
-            .select('id, nome, campos').eq('id', templateBuscaId).single();
-          tpl = t ?? null;
-        }
-        if (!tpl) {
-          // Pegar template padrão da clínica
-          const { data: t } = await supabase.from('anamnese_templates')
-            .select('id, nome, campos')
-            .eq('clinica_id', clinicaId)
-            .eq('padrao', true)
-            .eq('ativo', true)
-            .maybeSingle();
-          tpl = t ?? null;
-        }
-        if (!tpl) {
-          // Qualquer template ativo
-          const { data: t } = await supabase.from('anamnese_templates')
-            .select('id, nome, campos')
-            .eq('clinica_id', clinicaId)
-            .eq('ativo', true)
-            .order('created_at')
-            .limit(1)
-            .maybeSingle();
-          tpl = t ?? null;
-        }
+      const templateBuscaId = an?.template_id
+        ? `&templateId=${encodeURIComponent(an.template_id)}`
+        : '';
+      const templateRes = await fetch(
+        `/api/anamnese-template?avaliacaoId=${encodeURIComponent(params.id)}${templateBuscaId}`,
+        { cache: 'no-store' },
+      );
+
+      if (templateRes.ok) {
+        const body = await templateRes.json().catch(() => ({}));
+        tpl = body.data ?? null;
       }
 
       setTemplate(tpl);
@@ -327,24 +308,24 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
       return { ...prev, [CAMPOS_PUBLICOS_KEY]: prox };
     });
 
-  // Navegação
+  // NavegaÃ§Ã£o
   const steps = aval ? buildSteps(params.id, aval.modulos_selecionados) : [];
   const idx = steps.findIndex(s => s.key === 'anamnese');
   const next = steps[idx + 1];
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-  if (!loaded) return <p className="text-slate-400">Carregando formulário…</p>;
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (!loaded) return <p className="text-slate-400">Carregando formulÃ¡rioâ€¦</p>;
 
   return (
     <div className="space-y-5 max-w-4xl">
 
-      {/* Sem template: usar fallback básico */}
+      {/* Sem template: usar fallback bÃ¡sico */}
       {!template && (
         <>
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-            Nenhum formulário de anamnese configurado para esta clínica.{' '}
+            Nenhum formulÃ¡rio de anamnese configurado para esta clÃ­nica.{' '}
             <a href="/configuracoes/anamnese-templates" className="font-semibold underline">
-              Criar agora →
+              Criar agora â†’
             </a>
           </div>
           <AnamnesesFallback
@@ -356,9 +337,9 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
         </>
       )}
 
-      {/* Com template: renderizar campos dinâmicos agrupados em cards por seção */}
+      {/* Com template: renderizar campos dinÃ¢micos agrupados em cards por seÃ§Ã£o */}
       {template && (() => {
-        // Agrupar campos em seções
+        // Agrupar campos em seÃ§Ãµes
         type Grupo = { titulo: string | null; campos: Campo[] };
         const grupos: Grupo[] = [];
         let grupoAtual: Grupo = { titulo: null, campos: [] };
@@ -368,7 +349,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
             if (grupoAtual.campos.length > 0 || grupoAtual.titulo) {
               grupos.push(grupoAtual);
             }
-            grupoAtual = { titulo: textoSeguro(campo.label, 'Seção'), campos: [] };
+            grupoAtual = { titulo: textoSeguro(campo.label, 'SeÃ§Ã£o'), campos: [] };
           } else {
             grupoAtual.campos.push(campo);
           }
@@ -407,7 +388,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
           await salvarAnamnese();
           if (next) router.push(next.href);
         }}>
-          Continuar →
+          Continuar â†’
         </Button>
       </div>
       <SaveIndicator state={saveState} />

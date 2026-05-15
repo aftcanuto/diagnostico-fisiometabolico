@@ -1660,3 +1660,64 @@ Observacao tecnica:
 Validacao executada:
 
 - `npm run verify:release` passou com auditoria do banco, smoke test, testes de calculo, backup, nutricao, TypeScript, lint e build.
+
+## Revogacao de TCLE e leitura completa da anamnese
+
+Em 14/05/2026 foram refinados os fluxos de pre-atendimento:
+
+- criada a migration `037_consentimento_revogacao_e_anamnese_respostas.sql`;
+- a migration e auto-contida para criar/reparar as tabelas de anamnese pre-atendimento e comprovantes caso a migration anterior ainda nao tenha sido aplicada manualmente;
+- `consentimento_aceites` ganhou revogacao auditavel com `revogado`, `revogado_em`, `revogado_por` e `motivo_revogacao`;
+- a ficha do paciente agora mostra comprovantes aceitos e revogados, mantendo o historico;
+- foi incluido botao `Revogar aceite`, sem apagar o comprovante original;
+- ao revogar um aceite, o link relacionado tambem e revogado para impedir novo aceite no mesmo token;
+- a anamnese respondida agora pode ser expandida na ficha do paciente e mostra campo por campo, com rotulo do template quando disponivel;
+- valores em objeto/array sao convertidos para texto legivel, evitando que respostas fiquem escondidas ou aparecam como JSON bruto.
+
+Validacao esperada:
+
+- aplicar `037_consentimento_revogacao_e_anamnese_respostas.sql` no Supabase;
+- gerar link de anamnese, responder pelo paciente e conferir a lista expandida na ficha;
+- gerar TCLE, aceitar pelo link, abrir comprovante e depois revogar o aceite pela ficha do paciente;
+- ao abrir novamente o link do TCLE revogado, confirmar que aparece o comprovante com status de revogacao.
+
+## Busca segura do template de anamnese na avaliacao
+
+Em 14/05/2026 foi corrigido o falso aviso `Nenhum formulario de anamnese configurado para esta clinica`.
+
+Problema observado:
+
+- o template `teste` existia, mas a tela de anamnese da avaliacao continuava exibindo o aviso de ausencia de formulario;
+- a busca era feita diretamente pelo navegador em `anamnese_templates`, o que podia falhar por RLS, cache do schema ou diferenca entre template ativo/padrao.
+
+Correcoes aplicadas:
+
+- criada a rota `GET /api/anamnese-template`;
+- a rota valida se o usuario pode acessar a avaliacao, descobre a clinica da avaliacao pelo servidor e busca o template em ordem segura:
+  - template salvo na anamnese;
+  - template padrao ativo;
+  - qualquer template ativo;
+  - ultimo template da clinica, mesmo que nao esteja marcado como padrao;
+- a tela da anamnese passou a usar essa rota, evitando falso negativo no front.
+
+Validacao esperada:
+
+- abrir uma avaliacao com template ja criado;
+- confirmar que o aviso amarelo desaparece quando houver template na clinica;
+- preencher, sair e voltar ao modulo para confirmar que as respostas continuam salvas.
+
+## Ajuste do campo de historico familiar da anamnese
+
+Em 14/05/2026 foi ajustada a pergunta de historico familiar na anamnese.
+
+Correcoes aplicadas:
+
+- o campo `historia_familiar` passou a ter o rotulo `Historico de doenca na familia`;
+- nos novos templates, a pergunta agora fica logo abaixo da secao `Historico medico`, antes de hipertensao, diabetes, cardiopatia e demais campos clinicos;
+- criada a migration `038_anamnese_historia_familiar_historico_medico.sql` para reposicionar e renomear esse campo nos templates ja existentes no Supabase.
+
+Validacao esperada:
+
+- aplicar a migration `038_anamnese_historia_familiar_historico_medico.sql`;
+- abrir a configuracao do template e conferir a pergunta dentro de `Historico medico`;
+- abrir uma avaliacao na aba Anamnese e confirmar que o formulario usa a nova ordem e o novo nome.

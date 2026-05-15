@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const { data: respostas, error: respostasError } = await admin
     .from('paciente_anamnese_respostas')
-    .select('id,enviado_em,template_id,avaliacao_id')
+    .select('id,enviado_em,template_id,avaliacao_id,respostas,ip,user_agent,anamnese_templates(nome,campos)')
     .eq('paciente_id', pacienteId)
     .order('enviado_em', { ascending: false })
     .limit(10);

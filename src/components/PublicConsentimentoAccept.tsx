@@ -9,6 +9,9 @@ type ComprovanteAceite = {
   user_agent?: string | null;
   modelo_nome?: string | null;
   texto_versao?: number | null;
+  revogado?: boolean | null;
+  revogado_em?: string | null;
+  motivo_revogacao?: string | null;
 };
 
 function dataHora(valor?: string | null) {
@@ -53,14 +56,24 @@ export function PublicConsentimentoAccept({ token, aceiteInicial }: { token: str
   if (concluido) {
     return (
       <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6">
-        <h2 className="text-xl font-bold text-emerald-900">Termo aceito</h2>
-        <p className="mt-2 text-sm text-emerald-800">Este comprovante registra o aceite digital do termo.</p>
+        <h2 className="text-xl font-bold text-emerald-900">{comprovante?.revogado ? 'Termo aceito e revogado' : 'Termo aceito'}</h2>
+        <p className="mt-2 text-sm text-emerald-800">
+          {comprovante?.revogado
+            ? 'Este comprovante registra o aceite original e a revogacao posterior.'
+            : 'Este comprovante registra o aceite digital do termo.'}
+        </p>
         <div className="mt-5 grid gap-3 rounded-xl border border-emerald-100 bg-white/70 p-4 text-sm text-emerald-900 md:grid-cols-2">
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Data e hora</span>{dataHora(comprovante?.aceito_em)}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Versao do termo</span>{comprovante?.texto_versao ?? '-'}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">IP registrado</span>{comprovante?.ip ?? 'Nao registrado'}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Token</span><span className="font-mono text-xs">{token}</span></div>
           <div className="md:col-span-2"><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Dispositivo/navegador</span>{comprovante?.user_agent ?? 'Nao registrado'}</div>
+          {comprovante?.revogado && (
+            <div className="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-amber-700">Revogacao</span>
+              Revogado em {dataHora(comprovante.revogado_em)}. {comprovante.motivo_revogacao ?? ''}
+            </div>
+          )}
         </div>
       </div>
     );

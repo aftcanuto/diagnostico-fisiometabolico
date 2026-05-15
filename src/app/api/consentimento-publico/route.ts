@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (link.aceito_em) {
     const { data: aceite } = await admin
       .from('consentimento_aceites')
-      .select('aceito_em,ip,user_agent,modelo_nome,texto_versao')
+      .select('aceito_em,ip,user_agent,modelo_nome,texto_versao,revogado,revogado_em,motivo_revogacao')
       .eq('token', token)
       .order('aceito_em', { ascending: false })
       .limit(1)
