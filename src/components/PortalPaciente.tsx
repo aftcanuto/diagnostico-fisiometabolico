@@ -10,6 +10,7 @@ import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown, Info, Phone,
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
 import { scoreCardio, scoreComposicaoCorporal, scoreForca, scoreGlobal, scorePostura } from '@/lib/scores';
 import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
+import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 
 interface Props {
   paciente: { nome:string; sexo:'M'|'F'; data_nascimento:string; cpf?:string|null };
@@ -362,12 +363,12 @@ function TooltipInfo({ texto, label='Ver detalhes', placement='bottom' }: { text
           textAlign:'left',overflowWrap:'anywhere'}}>
           {partes.map((parte, idx)=>(
             <p key={`${parte.slice(0,20)}-${idx}`} style={{margin:idx===0?'0 0 10px':'12px 0 0'}}>
-              {parte.replace(/^([A-Za-zÀ-ÿ ]{3,28}:)\s*/, '') !== parte && (
+              {parte.replace(/^([\p{L} ]{3,32}:)\s*/u, '') !== parte && (
                 <strong style={{display:'block',fontWeight:700,color:'#0f172a',marginBottom:3}}>
-                  {parte.match(/^([A-Za-zÀ-ÿ ]{3,28}:)/)?.[1]}
+                  {parte.match(/^([\p{L} ]{3,32}:)/u)?.[1]}
                 </strong>
               )}
-              <span>{parte.replace(/^([A-Za-zÀ-ÿ ]{3,28}:)\s*/, '')}</span>
+              <span>{parte.replace(/^([\p{L} ]{3,32}:)\s*/u, '')}</span>
             </p>
           ))}
         </div>
@@ -1095,6 +1096,10 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             <Card style={{marginBottom:14}}>
               <h3 style={{fontSize:13,fontWeight:600,color:'#475569',margin:'0 0 12px'}}>Preensão palmar</h3>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:8,overflow:'hidden'}}>
+                {(atual.forca as any)?.esporte_contexto&&<Metrica label="Contexto" valor={labelEsporteForca((atual.forca as any).esporte_contexto)}/>}
+                {(atual.forca as any)?.finalidade_teste&&<Metrica label="Finalidade" valor={labelFinalidadeForca((atual.forca as any).finalidade_teste)}/>}
+                {(atual.forca as any)?.lado_dominante&&<Metrica label="Lado dominante" valor={labelLadoDominante((atual.forca as any).lado_dominante)}/>}
+
                 {atual.forca?.preensao_dir_kgf!=null&&<Metrica label="Mão direita" valor={atual.forca.preensao_dir_kgf} un="kgf"
                   d={dlt(atual.forca.preensao_dir_kgf,ant?.forca?.preensao_dir_kgf)} dBoa="subir"/>}
                 {atual.forca?.preensao_esq_kgf!=null&&<Metrica label="Mão esquerda" valor={atual.forca.preensao_esq_kgf} un="kgf"

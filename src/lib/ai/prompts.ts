@@ -3,6 +3,7 @@
  * Personalizado por sexo, idade e objetivo do paciente.
  */
 import { referenciasModulo } from '@/lib/clinical/references';
+import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 
 export interface PacienteContexto {
   nome: string;
@@ -45,14 +46,14 @@ Não inclua perguntas para próxima consulta. Não inclua lista de referências 
 export function promptAnamnese(ctx: PacienteContexto, dados: any) {
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: ANAMNESE\n\nReferências e limites obrigatórios:\n${referenciasModulo('anamnese')}\n\nDados:\n${JSON.stringify(dados, null, 2)}\n\nAnalise contexto clínico, hábitos de vida, histórico médico e objetivos. Identifique fatores de risco modificáveis, lacunas e aspectos comportamentais prioritários.`
+    user: `Módulo: ANAMNESE\n\nReferencias e limites obrigatorios:\n${referenciasModulo('anamnese')}\n\nDados:\n${JSON.stringify(dados, null, 2)}\n\nAnalise contexto clínico, hábitos de vida, histórico médico e objetivos. Identifique fatores de risco modificáveis, lacunas e aspectos comportamentais prioritários.`
   };
 }
 
 export function promptSinaisVitais(ctx: PacienteContexto, dados: any) {
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: SINAIS VITAIS\n\nReferências e limites obrigatórios:\n${referenciasModulo('sinais_vitais')}\n\nDados:\n${JSON.stringify(dados, null, 2)}\n\nInterprete PA, FC, SpO₂ e demais parâmetros considerando faixa etária, sexo e contexto. Aponte valores fora da normalidade e seu significado clínico.`
+    user: `Módulo: SINAIS VITAIS\n\nReferencias e limites obrigatorios:\n${referenciasModulo('sinais_vitais')}\n\nDados:\n${JSON.stringify(dados, null, 2)}\n\nInterprete PA, FC, SpO₂ e demais parâmetros considerando faixa etária, sexo e contexto. Aponte valores fora da normalidade e seu significado clínico.`
   };
 }
 
@@ -61,7 +62,7 @@ export function promptPosturografia(ctx: PacienteContexto, dados: any) {
     .filter(([, v]) => v).map(([k]) => k.replace(/_/g, ' '));
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: POSTUROGRAFIA\n\nReferências e limites obrigatórios:\n${referenciasModulo('posturografia')}\n\nDesvios: ${desvios.length ? desvios.join(', ') : 'nenhum'}\nObservações: ${dados?.observacoes || '—'}\n\nInterprete o padrão postural. Explique cadeias musculares encurtadas/inibidas para cada desvio. Recomende exercícios corretivos específicos (alongamentos, fortalecimento, controle motor) e tempo de reavaliação.`
+    user: `Módulo: POSTUROGRAFIA\n\nReferencias e limites obrigatorios:\n${referenciasModulo('posturografia')}\n\nDesvios: ${desvios.length ? desvios.join(', ') : 'nenhum'}\nObservações: ${dados?.observacoes || '—'}\n\nInterprete o padrão postural. Explique cadeias musculares encurtadas/inibidas para cada desvio. Recomende exercícios corretivos específicos (alongamentos, fortalecimento, controle motor) e tempo de reavaliação.`
   };
 }
 
@@ -72,7 +73,7 @@ export function promptAntropometria(ctx: PacienteContexto, dados: any) {
   const pctPotencial = dados?.massa_magra ? +((dados.massa_magra / limiteMax) * 100).toFixed(1) : null;
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: ANTROPOMETRIA (ISAK)\n\nReferências e limites obrigatórios:\n${referenciasModulo('antropometria')}\n\nDados:\n- Peso: ${dados?.peso} kg · Estatura: ${dados?.estatura} cm · IMC: ${dados?.imc}\n- % Gordura: ${dados?.percentual_gordura}% · Massa magra: ${dados?.massa_magra} kg · Massa óssea: ${dados?.massa_ossea} kg\n- Somatotipo: ${JSON.stringify(dados?.somatotipo)}\n- Circunferências: ${JSON.stringify(dados?.circunferencias)}\n- FFMI (Fat-Free Mass Index): ${ffmi}\n- Potencial genético atingido (Berkhan): ${pctPotencial}% (limite estimado: ${limiteMax.toFixed(1)} kg de massa magra)\n\nInterprete a composição corporal considerando sexo e idade. Avalie o FFMI e informe ao paciente quão próximo está do limite natural muscular. Comente sobre a massa óssea em relação ao esperado. Dê recomendações nutricionais gerais (macros, sem prescrever dieta) e de treinamento alinhadas ao objetivo.`
+    user: `Módulo: ANTROPOMETRIA (ISAK)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('antropometria')}\n\nDados:\n- Peso: ${dados?.peso} kg · Estatura: ${dados?.estatura} cm · IMC: ${dados?.imc}\n- % Gordura: ${dados?.percentual_gordura}% · Massa magra: ${dados?.massa_magra} kg · Massa óssea: ${dados?.massa_ossea} kg\n- Somatotipo: ${JSON.stringify(dados?.somatotipo)}\n- Circunferências: ${JSON.stringify(dados?.circunferencias)}\n- FFMI (Fat-Free Mass Index): ${ffmi}\n- Potencial genético atingido (Berkhan): ${pctPotencial}% (limite estimado: ${limiteMax.toFixed(1)} kg de massa magra)\n\nInterprete a composição corporal considerando sexo e idade. Avalie o FFMI e informe ao paciente quão próximo está do limite natural muscular. Comente sobre a massa óssea em relação ao esperado. Dê recomendações nutricionais gerais (macros, sem prescrever dieta) e de treinamento alinhadas ao objetivo.`
   };
 }
 
@@ -89,21 +90,21 @@ export function promptForca(ctx: PacienteContexto, dados: any) {
     : '';
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: FORÇA\n\nReferências e limites obrigatórios:\n${referenciasModulo('forca')}\n\nPreensão palmar:\n- Direita: ${dados?.preensao_dir_kgf} kgf · Esquerda: ${dados?.preensao_esq_kgf} kgf\n- Força relativa: D ${dados?.forca_relativa_dir} / E ${dados?.forca_relativa_esq} kgf/kg\n- Assimetria: ${dados?.assimetria_percent}%\n- Testes: ${JSON.stringify(dados?.testes ?? [])}\n- Pop. referência: ${dados?.populacao_ref}${dinamTexto}${sptechTexto}${tracaoTexto}\n\nInterprete considerando faixa etária e população. Discuta assimetria, RFD, 1RM estimado e impacto funcional. Se houver dados de dinamometria isométrica, analise cada grupo muscular, identifique desequilíbrios bilaterais e proponha intervenções específicas. Mencione que preensão é preditor de longevidade.`
+    user: `Módulo: FORÇA\n\nReferencias e limites obrigatorios:\n${referenciasModulo('forca')}\n\nPreensão palmar:\n- Direita: ${dados?.preensao_dir_kgf} kgf · Esquerda: ${dados?.preensao_esq_kgf} kgf\n- Força relativa: D ${dados?.forca_relativa_dir} / E ${dados?.forca_relativa_esq} kgf/kg\n- Assimetria: ${dados?.assimetria_percent}%\n- Testes: ${JSON.stringify(dados?.testes ?? [])}\n- Pop. referência: ${dados?.populacao_ref}${dinamTexto}${sptechTexto}${tracaoTexto}\n- Esporte/contexto: ${labelEsporteForca(dados?.esporte_contexto) || 'Nao informado'}\n- Finalidade do teste: ${labelFinalidadeForca(dados?.finalidade_teste) || 'Nao informada'}\n- Lado dominante: ${labelLadoDominante(dados?.lado_dominante) || 'Nao informado'}\n\nInterprete considerando faixa etaria, populacao, esporte/contexto, finalidade do teste e lado dominante. Discuta assimetria, RFD, 1RM estimado, exigencias funcionais do esporte e impacto funcional. Se houver dados de dinamometria isométrica, analise cada grupo muscular, identifique desequilíbrios bilaterais e proponha intervenções específicas. Mencione que preensão é preditor de longevidade.`
   };
 }
 
 export function promptFlexibilidade(ctx: PacienteContexto, dados: any) {
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: FLEXIBILIDADE (Banco de Wells / Sit and Reach)\n\nReferências e limites obrigatórios:\n${referenciasModulo('flexibilidade')}\n\nDados:\n- Tentativa 1: ${dados?.tentativa_1} cm · Tentativa 2: ${dados?.tentativa_2} cm · Tentativa 3: ${dados?.tentativa_3} cm\n- Melhor resultado: ${dados?.melhor_resultado} cm\n- Classificação: ${dados?.classificacao}\n- Observações: ${dados?.observacoes || '—'}\n\nInterprete o nível de flexibilidade considerando sexo e idade (tabela ACSM). Explique as implicações da flexibilidade posterior para saúde lombar, performance esportiva e prevenção de lesões. Recomende exercícios de alongamento específicos (estático, dinâmico, PNF) com frequência, duração e progressão. Relacione com achados posturais se disponível.`
+    user: `Módulo: FLEXIBILIDADE (Banco de Wells / Sit and Reach)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('flexibilidade')}\n\nDados:\n- Tentativa 1: ${dados?.tentativa_1} cm · Tentativa 2: ${dados?.tentativa_2} cm · Tentativa 3: ${dados?.tentativa_3} cm\n- Melhor resultado: ${dados?.melhor_resultado} cm\n- Classificação: ${dados?.classificacao}\n- Observações: ${dados?.observacoes || '—'}\n\nInterprete o nível de flexibilidade considerando sexo e idade (tabela ACSM). Explique as implicações da flexibilidade posterior para saúde lombar, performance esportiva e prevenção de lesões. Recomende exercícios de alongamento específicos (estático, dinâmico, PNF) com frequência, duração e progressão. Relacione com achados posturais se disponível.`
   };
 }
 
 export function promptCardio(ctx: PacienteContexto, dados: any) {
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: CARDIORRESPIRATÓRIO\n\nReferências e limites obrigatórios:\n${referenciasModulo('cardiorrespiratorio')}\n\nDados:\n- VO₂máx: ${dados?.vo2max} ml/kg/min\n- L2: ${dados?.l2} km/h · VAM: ${dados?.vam} km/h\n- FCmáx: ${dados?.fc_max} bpm · FC repouso: ${dados?.fc_repouso} bpm\n- Zonas: ${JSON.stringify(dados?.zonas)}\n\nInterprete a capacidade CR considerando sexo/idade. Classifique o VO₂máx. Dê uma semana típica de treino com distribuição Z1-Z5 alinhada ao objetivo.`
+    user: `Módulo: CARDIORRESPIRATÓRIO\n\nReferencias e limites obrigatorios:\n${referenciasModulo('cardiorrespiratorio')}\n\nDados:\n- VO₂máx: ${dados?.vo2max} ml/kg/min\n- L2: ${dados?.l2} km/h · VAM: ${dados?.vam} km/h\n- FCmáx: ${dados?.fc_max} bpm · FC repouso: ${dados?.fc_repouso} bpm\n- Zonas: ${JSON.stringify(dados?.zonas)}\n\nInterprete a capacidade CR considerando sexo/idade. Classifique o VO₂máx. Dê uma semana típica de treino com distribuição Z1-Z5 alinhada ao objetivo.`
   };
 }
 
@@ -124,7 +125,7 @@ Retorne APENAS JSON:
   "prioridades": [{ "titulo": string, "acao": string, "prazo": string }],
   "mensagem_paciente": string
 }`,
-    user: `Referências e limites obrigatórios:\n${referenciasModulo('geral')}\n\nScores:\n${JSON.stringify(modulos.scores, null, 2)}\n\nAnálises:\n${JSON.stringify(modulos.analises, null, 2)}\n\nSintetize o quadro global, aponte pontos fortes/críticos e indique 3 prioridades com prazo realista.`
+    user: `Referencias e limites obrigatorios:\n${referenciasModulo('geral')}\n\nScores:\n${JSON.stringify(modulos.scores, null, 2)}\n\nAnálises:\n${JSON.stringify(modulos.analises, null, 2)}\n\nSintetize o quadro global, aponte pontos fortes/críticos e indique 3 prioridades com prazo realista.`
   };
 }
 
@@ -142,7 +143,7 @@ export function promptBioimpedancia(ctx: PacienteContexto, dados: any) {
     system: SISTEMA_BASE(ctx),
     user: `Módulo: BIOIMPEDÂNCIA — ${dados?.aparelho ?? 'Avabio 380'}
 
-Referências e limites obrigatórios:
+Referencias e limites obrigatorios:
 ${referenciasModulo('bioimpedancia')}
 
 Análise global:
@@ -174,7 +175,7 @@ export function promptRML(ctx: PacienteContexto, dados: any) {
 
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: RESISTÊNCIA MUSCULAR LOCALIZADA (RML)\n\nReferências e limites obrigatórios:\n${referenciasModulo('rml')}\n\nCategoria: ${cat}\nScore RML: ${dados?.score ?? '—'}/100\n\nTestes realizados:\n${testes || 'Nenhum teste registrado'}\n\nObservações: ${dados?.observacoes || '—'}\n\nAnalise a resistência muscular localizada por grupamento (MMSS, core, MMII). Identifique desequilíbrios entre grupamentos. Correlacione com o objetivo declarado e histórico. Proponha protocolo de treino específico para cada grupamento deficiente (séries, repetições, frequência, progressão). Mencione implicações funcionais e para qualidade de vida.`
+    user: `Módulo: RESISTÊNCIA MUSCULAR LOCALIZADA (RML)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('rml')}\n\nCategoria: ${cat}\nScore RML: ${dados?.score ?? '—'}/100\n\nTestes realizados:\n${testes || 'Nenhum teste registrado'}\n\nObservações: ${dados?.observacoes || '—'}\n\nAnalise a resistência muscular localizada por grupamento (MMSS, core, MMII). Identifique desequilíbrios entre grupamentos. Correlacione com o objetivo declarado e histórico. Proponha protocolo de treino específico para cada grupamento deficiente (séries, repetições, frequência, progressão). Mencione implicações funcionais e para qualidade de vida.`
   };
 }
 
@@ -184,7 +185,7 @@ export function promptEvolucao(ctx: PacienteContexto, historico: any[]) {
 
 Paciente: ${ctx.nome}, ${ctx.sexo === 'M' ? 'masculino' : 'feminino'}, ${ctx.idade} anos.
 
-Referências e limites obrigatórios:
+Referencias e limites obrigatorios:
 ${referenciasModulo('evolucao')}
 
 Retorne APENAS JSON:
@@ -234,7 +235,7 @@ Retorne APENAS JSON válido:
   "recomendacoes": string[],
   "alertas": string[]
 }`,
-    user: `Referências e limites obrigatórios:
+    user: `Referencias e limites obrigatorios:
 ${referenciasModulo('biomecanica_corrida')}
 
 ÂNGULOS CINEMÁTICOS:\n${angulosTexto}

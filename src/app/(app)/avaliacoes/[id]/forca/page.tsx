@@ -94,6 +94,38 @@ const TRACAO_REFERENCIAS = [
   { key:'outro', musculo:'Outro', exercicio:'', fator:1 },
 ];
 
+const ESPORTES_FORCA = [
+  ['saude_geral', 'Saúde geral'],
+  ['corrida', 'Corrida'],
+  ['musculacao', 'Musculação'],
+  ['beach_tennis', 'Beach tennis'],
+  ['tenis', 'Tênis'],
+  ['tenis_mesa', 'Tênis de mesa'],
+  ['volei', 'Vôlei'],
+  ['natacao', 'Natação'],
+  ['lutas', 'Lutas'],
+  ['futebol', 'Futebol'],
+  ['ciclismo', 'Ciclismo'],
+  ['outro', 'Outro'],
+] as const;
+
+const FINALIDADES_FORCA = [
+  ['triagem', 'Triagem funcional'],
+  ['performance', 'Performance'],
+  ['retorno_esporte', 'Retorno ao esporte'],
+  ['prevencao', 'Prevenção de lesões'],
+  ['dor', 'Dor / limitação funcional'],
+  ['reabilitacao', 'Reabilitação'],
+  ['hipertrofia', 'Hipertrofia'],
+  ['emagrecimento', 'Emagrecimento'],
+] as const;
+
+const LADOS_DOMINANTES = [
+  ['direito', 'Direito'],
+  ['esquerdo', 'Esquerdo'],
+  ['ambidestro', 'Ambidestro'],
+] as const;
+
 /* ══ HELPERS ════════════════════════════════════════════ */
 const ladoVazio = (): LadoData => ({
   kgf:'', torque_nm:'', rm1_kg:'',
@@ -252,6 +284,9 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
   // Preensão
   const [tipo_avaliacao, setTipoAval] = useState('clinica');
   const [populacao_ref, setPopRef]    = useState('geral');
+  const [esporte_contexto, setEsporteContexto] = useState('saude_geral');
+  const [finalidade_teste, setFinalidadeTeste] = useState('triagem');
+  const [lado_dominante, setLadoDominante] = useState('direito');
   const [preensao_dir, setPreDir]     = useState('');
   const [preensao_esq, setPreEsq]     = useState('');
 
@@ -277,6 +312,9 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
     if (d) {
       setTipoAval(d.tipo_avaliacao ?? 'clinica');
       setPopRef(d.populacao_ref ?? 'geral');
+      setEsporteContexto(d.esporte_contexto ?? 'saude_geral');
+      setFinalidadeTeste(d.finalidade_teste ?? 'triagem');
+      setLadoDominante(d.lado_dominante ?? 'direito');
       setPreDir(d.preensao_dir_kgf?.toString() ?? '');
       setPreEsq(d.preensao_esq_kgf?.toString() ?? '');
       setModeloDinamometria(d.modelo_dinamometria ?? 'medeor');
@@ -292,7 +330,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
   })();}, [params.id, supabase]);
 
   const autoSaveValue = {
-    tipo_avaliacao, populacao_ref, preensao_dir, preensao_esq,
+    tipo_avaliacao, populacao_ref, esporte_contexto, finalidade_teste, lado_dominante, preensao_dir, preensao_esq,
     modeloDinamometria, spTestes, spRelacoes, tracaoTestes, temAlgometria, algPontos, testes,
   };
 
@@ -302,6 +340,9 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
     const peso = aval?.pacientes?.peso ?? 75;
     return upsertModulo('forca', params.id, {
       tipo_avaliacao: v.tipo_avaliacao, populacao_ref: v.populacao_ref,
+      esporte_contexto: v.esporte_contexto,
+      finalidade_teste: v.finalidade_teste,
+      lado_dominante: v.lado_dominante,
       preensao_dir_kgf: dir, preensao_esq_kgf: esq,
       forca_relativa_dir: dir&&peso ? +(dir/peso).toFixed(3) : null,
       forca_relativa_esq: esq&&peso ? +(esq/peso).toFixed(3) : null,
@@ -444,6 +485,29 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                   <option value="geral">Geral</option>
                   <option value="ativa">Ativa</option>
                   <option value="atleta">Atleta</option>
+                </Select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Esporte / contexto">
+                <Select value={esporte_contexto} onChange={e=>setEsporteContexto(e.target.value)}>
+                  {ESPORTES_FORCA.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Finalidade do teste">
+                <Select value={finalidade_teste} onChange={e=>setFinalidadeTeste(e.target.value)}>
+                  {FINALIDADES_FORCA.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Lado dominante">
+                <Select value={lado_dominante} onChange={e=>setLadoDominante(e.target.value)}>
+                  {LADOS_DOMINANTES.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </Select>
               </Field>
             </div>

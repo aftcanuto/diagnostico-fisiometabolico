@@ -4,6 +4,8 @@
  * Layout: capa Â· resumo dark Â· mÃ³dulos white
  */
 
+import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
+
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
   cor_gradient_1?: string; cor_gradient_2?: string; cor_gradient_3?: string;
@@ -979,6 +981,8 @@ function pgForca(f: any, score: number | null, ia?: any): string {
   };
   return pgModulo('ForÃ§a', score, `
   ${(f.preensao_dir_kgf||f.preensao_esq_kgf)?`<div class="kpi-grid" style="margin-bottom:18px">
+    ${kpi('Contexto',labelEsporteForca(f.esporte_contexto),'')}${kpi('Finalidade',labelFinalidadeForca(f.finalidade_teste),'')}
+    ${kpi('Lado dominante',labelLadoDominante(f.lado_dominante),'')}
     ${kpi('MÃ£o direita',f.preensao_dir_kgf,'kgf')}${kpi('MÃ£o esquerda',f.preensao_esq_kgf,'kgf')}
     ${kpi('ForÃ§a rel. D',f.forca_relativa_dir,'kgf/kg')}${kpi('Assimetria',f.assimetria_percent,'%')}
   </div>`:''}

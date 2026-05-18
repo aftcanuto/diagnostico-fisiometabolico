@@ -1721,3 +1721,34 @@ Validacao esperada:
 - aplicar a migration `038_anamnese_historia_familiar_historico_medico.sql`;
 - abrir a configuracao do template e conferir a pergunta dentro de `Historico medico`;
 - abrir uma avaliacao na aba Anamnese e confirmar que o formulario usa a nova ordem e o novo nome.
+
+## Contexto esportivo no modulo de forca
+
+Em 18/05/2026 foi ampliado o modulo de forca para contextualizar a interpretacao da dinamometria Medeor/SPTech e da preensao palmar.
+
+Implementado:
+
+- criada a migration `039_forca_contexto_esportivo_medeor.sql`;
+- a tabela `forca` ganhou os campos `esporte_contexto`, `finalidade_teste` e `lado_dominante`;
+- o formulario de forca passou a exibir seletores para contexto esportivo, finalidade do teste e lado dominante;
+- adicionados os esportes/contextos: saude geral, corrida, musculacao, beach tennis, tenis, tenis de mesa, volei, natacao, lutas, futebol, ciclismo e outro;
+- os novos campos foram incluidos no dashboard clinico, dashboard do paciente e relatorio PDF;
+- o prompt de IA de forca passou a receber esporte/contexto, finalidade e lado dominante para gerar analise clinica mais direcionada.
+
+Calculos atuais da preensao palmar:
+
+- valores brutos de mao direita e esquerda em kgf;
+- forca relativa direita e esquerda: `preensao kgf / peso corporal`;
+- assimetria percentual: `abs(direita - esquerda) / maior valor * 100`;
+- percentil estimado por sexo, idade e populacao de referencia;
+- score de forca com penalidade por assimetria: acima de 10% reduz 10 pontos; acima de 15% reduz 20 pontos.
+
+Pendente operacional:
+
+- aplicar `039_forca_contexto_esportivo_medeor.sql` no Supabase antes do proximo teste em producao.
+
+Validacao local:
+
+- `npm run predeploy` passou sem erros;
+- `npm run build` passou sem erros;
+- os previews de laudo, dashboard clinico e dashboard do paciente foram gerados pelo smoke test.

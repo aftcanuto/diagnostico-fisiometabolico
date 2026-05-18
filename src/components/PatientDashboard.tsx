@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/client';
 import { EditarPacienteModal } from '@/components/EditarPacienteModal';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
 import { upsertModulo } from '@/lib/modulos';
+import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 
 interface Props {
   paciente: { nome: string; sexo: 'M' | 'F'; data_nascimento: string; email?: string | null; cpf?: string | null };
@@ -710,8 +711,8 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
             Análise clínica
           </div>
           {textoFormatado.map((parte, idx) => {
-            const titulo = parte.match(/^([A-Za-zÀ-ÿ ]{3,32}:)\s*/)?.[1] ?? '';
-            const corpo = titulo ? parte.replace(/^([A-Za-zÀ-ÿ ]{3,32}:)\s*/, '') : parte;
+            const titulo = parte.match(/^([\p{L} ]{3,32}:)\s*/u)?.[1] ?? '';
+            const corpo = titulo ? parte.replace(/^([\p{L} ]{3,32}:)\s*/u, '') : parte;
             return (
               <p key={`${parte.slice(0, 24)}-${idx}`} style={{ margin: idx === 0 ? '0 0 10px' : '13px 0 0' }}>
                 {titulo && <strong style={{ display: 'block', marginBottom: 4, color: '#064e3b', fontWeight: 700 }}>{titulo}</strong>}
@@ -1555,6 +1556,9 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       {atual.forca && (() => {
         const f = atual.forca as any;
         const itens = [
+          ['Contexto', labelEsporteForca(f.esporte_contexto), '', '#0f172a'],
+          ['Finalidade', labelFinalidadeForca(f.finalidade_teste), '', '#0f172a'],
+          ['Lado dominante', labelLadoDominante(f.lado_dominante), '', '#0f172a'],
           ['Preensao direita', f.preensao_dir_kgf, 'kgf', '#0f172a'],
           ['Preensao esquerda', f.preensao_esq_kgf, 'kgf', '#0f172a'],
           ['Forca relativa direita', f.forca_relativa_dir, 'kgf/kg', '#0f172a'],
