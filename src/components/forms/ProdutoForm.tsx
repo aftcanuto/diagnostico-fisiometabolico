@@ -112,7 +112,7 @@ export function ProdutoForm({ id }: { id?: string }) {
 
   if (loading) return <p className="text-slate-500">Carregando…</p>;
 
-  if (notFound) return <p className="text-red-600">Produto nÃ£o encontrado ou sem permissÃ£o para editar.</p>;
+  if (notFound) return <p className="text-red-600">Produto não encontrado ou sem permissão para editar.</p>;
 
   return (
     <div className="max-w-3xl space-y-5">

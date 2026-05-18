@@ -154,11 +154,11 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                   </div>
                   {m.tipo === 'conclusao_global' && (
                     <div>
-                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Plano de aÃ§Ã£o pÃ³s-laudo</div>
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Plano de ação pós-laudo</div>
                       <Textarea
                         value={rascunhoPlano}
                         onChange={e => setRascunhoPlano(e.target.value)}
-                        placeholder="Prioridades clÃ­nicas, metas de 30/60/90 dias, recomendaÃ§Ãµes por Ã¡rea e alertas de encaminhamento."
+                        placeholder="Prioridades clínicas, metas de 30/60/90 dias, recomendações por área e alertas de encaminhamento."
                         className="min-h-[150px] text-sm"
                       />
                     </div>

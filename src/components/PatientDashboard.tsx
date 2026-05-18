@@ -240,7 +240,7 @@ function TimelineDelta({ atual, anterior }: { atual: any; anterior: any }) {
   const b = Number(anterior);
   if (!Number.isFinite(a) || !Number.isFinite(b)) return <span style={{ color: '#94a3b8' }}>sem comparativo anterior</span>;
   const diff = Math.round(a - b);
-  if (diff === 0) return <span style={{ color: '#64748b' }}>sem alteraÃ§Ã£o no score</span>;
+  if (diff === 0) return <span style={{ color: '#64748b' }}>sem alteração no score</span>;
   return (
     <span style={{ color: diff > 0 ? '#059669' : '#ef4444', fontWeight: 600 }}>
       {diff > 0 ? `+${diff}` : diff} pontos vs. anterior
@@ -1751,11 +1751,19 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                       borderRadius: 10, border: `1px solid ${acento}30` }}>
                       <div style={{ fontSize: 9, fontWeight: 600, color: acento,
                         textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{titulo}</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8 }}>
                         {[
                           ['FIM', lado.fim_kgf, 'kgf'],
+                          ['FIM', lado.fim_n, 'N'],
+                          ['Forca relativa', lado.forca_relativa_kgf_kg, 'kgf/kg'],
                           ['1RM estimado', lado.rm1_kg, 'kg'],
-                          ['RFD', lado.rfd_kgf_s, 'kgf/s'],
+                          ['RFD global', lado.rfd_kgf_s, 'kgf/s'],
+                          ['RFD 50ms', lado.rfd_50_kgf_s, 'kgf/s'],
+                          ['RFD 100ms', lado.rfd_100_kgf_s, 'kgf/s'],
+                          ['RFD 200ms', lado.rfd_200_kgf_s, 'kgf/s'],
+                          ['Impulso', lado.impulso_kgf_s, 'kgf.s'],
+                          ['Sust. 80%', lado.sustentacao_80_s, 's'],
+                          ['Duracao', lado.duracao_s, 's'],
                         ].map(([label, valor, un]) => (
                           <div key={label} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
                             <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px', fontWeight: 700 }}>{label}</div>
@@ -1786,6 +1794,22 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     <div style={{ padding: 10, display: 'flex', gap: 10 }}>
                       <LadoCard lado={t.lado_d} titulo="◀ Lado Direito" acento="#3b82f6"/>
                       <LadoCard lado={t.lado_e} titulo="Lado Esquerdo ▶" acento="#8b5cf6"/>
+                    </div>
+                    <div style={{ padding: '0 10px 10px', display: 'grid', gridTemplateColumns: 'repeat(5,minmax(0,1fr))', gap: 8 }}>
+                      {[
+                        ['Media tentativas', t.media_tentativas_kgf, 'kgf'],
+                        ['Fadiga', t.indice_fadiga_pct, '%'],
+                        ['LSI', t.lsi_pct, '%'],
+                        ['Assimetria', t.assimetria_pct, '%'],
+                        ['Delta absoluto', t.diferenca_abs_kgf, 'kgf'],
+                      ].filter(([, valor]) => valor != null && valor !== '').map(([label, valor, un]) => (
+                        <div key={label} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px', fontWeight: 700 }}>{label}</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                            {valor} <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 500 }}>{un}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                     {t.observacoes && (
                       <div style={{ padding: '0 12px 12px', fontSize: 12, color: '#475569' }}>{t.observacoes}</div>

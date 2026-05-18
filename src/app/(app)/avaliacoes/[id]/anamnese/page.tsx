@@ -10,7 +10,7 @@ import { useAutoSave } from '@/lib/useAutoSave';
 import { buildSteps } from '@/lib/steps';
 import { buscarModulo, upsertModulo } from '@/lib/modulos';
 
-// â”€â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Tipos ───────────────────────────────────────────────────────────────────
 type TipoCampo = 'texto' | 'texto_longo' | 'boolean' | 'numero' | 'escala' | 'selecao' | 'data' | 'secao';
 
 interface Campo {
@@ -59,12 +59,12 @@ function PublicarCheckbox({ checked, onChange }: { checked: boolean; onChange: (
         checked={checked}
         onChange={e => onChange(e.target.checked)}
       />
-      <span>Exibir este dado no relatÃ³rio e no portal do paciente</span>
+      <span>Exibir este dado no relatório e no portal do paciente</span>
     </label>
   );
 }
 
-// â”€â”€â”€ Renderizador de campo dinÃ¢mico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Renderizador de campo dinâmico ─────────────────────────────────────────
 function CampoDinamico({ campo, valor, onChange, publicar, onPublicarChange }: {
   campo: Campo;
   valor: any;
@@ -241,7 +241,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     (async () => {
-      // 1. Buscar avaliaÃ§Ã£o para saber a clÃ­nica e modulos
+      // 1. Buscar avaliação para saber a clínica e modulos
       const { data: av } = await supabase.from('avaliacoes')
         .select('modulos_selecionados, clinica_id')
         .eq('id', params.id)
@@ -251,7 +251,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
       // 2. Buscar dados salvos de anamnese
       const an = await buscarModulo('anamnese', params.id);
 
-      // 3. Buscar template da clÃ­nica (padrÃ£o ou o salvo na anamnese)
+      // 3. Buscar template da clínica (padrão ou o salvo na anamnese)
       let tpl: Template | null = null;
 
       const templateBuscaId = an?.template_id
@@ -308,24 +308,24 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
       return { ...prev, [CAMPOS_PUBLICOS_KEY]: prox };
     });
 
-  // NavegaÃ§Ã£o
+  // Navegação
   const steps = aval ? buildSteps(params.id, aval.modulos_selecionados) : [];
   const idx = steps.findIndex(s => s.key === 'anamnese');
   const next = steps[idx + 1];
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  if (!loaded) return <p className="text-slate-400">Carregando formulÃ¡rioâ€¦</p>;
+  // ── Render ──────────────────────────────────────────────────────────────────
+  if (!loaded) return <p className="text-slate-400">Carregando formulário…</p>;
 
   return (
     <div className="space-y-5 max-w-4xl">
 
-      {/* Sem template: usar fallback bÃ¡sico */}
+      {/* Sem template: usar fallback básico */}
       {!template && (
         <>
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-            Nenhum formulÃ¡rio de anamnese configurado para esta clÃ­nica.{' '}
+            Nenhum formulário de anamnese configurado para esta clínica.{' '}
             <a href="/configuracoes/anamnese-templates" className="font-semibold underline">
-              Criar agora â†’
+              Criar agora →
             </a>
           </div>
           <AnamnesesFallback
@@ -337,9 +337,9 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
         </>
       )}
 
-      {/* Com template: renderizar campos dinÃ¢micos agrupados em cards por seÃ§Ã£o */}
+      {/* Com template: renderizar campos dinâmicos agrupados em cards por seção */}
       {template && (() => {
-        // Agrupar campos em seÃ§Ãµes
+        // Agrupar campos em seções
         type Grupo = { titulo: string | null; campos: Campo[] };
         const grupos: Grupo[] = [];
         let grupoAtual: Grupo = { titulo: null, campos: [] };
@@ -349,7 +349,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
             if (grupoAtual.campos.length > 0 || grupoAtual.titulo) {
               grupos.push(grupoAtual);
             }
-            grupoAtual = { titulo: textoSeguro(campo.label, 'SeÃ§Ã£o'), campos: [] };
+            grupoAtual = { titulo: textoSeguro(campo.label, 'Seção'), campos: [] };
           } else {
             grupoAtual.campos.push(campo);
           }
@@ -388,7 +388,7 @@ export default function AnamnesePage({ params }: { params: { id: string } }) {
           await salvarAnamnese();
           if (next) router.push(next.href);
         }}>
-          Continuar â†’
+          Continuar →
         </Button>
       </div>
       <SaveIndicator state={saveState} />

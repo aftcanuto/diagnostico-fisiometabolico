@@ -87,7 +87,7 @@ export default function AnamneseTemplatesPage() {
     setErro(null);
     const { data: cid, error: clinicaError } = await supabase.rpc('current_clinica_id');
     if (clinicaError || !cid) {
-      setErro(clinicaError?.message ?? 'NÃ£o foi possÃ­vel identificar a clÃ­nica atual.');
+      setErro(clinicaError?.message ?? 'Não foi possível identificar a clínica atual.');
       setTemplates([]);
       setLoading(false);
       return;
@@ -140,7 +140,7 @@ export default function AnamneseTemplatesPage() {
     }
     setSalvando(false);
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel salvar o template: ${error.message}`);
+      setErro(`Não foi possível salvar o template: ${error.message}`);
       return;
     }
     setEditando(null);
@@ -152,7 +152,7 @@ export default function AnamneseTemplatesPage() {
     setErro(null);
     const { error: e1 } = await supabase.from('anamnese_templates').update({ padrao: false }).eq('clinica_id', clinicaId).neq('id', id);
     const { error: e2 } = await supabase.from('anamnese_templates').update({ padrao: true }).eq('id', id).eq('clinica_id', clinicaId);
-    if (e1 || e2) setErro(`NÃ£o foi possÃ­vel definir o padrÃ£o: ${(e1 ?? e2)?.message}`);
+    if (e1 || e2) setErro(`Não foi possível definir o padrão: ${(e1 ?? e2)?.message}`);
     carregar();
   }
 

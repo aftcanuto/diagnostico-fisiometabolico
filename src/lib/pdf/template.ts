@@ -1,7 +1,7 @@
 ﻿/**
- * PDF Template v4 â€” Baseado no design v0.dev
- * Gauges com gradiente completo + triÃ¢ngulo indicador
- * Layout: capa Â· resumo dark Â· mÃ³dulos white
+ * PDF Template v4 — Baseado no design v0.dev
+ * Gauges com gradiente completo + triângulo indicador
+ * Layout: capa · resumo dark · módulos white
  */
 
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
@@ -41,18 +41,18 @@ export interface LaudoData {
   } | null;
 }
 
-// â”€â”€â”€ Utils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Utils ────────────────────────────────────────────────────────────────────
 const x = (s: any) => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const xa = (s: any) => x(s).replace(/"/g,'&quot;');
 const fd = (iso: string) => { try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; } };
 function limparTextoHTML(html: string): string {
   const pares: [string, string][] = [
-    ['ÃƒÂ¡','á'], ['ÃƒÂ ','à'], ['ÃƒÂ¢','â'], ['ÃƒÂ£','ã'], ['ÃƒÂ©','é'], ['ÃƒÂª','ê'], ['ÃƒÂ­','í'], ['ÃƒÂ³','ó'], ['ÃƒÂ´','ô'], ['ÃƒÂµ','õ'], ['ÃƒÂº','ú'], ['ÃƒÂ§','ç'],
-    ['Ã¡','á'], ['Ã ','à'], ['Ã¢','â'], ['Ã£','ã'], ['Ã©','é'], ['Ãª','ê'], ['Ã­','í'], ['Ã³','ó'], ['Ã´','ô'], ['Ãµ','õ'], ['Ã¶','ö'], ['Ãº','ú'], ['Ã§','ç'],
-    ['Ã','Á'], ['Ã‰','É'], ['Ã','Í'], ['Ã“','Ó'], ['Ãš','Ú'], ['Ã‡','Ç'], ['Ã§','ç'],
-    ['Â·','·'], ['Â°','°'], ['Âª','ª'], ['â€”','—'], ['â€“','–'], ['â‰¥','≥'], ['â†’','→'], ['âœ“','✓'], ['âš ',''], ['â±','Prazo:'], ['â‚‚','2'], ['â—€',''], ['â–¶',''],
+    ['ÃƒÂ¡','á'], ['ÃƒÂ ','à'], ['ÃƒÂ¢','â'], ['ÃƒÂ£','ã'], ['ÃƒÂ©','é'], ['Ãƒª','ê'], ['ÃƒÂ­','í'], ['Ãƒ³','ó'], ['ÃƒÂ´','ô'], ['ÃƒÂµ','õ'], ['Ãƒº','ú'], ['ÃƒÂ§','ç'],
+    ['á','á'], ['à','à'], ['â','â'], ['ã','ã'], ['é','é'], ['ê','ê'], ['í','í'], ['ó','ó'], ['ô','ô'], ['õ','õ'], ['ö','ö'], ['ú','ú'], ['ç','ç'],
+    ['Ã','Á'], ['É','É'], ['Ã','Í'], ['Ó','Ó'], ['Ú','Ú'], ['Ç','Ç'], ['ç','ç'],
+    ['·','·'], ['°','°'], ['ª','ª'], ['—','—'], ['–','–'], ['≥','≥'], ['→','→'], ['âœ“','✓'], ['âš ',''], ['â±','Prazo:'], ['â‚‚','2'], ['â—€',''], ['â–¶',''],
     ['â¤ï¸',''], ['ðŸ§',''], ['âš–ï¸',''], ['ðŸ’ª',''], ['ðŸ¤¸',''], ['ðŸ’¬',''], ['ðŸ“‹',''], ['ðŸ”„',''],
-    ['Ã¢â‚¬â€','—'], ['Ã¢â‚¬â€œ','–'], ['Ã‚Â·','·'], ['Ã‚Â°','°'],
+    ['ââ‚¬”','—'], ['ââ‚¬“','–'], ['Ã‚·','·'], ['Ã‚°','°'],
   ];
   const limpo = pares.reduce((acc, [a, b]) => acc.split(a).join(b), html);
   return limpo.replace(/<!--[\s\S]*?-->/g, '');
@@ -65,15 +65,15 @@ function zoneColor(v: number | null) {
   return '#10b981';
 }
 function zoneLabel(v: number | null) {
-  if (v == null) return 'â€”';
-  if (v <= 40)   return 'CrÃ­tico';
-  if (v <= 70)   return 'AtenÃ§Ã£o';
-  return 'Ã“timo';
+  if (v == null) return '—';
+  if (v <= 40)   return 'Crítico';
+  if (v <= 70)   return 'Atenção';
+  return 'Ótimo';
 }
 
-// â”€â”€â”€ Gauge SVG â€” gradiente completo + triÃ¢ngulo indicador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// FÃ³rmula do triÃ¢ngulo: rotation = (V - 100) * 1.8 graus em torno de (cx, cy)
-// 0% â†’ -180Â°(esquerda), 50% â†’ -90Â°(topo), 100% â†’ 0Â°(direita)
+// ─── Gauge SVG — gradiente completo + triângulo indicador ─────────────────────
+// Fórmula do triângulo: rotation = (V - 100) * 1.8 graus em torno de (cx, cy)
+// 0% → -180°(esquerda), 50% → -90°(topo), 100% → 0°(direita)
 
 function gauge(value: number | null, label: string, size: 'lg' | 'sm'): string {
   const isLg = size === 'lg';
@@ -83,16 +83,16 @@ function gauge(value: number | null, label: string, size: 'lg' | 'sm'): string {
   const cx = vw / 2, cy = isLg ? 104 : 84;
   const r  = isLg ? 80 : 64;
   const sw = isLg ? 14 : 11;             // stroke-width arco
-  const tw = isLg ? 9  : 7;             // half-width triÃ¢ngulo
-  const tl = isLg ? 14 : 11;            // comprimento triÃ¢ngulo
+  const tw = isLg ? 9  : 7;             // half-width triângulo
+  const tl = isLg ? 14 : 11;            // comprimento triângulo
   const gid = `gg${isLg?'L':'S'}${value??'N'}`;
 
   const pct = Math.max(0, Math.min(100, value ?? 0));
-  // TriÃ¢ngulo base na posiÃ§Ã£o das 3h (right), rotacionado para o valor
+  // Triângulo base na posição das 3h (right), rotacionado para o valor
   const rot = (pct - 100) * 1.8;
-  // Base do triÃ¢ngulo: borda externa do arco â†’ aponta para fora
+  // Base do triângulo: borda externa do arco → aponta para fora
   const rOuter = r + sw / 2 + 3;
-  // VÃ©rtices do triÃ¢ngulo apontando para direita (antes da rotaÃ§Ã£o)
+  // Vértices do triângulo apontando para direita (antes da rotação)
   const t1 = `${(cx + rOuter + tl).toFixed(1)},${cy}`;
   const t2 = `${(cx + rOuter).toFixed(1)},${(cy - tw).toFixed(1)}`;
   const t3 = `${(cx + rOuter).toFixed(1)},${(cy + tw).toFixed(1)}`;
@@ -138,22 +138,22 @@ function gauge(value: number | null, label: string, size: 'lg' | 'sm'): string {
     return `<line x1="${xi}" y1="${yi}" x2="${(cx+(r+sw/2+8)*Math.cos(rad)).toFixed(1)}" y2="${(cy-(r+sw/2+8)*Math.sin(rad)).toFixed(1)}" stroke="#374151" stroke-width="1.5"/>
 `;
   }).join('')}
-  <!-- triÃ¢ngulo indicador -->
+  <!-- triângulo indicador -->
   ${value != null ? `<polygon points="${bx1},${by1} ${bx2},${by2} ${nx},${ny}" fill="#0f172a" filter="url(#${gid}sh)"/>
   <polygon points="${t1} ${t2} ${t3}" fill="${col}" transform="rotate(${rot.toFixed(2)},${cx},${cy})" filter="url(#${gid}sh)"/>
   <circle cx="${cx}" cy="${cy}" r="${isLg?9:7}" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
   <circle cx="${cx}" cy="${cy}" r="${isLg?4:3}" fill="#0f172a"/>` : ''}
 </svg>
-<div style="font-size:${fsize}px;font-weight:900;line-height:1;color:${col};margin-top:${isLg?'-10px':'-8px'}">${value ?? 'â€”'}</div>
+<div style="font-size:${fsize}px;font-weight:900;line-height:1;color:${col};margin-top:${isLg?'-10px':'-8px'}">${value ?? '—'}</div>
 <div style="font-size:${isLg?11:10}px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:2px">${x(label)}</div>
 <div style="display:inline-block;margin-top:5px;padding:3px 12px;border-radius:100px;font-size:${isLg?11:10}px;font-weight:600;background:${col}22;color:${col}">${lbl}</div>
 </div>`;
 }
 
-// â”€â”€â”€ Silhueta (estilo v0 â€” gradient fill, clean proportions) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Silhueta (estilo v0 — gradient fill, clean proportions) ──────────────────
 
 
-// â”€â”€â”€ Silhuetas prÃ©-renderizadas (PNG base64, geradas por IA) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Silhuetas pré-renderizadas (PNG base64, geradas por IA) ─────────────────
 const SIL_M: Record<number,string> = {
   0: 'data:image/png;base64,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',
   1: 'data:image/png;base64,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',
@@ -182,7 +182,7 @@ function silhueta(sexo: 'M' | 'F', pctG?: number | null): string {
   return `<img src="${src}" style="width:90px;height:auto;max-height:180px;object-fit:contain;filter:drop-shadow(0 4px 16px ${cor}66)"/>`;
 }
 
-// â”€â”€â”€ CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CSS ──────────────────────────────────────────────────────────────────────
 
 const CSS = (pri: string) => `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -329,7 +329,7 @@ p, li { orphans: 3; widows: 3; }
 .footer-note { margin-top: 16px; font-size: 8.5px; color: #9ca3af; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 14px; }
 `;
 
-// â”€â”€â”€ IA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── IA ──────────────────────────────────────────────────────────────────────
 
 function aiBlock(a: (AnaliseIA & {texto_editado?:string|null}) | undefined): string {
   if (!a) return '';
@@ -339,13 +339,13 @@ function aiBlock(a: (AnaliseIA & {texto_editado?:string|null}) | undefined): str
         a.interpretacao ? `<p class="ai-text" style="margin-bottom:8px">${x(a.interpretacao)}</p>` : '',
         a.achados?.length    ? mkList('Achados', a.achados, '#374151') : '',
         a.riscos?.length     ? mkList('âš  Riscos', a.riscos, '#b91c1c') : '',
-        a.recomendacoes?.length ? mkList('RecomendaÃ§Ãµes', a.recomendacoes, '#374151') : '',
+        a.recomendacoes?.length ? mkList('Recomendações', a.recomendacoes, '#374151') : '',
       ].join('');
   if (!body.trim()) return '';
   return `<div class="ai-box">
   <div class="ai-title">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="#059669" style="flex-shrink:0"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
-    AnÃ¡lise clÃ­nica
+    Análise clínica
   </div>
   ${body}
 </div>`;
@@ -356,7 +356,7 @@ function mkList(t: string, items: string[], col: string): string {
   <ul style="padding-left:16px;font-size:12px;color:#374151">${items.map(i=>`<li style="margin-bottom:2px">${x(i)}</li>`).join('')}</ul></div>`;
 }
 
-// â”€â”€â”€ SeÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Seções ───────────────────────────────────────────────────────────────────
 
 
 // Rodape de identificacao usado pelo Puppeteer como footer real do PDF.
@@ -479,7 +479,7 @@ function pgResumo(d: LaudoData): string {
   const soma   = ant?.somatotipo;
   const somaClass = soma?.classificacao;
   const somaTrio = soma?.endomorfia != null
-    ? `${x(soma.endomorfia)}-${x(soma.mesomorfia ?? 'â€”')}-${x(soma.ectomorfia ?? 'â€”')}`
+    ? `${x(soma.endomorfia)}-${x(soma.mesomorfia ?? '—')}-${x(soma.ectomorfia ?? '—')}`
     : '';
   const msg    = d.analisesIA?.conclusao_global?.texto_editado ?? d.analisesIA?.conclusao_global?.mensagem_paciente ?? '';
 
@@ -487,13 +487,13 @@ function pgResumo(d: LaudoData): string {
     ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
     : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : pctG <= 32 ? '#f97316' : '#ef4444';
 
-  const statusLbl = pctG == null ? 'â€”' : d.paciente.sexo === 'M'
-    ? pctG <= 10 ? 'Essencial' : pctG <= 17 ? 'AtlÃ©tico' : pctG <= 25 ? 'Fitness' : pctG <= 29 ? 'AceitÃ¡vel' : 'Obeso'
-    : pctG <= 14 ? 'Essencial' : pctG <= 21 ? 'AtlÃ©tica' : pctG <= 29 ? 'Fitness' : pctG <= 32 ? 'AceitÃ¡vel' : 'Obesa';
+  const statusLbl = pctG == null ? '—' : d.paciente.sexo === 'M'
+    ? pctG <= 10 ? 'Essencial' : pctG <= 17 ? 'Atlético' : pctG <= 25 ? 'Fitness' : pctG <= 29 ? 'Aceitável' : 'Obeso'
+    : pctG <= 14 ? 'Essencial' : pctG <= 21 ? 'Atlética' : pctG <= 29 ? 'Fitness' : pctG <= 32 ? 'Aceitável' : 'Obesa';
 
-  // Barra de escala de gordura (tipo termÃ´metro horizontal)
-  const escalaM = [{l:'Essencial',max:10},{l:'AtlÃ©tico',max:17},{l:'Fitness',max:25},{l:'AceitÃ¡vel',max:29},{l:'Obeso',max:50}];
-  const escalaF = [{l:'Essencial',max:14},{l:'AtlÃ©tica',max:21},{l:'Fitness',max:29},{l:'AceitÃ¡vel',max:32},{l:'Obesa',max:50}];
+  // Barra de escala de gordura (tipo termômetro horizontal)
+  const escalaM = [{l:'Essencial',max:10},{l:'Atlético',max:17},{l:'Fitness',max:25},{l:'Aceitável',max:29},{l:'Obeso',max:50}];
+  const escalaF = [{l:'Essencial',max:14},{l:'Atlética',max:21},{l:'Fitness',max:29},{l:'Aceitável',max:32},{l:'Obesa',max:50}];
   const escala  = d.paciente.sexo === 'M' ? escalaM : escalaF;
   const escCores= ['#06b6d4','#10b981','#f59e0b','#f97316','#ef4444'];
   const escTotal = 50;
@@ -582,13 +582,13 @@ function pgResumo(d: LaudoData): string {
 
   return `<section class="page summary" style="display:flex;flex-direction:column">
 
-  <!-- â”€â”€ HEADER â”€â”€ -->
+  <!-- ── HEADER ── -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #e2e8f0;margin-bottom:20px">
     <div>
-      <div style="font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Resumo da AvaliaÃ§Ã£o</div>
+      <div style="font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Resumo da Avaliação</div>
       <div style="font-size:28px;font-weight:800;letter-spacing:-.5px;color:#0f172a">${x(d.paciente.nome)}</div>
       <div style="font-size:12px;color:#94a3b8;margin-top:4px">
-        ${d.paciente.sexo==='M'?'Masculino':'Feminino'} Â· ${d.paciente.idade} anos Â· ${fd(d.avaliacao.data)} Â· ${x(d.avaliacao.tipo)}
+        ${d.paciente.sexo==='M'?'Masculino':'Feminino'} · ${d.paciente.idade} anos · ${fd(d.avaliacao.data)} · ${x(d.avaliacao.tipo)}
       </div>
     </div>
     <div style="text-align:right">
@@ -597,7 +597,7 @@ function pgResumo(d: LaudoData): string {
     </div>
   </div>
 
-  <!-- â”€â”€ CORPO PRINCIPAL: score + capacidades â”€â”€ -->
+  <!-- ── CORPO PRINCIPAL: score + capacidades ── -->
   <div style="display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:start">
 
     <!-- COLUNA ESQUERDA: score global -->
@@ -611,7 +611,7 @@ function pgResumo(d: LaudoData): string {
 
     </div>
 
-    <!-- COLUNA DIREITA: gauges dos mÃ³dulos -->
+    <!-- COLUNA DIREITA: gauges dos módulos -->
     <div style="display:flex;flex-direction:column;gap:10px">
       <svg width="0" height="0" style="position:absolute">
         <defs><linearGradient id="miniScoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ef4444"/><stop offset="48%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs>
@@ -646,7 +646,7 @@ function pgResumo(d: LaudoData): string {
 
   </div>
 
-  <!-- â”€â”€ MENSAGEM DO PACIENTE â”€â”€ -->
+  <!-- ── MENSAGEM DO PACIENTE ── -->
   ${msg ? `
   <div style="margin-top:18px;padding:16px 20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;display:flex;gap:12px;align-items:flex-start">
     <div style="font-size:18px;flex-shrink:0">ðŸ’¬</div>
@@ -669,13 +669,13 @@ function pgModulo(titulo: string, score: number | null, content: string, ia?: An
 }
 
 function kpi(label: string, val: any, unit = '') {
-  return `<div class="kpi"><div class="kpi-label">${x(label)}</div><div class="kpi-val">${val??'â€”'}<span class="kpi-unit">${unit?' '+unit:''}</span></div></div>`;
+  return `<div class="kpi"><div class="kpi-label">${x(label)}</div><div class="kpi-val">${val??'—'}<span class="kpi-unit">${unit?' '+unit:''}</span></div></div>`;
 }
 
 function pgAnamnese(a: any, ia?: any): string {
   if (!a) return '';
 
-  // â”€â”€ Modo dinÃ¢mico: quando hÃ¡ respostas + template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Modo dinâmico: quando há respostas + template ────────────────────────
   if (a.respostas && typeof a.respostas === 'object' && Object.keys(a.respostas).length > 0) {
     const permitidos = Array.isArray(a.respostas.__campos_publicos_relatorio) ? a.respostas.__campos_publicos_relatorio : [];
     const resps = Object.fromEntries(Object.entries(a.respostas).filter(([k, v]) =>
@@ -686,7 +686,7 @@ function pgAnamnese(a: any, ia?: any): string {
       Array.isArray(a._campos) ? a._campos : [];
 
     if (campos.length > 0) {
-      // Agrupar por seÃ§Ã£o
+      // Agrupar por seção
       type Grupo = { titulo: string|null; items: Array<{label:string;valor:any;tipo:string;unidade?:string}> };
       const grupos: Grupo[] = [];
       let cur: Grupo = { titulo: null, items: [] };
@@ -699,7 +699,7 @@ function pgAnamnese(a: any, ia?: any): string {
           const val = resps[c.id];
           if (val !== null && val !== undefined && val !== '') {
             let display = val;
-            if (c.tipo === 'boolean') display = val ? 'Sim' : 'NÃ£o';
+            if (c.tipo === 'boolean') display = val ? 'Sim' : 'Não';
             if (c.tipo === 'escala') display = `${val}/10`;
             cur.items.push({ label: c.label, valor: display, tipo: c.tipo, unidade: c.unidade });
           }
@@ -728,16 +728,16 @@ function pgAnamnese(a: any, ia?: any): string {
     </div>${aiBlock(ia)}`;
   }
 
-  // â”€â”€ Modo legado: campos diretos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Modo legado: campos diretos ──────────────────────────────────────────
   const hist = a.historico_medico ?? {};
   const pos  = Object.entries(hist).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' ')).join(', ')||'Nenhum';
   const af   = a.atividade_fisica ?? {};
   return `
     ${a.queixa_principal?`<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:14px"><div class="kpi-label">Queixa principal</div><div style="font-size:13px;color:#111827;margin-top:4px;font-weight:500;line-height:1.5">${x(a.queixa_principal)}</div></div>`:''}
     <div class="kpi-grid">
-      ${a.historico_medico?kpi('HistÃ³rico mÃ©dico',pos):''}
+      ${a.historico_medico?kpi('Histórico médico',pos):''}
       ${a.medicamentos?kpi('Medicamentos',a.medicamentos):''}
-      ${af.tipo?kpi('Atividade fÃ­sica',`${af.tipo} Â· ${af.frequencia??0}Ã—/sem`):''}
+      ${af.tipo?kpi('Atividade física',`${af.tipo} · ${af.frequencia??0}×/sem`):''}
       ${kpi('Objetivos',a.objetivos)}
     </div>
     ${aiBlock(ia)}`;
@@ -746,21 +746,21 @@ function pgAnamnese(a: any, ia?: any): string {
 function pgSinais(s: any, ia?: any): string {
   if (!s) return '';
   const pa = s.pa_sistolica&&s.pa_diastolica?`${s.pa_sistolica}/${s.pa_diastolica}`:null;
-  // Retorna apenas conteÃºdo interno
+  // Retorna apenas conteúdo interno
   return `<div class="kpi-grid">
-    ${pa?kpi('PressÃ£o arterial',pa,'mmHg'):''}
+    ${pa?kpi('Pressão arterial',pa,'mmHg'):''}
     ${kpi('FC repouso',s.fc_repouso,'bpm')}
     ${kpi('SpOâ‚‚',s.spo2,'%')}
-    ${kpi('Temperatura',s.temperatura,'Â°C')}
+    ${kpi('Temperatura',s.temperatura,'°C')}
     ${kpi('Freq. resp.',s.freq_respiratoria,'irpm')}
   </div>
   ${aiBlock(ia)}`;
 }
 
-// PÃ¡gina combinada: Anamnese (metade sup) + Sinais Vitais (metade inf)
+// Página combinada: Anamnese (metade sup) + Sinais Vitais (metade inf)
 function pgSinaisAnamnese(a: any, s: any, iaA: any, iaS: any, pri = '#059669'): string {
   if (!a && !s) return '';
-  const pri2 = '#059669'; // fallback â€” serÃ¡ sobrescrito pelo pri do caller
+  const pri2 = '#059669'; // fallback — será sobrescrito pelo pri do caller
   const anamneseHtml = a ? pgAnamnese(a, iaA) : '';
   if (!anamneseHtml && !s) return '';
   return `<section class="page module" style="display:flex;flex-direction:column">
@@ -768,7 +768,7 @@ function pgSinaisAnamnese(a: any, s: any, iaA: any, iaS: any, pri = '#059669'): 
     <h2 class="mod-title">Anamnese &amp; Sinais Vitais</h2>
   </div>
 
-  <!-- â”€â”€ METADE SUPERIOR: Anamnese â”€â”€ -->
+  <!-- ── METADE SUPERIOR: Anamnese ── -->
   ${anamneseHtml ? `<div style="padding:20px 0 18px;border-bottom:2px dashed #e5e7eb">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
@@ -777,7 +777,7 @@ function pgSinaisAnamnese(a: any, s: any, iaA: any, iaS: any, pri = '#059669'): 
     ${anamneseHtml}
   </div>` : ''}
 
-  <!-- â”€â”€ METADE INFERIOR: Sinais Vitais â”€â”€ -->
+  <!-- ── METADE INFERIOR: Sinais Vitais ── -->
   ${s ? `<div style="padding:20px 0 0">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
@@ -794,7 +794,7 @@ function pgPostura(p: any, score: number | null, ia?: any): string {
   const desv = Object.entries(alin).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' '));
   const fotos = ['foto_anterior','foto_posterior','foto_lateral_dir','foto_lateral_esq']
     .map((k,i)=>p[k]?`<div style="border-radius:10px;overflow:hidden;border:1px solid #e5e7eb"><img src="${x(p[k])}" style="width:100%;height:200px;object-fit:contain;display:block;background:#f8fafc"/><div style="font-size:10px;color:#6b7280;text-align:center;padding:5px">${['Anterior','Posterior','Lateral D','Lateral E'][i]}</div></div>`:'').join('');
-  // Retorna apenas conteÃºdo interno
+  // Retorna apenas conteúdo interno
   return `
     ${fotos?`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">${fotos}</div>`:''}
     <div class="sec-sub" style="margin-top:0">Achados posturais</div>
@@ -807,7 +807,7 @@ function pgPostura(p: any, score: number | null, ia?: any): string {
 // Pagina flexivel: pode renderizar Posturografia, Flexibilidade ou ambos.
 function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null, iaP: any, iaF: any, pri = '#059669'): string {
   if (!p && !f) return '';
-  const corF = f?.classificacao==='Excelente'?'#16a34a':f?.classificacao==='Bom'?'#10b981':f?.classificacao==='MÃ©dio'?'#f59e0b':f?.classificacao==='Regular'?'#f97316':'#ef4444';
+  const corF = f?.classificacao==='Excelente'?'#16a34a':f?.classificacao==='Bom'?'#10b981':f?.classificacao==='Médio'?'#f59e0b':f?.classificacao==='Regular'?'#f97316':'#ef4444';
   const titulo = p && f ? 'Posturografia &amp; Flexibilidade' : p ? 'Posturografia' : 'Flexibilidade';
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
@@ -833,7 +833,7 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
       ${kpi('Tentativa 1',f.tentativa_1,'cm')}${kpi('Tentativa 2',f.tentativa_2,'cm')}${kpi('Tentativa 3',f.tentativa_3,'cm')}
       ${f.melhor_resultado!=null?`<div class="kpi" style="border-color:${corF}"><div class="kpi-label">Melhor resultado</div><div class="kpi-val" style="color:${corF}">${f.melhor_resultado}<span class="kpi-unit"> cm</span></div><div style="font-size:11px;font-weight:700;color:${corF};margin-top:4px">${x(f.classificacao??'')}</div></div>`:''}
     </div>
-    <p style="font-size:11px;color:#9ca3af;margin-top:4px">Protocolo: Banco de Wells â€” Sit and Reach (ACSM)</p>
+    <p style="font-size:11px;color:#9ca3af;margin-top:4px">Protocolo: Banco de Wells — Sit and Reach (ACSM)</p>
     ${f.observacoes?`<p style="font-size:12px;color:#374151;margin-top:10px;line-height:1.6">${x(f.observacoes)}</p>`:''}
     ${aiBlock(iaF)}
   </div>` : ''}
@@ -843,28 +843,28 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
 function pgBio(b: any, ia?: any): string {
   if (!b) return '';
   const sm=b.segmentar_magra??{}, sg=b.segmentar_gordura??{};
-  const segs=[{k:'braco_dir',l:'BraÃ§o D',c:'bd'},{k:'braco_esq',l:'BraÃ§o E',c:'be'},{k:'tronco',l:'Tronco',c:'tr'},{k:'perna_dir',l:'Perna D',c:'pd'},{k:'perna_esq',l:'Perna E',c:'pe'}];
+  const segs=[{k:'braco_dir',l:'Braço D',c:'bd'},{k:'braco_esq',l:'Braço E',c:'be'},{k:'tronco',l:'Tronco',c:'tr'},{k:'perna_dir',l:'Perna D',c:'pd'},{k:'perna_esq',l:'Perna E',c:'pe'}];
   const temSeg=Object.keys(sm).length>0;
-  return pgModulo('BioimpedÃ¢ncia', null, `
+  return pgModulo('Bioimpedância', null, `
   <div class="dark-block">
     <div class="dark-label">${x(b.aparelho??'Avabio 380')}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
       ${b.peso_kg!=null?`<div><div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1">${b.peso_kg}</div><div style="font-size:8px;color:#6b7280;margin-top:3px">Peso (kg)</div></div>`:''}
       ${b.percentual_gordura!=null?`<div><div style="font-size:20px;font-weight:800;color:#f87171;line-height:1">${b.percentual_gordura}%</div><div style="font-size:8px;color:#6b7280;margin-top:3px">% Gordura</div></div>`:''}
       ${b.massa_livre_gordura_kg!=null?`<div><div style="font-size:20px;font-weight:800;color:#16a34a;line-height:1">${b.massa_livre_gordura_kg}</div><div style="font-size:8px;color:#6b7280;margin-top:3px">MLG (kg)</div></div>`:''}
-      ${b.agua_corporal_kg!=null?`<div><div style="font-size:20px;font-weight:800;color:#2563eb;line-height:1">${b.agua_corporal_kg}</div><div style="font-size:8px;color:#6b7280;margin-top:3px">Ãgua (kg)</div></div>`:''}
+      ${b.agua_corporal_kg!=null?`<div><div style="font-size:20px;font-weight:800;color:#2563eb;line-height:1">${b.agua_corporal_kg}</div><div style="font-size:8px;color:#6b7280;margin-top:3px">Água (kg)</div></div>`:''}
     </div>
   </div>
   <div class="kpi-grid">
     ${b.imc!=null?kpi('IMC',b.imc):''}
     ${b.taxa_metabolica_basal_kcal!=null?kpi('TMB',b.taxa_metabolica_basal_kcal,'kcal/dia'):''}
-    ${b.indice_apendicular!=null?kpi('Ãndice apendicular',b.indice_apendicular):''}
-    ${b.idade_metabolica!=null?kpi('Idade metabÃ³lica',b.idade_metabolica,'anos'):''}
-    ${b.gordura_visceral_nivel!=null?kpi('Gordura visceral',b.gordura_visceral_nivel,'nÃ­vel'):''}
+    ${b.indice_apendicular!=null?kpi('Índice apendicular',b.indice_apendicular):''}
+    ${b.idade_metabolica!=null?kpi('Idade metabólica',b.idade_metabolica,'anos'):''}
+    ${b.gordura_visceral_nivel!=null?kpi('Gordura visceral',b.gordura_visceral_nivel,'nível'):''}
   </div>
   ${temSeg?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-    <div><div class="sec-sub">Massa magra por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sm[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sm[s.k]?.kg??'â€”'}</td><td>${sm[s.k]?.pct??'â€”'}%</td></tr>`).join('')}</tbody></table></div>
-    <div><div class="sec-sub">Gordura por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sg[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sg[s.k]?.kg??'â€”'}</td><td>${sg[s.k]?.pct??'â€”'}%</td></tr>`).join('')}</tbody></table></div>
+    <div><div class="sec-sub">Massa magra por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sm[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sm[s.k]?.kg??'—'}</td><td>${sm[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
+    <div><div class="sec-sub">Gordura por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sg[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sg[s.k]?.kg??'—'}</td><td>${sg[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
   </div>`:''}
   `, ia);
 }
@@ -873,55 +873,55 @@ function pgAntro(a: any, score: number | null, ia?: any): string {
   if (!a) return '';
   const dobras=a.dobras??{}, soma=a.somatotipo;
   const ord=['triceps','subescapular','peitoral','axilar_media','supra_iliaca','abdominal','coxa'];
-  const rot:Record<string,string>={triceps:'TrÃ­ceps',subescapular:'Subescapular',peitoral:'Peitoral',axilar_media:'Axilar mÃ©dia',supra_iliaca:'Supra-ilÃ­aca',abdominal:'Abdominal',coxa:'Coxa'};
+  const rot:Record<string,string>={triceps:'Tríceps',subescapular:'Subescapular',peitoral:'Peitoral',axilar_media:'Axilar média',supra_iliaca:'Supra-ilíaca',abdominal:'Abdominal',coxa:'Coxa'};
   const estM=a.estatura?a.estatura/100:null;
   const ffmi=a.massa_magra&&estM?+(a.massa_magra/(estM*estM)).toFixed(1):null;
   const sexo=a._sexo??'M';
   const limMax=a.estatura?(sexo==='M'?a.estatura-100:(a.estatura-100)*0.85):null;
   const pctPot=a.massa_magra&&limMax?+((a.massa_magra/limMax)*100).toFixed(1):null;
-  const dobraValidada = (v:any) => v?.media ?? v?.média ?? v?.['mÃ©dia'] ?? v?.validada ?? v?.validado ?? v?.valor ?? v?.resultado ?? v?.m3 ?? v?.m2 ?? v?.m1 ?? v;
+  const dobraValidada = (v:any) => v?.media ?? v?.média ?? v?.['média'] ?? v?.validada ?? v?.validado ?? v?.valor ?? v?.resultado ?? v?.m3 ?? v?.m2 ?? v?.m1 ?? v;
   return pgModulo('Antropometria', score, `
   <div class="data-grid">
-    <div class="data-card"><div class="dc-label">Peso</div><div class="dc-val">${a.peso??'â€”'}<span class="dc-unit">kg</span></div></div>
-    <div class="data-card"><div class="dc-label">% Gordura</div><div class="dc-val">${a.percentual_gordura??'â€”'}<span class="dc-unit">%</span></div></div>
-    <div class="data-card"><div class="dc-label">Massa magra</div><div class="dc-val">${a.massa_magra??'â€”'}<span class="dc-unit">kg</span></div></div>
-    <div class="data-card"><div class="dc-label">Estatura</div><div class="dc-val">${a.estatura??'â€”'}<span class="dc-unit">cm</span></div></div>
-    <div class="data-card"><div class="dc-label">IMC</div><div class="dc-val">${a.imc??'â€”'}</div></div>
-    <div class="data-card"><div class="dc-label">Massa Ã³ssea</div><div class="dc-val">${a.massa_ossea??'â€”'}<span class="dc-unit">kg</span></div></div>
+    <div class="data-card"><div class="dc-label">Peso</div><div class="dc-val">${a.peso??'—'}<span class="dc-unit">kg</span></div></div>
+    <div class="data-card"><div class="dc-label">% Gordura</div><div class="dc-val">${a.percentual_gordura??'—'}<span class="dc-unit">%</span></div></div>
+    <div class="data-card"><div class="dc-label">Massa magra</div><div class="dc-val">${a.massa_magra??'—'}<span class="dc-unit">kg</span></div></div>
+    <div class="data-card"><div class="dc-label">Estatura</div><div class="dc-val">${a.estatura??'—'}<span class="dc-unit">cm</span></div></div>
+    <div class="data-card"><div class="dc-label">IMC</div><div class="dc-val">${a.imc??'—'}</div></div>
+    <div class="data-card"><div class="dc-label">Massa óssea</div><div class="dc-val">${a.massa_ossea??'—'}<span class="dc-unit">kg</span></div></div>
   </div>
   ${ffmi!=null?`<div class="dark-block">
-    <div class="dark-label">Potencial genÃ©tico muscular</div>
+    <div class="dark-label">Potencial genético muscular</div>
     <div style="display:flex;align-items:center;gap:20px">
       <div><div style="font-size:28px;font-weight:800;color:#16a34a;line-height:1">${ffmi}</div><div style="font-size:9px;color:#6b7280;margin-top:3px">FFMI</div></div>
-      <div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:9px;color:#6b7280;margin-bottom:5px"><span>${a.massa_magra} kg atual</span><span>${pctPot}% do potencial</span>${limMax?`<span>${limMax.toFixed(1)} kg mÃ¡x.</span>`:''}</div>
+      <div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:9px;color:#6b7280;margin-bottom:5px"><span>${a.massa_magra} kg atual</span><span>${pctPot}% do potencial</span>${limMax?`<span>${limMax.toFixed(1)} kg máx.</span>`:''}</div>
       <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100,pctPot??0)}%"></div></div></div>
     </div>
   </div>`:''}
-  ${Object.keys(dobras).length?`<div class="sec-sub">Dobras cutÃ¢neas (mm)</div>
+  ${Object.keys(dobras).length?`<div class="sec-sub">Dobras cutâneas (mm)</div>
   <table><thead><tr><th>Dobra</th><th>Medida validada</th></tr></thead><tbody>
-    ${ord.filter(k=>dobras[k]).map(k=>{const v=dobraValidada(dobras[k]);return `<tr><td>${rot[k]??k}</td><td style="font-weight:600">${v??'â€”'} mm</td></tr>`;}).join('')}
+    ${ord.filter(k=>dobras[k]).map(k=>{const v=dobraValidada(dobras[k]);return `<tr><td>${rot[k]??k}</td><td style="font-weight:600">${v??'—'} mm</td></tr>`;}).join('')}
   </tbody></table>`:''}
-  ${soma?`<div class="kpi-grid" style="margin-top:18px">${kpi('Endomorfia',soma.endomorfia)}${kpi('Mesomorfia',soma.mesomorfia)}${kpi('Ectomorfia',soma.ectomorfia)}${kpi('ClassificaÃ§Ã£o',soma.classificacao)}</div>`:''}
+  ${soma?`<div class="kpi-grid" style="margin-top:18px">${kpi('Endomorfia',soma.endomorfia)}${kpi('Mesomorfia',soma.mesomorfia)}${kpi('Ectomorfia',soma.ectomorfia)}${kpi('Classificação',soma.classificacao)}</div>`:''}
   ${(() => {
     const c=a.circunferencias??{};
     const pares=[
-      {l:'BraÃ§o relaxado', d:c.braco_dir_relaxado??c.braco_relaxado, e:c.braco_esq_relaxado},
-      {l:'BraÃ§o contraÃ­do', d:c.braco_dir_contraido??c.braco_contraido, e:c.braco_esq_contraido},
-      {l:'AntebraÃ§o', d:c.antebraco_dir??c.antebraco, e:c.antebraco_esq},
+      {l:'Braço relaxado', d:c.braco_dir_relaxado??c.braco_relaxado, e:c.braco_esq_relaxado},
+      {l:'Braço contraído', d:c.braco_dir_contraido??c.braco_contraido, e:c.braco_esq_contraido},
+      {l:'Antebraço', d:c.antebraco_dir??c.antebraco, e:c.antebraco_esq},
       {l:'Coxa proximal', d:c.coxa_dir_proximal??c.coxa_proximal, e:c.coxa_esq_proximal},
       {l:'Coxa medial', d:c.coxa_dir_medial??c.coxa_medial, e:c.coxa_esq_medial},
       {l:'Panturrilha', d:c.panturrilha_dir??c.panturrilha, e:c.panturrilha_esq},
     ];
     const unilateras=[
-      {l:'PescoÃ§o', v:c.pescoco},{l:'Ombro', v:c.ombro},{l:'TÃ³rax', v:c.torax},
+      {l:'Pescoço', v:c.pescoco},{l:'Ombro', v:c.ombro},{l:'Tórax', v:c.torax},
       {l:'Cintura', v:c.cintura},{l:'Abdome', v:c.abdome},{l:'Quadril', v:c.quadril},
     ];
     const temPares = pares.some(p=>p.d||p.e);
     const temUni = unilateras.some(u=>u.v);
     if(!temPares && !temUni) return '';
-    return `<div class="sec-sub" style="margin-top:18px">CircunferÃªncias (cm)</div>
+    return `<div class="sec-sub" style="margin-top:18px">Circunferências (cm)</div>
     ${temPares?`<table><thead><tr><th>Segmento</th><th style="text-align:center;color:#3b82f6">Dir</th><th style="text-align:center;color:#8b5cf6">Esq</th></tr></thead><tbody>
-      ${pares.filter(p=>p.d||p.e).map(p=>`<tr><td>${p.l}</td><td style="text-align:center;font-weight:600;color:#3b82f6">${p.d??'â€”'}</td><td style="text-align:center;font-weight:600;color:#8b5cf6">${p.e??'â€”'}</td></tr>`).join('')}
+      ${pares.filter(p=>p.d||p.e).map(p=>`<tr><td>${p.l}</td><td style="text-align:center;font-weight:600;color:#3b82f6">${p.d??'—'}</td><td style="text-align:center;font-weight:600;color:#8b5cf6">${p.e??'—'}</td></tr>`).join('')}
     </tbody></table>`:''}
     ${temUni?`<table style="margin-top:10px"><thead><tr>${unilateras.filter(u=>u.v).map(u=>`<th>${u.l}</th>`).join('')}</tr></thead><tbody><tr>${unilateras.filter(u=>u.v).map(u=>`<td style="font-weight:600">${u.v}</td>`).join('')}</tr></tbody></table>`:''}`;
   })()}
@@ -940,18 +940,18 @@ function pgForca(f: any, score: number | null, ia?: any): string {
     const car=lado.cargas??{};
     const cor = corLado(cls);
     const temCar = Object.keys(car).some(k=>car[k]);
-    // Linha de carga: label | mÃ­n: X kg | mÃ¡x: X kg
+    // Linha de carga: label | mín: X kg | máx: X kg
     const linhasCarga = [
-      ['resistencia','ResistÃªncia'],
-      ['forca','ForÃ§a'],
-      ['potencia','PotÃªncia'],
+      ['resistencia','Resistência'],
+      ['forca','Força'],
+      ['potencia','Potência'],
       ['hipertrofia','Hipertrofia'],
       ['velocidade','Velocidade'],
     ].map(([k,l])=>{
       const mn = car[`${k}_min`], mx = car[`${k}_max`];
       if(!mn && !mx) return '';
-      const minPart = mn ? `<span style="color:#6b7280;font-size:9px">mÃ­n:</span> <b>${mn} Kg</b>` : '';
-      const maxPart = mx ? `<span style="color:#6b7280;font-size:9px">mÃ¡x:</span> <b>${mx} Kg</b>` : '';
+      const minPart = mn ? `<span style="color:#6b7280;font-size:9px">mín:</span> <b>${mn} Kg</b>` : '';
+      const maxPart = mx ? `<span style="color:#6b7280;font-size:9px">máx:</span> <b>${mx} Kg</b>` : '';
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:11px;color:#374151">
         <span style="color:#6b7280;min-width:70px">${l}</span>
         <div style="display:flex;gap:14px">${minPart}${maxPart ? ' &nbsp; ' + maxPart : ''}</div>
@@ -959,7 +959,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
     }).filter(Boolean);
 
     return `<div class="${cls}">
-      <!-- TÃ­tulo do lado -->
+      <!-- Título do lado -->
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;color:${cor}">${tit}</div>
 
       <!-- Torque + 1RM em destaque -->
@@ -979,21 +979,21 @@ function pgForca(f: any, score: number | null, ia?: any): string {
       <div>${linhasCarga.join('')}</div>`:''}
     </div>`;
   };
-  return pgModulo('ForÃ§a', score, `
+  return pgModulo('Força', score, `
   ${(f.preensao_dir_kgf||f.preensao_esq_kgf)?`<div class="kpi-grid" style="margin-bottom:18px">
     ${kpi('Contexto',labelEsporteForca(f.esporte_contexto),'')}${kpi('Finalidade',labelFinalidadeForca(f.finalidade_teste),'')}
     ${kpi('Lado dominante',labelLadoDominante(f.lado_dominante),'')}
-    ${kpi('MÃ£o direita',f.preensao_dir_kgf,'kgf')}${kpi('MÃ£o esquerda',f.preensao_esq_kgf,'kgf')}
-    ${kpi('ForÃ§a rel. D',f.forca_relativa_dir,'kgf/kg')}${kpi('Assimetria',f.assimetria_percent,'%')}
+    ${kpi('Mão direita',f.preensao_dir_kgf,'kgf')}${kpi('Mão esquerda',f.preensao_esq_kgf,'kgf')}
+    ${kpi('Força rel. D',f.forca_relativa_dir,'kgf/kg')}${kpi('Assimetria',f.assimetria_percent,'%')}
   </div>`:''}
   ${spR.length?`<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;margin-bottom:18px">
-    <div class="sec-sub" style="margin-top:0">RelaÃ§Ãµes musculares</div>
+    <div class="sec-sub" style="margin-top:0">Relações musculares</div>
     ${spR.map((r:any)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:12px"><span style="color:#4b5563">${x(r.descricao)}</span><span style="font-weight:700">${r.percentual}%</span></div>`).join('')}
   </div>`:''}
   ${spT.map((t:any)=>{const ap=parseFloat(t.assimetria_pct);return `<div style="margin-bottom:20px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="font-size:14px;font-weight:700;color:#111827">${x(t.articulacao)} â€” ${x(t.movimento)}</div>
-      ${!isNaN(ap)?`<span class="asym-badge" style="background:${corA(t.classificacao_assimetria)}18;color:${corA(t.classificacao_assimetria)}">Assimetria ${ap.toFixed(1)}% Â· ${x(t.classificacao_assimetria)}</span>`:''}
+      <div style="font-size:14px;font-weight:700;color:#111827">${x(t.articulacao)} — ${x(t.movimento)}</div>
+      ${!isNaN(ap)?`<span class="asym-badge" style="background:${corA(t.classificacao_assimetria)}18;color:${corA(t.classificacao_assimetria)}">Assimetria ${ap.toFixed(1)}% · ${x(t.classificacao_assimetria)}</span>`:''}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       ${ladoCard(t.lado_d,'side-d','â—€ Lado Direito')}
@@ -1015,13 +1015,28 @@ function pgForca(f: any, score: number | null, ia?: any): string {
         const tit=idx===0?'◀ Lado Direito':'Lado Esquerdo ▶';
         return `<div style="border:1px solid ${cor}25;border-radius:10px;background:#f8fafc;padding:12px">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;color:${cor}">${tit}</div>
-          <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);gap:8px;margin:0">
+          <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);gap:8px;margin:0">
             ${kpi('FIM',lado.fim_kgf,'kgf')}
+            ${kpi('FIM N',lado.fim_n,'N')}
+            ${kpi('Força rel.',lado.forca_relativa_kgf_kg,'kgf/kg')}
             ${kpi('1RM estimado',lado.rm1_kg,'kg')}
-            ${kpi('RFD',lado.rfd_kgf_s,'kgf/s')}
+            ${kpi('RFD global',lado.rfd_kgf_s,'kgf/s')}
+            ${kpi('RFD 50ms',lado.rfd_50_kgf_s,'kgf/s')}
+            ${kpi('RFD 100ms',lado.rfd_100_kgf_s,'kgf/s')}
+            ${kpi('RFD 200ms',lado.rfd_200_kgf_s,'kgf/s')}
+            ${kpi('Impulso',lado.impulso_kgf_s,'kgf·s')}
+            ${kpi('Sust. 80%',lado.sustentacao_80_s,'s')}
+            ${kpi('Duração',lado.duracao_s,'s')}
           </div>
         </div>`;
       }).join('')}
+    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 0">
+      ${kpi('Média tentativas',t.media_tentativas_kgf,'kgf')}
+      ${kpi('Fadiga',t.indice_fadiga_pct,'%')}
+      ${kpi('LSI',t.lsi_pct,'%')}
+      ${kpi('Assimetria',t.assimetria_pct,'%')}
+      ${kpi('Diferença abs.',t.diferenca_abs_kgf,'kgf')}
     </div>
     ${t.observacoes?`<div style="font-size:11px;color:#4b5563;margin-top:8px">${x(t.observacoes)}</div>`:''}
   </div>`;}).join('')}`:''}
@@ -1029,20 +1044,20 @@ function pgForca(f: any, score: number | null, ia?: any): string {
   ${(()=>{
     const alg:any[] = f.algometria??[];
     if(!f.tem_algometria || !alg.length) return '';
-    const ladoLbl = (l:string) => l==='direito'?'D':l==='esquerdo'?'E':'â€”';
-    return `<div class="sec-sub">Algometria â€” Limiar de dor Ã  pressÃ£o (PPT)</div>
+    const ladoLbl = (l:string) => l==='direito'?'D':l==='esquerdo'?'E':'—';
+    return `<div class="sec-sub">Algometria — Limiar de dor à pressão (PPT)</div>
     <table><thead><tr><th>Segmento</th><th style="text-align:center">Lado</th><th style="text-align:right">kgf</th><th>Obs.</th></tr></thead>
     <tbody>${alg.map((p:any)=>`<tr>
       <td style="font-weight:500">${x(p.segmento)}</td>
       <td style="text-align:center;color:#6b7280">${ladoLbl(p.lado)}</td>
-      <td style="text-align:right;font-weight:700">${p.valor_kgf??'â€”'}</td>
+      <td style="text-align:right;font-weight:700">${p.valor_kgf??'—'}</td>
       <td style="color:#6b7280;font-size:11px">${x(p.observacao??'')}</td>
     </tr>`).join('')}</tbody></table>`;
   })()}
   `, ia);
 }
 
-// â”€â”€â”€ pgRML â€” ResistÃªncia Muscular Localizada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── pgRML — Resistência Muscular Localizada ────────────────────────────────
 
 function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: any, pri = '#059669'): string {
   if (!r) return '';
@@ -1051,12 +1066,12 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
     'Excelente':'#10b981','Bom':'#3b82f6','Regular':'#f59e0b','Fraco':'#f97316','Muito fraco':'#ef4444',
   };
 
-  // Gauge SVG pequeno (igual ao padrÃ£o do sistema)
+  // Gauge SVG pequeno (igual ao padrão do sistema)
   const miniGauge = (val: number | null, lbl: string, cls?: string | null) => {
     const cor = cls ? (COR_CLASSE[cls] ?? '#6b7280') : '#6b7280';
     const unit = lbl.toLowerCase().includes('seg') ? 'seg' : 'reps';
     return `<div style="flex:1 1 120px;min-width:118px;background:#fff;border:1px solid ${cor}33;border-radius:12px;padding:12px 10px;text-align:center">
-      <div style="font-size:26px;font-weight:900;color:${cor};line-height:1">${val??'â€”'}</div>
+      <div style="font-size:26px;font-weight:900;color:${cor};line-height:1">${val??'—'}</div>
       <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:3px 0 5px">${unit}</div>
       <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.35px;text-align:center;line-height:1.25;white-space:normal">${x(lbl).replace(/\n/g,'<br/>')}</div>
       ${cls?`<span style="display:inline-block;margin-top:7px;padding:2px 9px;border-radius:100px;font-size:8px;font-weight:700;background:${cor}22;color:${cor}">${cls}</span>`:''}
@@ -1074,7 +1089,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
     </tr>`;
   };
 
-  // â”€â”€ Gauges conforme categoria â”€â”€
+  // ── Gauges conforme categoria ──
   let gaugesHTML = '';
   let tabelaHTML = '';
   let tituloSecao = '';
@@ -1083,7 +1098,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
     tituloSecao = 'Jovem / Ativo';
     // Gauges
     const gauges = [
-      r.mmss_reps != null       ? miniGauge(r.mmss_reps, r.mmss_modalidade === 'modificada' ? 'FlexÃ£o\nmodificada' : 'FlexÃ£o\ntradicional', r.mmss_classificacao) : '',
+      r.mmss_reps != null       ? miniGauge(r.mmss_reps, r.mmss_modalidade === 'modificada' ? 'Flexão\nmodificada' : 'Flexão\ntradicional', r.mmss_classificacao) : '',
       r.abd_1min_reps != null   ? miniGauge(r.abd_1min_reps, 'Abdominal\n1 min', r.abd_1min_classificacao) : '',
       r.abd_prancha_seg != null ? miniGauge(r.abd_prancha_seg, 'Prancha\n(seg)', r.abd_prancha_classificacao) : '',
       r.mmii_agach_reps != null ? miniGauge(r.mmii_agach_reps, 'Agachamento\n1 min', r.mmii_agach_classificacao) : '',
@@ -1096,10 +1111,10 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
       <thead><tr>
         <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Teste</th>
         <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Resultado</th>
-        <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">ClassificaÃ§Ã£o</th>
+        <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Classificação</th>
       </tr></thead>
       <tbody>
-        ${linha(`FlexÃ£o de braÃ§o â€” ${r.mmss_modalidade === 'modificada' ? 'modificada' : 'tradicional'}`, r.mmss_reps, 'reps', r.mmss_classificacao)}
+        ${linha(`Flexão de braço — ${r.mmss_modalidade === 'modificada' ? 'modificada' : 'tradicional'}`, r.mmss_reps, 'reps', r.mmss_classificacao)}
         ${linha('Abdominal 1 minuto', r.abd_1min_reps, 'reps', r.abd_1min_classificacao)}
         ${linha('Prancha ventral', r.abd_prancha_seg, 'seg', r.abd_prancha_classificacao)}
         ${linha('Agachamento livre 1 min', r.mmii_agach_reps, 'reps', r.mmii_agach_classificacao)}
@@ -1107,7 +1122,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
       </tbody>
     </table>`;
   } else {
-    tituloSecao = 'Idoso (â‰¥ 60 anos)';
+    tituloSecao = 'Idoso (≥ 60 anos)';
     const gauges = [
       r.idoso_sl_reps != null      ? miniGauge(r.idoso_sl_reps, 'Sentar &\nLevantar 30s', r.idoso_sl_classificacao) : '',
       r.idoso_armcurl_reps != null ? miniGauge(r.idoso_armcurl_reps, 'Arm Curl\n30s', r.idoso_armcurl_classificacao) : '',
@@ -1118,7 +1133,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
       <thead><tr>
         <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Teste</th>
         <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Resultado</th>
-        <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">ClassificaÃ§Ã£o</th>
+        <th style="text-align:left;padding:8px 12px;background:#f3f4f6;font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Classificação</th>
       </tr></thead>
       <tbody>
         ${linha('Sentar e Levantar 30s', r.idoso_sl_reps, 'reps', r.idoso_sl_classificacao)}
@@ -1127,16 +1142,16 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
     </table>`;
   }
 
-  // InterpretaÃ§Ã£o padrÃ£o
-  const interpretacao = `A avaliaÃ§Ã£o de resistÃªncia muscular localizada demonstrou o desempenho do paciente em testes dinÃ¢micos e/ou isomÃ©tricos, permitindo estimar a capacidade de sustentar contraÃ§Ãµes repetidas ou prolongadas com seguranÃ§a tÃ©cnica. Resultados reduzidos podem estar associados a menor tolerÃ¢ncia ao esforÃ§o, fadiga precoce, pior estabilidade articular, maior risco de compensaÃ§Ãµes biomecÃ¢nicas e menor eficiÃªncia em atividades esportivas ou funcionais. A melhora desses indicadores tende a favorecer desempenho fÃ­sico, controle postural, estabilidade do core, proteÃ§Ã£o articular e maior capacidade de sustentar esforÃ§os repetidos.`;
+  // Interpretação padrão
+  const interpretacao = `A avaliação de resistência muscular localizada demonstrou o desempenho do paciente em testes dinâmicos e/ou isométricos, permitindo estimar a capacidade de sustentar contrações repetidas ou prolongadas com segurança técnica. Resultados reduzidos podem estar associados a menor tolerância ao esforço, fadiga precoce, pior estabilidade articular, maior risco de compensações biomecânicas e menor eficiência em atividades esportivas ou funcionais. A melhora desses indicadores tende a favorecer desempenho físico, controle postural, estabilidade do core, proteção articular e maior capacidade de sustentar esforços repetidos.`;
 
   const aiHTML = ia?.texto_editado
-    ? `<div class="ai-box"><div class="ai-title">ðŸ”„ AnÃ¡lise clÃ­nica</div><div class="ai-text">${x(ia.texto_editado)}</div></div>`
-    : `<div class="ai-box"><div class="ai-title">ðŸ“‹ InterpretaÃ§Ã£o</div><div class="ai-text">${x(interpretacao)}</div></div>`;
+    ? `<div class="ai-box"><div class="ai-title">ðŸ”„ Análise clínica</div><div class="ai-text">${x(ia.texto_editado)}</div></div>`
+    : `<div class="ai-box"><div class="ai-title">ðŸ“‹ Interpretação</div><div class="ai-text">${x(interpretacao)}</div></div>`;
 
-  return pgModulo('ResistÃªncia Muscular (RML)', score, `
+  return pgModulo('Resistência Muscular (RML)', score, `
   <div style="font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">
-    Categoria: ${x(tituloSecao)} Â· Sexo: ${sexo === 'M' ? 'Masculino' : 'Feminino'} Â· ${idade} anos
+    Categoria: ${x(tituloSecao)} · Sexo: ${sexo === 'M' ? 'Masculino' : 'Feminino'} · ${idade} anos
   </div>
 
   <!-- Gauges -->
@@ -1149,7 +1164,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
     ${tabelaHTML}
   </div>
 
-  ${r.observacoes ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid #e5e7eb"><b style="color:#374151">ObservaÃ§Ãµes:</b> ${x(r.observacoes)}</div>` : ''}
+  ${r.observacoes ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid #e5e7eb"><b style="color:#374151">Observações:</b> ${x(r.observacoes)}</div>` : ''}
   `, ia);
 }
 
@@ -1160,49 +1175,49 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
   const zCores=['#6ee7b7','#34d399','#fbbf24','#f97316','#ef4444'];
   const rec60=recFC['60'];
   const recCor=rec60!=null?(rec60<=-20?'#10b981':rec60<=-12?'#f59e0b':'#ef4444'):'#6b7280';
-  const limCores:Record<string,string>={'SaÃºde Cardiovascular':'#3b82f6','Emagrecimento':'#f59e0b','Performance':'#10b981','EsforÃ§o mÃ¡ximo':'#ef4444'};
-  return pgModulo('CardiorrespiratÃ³rio', score, `
+  const limCores:Record<string,string>={'Saúde Cardiovascular':'#3b82f6','Emagrecimento':'#f59e0b','Performance':'#10b981','Esforço máximo':'#ef4444'};
+  return pgModulo('Cardiorrespiratório', score, `
   <div class="dark-block">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
-      ${c.vo2max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VOâ‚‚mÃ¡x</div><div style="font-size:20px;font-weight:800;color:#16a34a;line-height:1">${c.vo2max}</div><div style="font-size:8px;color:#4b5563">ml/kg/min</div></div>`:''}
+      ${c.vo2max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VOâ‚‚máx</div><div style="font-size:20px;font-weight:800;color:#16a34a;line-height:1">${c.vo2max}</div><div style="font-size:8px;color:#4b5563">ml/kg/min</div></div>`:''}
       ${c.fc_limiar!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">FC Limiar</div><div style="font-size:20px;font-weight:800;color:#2563eb;line-height:1">${c.fc_limiar}</div><div style="font-size:8px;color:#4b5563">bpm</div></div>`:''}
-      ${c.fc_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">FC MÃ¡x</div><div style="font-size:20px;font-weight:800;color:#f87171;line-height:1">${c.fc_max}</div><div style="font-size:8px;color:#4b5563">bpm</div></div>`:''}
+      ${c.fc_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">FC Máx</div><div style="font-size:20px;font-weight:800;color:#f87171;line-height:1">${c.fc_max}</div><div style="font-size:8px;color:#4b5563">bpm</div></div>`:''}
       ${c.vam!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VAM</div><div style="font-size:20px;font-weight:800;color:#7c3aed;line-height:1">${c.vam}</div><div style="font-size:8px;color:#4b5563">km/h</div></div>`:''}
-      ${c.ve_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VE MÃ¡x</div><div style="font-size:20px;font-weight:800;color:#fbbf24;line-height:1">${c.ve_max}</div><div style="font-size:8px;color:#4b5563">l/min</div></div>`:''}
+      ${c.ve_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VE Máx</div><div style="font-size:20px;font-weight:800;color:#fbbf24;line-height:1">${c.ve_max}</div><div style="font-size:8px;color:#4b5563">l/min</div></div>`:''}
       ${c.carga_limiar!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">Carga limiar</div><div style="font-size:20px;font-weight:800;color:#34d399;line-height:1">${c.carga_limiar}</div><div style="font-size:8px;color:#4b5563">km/h</div></div>`:''}
-      ${c.carga_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">Carga mÃ¡x</div><div style="font-size:20px;font-weight:800;color:#f97316;line-height:1">${c.carga_max}</div><div style="font-size:8px;color:#4b5563">km/h</div></div>`:''}
+      ${c.carga_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">Carga máx</div><div style="font-size:20px;font-weight:800;color:#f97316;line-height:1">${c.carga_max}</div><div style="font-size:8px;color:#4b5563">km/h</div></div>`:''}
       ${c.fc_repouso!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">FC repouso</div><div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1">${c.fc_repouso}</div><div style="font-size:8px;color:#4b5563">bpm</div></div>`:''}
     </div>
-    ${c.classificacao_vo2?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2937;font-size:10px;color:#6b7280">ClassificaÃ§Ã£o: <b style="color:#16a34a">${x(c.classificacao_vo2)}</b>${c.protocolo?` Â· ${x(c.protocolo)}`:''}${c.ponto_limiar_tempo?` Â· Limiar em ${x(c.ponto_limiar_tempo)}`:''}</div>`:''}
+    ${c.classificacao_vo2?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2937;font-size:10px;color:#6b7280">Classificação: <b style="color:#16a34a">${x(c.classificacao_vo2)}</b>${c.protocolo?` · ${x(c.protocolo)}`:''}${c.ponto_limiar_tempo?` · Limiar em ${x(c.ponto_limiar_tempo)}`:''}</div>`:''}
   </div>
-  ${Object.keys(recFC).length?`<div class="sec-sub">RecuperaÃ§Ã£o da FC</div>
+  ${Object.keys(recFC).length?`<div class="sec-sub">Recuperação da FC</div>
   <table><thead><tr><th>Segundos</th>${[10,30,60].map(s=>`<th style="text-align:center">${s}s</th>`).join('')}</tr></thead>
-  <tbody><tr><td style="font-weight:600">Î” bpm</td>${[10,30,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:600;color:${cor}">${v??'â€”'}</td>`;}).join('')}</tr></tbody></table>
-  ${rec60!=null?`<div style="margin-top:8px;font-size:11px;font-weight:600;color:${recCor}">Rec. 60s: ${rec60} bpm Â· ${rec60<=-20?'Boa':rec60<=-12?'Mediana':'Ruim'}</div>`:''}
+  <tbody><tr><td style="font-weight:600">Î” bpm</td>${[10,30,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:600;color:${cor}">${v??'—'}</td>`;}).join('')}</tr></tbody></table>
+  ${rec60!=null?`<div style="margin-top:8px;font-size:11px;font-weight:600;color:${recCor}">Rec. 60s: ${rec60} bpm · ${rec60<=-20?'Boa':rec60<=-12?'Mediana':'Ruim'}</div>`:''}
   `:''}
-  ${zLim.length?`<div class="sec-sub">Zonas por limiar ventilatÃ³rio</div>
+  ${zLim.length?`<div class="sec-sub">Zonas por limiar ventilatório</div>
   <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
-    ${zLim.map((z:any)=>{const cor=limCores[z.nome]??'#6b7280';return `<div style="background:${cor}0e;border:1px solid ${cor}30;border-radius:10px;padding:12px 16px"><div style="font-size:10px;font-weight:700;color:${cor};margin-bottom:3px">${x(z.nome)}</div><div style="font-size:10px;color:#4b5563">${z.pct_min}% â€“ ${z.pct_max}%</div>${(z.bpm_min||z.bpm_max)?`<div style="font-size:14px;font-weight:800;color:#111827;margin-top:3px">${z.bpm_min??'â€”'} â€“ ${z.bpm_max??'â€”'} bpm</div>`:''}</div>`;}).join('')}
+    ${zLim.map((z:any)=>{const cor=limCores[z.nome]??'#6b7280';return `<div style="background:${cor}0e;border:1px solid ${cor}30;border-radius:10px;padding:12px 16px"><div style="font-size:10px;font-weight:700;color:${cor};margin-bottom:3px">${x(z.nome)}</div><div style="font-size:10px;color:#4b5563">${z.pct_min}% – ${z.pct_max}%</div>${(z.bpm_min||z.bpm_max)?`<div style="font-size:14px;font-weight:800;color:#111827;margin-top:3px">${z.bpm_min??'—'} – ${z.bpm_max??'—'} bpm</div>`:''}</div>`;}).join('')}
   </div>`:''}
-  ${Object.keys(zonas).length?`<div class="sec-sub">Zonas de treinamento Z1â€“Z5</div>
+  ${Object.keys(zonas).length?`<div class="sec-sub">Zonas de treinamento Z1–Z5</div>
   <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-    ${['z1','z2','z3','z4','z5'].map((k,i)=>{const z=zonas[k];if(!z)return '';const pct=Math.round(z.max/(c.fc_max||200)*100);return `<div style="display:flex;align-items:center;gap:10px"><div style="width:80px;font-size:10px;font-weight:600;color:#374151">${['Z1 Regen.','Z2 Base','Z3 AerÃ³bico','Z4 Limiar','Z5 VOâ‚‚mÃ¡x'][i]}</div><div style="flex:1;background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${zCores[i]};border-radius:999px"></div></div><div style="width:88px;font-size:10px;color:#6b7280;text-align:right">${z.min}â€“${z.max} bpm</div></div>`;}).join('')}
+    ${['z1','z2','z3','z4','z5'].map((k,i)=>{const z=zonas[k];if(!z)return '';const pct=Math.round(z.max/(c.fc_max||200)*100);return `<div style="display:flex;align-items:center;gap:10px"><div style="width:80px;font-size:10px;font-weight:600;color:#374151">${['Z1 Regen.','Z2 Base','Z3 Aeróbico','Z4 Limiar','Z5 VOâ‚‚máx'][i]}</div><div style="flex:1;background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${zCores[i]};border-radius:999px"></div></div><div style="width:88px;font-size:10px;color:#6b7280;text-align:right">${z.min}–${z.max} bpm</div></div>`;}).join('')}
   </div>`:''}
   ${vel.length?`<div class="sec-sub">Velocidades por intensidade</div>
-  <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="text-align:left;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Zona</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h mÃ­n</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h mÃ¡x</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Pace mÃ­n</th></tr></thead>
-  <tbody>${vel.map((v:any,i:number)=>{const cor=['#6ee7b7','#34d399','#fbbf24','#f97316','#ef4444'][i]??'#94a3b8';function pace(kmh:number){if(!kmh)return'â€”';const ms=60/kmh;const m=Math.floor(ms);const s=Math.round((ms-m)*60);return m+':'+String(s).padStart(2,'0');} return `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:8px 10px;font-size:11px;font-weight:600;color:${cor}">${v.tipo??v.intensidade??''}</td><td style="text-align:center;padding:8px 10px;font-size:11px;font-weight:700">${v.velocidade_min??v.velocidade??'â€”'}</td><td style="text-align:center;padding:8px 10px;font-size:11px;font-weight:700">${v.velocidade_max??'â€”'}</td><td style="text-align:center;padding:8px 10px;font-size:11px;color:#6b7280">${v.velocidade_min?pace(v.velocidade_min):'â€”'}</td></tr>`;}).join('')}
+  <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="text-align:left;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Zona</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h mín</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h máx</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Pace mín</th></tr></thead>
+  <tbody>${vel.map((v:any,i:number)=>{const cor=['#6ee7b7','#34d399','#fbbf24','#f97316','#ef4444'][i]??'#94a3b8';function pace(kmh:number){if(!kmh)return'—';const ms=60/kmh;const m=Math.floor(ms);const s=Math.round((ms-m)*60);return m+':'+String(s).padStart(2,'0');} return `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:8px 10px;font-size:11px;font-weight:600;color:${cor}">${v.tipo??v.intensidade??''}</td><td style="text-align:center;padding:8px 10px;font-size:11px;font-weight:700">${v.velocidade_min??v.velocidade??'—'}</td><td style="text-align:center;padding:8px 10px;font-size:11px;font-weight:700">${v.velocidade_max??'—'}</td><td style="text-align:center;padding:8px 10px;font-size:11px;color:#6b7280">${v.velocidade_min?pace(v.velocidade_min):'—'}</td></tr>`;}).join('')}
   </tbody></table>`:''}
   `, ia);
 }
 
 function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
-  return pgModulo('ConclusÃ£o clÃ­nica', null, `
+  return pgModulo('Conclusão clínica', null, `
   ${c.texto_editado?`<p style="font-size:13px;color:#374151;line-height:1.7">${x(c.texto_editado)}</p>`:`
     ${c.resumo_executivo?`<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:16px">${x(c.resumo_executivo)}</p>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
       ${c.pontos_fortes?.length?`<div style="background:#f0fdf4;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:8px">âœ“ Pontos fortes</div><ul style="padding-left:16px;font-size:12px;color:#166534">${c.pontos_fortes.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
-      ${c.pontos_criticos?.length?`<div style="background:#fef2f2;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:8px">âš  Pontos crÃ­ticos</div><ul style="padding-left:16px;font-size:12px;color:#991b1b">${c.pontos_criticos.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
+      ${c.pontos_criticos?.length?`<div style="background:#fef2f2;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:8px">âš  Pontos críticos</div><ul style="padding-left:16px;font-size:12px;color:#991b1b">${c.pontos_criticos.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
     </div>
     ${c.prioridades?.length?`<div>${c.prioridades.map((p,i)=>`<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><div style="min-width:28px;height:28px;border-radius:50%;background:${pri};color:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0">${i+1}</div><div><div style="font-weight:700;font-size:13px;color:#111827">${x(p.titulo)}</div><div style="color:#4b5563;font-size:12px">${x(p.acao)}</div><div style="color:#9ca3af;font-size:11px;margin-top:2px">â± ${x(p.prazo)}</div></div></div>`).join('')}</div>`:''}
     ${c.mensagem_paciente?`<div style="background:#eff6ff;border-left:4px solid ${pri};padding:14px 18px;border-radius:0 10px 10px 0;font-style:italic;color:#1e40af;font-size:13px;margin-top:10px">${x(c.mensagem_paciente)}</div>`:''}
@@ -1256,7 +1271,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   };
 
   const corCls = (cls: string) => cls === 'ideal' ? '#10b981' : cls === 'atencao' ? '#f59e0b' : '#ef4444';
-  const lbCls  = (cls: string) => cls === 'ideal' ? 'Ideal âœ“' : cls === 'atencao' ? 'AtenÃ§Ã£o' : 'Fora do ideal';
+  const lbCls  = (cls: string) => cls === 'ideal' ? 'Ideal âœ“' : cls === 'atencao' ? 'Atenção' : 'Fora do ideal';
 
   const metricaCard = (titulo: string, valor: any, unidade: string) =>
     valor != null ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center">
@@ -1343,13 +1358,13 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     </section>`;
   };
 
-  // PÃ¡gina 1: Frame anotado + mÃ©tricas
+  // Página 1: Frame anotado + métricas
   const pg1 = `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head">
     <div>
-      <h2 class="mod-title">BiomecÃ¢nica da corrida</h2>
+      <h2 class="mod-title">Biomecânica da corrida</h2>
       <div style="font-size:12px;color:#64748b;margin-top:4px">
-        CinemÃ¡tica 2D â€” ${x(b.movimento ?? 'Corrida')} Â· ${b.velocidade_kmh ?? 'â€”'} km/h
+        Cinemática 2D — ${x(b.movimento ?? 'Corrida')} · ${b.velocidade_kmh ?? '—'} km/h
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
@@ -1362,14 +1377,14 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
       <img src="${x(b.foto_frame_url)}" alt="Frame" style="width:100%;max-height:330px;object-fit:contain;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0"/>
     </div>` : ''}
     <div>
-      <div class="sec-sub" style="margin-top:0">MÃ©tricas da passada</div>
+      <div class="sec-sub" style="margin-top:0">Métricas da passada</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         ${metricaCard('Tempo de voo', met.tempo_voo_s, 'segundos')}
         ${metricaCard('Contato solo', met.tempo_contato_solo_s, 'segundos')}
         ${metricaCard('Freq. de passos', met.frequencia_passos_ppm, 'por minuto')}
         ${metricaCard('Comp. do passo', met.comprimento_passo_m, 'metros')}
         ${metricaCard('Comp. da passada', met.comprimento_passada_m, 'metros')}
-        ${metricaCard('Fator de esforÃ§o', met.fator_esforco_pct, `% ${met.fator_esforco_tipo ?? 'aÃ©reo'}`)}
+        ${metricaCard('Fator de esforço', met.fator_esforco_pct, `% ${met.fator_esforco_tipo ?? 'aéreo'}`)}
       </div>
     </div>
   </div>
@@ -1393,7 +1408,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   const posteriorKeys = ['queda_pelve_esq','queda_pelve_dir','alinhamento_joelho_esq','alinhamento_joelho_dir','pronacao_supinacao_esq','pronacao_supinacao_dir'];
   const pgReguaAngular = reguaPlanos();
 
-  // PÃ¡gina 2: AnÃ¡lise cinemÃ¡tica + achados + recomendaÃ§Ãµes
+  // Página 2: Análise cinemática + achados + recomendações
   const angItems = Object.entries(ang).map(([key, v]: any) => {
     const cor = corCls(v.classificacao ?? 'fora');
     const lb  = lbCls(v.classificacao ?? 'fora');
@@ -1405,12 +1420,12 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
         <span style="font-size:11px;font-weight:700;color:${cor};padding:2px 10px;background:${cor}15;border-radius:20px">${lb}</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:20px;font-weight:800;color:${cor};min-width:56px">${v.valor}Â°</div>
+        <div style="font-size:20px;font-weight:800;color:${cor};min-width:56px">${v.valor}°</div>
         <div style="flex:1">
           <div style="height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden">
             <div style="height:100%;width:${Math.min(100, Math.abs(v.valor) / (v.ideal_max || 180) * 100)}%;background:${cor};border-radius:99px"></div>
           </div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:3px">Faixa ideal: ${v.ideal_min}Â° a ${v.ideal_max}Â°</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:3px">Faixa ideal: ${v.ideal_min}° a ${v.ideal_max}°</div>
         </div>
       </div>
       ${comentario ? `<div style="margin-top:7px;margin-left:66px;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0">
@@ -1420,23 +1435,23 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   }).join('');
 
   const achadosList = [
-    achados.mecanica_frenagem      && 'MecÃ¢nica de frenagem (overstride)',
+    achados.mecanica_frenagem      && 'Mecânica de frenagem (overstride)',
     achados.sobrecarga_articular   && 'Sobrecarga articular e muscular',
     achados.deslocamento_cg        && 'Deslocamento do centro de gravidade',
-    achados.ineficiencia_propulsiva&& 'IneficiÃªncia propulsiva',
+    achados.ineficiencia_propulsiva&& 'Ineficiência propulsiva',
   ].filter(Boolean);
 
   const recItems = [
-    rec.correcao_postura     && ['CorreÃ§Ã£o de postura', rec.correcao_postura],
+    rec.correcao_postura     && ['Correção de postura', rec.correcao_postura],
     rec.ajuste_passada       && ['Ajuste de passada', rec.ajuste_passada],
-    rec.exercicios_dinamicos && ['ExercÃ­cios dinÃ¢micos', rec.exercicios_dinamicos],
+    rec.exercicios_dinamicos && ['Exercícios dinâmicos', rec.exercicios_dinamicos],
     rec.complementos         && ['Complementos', rec.complementos],
   ].filter(Boolean) as [string,string][];
 
   const temPg2 = Boolean(achadosList.length || achados.comentarios_risco || achados.observacoes || recItems.length);
   const pg2 = temPg2 ? `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head"><h2 class="mod-title">Achados e recomendações da corrida</h2></div>
-  ${achadosList.length || achados.comentarios_risco ? `<div class="sec-sub">Pontos de atenÃ§Ã£o e risco</div>
+  ${achadosList.length || achados.comentarios_risco ? `<div class="sec-sub">Pontos de atenção e risco</div>
     ${achadosList.length ? `<div style="margin-bottom:16px">${achadosList.map(a =>
       `<div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
         <div style="width:6px;height:6px;background:#ef4444;border-radius:50%;margin-top:5px;flex-shrink:0"></div>
@@ -1447,7 +1462,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     <p style="font-size:12px;color:#7c2d12;margin:0;line-height:1.6;white-space:pre-line">${x(achados.comentarios_risco)}</p>
   </div>` : ''}` : ''}
   ${achados.observacoes ? `<p style="font-size:12px;color:#4b5563;margin-bottom:16px;line-height:1.6">${x(achados.observacoes)}</p>` : ''}
-  ${recItems.length ? `<div class="sec-sub">RecomendaÃ§Ãµes</div>
+  ${recItems.length ? `<div class="sec-sub">Recomendações</div>
     <div>${recItems.map(([titulo, texto]: [string,string]) =>
       `<div style="margin-bottom:12px">
         <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:4px">${titulo}</div>
@@ -1456,7 +1471,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     </div>` : ''}
 </section>` : '';
 
-  // PÃ¡gina 3: GrÃ¡ficos cinemÃ¡ticos
+  // Página 3: Gráficos cinemáticos
   const grafUrls = [
     ['ombro_url',    'ombro',    'Ombro'],
     ['cotovelo_url', 'cotovelo', 'Cotovelo'],
@@ -1466,8 +1481,8 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   ].filter(([k]) => graf[k]);
 
   const pg3 = grafUrls.length ? `<section class="page module" style="display:flex;flex-direction:column">
-  <div class="mod-head"><h2 class="mod-title">GrÃ¡ficos cinemÃ¡ticos</h2></div>
-  <div class="sec-sub" style="margin-top:0">GrÃ¡ficos cinemÃ¡ticos</div>
+  <div class="mod-head"><h2 class="mod-title">Gráficos cinemáticos</h2></div>
+  <div class="sec-sub" style="margin-top:0">Gráficos cinemáticos</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;align-items:start">
     ${grafUrls.map(([k, ck, lbl]) => `<div style="width:100%;min-width:0">
       <div style="font-size:11px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${lbl}</div>
@@ -1489,72 +1504,72 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
 function pgRodape(d: LaudoData, pri: string): string {
   const c = d.clinica;
   const cfg = d.pdfConfig;
-  const contato = c?[c.cnpj&&`CNPJ: ${c.cnpj}`,c.telefone,c.email,c.site,c.endereco].filter(Boolean).join(' Â· '):'';
-  const textoLegal = cfg?.texto_legal ?? 'Este documento Ã© um relatÃ³rio tÃ©cnico e nÃ£o substitui diagnÃ³stico ou prescriÃ§Ã£o mÃ©dica.';
+  const contato = c?[c.cnpj&&`CNPJ: ${c.cnpj}`,c.telefone,c.email,c.site,c.endereco].filter(Boolean).join(' · '):'';
+  const textoLegal = cfg?.texto_legal ?? 'Este documento é um relatório técnico e não substitui diagnóstico ou prescrição médica.';
   const notaEquip = cfg?.nota_equipamentos;
 
-  // Protocolos â€” usar config do banco se disponÃ­vel, senÃ£o fallback
+  // Protocolos — usar config do banco se disponível, senão fallback
   const protos = cfg?.protocolos ?? [
-    {label:'Antropometria',texto:'PadrÃ£o ISAK'},
+    {label:'Antropometria',texto:'Padrão ISAK'},
     {label:'% Gordura',texto:'Jackson & Pollock 7 dobras + Siri'},
-    {label:'Massa Ã³ssea',texto:'Von DÃ¶beln (Rocha, 1974)'},
+    {label:'Massa óssea',texto:'Von Döbeln (Rocha, 1974)'},
     {label:'Somatotipo',texto:'Heath-Carter'},
-    {label:'PreensÃ£o palmar',texto:'DinamÃ´metro Medeor (Massy-Westropp, 2011)'},
-    {label:'Dinamometria isomÃ©trica',texto:'SP Tech (protocolo interno)'},
+    {label:'Preensão palmar',texto:'Dinamômetro Medeor (Massy-Westropp, 2011)'},
+    {label:'Dinamometria isométrica',texto:'SP Tech (protocolo interno)'},
     {label:'Flexibilidade',texto:'Banco de Wells (ACSM)'},
-    {label:'AerÃ³bico',texto:'Zonas % FCmÃ¡x (Tanaka, 2001)'},
+    {label:'Aeróbico',texto:'Zonas % FCmáx (Tanaka, 2001)'},
     {label:'FFMI',texto:'Schutz 2002; limite: Berkhan/McDonald'},
-    {label:'RML â€” FlexÃ£o de braÃ§o',texto:'ACSM Guidelines, 11Âª ed. (2022)'},
-    {label:'RML â€” Abdominal 1 min',texto:'Pollock & Wilmore (1990) / ACSM (2022)'},
-    {label:'RML â€” Prancha ventral',texto:'McGill SM. Low Back Disorders, 2Âª ed. (2007)'},
-    {label:'RML â€” Agachamento 1 min',texto:'Matsudo SMM (2001) / ACSM (2022)'},
-    {label:'RML â€” Sentar e Levantar 30s',texto:'Rikli & Jones. Senior Fitness Test, 2Âª ed. (2013)'},
-    {label:'RML â€” Arm Curl Test 30s',texto:'Rikli & Jones. Senior Fitness Test, 2Âª ed. (2013)'},
+    {label:'RML — Flexão de braço',texto:'ACSM Guidelines, 11ª ed. (2022)'},
+    {label:'RML — Abdominal 1 min',texto:'Pollock & Wilmore (1990) / ACSM (2022)'},
+    {label:'RML — Prancha ventral',texto:'McGill SM. Low Back Disorders, 2ª ed. (2007)'},
+    {label:'RML — Agachamento 1 min',texto:'Matsudo SMM (2001) / ACSM (2022)'},
+    {label:'RML — Sentar e Levantar 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
+    {label:'RML — Arm Curl Test 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
   ];
 
-  // ReferÃªncias â€” usar config do banco se disponÃ­vel
+  // Referências — usar config do banco se disponível
   const refs = cfg?.referencias ?? [
-    {texto:'Jackson & Pollock. Br J Nutr. 1978;40(3):497â€“504.'},
+    {texto:'Jackson & Pollock. Br J Nutr. 1978;40(3):497–504.'},
     {texto:'Siri WE. Univ. of California; 1961.'},
     {texto:'Carter & Heath. Somatotyping. Cambridge; 1990.'},
-    {texto:'Tanaka et al. J Am Coll Cardiol. 2001;37(1):153â€“6.'},
+    {texto:'Tanaka et al. J Am Coll Cardiol. 2001;37(1):153–6.'},
     {texto:'Stewart et al. ISAK Standards; 2011.'},
-    {texto:'Leong et al. Lancet. 2015;386:266â€“273.'},
-    {texto:'Medeor Ltda. Manual tÃ©cnico do dinamÃ´metro isomÃ©trico Medeor. SÃ£o Paulo; 2019.'},
+    {texto:'Leong et al. Lancet. 2015;386:266–273.'},
+    {texto:'Medeor Ltda. Manual técnico do dinamômetro isométrico Medeor. São Paulo; 2019.'},
     {texto:'Massy-Westropp NM et al. Hand Grip Strength normative data. BMC Res Notes. 2011;4:127.'},
-    {texto:'ACSM\'s Guidelines for Exercise Testing and Prescription, 11Âª ed. (2022).'},
-    {texto:'Pollock ML, Wilmore JH. Exercise in Health and Disease, 2Âª ed. (1990).'},
-    {texto:'McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation, 2Âª ed. (2007).'},
-    {texto:'Rikli RE, Jones CJ. Senior Fitness Test Manual, 2Âª ed. (2013).'},
-    {texto:'Matsudo SMM. Envelhecimento & Atividade FÃ­sica. Midiograf (2001).'},
-    {texto:'Matsudo VKR et al. Tabelas de referÃªncia para aptidÃ£o fÃ­sica. Rev Bras Ativ FÃ­s SaÃºde (1997).'},
+    {texto:'ACSM\'s Guidelines for Exercise Testing and Prescription, 11ª ed. (2022).'},
+    {texto:'Pollock ML, Wilmore JH. Exercise in Health and Disease, 2ª ed. (1990).'},
+    {texto:'McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation, 2ª ed. (2007).'},
+    {texto:'Rikli RE, Jones CJ. Senior Fitness Test Manual, 2ª ed. (2013).'},
+    {texto:'Matsudo SMM. Envelhecimento & Atividade Física. Midiograf (2001).'},
+    {texto:'Matsudo VKR et al. Tabelas de referência para aptidão física. Rev Bras Ativ Fís Saúde (1997).'},
   ];
 
   return `<section class="ref-section page module" style="page-break-after:auto">
   <div style="border-top:2px solid ${pri};padding-top:20px">
-    <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:16px">Protocolos e referÃªncias</div>
+    <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:16px">Protocolos e referências</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div>
         <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:8px">Protocolos utilizados</div>
         <ul style="padding-left:16px;font-size:11px;color:#4b5563;line-height:1.8">
-          ${protos.filter((p: any)=>p.label&&p.texto).map((p: any)=>`<li>${x(p.label)} â€” ${x(p.texto)}</li>`).join('')}
+          ${protos.filter((p: any)=>p.label&&p.texto).map((p: any)=>`<li>${x(p.label)} — ${x(p.texto)}</li>`).join('')}
         </ul>
         ${notaEquip ? `<div style="margin-top:10px;font-size:10px;color:#6b7280;font-style:italic;padding:8px 10px;background:#f9fafb;border-radius:6px;border-left:2px solid ${pri}">${x(notaEquip)}</div>` : ''}
       </div>
       <div>
-        <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:8px">ReferÃªncias bibliogrÃ¡ficas</div>
+        <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:8px">Referências bibliográficas</div>
         <ol style="padding-left:16px;font-size:10px;color:#6b7280;line-height:1.8">
           ${refs.filter((r: any)=>r.texto).map((r: any)=>`<li>${x(r.texto)}</li>`).join('')}
         </ol>
       </div>
     </div>
     <div class="footer-note">${x(textoLegal)}
-    ${contato?`<br/><b style="color:#6b7280">${x(c?.nome??'')}</b> Â· ${x(contato)}`:''}</div>
+    ${contato?`<br/><b style="color:#6b7280">${x(c?.nome??'')}</b> · ${x(contato)}`:''}</div>
   </div>
 </section>`;
 }
 
-// â”€â”€â”€ Render principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Render principal ─────────────────────────────────────────────────────────
 
 export function renderLaudoHTML(d: LaudoData): string {
   const m = d.modulos, ia = d.analisesIA??{};
@@ -1601,7 +1616,7 @@ export function renderLaudoHTML(d: LaudoData): string {
 
   return limparTextoHTML(`<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8"/>
-<title>${x(d.paciente.nome)} â€” DiagnÃ³stico FisiometabÃ³lico</title>
+<title>${x(d.paciente.nome)} — Diagnóstico Fisiometabólico</title>
 <style>${CSS(pri)}</style>
 </head><body data-footer-left="${xa(footerLeft)}" data-footer-center="${xa(footerCenter)}" data-footer-right="${xa(footerRight)}">${pages}</body></html>`);
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useMemo, useState } from 'react';
 import { consolidarHistorico, type AvaliacaoHidratada } from '@/lib/historico';
 import { calcIdade } from '@/lib/calculations/antropometria';
@@ -19,7 +19,7 @@ interface Props {
   avaliacoes: AvaliacaoHidratada[];
 }
 
-/* ── helpers ── */
+/* â”€â”€ helpers â”€â”€ */
 function zCor(v:number|null){if(v==null)return'#94a3b8';if(v<=40)return'#ef4444';if(v<=70)return'#f59e0b';return'#10b981';}
 function zLabel(v:number|null){if(v==null)return'N/A';if(v<=40)return'Crítico';if(v<=70)return'Atenção';return'Ótimo';}
 function dlt(a:any,b:any){const x=Number(a),y=Number(b);if(!isFinite(x)||!isFinite(y)||a==null||b==null)return null;return+(x-y).toFixed(1);}
@@ -63,7 +63,7 @@ function TimelineDeltaPortal({ atual, anterior }: { atual: any; anterior: any })
   return <span style={{color:diff>0?'#059669':'#ef4444',fontWeight:600}}>{diff>0?`+${diff}`:diff} pontos vs. anterior</span>;
 }
 
-/* ── Velocímetro HDR ── */
+/* â”€â”€ Velocímetro HDR â”€â”€ */
 function Gauge({value,label,size=150}:{value:number|null;label:string;size?:number}) {
   const v=Math.max(0,Math.min(100,value??0));
   const r=size*0.36, cxg=size/2, cy=size*0.52;
@@ -203,7 +203,7 @@ function GaugePremium({value,size=250}:{value:number|null;size?:number}) {
   );
 }
 
-/* ── Score ring ── */
+/* â”€â”€ Score ring â”€â”€ */
 function ScoreRing({value,label,size=72}:{value:number|null;label:string;size?:number}) {
   const r=size*0.36,circ=2*Math.PI*r,pct=Math.max(0,Math.min(100,value??0));
   const dash=(pct/100)*circ,cor=zCor(value);
@@ -229,7 +229,7 @@ function ScoreRing({value,label,size=72}:{value:number|null;label:string;size?:n
   );
 }
 
-/* ── Gráfico de barras para scores ── */
+/* â”€â”€ Gráfico de barras para scores â”€â”€ */
 function ScoresBarChart({series}:{series:{label:string;value:number|null;cor:string}[]}) {
   const max=100;
   return (
@@ -259,7 +259,7 @@ function ScoresBarChart({series}:{series:{label:string;value:number|null;cor:str
   );
 }
 
-/* ── DeltaBadge ── */
+/* â”€â”€ DeltaBadge â”€â”€ */
 function DeltaB({d,boa}:{d:number|null;boa:'subir'|'descer'}) {
   if(d==null||d===0)return null;
   const pos=d>0,bom=(boa==='subir'&&pos)||(boa==='descer'&&!pos);
@@ -270,7 +270,7 @@ function DeltaB({d,boa}:{d:number|null;boa:'subir'|'descer'}) {
   </span>;
 }
 
-/* ── Card / Secao / Metrica ── */
+/* â”€â”€ Card / Secao / Metrica â”€â”€ */
 function scoreNumero(v:any): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? Math.round(n) : null;
@@ -323,7 +323,7 @@ function valorParaTela(v:any): string {
     return texto||'—';
   }
   if(typeof v==='object'){
-    const alvo=v.media??v['média']??v['mÃ©dia']??v.validada??v.validado??v.valor??v.resultado??v.total??v.kg??v.pct??v.m3??v.m2??v.m1;
+    const alvo=v.media??v['média']??v['média']??v.validada??v.validado??v.valor??v.resultado??v.total??v.kg??v.pct??v.m3??v.m2??v.m1;
     return alvo==null||alvo===''?'—':String(alvo);
   }
   return String(v);
@@ -523,7 +523,7 @@ function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentar
   </div>;
 }
 
-/* ════════════════ COMPONENTE PRINCIPAL ════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• COMPONENTE PRINCIPAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const hist=useMemo(()=>consolidarHistorico(avaliacoes),[avaliacoes]);
   const [sel,setSel]=useState(hist.ultima?.id??'');
@@ -594,7 +594,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const zonasItems=Array.isArray(zonas)
     ?zonas.map((z:any,i:number)=>({
       label:z.label??z.nome??`Z${i+1}`,
-      nome:z.descricao??z.nome??['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO₂máx'][i]??`Zona ${i+1}`,
+      nome:z.descricao??z.nome??['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO2máx'][i]??`Zona ${i+1}`,
       min:z.min??0,
       max:z.max??0,
       cor:['#22c55e','#10b981','#f59e0b','#f97316','#ef4444'][i]??'#10b981',
@@ -604,7 +604,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     {label:'Z2',nome:'Base aeróbica',min:zonas.z2?.min??0,max:zonas.z2?.max??0,cor:'#34d399'},
     {label:'Z3',nome:'Aeróbico',     min:zonas.z3?.min??0,max:zonas.z3?.max??0,cor:'#fbbf24'},
     {label:'Z4',nome:'Limiar',       min:zonas.z4?.min??0,max:zonas.z4?.max??0,cor:'#f97316'},
-    {label:'Z5',nome:'VO₂máx',       min:zonas.z5?.min??0,max:zonas.z5?.max??0,cor:'#ef4444'},
+    {label:'Z5',nome:'VO2máx',       min:zonas.z5?.min??0,max:zonas.z5?.max??0,cor:'#ef4444'},
   ]:[];
 
   // TODOS os scores — sempre exibir mesmo se null
@@ -836,7 +836,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:8}}>
                 {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
                 {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
-                {sv?.spo2!=null&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
+                {sv?.spo2!=null&&<MetricaHorizontal label="SpO2" valor={`${sv.spo2}%`}/>}
                 {sv?.temperatura!=null&&sv?.temperatura!==''&&<MetricaHorizontal label="Temperatura" valor={sv.temperatura} un="°C"/>}
                 {sv?.fr!=null&&sv?.fr!==''&&<MetricaHorizontal label="Frequência respiratória" valor={sv.fr} un="irpm"/>}
               </div>
@@ -1018,14 +1018,14 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           {(vo2!=null||sv)&&(
             <Card style={{marginBottom:14}}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))',gap:8}}>
-                {vo2!=null&&<MetricaHorizontal label="VO₂máx" valor={vo2} un="ml/kg/min" cor="#10b981"
+                {vo2!=null&&<MetricaHorizontal label="VO2máx" valor={vo2} un="ml/kg/min" cor="#10b981"
                   d={dlt(vo2,ant?.cardiorrespiratorio?.vo2max)} dBoa="subir"/>}
                 {atual.cardiorrespiratorio?.classificacao_vo2&&<MetricaHorizontal label="Classificação" valor={atual.cardiorrespiratorio.classificacao_vo2}/>}
                 {atual.cardiorrespiratorio?.fc_limiar!=null&&<MetricaHorizontal label="FC limiar" valor={atual.cardiorrespiratorio.fc_limiar} un="bpm" cor="#f59e0b"/>}
                 {atual.cardiorrespiratorio?.fc_max!=null&&<MetricaHorizontal label="FC máxima" valor={atual.cardiorrespiratorio.fc_max} un="bpm" cor="#f87171"/>}
                 {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
                 {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
-                {sv?.spo2!=null&&<MetricaHorizontal label="SpO₂" valor={`${sv.spo2}%`}/>}
+                {sv?.spo2!=null&&<MetricaHorizontal label="SpO2" valor={`${sv.spo2}%`}/>}
               </div>
               {atual.cardiorrespiratorio?.protocolo&&(
                 <div style={{marginTop:10,padding:'11px 13px',borderRadius:10,background:'#f8fafc',border:'1px solid #f1f5f9'}}>
@@ -1152,13 +1152,21 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 {(atual.forca as any).tracao_testes.map((t:any,i:number)=>{
                   const ca=t.classificacao_assimetria==='Leve'?'#10b981':t.classificacao_assimetria==='Moderada'?'#f59e0b':'#ef4444';
                   const LCard=({lado,tit,ac}:{lado:any;tit:string;ac:string})=>{
-                    if(!lado?.fim_kgf&&!lado?.rm1_kg&&!lado?.rfd_kgf_s)return null;
+                    if(!lado?.fim_kgf&&!lado?.rm1_kg&&!lado?.rfd_kgf_s&&!lado?.fim_n&&!lado?.forca_relativa_kgf_kg)return null;
                     return <div style={{flex:1,padding:'10px 12px',background:'#f8fafc',borderRadius:10,border:`1px solid ${ac}25`}}>
                       <div style={{fontSize:9,fontWeight:600,color:ac,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6}}>{tit}</div>
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:8}}>
-                        <Metrica label="FIM" valor={lado.fim_kgf || '—'} un="kgf"/>
-                        <Metrica label="1RM estimado" valor={lado.rm1_kg || '—'} un="kg"/>
-                        <Metrica label="RFD" valor={lado.rfd_kgf_s || '—'} un="kgf/s"/>
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:8}}>
+                        <Metrica label="FIM" valor={lado.fim_kgf || "-"} un="kgf"/>
+                        <Metrica label="FIM N" valor={lado.fim_n || "-"} un="N"/>
+                        <Metrica label="Forca rel." valor={lado.forca_relativa_kgf_kg || "-"} un="kgf/kg"/>
+                        <Metrica label="1RM estimado" valor={lado.rm1_kg || "-"} un="kg"/>
+                        <Metrica label="RFD global" valor={lado.rfd_kgf_s || "-"} un="kgf/s"/>
+                        <Metrica label="RFD 50ms" valor={lado.rfd_50_kgf_s || "-"} un="kgf/s"/>
+                        <Metrica label="RFD 100ms" valor={lado.rfd_100_kgf_s || "-"} un="kgf/s"/>
+                        <Metrica label="RFD 200ms" valor={lado.rfd_200_kgf_s || "-"} un="kgf/s"/>
+                        <Metrica label="Impulso" valor={lado.impulso_kgf_s || "-"} un="kgf.s"/>
+                        <Metrica label="Sust. 80%" valor={lado.sustentacao_80_s || "-"} un="s"/>
+                        <Metrica label="Duracao" valor={lado.duracao_s || "-"} un="s"/>
                       </div>
                     </div>;
                   };
@@ -1174,6 +1182,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                     <div style={{padding:10,display:'flex',gap:8}}>
                       <LCard lado={t.lado_d} tit="◀ Lado Direito" ac="#3b82f6"/>
                       <LCard lado={t.lado_e} tit="Lado Esquerdo ▶" ac="#8b5cf6"/>
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(5,minmax(0,1fr))',gap:8,padding:'0 10px 10px'}}>
+                      <Metrica label="Media tentativas" valor={t.media_tentativas_kgf || "-"} un="kgf"/>
+                      <Metrica label="Fadiga" valor={t.indice_fadiga_pct || "-"} un="%"/>
+                      <Metrica label="LSI" valor={t.lsi_pct || "-"} un="%"/>
+                      <Metrica label="Assimetria" valor={t.assimetria_pct || "-"} un="%"/>
+                      <Metrica label="Delta absoluto" valor={t.diferenca_abs_kgf || "-"} un="kgf"/>
                     </div>
                     {t.observacoes&&<div style={{padding:'0 12px 12px',fontSize:12,color:'#475569'}}>{t.observacoes}</div>}
                   </div>;
@@ -1480,7 +1495,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 {nome:'Peso',pontos:hist.series.peso,cor:'#64748b'},
                 {nome:'Massa magra',pontos:hist.series.massaMagra,cor:'#10b981'}]},
               {t:'% Gordura corporal',s:[{nome:'% Gordura',pontos:hist.series.pctGordura,cor:'#f59e0b'}]},
-              {t:'VO₂máx (ml/kg/min)',s:[{nome:'VO₂máx',pontos:hist.series.vo2max,cor:'#10b981'}]},
+              {t:'VO2máx (ml/kg/min)',s:[{nome:'VO2máx',pontos:hist.series.vo2max,cor:'#10b981'}]},
             ].map(({t,s})=>(
               <Card key={t} bg="#f8fafc">
                 <h3 style={{fontSize:13,fontWeight:600,color:'#475569',margin:'0 0 10px'}}>{t}</h3>

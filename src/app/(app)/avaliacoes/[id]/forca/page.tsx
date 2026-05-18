@@ -41,22 +41,59 @@ interface AlgometriaPonto {
 }
 interface SPTechRelacao { descricao: string; percentual: string; }
 interface TesteSimplesItem { nome: string; valor: string; unidade: string; }
+interface SPTechRelacaoCalculada {
+  nome: string;
+  lado: 'Direito' | 'Esquerdo';
+  percentual: number;
+  numerador: string;
+  denominador: string;
+  unidade: 'kgf' | 'Nm';
+  descricao: string;
+}
 interface TracaoLado {
   fim_kgf: string;
+  fim_n: string;
+  forca_inicial_kgf: string;
   tempo_ms: string;
+  forca_50ms_kgf: string;
+  forca_100ms_kgf: string;
+  forca_200ms_kgf: string;
   rm1_kg: string;
+  forca_relativa_kgf_kg: string;
   rfd_kgf_s: string;
+  rfd_50_kgf_s: string;
+  rfd_100_kgf_s: string;
+  rfd_200_kgf_s: string;
+  impulso_kgf_s: string;
+  sustentacao_80_s: string;
+  duracao_s: string;
 }
 interface TracaoTeste {
+  modo_coleta: 'manual' | 'bluetooth';
   teste: string;
   musculo: string;
   exercicio_ref: string;
   fator: string;
+  peso_corporal_kg: string;
+  numero_tentativas: string;
+  tentativas_fim_kgf: string;
   lado_d: TracaoLado;
   lado_e: TracaoLado;
+  media_tentativas_kgf: string;
+  indice_fadiga_pct: string;
+  lsi_pct: string;
+  diferenca_abs_kgf: string;
   assimetria_pct: string;
   classificacao_assimetria: string;
   observacoes: string;
+}
+interface TracaoRelacaoCalculada {
+  nome: string;
+  lado: 'Direito' | 'Esquerdo';
+  percentual: number;
+  numerador: string;
+  denominador: string;
+  descricao: string;
 }
 
 /* ══ CONSTANTES ══════════════════════════════════════════ */
@@ -93,6 +130,57 @@ const TRACAO_REFERENCIAS = [
   { key:'imtp_130_140', musculo:'IMTP 130°-140°', exercicio:'Deadlift / puxada / força global', fator:0.50 },
   { key:'outro', musculo:'Outro', exercicio:'', fator:1 },
 ];
+
+TRACAO_REFERENCIAS.splice(4, 0,
+  { key:'ombro_rotacao_interna', musculo:'Ombro - rotacao interna', exercicio:'Rotacao interna com cabo/elastico', fator:1 },
+  { key:'ombro_rotacao_externa', musculo:'Ombro - rotacao externa', exercicio:'Rotacao externa com cabo/elastico', fator:1 },
+  { key:'ombro_flexao', musculo:'Ombro - flexao', exercicio:'Elevacao frontal / flexao de ombro', fator:1 },
+  { key:'ombro_extensao', musculo:'Ombro - extensao', exercicio:'Extensao de ombro no cabo', fator:1 },
+  { key:'ombro_abducao', musculo:'Ombro - abducao', exercicio:'Elevacao lateral / abducao de ombro', fator:1 },
+  { key:'ombro_aducao', musculo:'Ombro - aducao', exercicio:'Aducao de ombro no cabo', fator:1 },
+);
+
+const TRACAO_RELACOES = [
+  {
+    nome: 'Isquiotibiais / Quadríceps',
+    numerador: 'isquiotibiais_30_45',
+    denominador: 'quadriceps_90',
+    descricao: 'Relação H/Q pela força isométrica máxima',
+  },
+  {
+    nome: 'Tríceps / Bíceps',
+    numerador: 'triceps_90',
+    denominador: 'biceps_90',
+    descricao: 'Equilíbrio flexores/extensores do cotovelo',
+  },
+  {
+    nome: 'Puxar / empurrar',
+    numerador: 'latissimo_dorso',
+    denominador: 'peitoral_maior',
+    descricao: 'Equilíbrio entre cadeia de puxada e empurrar',
+  },
+] as const;
+
+const TRACAO_RELACOES_EXTRA = [
+  {
+    nome: 'Rotacao externa / interna do ombro',
+    numerador: 'ombro_rotacao_externa',
+    denominador: 'ombro_rotacao_interna',
+    descricao: 'Relacao RE/RI do ombro',
+  },
+  {
+    nome: 'Flexao / extensao do ombro',
+    numerador: 'ombro_flexao',
+    denominador: 'ombro_extensao',
+    descricao: 'Referencia operacional: 85-100%',
+  },
+  {
+    nome: 'Abducao / aducao do ombro',
+    numerador: 'ombro_abducao',
+    denominador: 'ombro_aducao',
+    descricao: 'Referencia operacional: 80-95%',
+  },
+] as const;
 
 const ESPORTES_FORCA = [
   ['saude_geral', 'Saúde geral'],
@@ -165,18 +253,41 @@ const algVazio = (): AlgometriaPonto => ({
 });
 
 const tracaoLadoVazio = (): TracaoLado => ({
-  fim_kgf:'', tempo_ms:'', rm1_kg:'', rfd_kgf_s:'',
+  fim_kgf:'',
+  fim_n:'',
+  forca_inicial_kgf:'',
+  tempo_ms:'',
+  forca_50ms_kgf:'',
+  forca_100ms_kgf:'',
+  forca_200ms_kgf:'',
+  rm1_kg:'',
+  forca_relativa_kgf_kg:'',
+  rfd_kgf_s:'',
+  rfd_50_kgf_s:'',
+  rfd_100_kgf_s:'',
+  rfd_200_kgf_s:'',
+  impulso_kgf_s:'',
+  sustentacao_80_s:'',
+  duracao_s:'',
 });
 
 const tracaoVazio = (): TracaoTeste => {
   const ref = TRACAO_REFERENCIAS[0];
   return {
+    modo_coleta: 'manual',
     teste: ref.key,
     musculo: ref.musculo,
     exercicio_ref: ref.exercicio,
     fator: ref.fator.toString(),
+    peso_corporal_kg:'',
+    numero_tentativas:'',
+    tentativas_fim_kgf:'',
     lado_d: tracaoLadoVazio(),
     lado_e: tracaoLadoVazio(),
+    media_tentativas_kgf:'',
+    indice_fadiga_pct:'',
+    lsi_pct:'',
+    diferenca_abs_kgf:'',
     assimetria_pct:'',
     classificacao_assimetria:'Leve',
     observacoes:'',
@@ -192,13 +303,23 @@ function classAssimetria(p: number) {
 
 function recalcTracao(t: TracaoTeste): TracaoTeste {
   const fator = parseFloat(t.fator) || 0;
+  const peso = parseFloat(t.peso_corporal_kg) || 0;
   const calcLado = (lado: TracaoLado): TracaoLado => {
     const fim = parseFloat(lado.fim_kgf) || 0;
+    const forcaInicial = parseFloat(lado.forca_inicial_kgf) || 0;
     const tempoS = (parseFloat(lado.tempo_ms) || 0) / 1000;
+    const f50 = parseFloat(lado.forca_50ms_kgf) || 0;
+    const f100 = parseFloat(lado.forca_100ms_kgf) || 0;
+    const f200 = parseFloat(lado.forca_200ms_kgf) || 0;
     return {
       ...lado,
+      fim_n: fim ? (fim * 9.80665).toFixed(1) : '',
       rm1_kg: fim && fator ? (fim * fator).toFixed(1) : '',
-      rfd_kgf_s: fim && tempoS ? (fim / tempoS).toFixed(1) : '',
+      forca_relativa_kgf_kg: fim && peso ? (fim / peso).toFixed(3) : '',
+      rfd_kgf_s: fim && tempoS ? ((fim - forcaInicial) / tempoS).toFixed(1) : '',
+      rfd_50_kgf_s: f50 ? (f50 / 0.05).toFixed(1) : '',
+      rfd_100_kgf_s: f100 ? (f100 / 0.10).toFixed(1) : '',
+      rfd_200_kgf_s: f200 ? (f200 / 0.20).toFixed(1) : '',
     };
   };
   const lado_d = calcLado(t.lado_d);
@@ -206,13 +327,116 @@ function recalcTracao(t: TracaoTeste): TracaoTeste {
   const d = parseFloat(lado_d.fim_kgf) || 0;
   const e = parseFloat(lado_e.fim_kgf) || 0;
   const assim = d && e ? (Math.abs(d - e) / Math.max(d, e)) * 100 : null;
+  const lsi = d && e ? (Math.min(d, e) / Math.max(d, e)) * 100 : null;
+  const difAbs = d && e ? Math.abs(d - e) : null;
+  const tentativas = (t.tentativas_fim_kgf || '')
+    .split(/[;,\s]+/)
+    .map(v => parseFloat(v.replace(',', '.')))
+    .filter(v => Number.isFinite(v) && v > 0);
+  const media = tentativas.length
+    ? tentativas.reduce((acc, v) => acc + v, 0) / tentativas.length
+    : null;
+  const melhor = tentativas.length ? Math.max(...tentativas) : null;
+  const pior = tentativas.length ? Math.min(...tentativas) : null;
+  const fadiga = melhor && pior ? ((melhor - pior) / melhor) * 100 : null;
   return {
     ...t,
+    modo_coleta: t.modo_coleta ?? 'manual',
+    peso_corporal_kg: t.peso_corporal_kg ?? '',
+    numero_tentativas: t.numero_tentativas || (tentativas.length ? String(tentativas.length) : ''),
+    tentativas_fim_kgf: t.tentativas_fim_kgf ?? '',
     lado_d,
     lado_e,
+    media_tentativas_kgf: media == null ? '' : media.toFixed(1),
+    indice_fadiga_pct: fadiga == null ? '' : fadiga.toFixed(1),
+    lsi_pct: lsi == null ? '' : lsi.toFixed(1),
+    diferenca_abs_kgf: difAbs == null ? '' : difAbs.toFixed(1),
     assimetria_pct: assim == null ? '' : assim.toFixed(1),
     classificacao_assimetria: assim == null ? 'Leve' : classAssimetria(assim),
   };
+}
+
+function fimTracao(teste: TracaoTeste | undefined, lado: 'lado_d' | 'lado_e') {
+  if (!teste) return 0;
+  return parseFloat(teste[lado]?.fim_kgf ?? '') || 0;
+}
+
+function relacoesTracaoCalculadas(testes: TracaoTeste[]): TracaoRelacaoCalculada[] {
+  const porTeste = new Map<string, TracaoTeste>();
+  for (const teste of testes) {
+    if (teste.teste && teste.teste !== 'outro' && !porTeste.has(teste.teste)) {
+      porTeste.set(teste.teste, teste);
+    }
+  }
+
+  return [...TRACAO_RELACOES, ...TRACAO_RELACOES_EXTRA].flatMap(relacao => {
+    const numerador = porTeste.get(relacao.numerador);
+    const denominador = porTeste.get(relacao.denominador);
+
+    return ([
+      ['lado_d', 'Direito'],
+      ['lado_e', 'Esquerdo'],
+    ] as const).flatMap(([ladoKey, ladoLabel]) => {
+      const valorNumerador = fimTracao(numerador, ladoKey);
+      const valorDenominador = fimTracao(denominador, ladoKey);
+      if (!valorNumerador || !valorDenominador) return [];
+
+      return [{
+        nome: relacao.nome,
+        lado: ladoLabel,
+        percentual: Number(((valorNumerador / valorDenominador) * 100).toFixed(1)),
+        numerador: numerador?.musculo || TRACAO_REFERENCIAS.find(r => r.key === relacao.numerador)?.musculo || relacao.numerador,
+        denominador: denominador?.musculo || TRACAO_REFERENCIAS.find(r => r.key === relacao.denominador)?.musculo || relacao.denominador,
+        descricao: relacao.descricao,
+      }];
+    });
+  });
+}
+
+function normalizarTextoBusca(valor: string) {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function movimentoSPTech(teste: SPTechTeste) {
+  return normalizarTextoBusca(teste.articulacao === 'Outra' ? teste.movimento_outra : teste.movimento);
+}
+
+function valorSPTech(teste: SPTechTeste | undefined, lado: 'lado_d' | 'lado_e') {
+  if (!teste) return { valor: 0, unidade: 'kgf' as const };
+  const kgf = parseFloat(teste[lado]?.kgf ?? '') || 0;
+  if (kgf) return { valor: kgf, unidade: 'kgf' as const };
+  const torque = parseFloat(teste[lado]?.torque_nm ?? '') || 0;
+  return { valor: torque, unidade: 'Nm' as const };
+}
+
+function relacoesSPTechCalculadas(testes: SPTechTeste[]): SPTechRelacaoCalculada[] {
+  const ombroInterna = testes.find(t => t.articulacao === 'Ombro' && movimentoSPTech(t) === 'rotacao interna');
+  const ombroExterna = testes.find(t => t.articulacao === 'Ombro' && movimentoSPTech(t) === 'rotacao externa');
+
+  if (!ombroInterna || !ombroExterna) return [];
+
+  return ([
+    ['lado_d', 'Direito'],
+    ['lado_e', 'Esquerdo'],
+  ] as const).flatMap(([ladoKey, ladoLabel]) => {
+    const externa = valorSPTech(ombroExterna, ladoKey);
+    const interna = valorSPTech(ombroInterna, ladoKey);
+    if (!externa.valor || !interna.valor || externa.unidade !== interna.unidade) return [];
+
+    return [{
+      nome: 'Rotação externa / interna do ombro',
+      lado: ladoLabel,
+      percentual: Number(((externa.valor / interna.valor) * 100).toFixed(1)),
+      numerador: 'Rotação externa',
+      denominador: 'Rotação interna',
+      unidade: externa.unidade,
+      descricao: 'Equilíbrio entre rotadores externos e internos do ombro',
+    }];
+  });
 }
 
 function rotuloTracao(t: TracaoTeste) {
@@ -358,6 +582,13 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
     });
   }, 2000);
 
+  const tracaoRelacoesAuto = modeloDinamometria === 'tracao'
+    ? relacoesTracaoCalculadas(tracaoTestes)
+    : [];
+  const spTechRelacoesAuto = modeloDinamometria === 'medeor'
+    ? relacoesSPTechCalculadas(spTestes)
+    : [];
+
   /* ── helpers dinamometria ── */
   function addTeste() {
     setSPTestes(t=>[...t, testeVazio()]);
@@ -426,7 +657,9 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
   }
 
   function addTracaoTeste() {
-    setTracaoTestes(t=>[...t, tracaoVazio()]);
+    const novo = tracaoVazio();
+    novo.peso_corporal_kg = aval?.pacientes?.peso?.toString?.() ?? '';
+    setTracaoTestes(t=>[...t, novo]);
   }
   function rmTracaoTeste(i:number) {
     setTracaoTestes(t=>t.filter((_,j)=>j!==i));
@@ -444,7 +677,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
           fator: ref.fator.toString(),
         });
       }
-      return recalcTracao({...t, [field]: val});
+      return recalcTracao({...t, [field]: val} as TracaoTeste);
     }));
   }
   function updTracaoLado(i:number, lado:'lado_d'|'lado_e', field:keyof TracaoLado, val:string) {
@@ -719,6 +952,12 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                 </div>
                 <div className="p-4 space-y-4">
                   <div className="grid grid-cols-4 gap-3">
+                    <Field label="Modo de coleta">
+                      <Select value={t.modo_coleta ?? 'manual'} onChange={e=>updTracaoTeste(i,'modo_coleta',e.target.value as any)}>
+                        <option value="manual">Manual</option>
+                        <option value="bluetooth">Bluetooth WHC-06</option>
+                      </Select>
+                    </Field>
                     <Field label="Teste DIM">
                       <Select value={t.teste} onChange={e=>updTracaoTeste(i,'teste',e.target.value)}>
                         {TRACAO_REFERENCIAS.map(r=><option key={r.key} value={r.key}>{r.musculo}</option>)}
@@ -733,6 +972,18 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                     <Field label="Fator operacional">
                       <Input type="number" step="0.01" min="0" value={t.fator}
                         onChange={e=>updTracaoTeste(i,'fator',e.target.value)} />
+                    </Field>
+                    <Field label="Peso corporal (kg)">
+                      <Input type="number" step="0.1" value={t.peso_corporal_kg ?? ''}
+                        onChange={e=>updTracaoTeste(i,'peso_corporal_kg',e.target.value)} />
+                    </Field>
+                    <Field label="Numero de tentativas">
+                      <Input type="number" step="1" min="0" value={t.numero_tentativas ?? ''}
+                        onChange={e=>updTracaoTeste(i,'numero_tentativas',e.target.value)} />
+                    </Field>
+                    <Field label="FIM das tentativas (kgf)">
+                      <Input value={t.tentativas_fim_kgf ?? ''} placeholder="Ex: 42, 44, 43"
+                        onChange={e=>updTracaoTeste(i,'tentativas_fim_kgf',e.target.value)} />
                     </Field>
                   </div>
 
@@ -750,17 +1001,61 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                               <Input type="number" step="0.1" value={dados.fim_kgf}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','fim_kgf',e.target.value)} />
                             </Field>
+                            <Field label="Forca inicial (kgf)">
+                              <Input type="number" step="0.1" value={dados.forca_inicial_kgf ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_inicial_kgf',e.target.value)} />
+                            </Field>
                             <Field label="Tempo até pico (ms)">
                               <Input type="number" step="1" value={dados.tempo_ms}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','tempo_ms',e.target.value)} />
                             </Field>
+                            <Field label="Forca aos 50 ms (kgf)">
+                              <Input type="number" step="0.1" value={dados.forca_50ms_kgf ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_50ms_kgf',e.target.value)} />
+                            </Field>
+                            <Field label="Forca aos 100 ms (kgf)">
+                              <Input type="number" step="0.1" value={dados.forca_100ms_kgf ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_100ms_kgf',e.target.value)} />
+                            </Field>
+                            <Field label="Forca aos 200 ms (kgf)">
+                              <Input type="number" step="0.1" value={dados.forca_200ms_kgf ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_200ms_kgf',e.target.value)} />
+                            </Field>
+                            <Field label="Impulso (kgf.s)">
+                              <Input type="number" step="0.01" value={dados.impulso_kgf_s ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','impulso_kgf_s',e.target.value)} />
+                            </Field>
+                            <Field label="Sustentacao >=80% FIM (s)">
+                              <Input type="number" step="0.01" value={dados.sustentacao_80_s ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','sustentacao_80_s',e.target.value)} />
+                            </Field>
+                            <Field label="Duracao da contracao (s)">
+                              <Input type="number" step="0.01" value={dados.duracao_s ?? ''}
+                                onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','duracao_s',e.target.value)} />
+                            </Field>
+                            <div className="rounded-lg bg-white border border-slate-200 p-3">
+                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">FIM em Newton</div>
+                              <div className="text-lg font-bold text-slate-800">{dados.fim_n || 'â€”'} <span className="text-xs text-slate-400">N</span></div>
+                            </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">1RM estimado</div>
                               <div className="text-lg font-bold text-slate-800">{dados.rm1_kg || '—'} <span className="text-xs text-slate-400">kg</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
-                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">RFD</div>
+                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Forca relativa</div>
+                              <div className="text-lg font-bold text-slate-800">{dados.forca_relativa_kgf_kg || '—'} <span className="text-xs text-slate-400">kgf/kg</span></div>
+                            </div>
+                            <div className="rounded-lg bg-white border border-slate-200 p-3">
+                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">RFD global</div>
                               <div className="text-lg font-bold text-slate-800">{dados.rfd_kgf_s || '—'} <span className="text-xs text-slate-400">kgf/s</span></div>
+                            </div>
+                            <div className="rounded-lg bg-white border border-slate-200 p-3 col-span-2">
+                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-2">RFD por janela</div>
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div><span className="text-slate-400">0-50 ms</span><br/><b>{dados.rfd_50_kgf_s || '—'}</b> kgf/s</div>
+                                <div><span className="text-slate-400">0-100 ms</span><br/><b>{dados.rfd_100_kgf_s || '—'}</b> kgf/s</div>
+                                <div><span className="text-slate-400">0-200 ms</span><br/><b>{dados.rfd_200_kgf_s || '—'}</b> kgf/s</div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -768,6 +1063,22 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                     })}
                   </div>
 
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      ['Media tentativas', t.media_tentativas_kgf, 'kgf'],
+                      ['Fadiga', t.indice_fadiga_pct, '%'],
+                      ['LSI', t.lsi_pct, '%'],
+                      ['Assimetria', t.assimetria_pct, '%'],
+                      ['Delta absoluto', t.diferenca_abs_kgf, 'kgf'],
+                    ].map(([label, valor, unidade]) => (
+                      <div key={label} className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+                        <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">{label}</div>
+                        <div className="text-lg font-bold text-slate-800">
+                          {valor || '—'} <span className="text-xs text-slate-400">{unidade}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                   <Field label="Observações">
                     <Input value={t.observacoes} placeholder="Comentário clínico sobre este teste"
                       onChange={e=>updTracaoTeste(i,'observacoes',e.target.value)} />
@@ -793,8 +1104,71 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
             <p className="text-xs text-slate-500">
               Relações agonista/antagonista — ex: Flexão/Extensão joelho E
             </p>
+            {modeloDinamometria === 'medeor' && spTechRelacoesAuto.length > 0 && (
+              <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                  Relacoes calculadas automaticamente pelo Medeor/SPTech
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {spTechRelacoesAuto.map((relacao, i) => (
+                    <div key={`${relacao.nome}-${relacao.lado}-${i}`} className="rounded-lg border border-blue-200 bg-white px-3 py-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">{relacao.nome}</div>
+                          <div className="text-[11px] text-slate-500">{relacao.lado} Â· {relacao.descricao}</div>
+                          <div className="mt-1 text-[11px] text-slate-400">
+                            {relacao.numerador} Ã· {relacao.denominador}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-blue-600">{relacao.percentual}%</div>
+                          <div className="text-[10px] uppercase tracking-wide text-slate-400">{relacao.unidade}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {modeloDinamometria === 'tracao' && (
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                  Relações calculadas automaticamente pela tração
+                </div>
+                {tracaoRelacoesAuto.length === 0 ? (
+                  <p className="text-xs text-slate-500">
+                    Preencha os testes equivalentes para calcular automaticamente as relações: isquiotibiais/quadríceps,
+                    tríceps/bíceps, puxar/empurrar, RE/RI de ombro, flexão/extensão de ombro e abdução/adução de ombro.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {tracaoRelacoesAuto.map((relacao, i) => (
+                      <div key={`${relacao.nome}-${relacao.lado}-${i}`} className="rounded-lg border border-emerald-200 bg-white px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">{relacao.nome}</div>
+                            <div className="text-[11px] text-slate-500">{relacao.lado} · {relacao.descricao}</div>
+                            <div className="mt-1 text-[11px] text-slate-400">
+                              {relacao.numerador} ÷ {relacao.denominador}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-emerald-600">{relacao.percentual}%</div>
+                            <div className="text-[10px] uppercase tracking-wide text-slate-400">FIM kgf</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {spRelacoes.length===0 && (
-              <p className="text-xs text-slate-400">Nenhuma relação cadastrada.</p>
+              <p className="text-xs text-slate-400">
+                {modeloDinamometria === 'tracao'
+                  ? 'Nenhuma relação manual cadastrada.'
+                  : 'Nenhuma relação cadastrada.'}
+              </p>
             )}
             {spRelacoes.map((r,i)=>(
               <div key={i} className="flex gap-2 items-center">

@@ -45,7 +45,7 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
       .order('padrao', { ascending: false })
       .order('titulo');
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel carregar as recomendaÃ§Ãµes: ${error.message}`);
+      setErro(`Não foi possível carregar as recomendações: ${error.message}`);
       setItens([]);
       return;
     }
@@ -64,7 +64,7 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
     const { error } = await query;
     setSalvando(false);
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel salvar a recomendaÃ§Ã£o: ${error.message}`);
+      setErro(`Não foi possível salvar a recomendação: ${error.message}`);
       return;
     }
     setSelecionado(VAZIO);
@@ -75,7 +75,7 @@ export function ProtocolosConfigPanel({ clinicaId }: { clinicaId: string }) {
     if (!selecionado.id || !confirm('Excluir esta recomendação?')) return;
     const { error } = await supabase.from('protocolo_recomendacoes').delete().eq('id', selecionado.id);
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel excluir a recomendaÃ§Ã£o: ${error.message}`);
+      setErro(`Não foi possível excluir a recomendação: ${error.message}`);
       return;
     }
     setSelecionado(VAZIO);

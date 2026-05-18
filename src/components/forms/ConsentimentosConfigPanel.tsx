@@ -32,7 +32,7 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
       .order('padrao', { ascending: false })
       .order('nome');
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel carregar os modelos: ${error.message}`);
+      setErro(`Não foi possível carregar os modelos: ${error.message}`);
       setModelos([]);
       return;
     }
@@ -56,7 +56,7 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
     const { error } = await query;
     setSalvando(false);
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel salvar o modelo: ${error.message}`);
+      setErro(`Não foi possível salvar o modelo: ${error.message}`);
       return;
     }
     setSelecionado(MODELO_VAZIO);
@@ -67,7 +67,7 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
     if (!selecionado.id || !confirm('Excluir este modelo?')) return;
     const { error } = await supabase.from('consentimento_modelos').delete().eq('id', selecionado.id);
     if (error) {
-      setErro(`NÃ£o foi possÃ­vel excluir o modelo: ${error.message}`);
+      setErro(`Não foi possível excluir o modelo: ${error.message}`);
       return;
     }
     setSelecionado(MODELO_VAZIO);

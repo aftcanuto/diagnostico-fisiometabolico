@@ -1752,3 +1752,73 @@ Validacao local:
 - `npm run predeploy` passou sem erros;
 - `npm run build` passou sem erros;
 - os previews de laudo, dashboard clinico e dashboard do paciente foram gerados pelo smoke test.
+
+## Correcao: textos quebrados e relacoes automaticas na tracao
+
+Em 18/05/2026 foi feita uma rodada de refinamento no modulo de forca e em textos de interface.
+
+Problemas tratados:
+
+- algumas telas exibiam textos com caracteres quebrados em palavras acentuadas e setas;
+- a dinamometria de tracao calculava FIM, 1RM, RFD e assimetria, mas nao calculava relacoes musculares quando os pares equivalentes eram preenchidos.
+
+Arquivos ajustados:
+
+- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` e componentes relacionados tiveram textos normalizados para UTF-8 correto;
+- `src/app/(app)/avaliacoes/[id]/forca/page.tsx` passou a calcular relacoes automaticas para dinamometria de tracao;
+- `src/lib/pdf/template.ts` recebeu correcoes pontuais de acentos no PDF.
+
+Relacoes automaticas da tracao:
+
+- Isquiotibiais / Quadriceps, usando FIM kgf dos dois testes;
+- Triceps / Biceps, usando FIM kgf dos dois testes;
+- Puxar / empurrar, usando Latissimo do dorso / Peitoral maior;
+- todas sao calculadas separadamente para lado direito e esquerdo e aparecem assim que os testes equivalentes possuem valores validos.
+
+Sem migration nesta rodada: os calculos sao derivados dos valores ja salvos em `forca.tracao_testes`.
+
+## Dinamometria de tracao WHC-06/BLE e metricas ampliadas
+
+Em 18/05/2026 foi ampliado o suporte da dinamometria de tracao para contemplar o fluxo do dinamometro/balanca WHC-06 via BLE.
+
+Premissa registrada:
+
+- o hardware envia apenas a serie temporal de forca em kgf;
+- tempo, curva, RFD, impulso, sustentacao, assimetria, fadiga, 1RM e relacoes musculares sao calculos do sistema;
+- neste momento o lancamento segue manual, mas os campos ja foram estruturados para receber estes dados quando a integracao BLE for implementada.
+
+Implementado no modulo de forca:
+
+- modo de coleta `Manual` ou `Bluetooth WHC-06`;
+- peso corporal por teste para calcular forca relativa;
+- numero de tentativas e lista de FIM por tentativa;
+- FIM em kgf e Newton;
+- forca inicial, forca aos 50 ms, 100 ms e 200 ms;
+- RFD global, RFD 0-50 ms, RFD 0-100 ms e RFD 0-200 ms;
+- 1RM estimado pelo fator operacional;
+- forca relativa kgf/kg;
+- impulso, sustentacao acima de 80% da FIM e duracao da contracao;
+- media das tentativas, indice de fadiga, LSI, assimetria percentual e diferenca absoluta;
+- relacoes automaticas de tracao para H/Q, triceps/biceps, puxar/empurrar, RE/RI de ombro, flexao/extensao de ombro e abducao/aducao de ombro.
+
+Visualizacao:
+
+- dashboard clinico, dashboard do paciente e PDF passaram a exibir as novas metricas de tracao;
+- o prompt de IA de forca foi atualizado para interpretar o WHC-06/BLE com base nas metricas calculadas;
+- o painel do paciente teve normalizacao de caracteres para evitar retorno de textos corrompidos no smoke test.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `node scripts/full-smoke-test.js` passou sem erros e gerou laudo, dashboard clinico e dashboard do paciente;
+- `npm run predeploy` passou completo: auditoria do banco, smoke test, calculos, backup, nutricao, TypeScript e lint.
+
+Migration criada:
+
+- `040_forca_tracao_whc06_metricas.sql`;
+- garante `forca.tracao_testes` como JSONB array com default `[]`;
+- preserva o check de `modelo_dinamometria` para `medeor` ou `tracao`;
+- adiciona `tracao_schema_versao` para rastrear a evolucao da estrutura JSONB;
+- cria a funcao `validar_forca_tracao_testes_whc06(jsonb)` para impedir payload quebrado sem bloquear dados antigos;
+- cria checks de formato, indice por modelo e indice GIN no JSONB;
+- documenta no banco a estrutura esperada do WHC-06/BLE e as metricas calculadas pelo sistema.
