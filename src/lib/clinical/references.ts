@@ -10,7 +10,7 @@ export const REFERENCIAS_CLINICAS: Record<string, string[]> = {
     'PAR-Q+ / CSEP: rastreio de prontidão para atividade física e indicação de encaminhamento quando necessário.',
   ],
   sinais_vitais: [
-    'ACC/AHA Guideline for High Blood Pressure in Adults, 2017: normal, elevada, hipertensão estágio 1, estágio 2 e crise hipertensiva.',
+    '2025 AHA/ACC/AANP/AAPA/ABC/ACCP/ACPM/AGS/AMA/ASPC/NMA/PCNA/SGIM Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults: classificação, estratificação de risco PREVENT e metas de controle em adultos.',
     'American Heart Association: leitura e interpretação de pressão arterial em adultos.',
   ],
   posturografia: [

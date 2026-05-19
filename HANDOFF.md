@@ -1871,3 +1871,15 @@ Implementado:
 - os cards de RFD receberam `whitespace-nowrap` para evitar quebra visual da unidade `kgf/s`.
 
 Sem migration nesta rodada.
+
+## Atualizacao de referencia de pressao arterial
+
+Em 19/05/2026 foi atualizada a referencia clinica de sinais vitais.
+
+Implementado:
+
+- substituida a referencia `ACC/AHA Guideline for High Blood Pressure in Adults, 2017`;
+- nova referencia registrada: `2025 AHA/ACC/AANP/AAPA/ABC/ACCP/ACPM/AGS/AMA/ASPC/NMA/PCNA/SGIM Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults`;
+- a referencia aparece nos prompts de IA, dashboards e area de referencias porque `src/lib/clinical/references.ts` e a fonte central usada pelo sistema.
+
+Sem migration nesta rodada.
