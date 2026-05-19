@@ -10,6 +10,7 @@ import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, ChevronDown, ChevronUp, Crosshair } from 'lucide-react';
 import { buildSteps } from '@/lib/steps';
+import { buscarDadosCorporaisBase } from '@/lib/avaliacaoBase';
 
 /* ══ TIPOS ══════════════════════════════════════════════ */
 interface LadoData {
@@ -301,13 +302,20 @@ function classAssimetria(p: number) {
   return 'Muito alta';
 }
 
+function tempoPicoEmSegundos(valor: string) {
+  const t = parseFloat(valor);
+  if (!Number.isFinite(t) || t <= 0) return 0;
+  // Valores pequenos sao interpretados como segundos para evitar confundir 3 s com 3 ms.
+  return t < 20 ? t : t / 1000;
+}
+
 function recalcTracao(t: TracaoTeste): TracaoTeste {
   const fator = parseFloat(t.fator) || 0;
   const peso = parseFloat(t.peso_corporal_kg) || 0;
   const calcLado = (lado: TracaoLado): TracaoLado => {
     const fim = parseFloat(lado.fim_kgf) || 0;
     const forcaInicial = parseFloat(lado.forca_inicial_kgf) || 0;
-    const tempoS = (parseFloat(lado.tempo_ms) || 0) / 1000;
+    const tempoS = tempoPicoEmSegundos(lado.tempo_ms);
     const f50 = parseFloat(lado.forca_50ms_kgf) || 0;
     const f100 = parseFloat(lado.forca_100ms_kgf) || 0;
     const f200 = parseFloat(lado.forca_200ms_kgf) || 0;
@@ -504,6 +512,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);
+  const [pesoCorporalBase, setPesoCorporalBase] = useState<number | null>(null);
 
   // Preensão
   const [tipo_avaliacao, setTipoAval] = useState('clinica');
@@ -532,6 +541,8 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
     const { data: av } = await supabase.from('avaliacoes')
       .select('*, pacientes(*)').eq('id', params.id).single();
     setAval(av);
+    const base = await buscarDadosCorporaisBase(params.id, av?.pacientes as any);
+    setPesoCorporalBase(base.pesoKg);
     const d = await buscarModulo('forca', params.id);
     if (d) {
       setTipoAval(d.tipo_avaliacao ?? 'clinica');
@@ -544,7 +555,10 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
       setModeloDinamometria(d.modelo_dinamometria ?? 'medeor');
       setSPTestes((d.sptech_testes?.length ? d.sptech_testes : testesPredefinidos()));
       setSPRelacoes(d.sptech_relacoes ?? []);
-      setTracaoTestes((d.tracao_testes ?? []).map((t:TracaoTeste)=>recalcTracao(t)));
+      setTracaoTestes((d.tracao_testes ?? []).map((t:TracaoTeste)=>recalcTracao({
+        ...t,
+        peso_corporal_kg: t.peso_corporal_kg || (base.pesoKg?.toString() ?? ''),
+      })));
       setTemAlgometria(d.tem_algometria ?? false);
       setAlgPontos(d.algometria ?? []);
       setTestes(d.testes ?? []);
@@ -561,7 +575,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
   const saving = useAutoSave(autoSaveValue, async (v)=>{
     const dir = parseFloat(v.preensao_dir)||null;
     const esq = parseFloat(v.preensao_esq)||null;
-    const peso = aval?.pacientes?.peso ?? 75;
+    const peso = pesoCorporalBase ?? 75;
     return upsertModulo('forca', params.id, {
       tipo_avaliacao: v.tipo_avaliacao, populacao_ref: v.populacao_ref,
       esporte_contexto: v.esporte_contexto,
@@ -658,7 +672,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
 
   function addTracaoTeste() {
     const novo = tracaoVazio();
-    novo.peso_corporal_kg = aval?.pacientes?.peso?.toString?.() ?? '';
+    novo.peso_corporal_kg = pesoCorporalBase?.toString() ?? '';
     setTracaoTestes(t=>[...t, novo]);
   }
   function rmTracaoTeste(i:number) {
@@ -930,7 +944,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
                 <p className="text-sm text-slate-500">Adicione os testes de tração que serão avaliados.</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  Fórmula usada: 1RM estimado = FIM (kgf) × fator. RFD = FIM / tempo até pico.
+                  Formula usada: 1RM estimado = FIM (kgf) x fator. RFD = (FIM - forca inicial) / tempo ate pico.
                 </p>
               </div>
             )}
@@ -1005,9 +1019,12 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                               <Input type="number" step="0.1" value={dados.forca_inicial_kgf ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_inicial_kgf',e.target.value)} />
                             </Field>
-                            <Field label="Tempo até pico (ms)">
-                              <Input type="number" step="1" value={dados.tempo_ms}
+                            <Field label="Tempo ate pico (ms ou s)">
+                              <Input type="number" step="0.01" placeholder="Ex: 300 ms ou 0.3 s" value={dados.tempo_ms}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','tempo_ms',e.target.value)} />
+                              <p className="mt-1 text-[10px] leading-tight text-slate-400">
+                                Menor que 20 = segundos. 20 ou mais = milissegundos.
+                              </p>
                             </Field>
                             <Field label="Forca aos 50 ms (kgf)">
                               <Input type="number" step="0.1" value={dados.forca_50ms_kgf ?? ''}
@@ -1047,14 +1064,14 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">RFD global</div>
-                              <div className="text-lg font-bold text-slate-800">{dados.rfd_kgf_s || '—'} <span className="text-xs text-slate-400">kgf/s</span></div>
+                              <div className="text-lg font-bold text-slate-800 whitespace-nowrap">{dados.rfd_kgf_s || '—'} <span className="text-xs text-slate-400">kgf/s</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3 col-span-2">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-2">RFD por janela</div>
                               <div className="grid grid-cols-3 gap-2 text-xs">
-                                <div><span className="text-slate-400">0-50 ms</span><br/><b>{dados.rfd_50_kgf_s || '—'}</b> kgf/s</div>
-                                <div><span className="text-slate-400">0-100 ms</span><br/><b>{dados.rfd_100_kgf_s || '—'}</b> kgf/s</div>
-                                <div><span className="text-slate-400">0-200 ms</span><br/><b>{dados.rfd_200_kgf_s || '—'}</b> kgf/s</div>
+                                <div className="whitespace-nowrap"><span className="text-slate-400">0-50 ms</span><br/><b>{dados.rfd_50_kgf_s || '—'}</b> kgf/s</div>
+                                <div className="whitespace-nowrap"><span className="text-slate-400">0-100 ms</span><br/><b>{dados.rfd_100_kgf_s || '—'}</b> kgf/s</div>
+                                <div className="whitespace-nowrap"><span className="text-slate-400">0-200 ms</span><br/><b>{dados.rfd_200_kgf_s || '—'}</b> kgf/s</div>
                               </div>
                             </div>
                           </div>

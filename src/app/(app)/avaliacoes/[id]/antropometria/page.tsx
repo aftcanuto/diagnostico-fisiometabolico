@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { SaveIndicator } from '@/components/ui/SaveIndicator';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { upsertModulo, buscarModulo } from '@/lib/modulos';
+import { aplicarBaseSeVazio, buscarDadosCorporaisBase } from '@/lib/avaliacaoBase';
 import { createClient } from '@/lib/supabase/client';
 import {
   calcIdade, imc, mediaDobra, percentualGorduraJP7,
@@ -57,15 +58,19 @@ export default function AntropometriaPage({ params }: { params: { id: string } }
 
   useEffect(() => { (async () => {
     const { data: aval } = await supabase.from('avaliacoes')
-      .select('modulos_selecionados,pacientes(sexo,data_nascimento)').eq('id', params.id).single();
+      .select('modulos_selecionados,pacientes(*)').eq('id', params.id).single();
     setAval(aval);
     if (aval?.pacientes) setPac(aval.pacientes as any);
     const d = await buscarModulo('antropometria', params.id);
-    if (d) setForm((p: any) => ({ ...p, ...d,
-      dobras: { ...p.dobras, ...(d.dobras || {}) },
-      circunferencias: d.circunferencias || {},
-      diametros: d.diametros || {},
-    }));
+    const base = await buscarDadosCorporaisBase(params.id, aval?.pacientes as any);
+    setForm((p: any) => {
+      const preenchido = d ? { ...p, ...d,
+        dobras: { ...p.dobras, ...(d.dobras || {}) },
+        circunferencias: d.circunferencias || {},
+        diametros: d.diametros || {},
+      } : p;
+      return aplicarBaseSeVazio(preenchido, base, { peso: 'peso', altura: 'estatura' });
+    });
     setLoaded(true);
   })(); }, [params.id, supabase]);
 

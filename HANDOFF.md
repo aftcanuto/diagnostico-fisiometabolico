@@ -1822,3 +1822,52 @@ Migration criada:
 - cria a funcao `validar_forca_tracao_testes_whc06(jsonb)` para impedir payload quebrado sem bloquear dados antigos;
 - cria checks de formato, indice por modelo e indice GIN no JSONB;
 - documenta no banco a estrutura esperada do WHC-06/BLE e as metricas calculadas pelo sistema.
+
+## Dados corporais base do paciente e preenchimento automatico
+
+Em 18/05/2026 foi implementado o reaproveitamento automatico de peso e altura para evitar que o avaliador precise repetir os mesmos dados em varios modulos.
+
+Implementado:
+
+- o cadastro de paciente agora possui `peso_base_kg` e `altura_cm`;
+- a edicao do paciente tambem permite atualizar peso de referencia e altura;
+- o cabecalho do paciente passa a mostrar peso/altura quando informados;
+- foi criado `src/lib/avaliacaoBase.ts`, que busca dados corporais em ordem de prioridade:
+  1. antropometria da avaliacao;
+  2. bioimpedancia da avaliacao;
+  3. cadastro do paciente;
+- antropometria preenche automaticamente `peso` e `estatura` quando ainda estiverem vazios;
+- bioimpedancia preenche automaticamente `peso_kg` e `altura_cm` quando ainda estiverem vazios;
+- bioimpedancia calcula IMC quando peso e altura existem e o campo de IMC nao foi informado;
+- forca usa o peso corporal encontrado para calcular forca relativa e para preencher os testes de tracao;
+- campos ja preenchidos pelo avaliador nao sao sobrescritos.
+
+Migration criada:
+
+- `041_paciente_dados_corporais_base.sql`;
+- adiciona `pacientes.peso_base_kg`, `pacientes.altura_cm` e `bioimpedancia.altura_cm`;
+- inclui checks de faixa segura para peso e altura.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros.
+
+## Ajuste de RFD na dinamometria de tracao
+
+Em 19/05/2026 foi refinado o campo de tempo ate pico na dinamometria de tracao.
+
+Motivo:
+
+- o calculo de RFD estava matematicamente correto, mas o campo aceitava apenas milissegundos;
+- quando o avaliador digitava `3` pensando em 3 segundos, o sistema interpretava como 3 ms e retornava RFD artificialmente alto, como 3333 kgf/s.
+
+Implementado:
+
+- o tempo ate pico agora aceita segundos ou milissegundos;
+- valores menores que 20 sao interpretados como segundos;
+- valores iguais ou maiores que 20 sao interpretados como milissegundos;
+- o campo recebeu placeholder e aviso visual: `Ex: 300 ms ou 0.3 s`;
+- a formula exibida foi ajustada para `RFD = (FIM - forca inicial) / tempo ate pico`;
+- os cards de RFD receberam `whitespace-nowrap` para evitar quebra visual da unidade `kgf/s`.
+
+Sem migration nesta rodada.

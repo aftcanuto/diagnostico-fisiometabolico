@@ -13,6 +13,8 @@ interface Paciente {
   telefone?: string | null;
   email?: string | null;
   cpf?: string | null;
+  peso_base_kg?: number | string | null;
+  altura_cm?: number | string | null;
 }
 
 interface Props {
@@ -32,6 +34,8 @@ export function EditarPacienteModal({ paciente, onSaved }: Props) {
     telefone: paciente.telefone ?? '',
     email: paciente.email ?? '',
     cpf: paciente.cpf ?? '',
+    peso_base_kg: paciente.peso_base_kg?.toString() ?? '',
+    altura_cm: paciente.altura_cm?.toString() ?? '',
   });
 
   const upd = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -57,6 +61,8 @@ export function EditarPacienteModal({ paciente, onSaved }: Props) {
         telefone: form.telefone || null,
         email: form.email || null,
         cpf: form.cpf.replace(/\D/g, '') ? form.cpf : null,
+        peso_base_kg: form.peso_base_kg ? Number(form.peso_base_kg) : null,
+        altura_cm: form.altura_cm ? Number(form.altura_cm) : null,
       })
       .eq('id', paciente.id);
 
@@ -125,6 +131,15 @@ export function EditarPacienteModal({ paciente, onSaved }: Props) {
                 </Field>
                 <Field label="E-mail">
                   <Input type="email" value={form.email} onChange={upd('email')} />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Peso ref. (kg)">
+                  <Input type="number" step="0.1" value={form.peso_base_kg} onChange={upd('peso_base_kg')} />
+                </Field>
+                <Field label="Altura (cm)">
+                  <Input type="number" step="0.1" value={form.altura_cm} onChange={upd('altura_cm')} />
                 </Field>
               </div>
 

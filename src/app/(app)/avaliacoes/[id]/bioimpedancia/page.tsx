@@ -9,6 +9,7 @@ import { buscarModulo, upsertModulo } from '@/lib/modulos';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
 import { buildSteps } from '@/lib/steps';
+import { aplicarBaseSeVazio, buscarDadosCorporaisBase } from '@/lib/avaliacaoBase';
 
 const APARELHOS = ['Avabio 380','InBody 270','InBody 370s','InBody 570','InBody 770',
   'Tanita MC-780','Tanita BC-601','Omron HBF-514C','Seca mBCA 514','Outro'];
@@ -33,7 +34,7 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
   const [form, setForm] = useState({
     aparelho: 'Avabio 380',
     data_exame: '',
-    peso_kg: '', percentual_gordura: '', massa_gordura_kg: '',
+    peso_kg: '', altura_cm: '', percentual_gordura: '', massa_gordura_kg: '',
     massa_livre_gordura_kg: '', agua_corporal_kg: '', imc: '',
     taxa_metabolica_basal_kcal: '', indice_apendicular: '',
     idade_metabolica: '', gordura_visceral_nivel: '',
@@ -54,12 +55,14 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
     const { data: av } = await supabase.from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();
     setAval(av);
     const dados = await buscarModulo('bioimpedancia', params.id);
-    if (dados) {
-      setForm(f => ({
+    const base = await buscarDadosCorporaisBase(params.id, av?.pacientes as any);
+    setForm(f => {
+      const preenchido = dados ? {
         ...f,
         aparelho:  dados.aparelho ?? 'Avabio 380',
         data_exame: dados.data_exame ?? '',
         peso_kg:   dados.peso_kg?.toString() ?? '',
+        altura_cm: dados.altura_cm?.toString() ?? '',
         percentual_gordura: dados.percentual_gordura?.toString() ?? '',
         massa_gordura_kg: dados.massa_gordura_kg?.toString() ?? '',
         massa_livre_gordura_kg: dados.massa_livre_gordura_kg?.toString() ?? '',
@@ -73,21 +76,26 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
         segmentar_magra:   dados.segmentar_magra ?? {},
         segmentar_gordura: dados.segmentar_gordura ?? {},
 
-      }));
-    }
+      } : f;
+      return aplicarBaseSeVazio(preenchido, base, { peso: 'peso_kg', altura: 'altura_cm' });
+    });
   })(); }, [params.id, supabase]);
 
   const salvar = async (v = form) => {
     const n = (v: string) => v !== '' && v != null ? Number(v) : null;
+    const peso = n(v.peso_kg);
+    const altura = n(v.altura_cm);
+    const imcCalculado = peso && altura ? +(peso / ((altura / 100) ** 2)).toFixed(2) : null;
     return upsertModulo('bioimpedancia', params.id, {
       aparelho: v.aparelho || null,
       data_exame: v.data_exame || null,
-      peso_kg: n(v.peso_kg),
+      peso_kg: peso,
+      altura_cm: altura,
       percentual_gordura: n(v.percentual_gordura),
       massa_gordura_kg: n(v.massa_gordura_kg),
       massa_livre_gordura_kg: n(v.massa_livre_gordura_kg),
       agua_corporal_kg: n(v.agua_corporal_kg),
-      imc: n(v.imc),
+      imc: n(v.imc) ?? imcCalculado,
       taxa_metabolica_basal_kcal: n(v.taxa_metabolica_basal_kcal),
       indice_apendicular: n(v.indice_apendicular),
       idade_metabolica: n(v.idade_metabolica),
@@ -135,6 +143,7 @@ export default function BioimpedanciaPage({ params }: { params: { id: string } }
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
                 { k: 'peso_kg',               label: 'Peso (kg)' },
+                { k: 'altura_cm',             label: 'Altura (cm)' },
                 { k: 'percentual_gordura',    label: '% Gordura' },
                 { k: 'massa_gordura_kg',      label: 'Massa de Gordura (kg)' },
                 { k: 'massa_livre_gordura_kg',label: 'Massa Livre de Gordura (kg)' },

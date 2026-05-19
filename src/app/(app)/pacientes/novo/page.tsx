@@ -11,7 +11,7 @@ export default function NovoPacientePage() {
   const supabase = createClient();
   const [form, setForm] = useState({
     nome: '', sexo: 'M', data_nascimento: '',
-    telefone: '', email: '', cpf: '', observacoes: '',
+    telefone: '', email: '', cpf: '', peso_base_kg: '', altura_cm: '', observacoes: '',
   });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -26,7 +26,13 @@ export default function NovoPacientePage() {
     const { data: clinicaId } = await supabase.rpc('current_clinica_id');
     if (!clinicaId) { setErr('Sua conta não está vinculada a uma clínica.'); setLoading(false); return; }
     const { data, error } = await supabase.from('pacientes')
-      .insert({ ...form, avaliador_id: user.id, clinica_id: clinicaId })
+      .insert({
+        ...form,
+        peso_base_kg: form.peso_base_kg ? Number(form.peso_base_kg) : null,
+        altura_cm: form.altura_cm ? Number(form.altura_cm) : null,
+        avaliador_id: user.id,
+        clinica_id: clinicaId,
+      })
       .select('id').single();
     if (error) { setErr(error.message); setLoading(false); return; }
     router.push(`/pacientes/${data!.id}`);
@@ -54,6 +60,14 @@ export default function NovoPacientePage() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="Telefone"><Input value={form.telefone} onChange={upd('telefone')} /></Field>
               <Field label="E-mail"><Input type="email" value={form.email} onChange={upd('email')} /></Field>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Peso de referencia (kg)">
+                <Input type="number" step="0.1" value={form.peso_base_kg} onChange={upd('peso_base_kg')} placeholder="Ex: 76.5" />
+              </Field>
+              <Field label="Altura / estatura (cm)">
+                <Input type="number" step="0.1" value={form.altura_cm} onChange={upd('altura_cm')} placeholder="Ex: 170" />
+              </Field>
             </div>
             <Field label="CPF">
               <Input value={form.cpf} onChange={upd('cpf')} placeholder="000.000.000-00" maxLength={14} />

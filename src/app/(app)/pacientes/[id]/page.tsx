@@ -112,6 +112,8 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
             {p.sexo === 'M' ? 'Masculino' : 'Feminino'} · {calcIdade(p.data_nascimento)} anos
             {p.cpf && <span className="ml-2">· CPF: {p.cpf}</span>}
             {p.email && <span className="ml-2">· {p.email}</span>}
+            {p.peso_base_kg && <span className="ml-2">· {p.peso_base_kg} kg</span>}
+            {p.altura_cm && <span className="ml-2">· {p.altura_cm} cm</span>}
           </p>
         </div>
         <div className="text-right hidden sm:block">
