@@ -93,9 +93,9 @@ export function PdfConfigForm({ clinicaId, config }: { clinicaId: string; config
       nota_equipamentos: notaEquip || null,
       updated_at: new Date().toISOString(),
     };
-    const { error } = config?.id
-      ? await supabase.from('pdf_config').update(payload).eq('id', config.id)
-      : await supabase.from('pdf_config').insert(payload);
+    const { error } = await supabase
+      .from('pdf_config')
+      .upsert(payload, { onConflict: 'clinica_id' });
 
     if (error) { setErr(error.message); }
     else { setSaved(true); setTimeout(() => setSaved(false), 3000); }

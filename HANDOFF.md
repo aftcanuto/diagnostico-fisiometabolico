@@ -1883,3 +1883,19 @@ Implementado:
 - a referencia aparece nos prompts de IA, dashboards e area de referencias porque `src/lib/clinical/references.ts` e a fonte central usada pelo sistema.
 
 Sem migration nesta rodada.
+
+## Correção do salvamento de referências bibliográficas
+
+Em 19/05/2026 foi corrigido erro 409 ao salvar protocolos, referências bibliográficas e textos do laudo na tela de Configurações.
+
+Problema:
+
+- a tela tentava inserir uma nova linha em `pdf_config` quando não recebia o `id` da configuração;
+- como `pdf_config` possui `unique(clinica_id)`, o banco retornava conflito quando a clínica já tinha configuração salva.
+
+Implementado:
+
+- `PdfConfigForm` passou a usar `upsert` com `onConflict: 'clinica_id'`;
+- agora o mesmo botão salva criando a configuração quando não existe ou atualizando a configuração existente.
+
+Sem migration nesta rodada.
