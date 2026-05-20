@@ -1872,6 +1872,70 @@ Implementado:
 
 Sem migration nesta rodada.
 
+## Frame da biomecanica e plano de acao no PDF
+
+Em 20/05/2026 foram corrigidos dois pontos do relatorio PDF.
+
+Problemas:
+
+- a imagem do frame anotado da biomecanica podia aparecer quebrada no PDF quando vinha de URL externa ou de campos alternativos;
+- o plano de acao nao aparecia quando estava salvo como objeto estruturado, e nao como texto simples.
+
+Implementado:
+
+- `src/lib/pdf/template.ts` agora normaliza URLs de imagem para o PDF, incluindo links do Google Drive e campos alternativos de frame;
+- as imagens sagitais, posteriores e graficos cinematicos tambem usam o mesmo resolvedor;
+- o PDF agora aceita `plano_acao` em texto simples ou em formato estruturado com prioridades, metas e recomendacoes;
+- planos de acao longos sao divididos em paginas de continuacao para evitar corte;
+- `src/app/(app)/avaliacoes/[id]/biomecanica/page.tsx` recebeu upload direto para o frame anotado, alem do campo de URL.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
+## Plano de acao nos dashboards
+
+Em 20/05/2026 foi corrigida a exibicao do plano de acao nos dashboards.
+
+Problemas:
+
+- no dashboard clinico, quando `plano_acao` estava salvo como JSONB estruturado, a tela mostrava `[object Object]`;
+- no dashboard do paciente, o plano de acao nao aparecia como secao propria.
+
+Implementado:
+
+- `src/components/PatientDashboard.tsx` recebeu resolvedor de plano de acao estruturado, com suporte a texto, prioridades, metas de 30/60/90 dias, recomendacoes por area e alertas;
+- o preview do plano no dashboard clinico agora mostra texto legivel e mantem o icone para ver o conteudo completo;
+- `src/components/PortalPaciente.tsx` recebeu a mesma regra de resolucao;
+- o portal do paciente agora exibe uma secao `Plano de acao` antes das analises clinicas quando houver conteudo salvo.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
+## Quebra da analise global no PDF
+
+Em 20/05/2026 foi corrigida a exibicao da analise global no relatorio PDF.
+
+Problema:
+
+- quando a conclusao global era longa, o resumo do relatorio colocava todo o texto dentro de um bloco verde em uma pagina A4 fixa;
+- como a pagina do PDF tem rodape e limite visual, o final da analise ficava escondido/cortado.
+
+Implementado:
+
+- o resumo da avaliacao agora exibe apenas uma previa da analise global;
+- a analise completa foi movida para a secao `Conclusao clinica`;
+- textos longos da conclusao sao divididos em paginas sequenciais com indicacao de `continuacao`;
+- a divisao evita que o rodape cubra o texto e preserva a leitura completa no PDF.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
 ## Coerencia da silhueta corporal no dashboard do paciente
 
 Em 20/05/2026 foi corrigida a coerencia visual da silhueta corporal exibida no dashboard do paciente, dashboard clinico e PDF.

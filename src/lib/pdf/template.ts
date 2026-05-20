@@ -353,6 +353,127 @@ function textoAnalisePdf(a: (AnaliseIA & {texto_editado?:string|null}) | undefin
   return '';
 }
 
+function resumoTexto(texto: string, limite = 900): string {
+  const limpo = String(texto || '').replace(/\s+/g, ' ').trim();
+  if (limpo.length <= limite) return limpo;
+  const corte = limpo.lastIndexOf('.', limite);
+  const fim = corte > Math.floor(limite * 0.62) ? corte + 1 : limite;
+  return `${limpo.slice(0, fim).trim()} Continuação na seção Conclusão clínica.`;
+}
+
+function quebrarTextoPdf(texto: string, limite = 1850): string[] {
+  const partes = String(texto || '')
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const fonte = partes.length ? partes : [String(texto || '').trim()].filter(Boolean);
+  const paginas: string[] = [];
+  let atual = '';
+
+  for (const parte of fonte) {
+    if ((atual + '\n\n' + parte).trim().length <= limite) {
+      atual = (atual ? `${atual}\n\n` : '') + parte;
+      continue;
+    }
+
+    if (atual.trim()) paginas.push(atual.trim());
+
+    if (parte.length <= limite) {
+      atual = parte;
+      continue;
+    }
+
+    const frases = parte.match(/[^.!?]+[.!?]+|\S.+$/g) || [parte];
+    atual = '';
+    for (const frase of frases) {
+      const proximo = (atual ? `${atual} ` : '') + frase.trim();
+      if (proximo.length <= limite) {
+        atual = proximo;
+      } else {
+        if (atual.trim()) paginas.push(atual.trim());
+        atual = frase.trim();
+      }
+    }
+  }
+
+  if (atual.trim()) paginas.push(atual.trim());
+  return paginas.length ? paginas : [''];
+}
+
+function renderTextoEstruturado(c: any): string {
+  if (!c) return '';
+  if (typeof c === 'string') return c.trim();
+  const partes: string[] = [];
+  if (c.texto) partes.push(String(c.texto));
+  if (c.resumo) partes.push(`RESUMO:\n${c.resumo}`);
+  if (c.resumo_executivo) partes.push(`RESUMO:\n${c.resumo_executivo}`);
+  if (c.resumo_clinico) partes.push(`RESUMO CLINICO:\n${c.resumo_clinico}`);
+  if (c.prioridades_clinicas) partes.push(`PRIORIDADES CLINICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((x: any) => `- ${x}`).join('\n') : c.prioridades_clinicas}`);
+  if (c.metas_30_dias || c.meta_30_dias) partes.push(`META 30 DIAS:\n${c.metas_30_dias ?? c.meta_30_dias}`);
+  if (c.metas_60_dias || c.meta_60_dias) partes.push(`META 60 DIAS:\n${c.metas_60_dias ?? c.meta_60_dias}`);
+  if (c.metas_90_dias || c.meta_90_dias) partes.push(`META 90 DIAS:\n${c.metas_90_dias ?? c.meta_90_dias}`);
+
+  const listas: [string, any][] = [
+    ['PRIORIDADES', c.prioridades],
+    ['COMPOSICAO CORPORAL', c.composicao_corporal],
+    ['FORCA', c.forca],
+    ['FLEXIBILIDADE', c.flexibilidade],
+    ['CARDIORRESPIRATORIO', c.cardiorrespiratorio],
+    ['RML', c.rml],
+    ['POSTURA', c.postura],
+    ['BIOMECANICA', c.biomecanica ?? c.biomecanica_corrida],
+    ['RECOMENDACOES', c.recomendacoes],
+    ['RECOMENDACOES PRATICAS', c.recomendacoes_praticas],
+    ['ENCAMINHAMENTOS', c.encaminhamentos ?? c.alertas_encaminhamento],
+    ['ALERTAS', c.alertas],
+  ];
+
+  listas.forEach(([titulo, valor]) => {
+    if (!valor) return;
+    if (Array.isArray(valor)) {
+      partes.push(`${titulo}:\n${valor.map((item: any) => {
+        if (typeof item === 'string') return `- ${item}`;
+        return `- ${[item.titulo, item.acao, item.prazo].filter(Boolean).join(': ') || JSON.stringify(item)}`;
+      }).join('\n')}`);
+    } else if (typeof valor === 'object') {
+      const linhas = Object.entries(valor)
+        .filter(([, v]) => v != null && v !== '')
+        .map(([k, v]) => `- ${k.replace(/_/g, ' ')}: ${Array.isArray(v) ? v.join('; ') : String(v)}`);
+      if (linhas.length) partes.push(`${titulo}:\n${linhas.join('\n')}`);
+    } else {
+      partes.push(`${titulo}:\n${valor}`);
+    }
+  });
+
+  return partes.join('\n\n').trim();
+}
+
+function textoPlanoAcaoPdf(c: any): string {
+  if (!c) return '';
+  const candidatos = [
+    c.plano_acao,
+    c.planoAcao,
+    c.conteudo?.plano_acao,
+    c.conteudo?.planoAcao,
+    c.conteudo_paciente?.plano_acao,
+    c.conteudo_paciente?.planoAcao,
+  ];
+  for (const candidato of candidatos) {
+    const texto = renderTextoEstruturado(candidato);
+    if (texto) return texto;
+  }
+  return '';
+}
+
+function imagemPdfSrc(valor: any): string {
+  const raw = String(valor ?? '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('data:image/')) return raw;
+  const driveMatch = raw.match(/drive\.google\.com\/file\/d\/([^/]+)/) || raw.match(/[?&]id=([^&]+)/);
+  if (driveMatch?.[1]) return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+  return raw;
+}
+
 function aiBlock(a: (AnaliseIA & {texto_editado?:string|null}) | undefined): string {
   const texto = textoAnalisePdf(a);
   if (!texto) return '';
@@ -670,7 +791,7 @@ function pgResumo(d: LaudoData): string {
   ${msg ? `
   <div style="margin-top:18px;padding:16px 20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;display:flex;gap:12px;align-items:flex-start">
     <div style="font-size:18px;flex-shrink:0">ðŸ’¬</div>
-    <div style="font-size:12px;color:#166534;font-style:italic;line-height:1.65">${x(msg)}</div>
+    <div style="font-size:12px;color:#166534;font-style:italic;line-height:1.65">${x(resumoTexto(msg))}</div>
   </div>` : ''}
 
 </section>`;
@@ -1233,9 +1354,12 @@ function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
   const textoPdf = textoAnalisePdf(c);
   if (textoPdf) {
-    return pgModulo('Conclusão clínica', null, `
-      <p style="font-size:13px;color:#374151;line-height:1.75;white-space:pre-line">${x(textoPdf)}</p>
-    `);
+    return quebrarTextoPdf(textoPdf).map((parte, idx) => pgModulo(idx === 0 ? 'Conclusão clínica' : 'Conclusão clínica', null, `
+      ${idx > 0 ? `<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:-10px;margin-bottom:18px">continuação</div>` : ''}
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:18px 22px">
+        <p style="font-size:13px;color:#166534;line-height:1.78;white-space:pre-line">${x(parte)}</p>
+      </div>
+    `)).join('');
   }
   return pgModulo('Conclusão clínica', null, `
   ${`
@@ -1251,12 +1375,13 @@ function pgConclusao(d: LaudoData, pri: string): string {
 
 function pgPlanoAcao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global;
-  const plano = typeof c?.plano_acao === 'string' ? c.plano_acao.trim() : '';
+  const plano = textoPlanoAcaoPdf(c);
   if (!plano) return '';
-  return pgModulo('Plano de acao', null, `
+  return quebrarTextoPdf(plano, 2100).map((parte, idx) => pgModulo('Plano de acao', null, `
+    ${idx > 0 ? `<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:-10px;margin-bottom:18px">continuação</div>` : ''}
     <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">Prioridades, metas e recomendacoes para a proxima etapa.</p>
-    <div style="background:#ecfdf5;border-left:4px solid ${pri};border-radius:0 12px 12px 0;padding:16px 18px;font-size:12px;line-height:1.75;color:#334155;white-space:pre-line">${x(plano)}</div>
-  `);
+    <div style="background:#ecfdf5;border-left:4px solid ${pri};border-radius:0 12px 12px 0;padding:16px 18px;font-size:12px;line-height:1.75;color:#334155;white-space:pre-line">${x(parte)}</div>
+  `)).join('');
 }
 
 function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
@@ -1270,6 +1395,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   const comentAng: any = b.comentarios_angulos ?? {};
   const videoUrl = b.link_video ?? b.linkVideo ?? b.video_url ?? b.videoUrl ?? b.link_cinematica ?? b.link_video_cinematica ?? '';
   const videoPosteriorUrl = b.link_video_posterior ?? b.linkVideoPosterior ?? b.video_posterior_url ?? b.videoPosteriorUrl ?? '';
+  const frameUrl = imagemPdfSrc(b.foto_frame_url ?? b.frame_url ?? b.frameUrl ?? graf.foto_frame_url ?? graf.frame_url ?? graf.frameUrl ?? graf.frame);
   const sagitalImgs = [
     ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
   ].filter(([k]) => graf[k]);
@@ -1397,9 +1523,9 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
       ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:#0f766e;text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px #0f766e33">Ver video analise cinematica plano posterior</a>` : ''}
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:${b.foto_frame_url ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:18px">
-    ${b.foto_frame_url ? `<div>
-      <img src="${x(b.foto_frame_url)}" alt="Frame" style="width:100%;max-height:330px;object-fit:contain;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0"/>
+  <div style="display:grid;grid-template-columns:${frameUrl ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:18px">
+    ${frameUrl ? `<div>
+      <img src="${x(frameUrl)}" alt="Frame" style="width:100%;max-height:330px;object-fit:contain;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0"/>
     </div>` : ''}
     <div>
       <div class="sec-sub" style="margin-top:0">Métricas da passada</div>
@@ -1416,13 +1542,13 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   ${sagitalImgs.length ? `<div class="sec-sub">Imagens do plano sagital</div>
   <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px">
     ${sagitalImgs.map(([k,l]) => `<div style="width:100%;aspect-ratio:9/14;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
-      <img src="${x(graf[k])}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/>
+      <img src="${x(imagemPdfSrc(graf[k]))}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/>
     </div>`).join('')}
   </div>` : ''}
   ${posteriorImgs.length ? `<div class="sec-sub">Imagens do plano posterior</div>
   <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px">
     ${posteriorImgs.map(([k,l]) => `<div style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
-      <div style="width:100%;aspect-ratio:16/9"><img src="${x(graf[k])}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/></div>
+      <div style="width:100%;aspect-ratio:16/9"><img src="${x(imagemPdfSrc(graf[k]))}" alt="${x(l)}" style="width:100%;height:100%;object-fit:contain;display:block"/></div>
       <div style="font-size:9px;font-weight:700;color:#334155;text-align:center;padding:5px 6px;background:#fff;border-top:1px solid #e2e8f0">${x(l)}</div>
     </div>`).join('')}
   </div>` : ''}
@@ -1512,7 +1638,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     ${grafUrls.map(([k, ck, lbl]) => `<div style="width:100%;min-width:0">
       <div style="font-size:11px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${lbl}</div>
       <div style="width:100%;aspect-ratio:544/443;background:#050505;border-radius:8px;border:1px solid #1f2937;overflow:hidden">
-        <img src="${x(graf[k])}" alt="${lbl}" style="width:100%;height:100%;object-fit:contain;display:block"/>
+        <img src="${x(imagemPdfSrc(graf[k]))}" alt="${lbl}" style="width:100%;height:100%;object-fit:contain;display:block"/>
       </div>
     </div>`).join('')}
     ${comentGraf.geral ? `<div style="grid-column:1/-1;padding:11px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc">

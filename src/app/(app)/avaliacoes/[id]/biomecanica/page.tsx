@@ -171,6 +171,20 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
     setGraficos(g => ({ ...g, [key]: data.url }));
   }
 
+  async function uploadFrame(file: File) {
+    const body = new FormData();
+    body.append('avaliacaoId', params.id);
+    body.append('key', 'frame');
+    body.append('file', file);
+    const res = await fetch('/api/uploads/biomecanica', { method: 'POST', body });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) {
+      alert(data.error ?? 'Nao foi possivel enviar a imagem do frame.');
+      return;
+    }
+    setFotoFrame(data.url);
+  }
+
   const autoSaveValue = { velocidade, movimento, linkVideo, linkVideoPosterior, fotoFrame, metricas, angulos, comentariosAngulos, achados, recomendacoes, graficos, comentarioGraficos };
 
   const salvar = async (v = autoSaveValue) => {
@@ -250,6 +264,13 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
                     )}
                   </div>
                 </Field>
+              </div>
+              <div className="mb-2">
+                <Input type="file" accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadFrame(file);
+                  }} />
               </div>
               <Input value={fotoFrame} onChange={e => setFotoFrame(e.target.value)}
                 placeholder="URL da imagem no Storage ou Drive" />

@@ -630,6 +630,63 @@ function renderAiText(c: any): string {
   return partes.join('\n\n');
 }
 
+function renderPlanoAcaoText(c: any): string {
+  if (!c) return '';
+  if (typeof c === 'string') return c.trim();
+  const partes: string[] = [];
+
+  if (c.texto) partes.push(String(c.texto));
+  if (c.resumo) partes.push(`RESUMO:\n${c.resumo}`);
+  if (c.resumo_executivo) partes.push(`RESUMO:\n${c.resumo_executivo}`);
+  if (c.resumo_clinico) partes.push(`RESUMO CLINICO:\n${c.resumo_clinico}`);
+  if (c.prioridades_clinicas) {
+    partes.push(`PRIORIDADES CLINICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((item: any) => `- ${item}`).join('\n') : c.prioridades_clinicas}`);
+  }
+  if (c.metas_30_dias || c.meta_30_dias) partes.push(`META 30 DIAS:\n${c.metas_30_dias ?? c.meta_30_dias}`);
+  if (c.metas_60_dias || c.meta_60_dias) partes.push(`META 60 DIAS:\n${c.metas_60_dias ?? c.meta_60_dias}`);
+  if (c.metas_90_dias || c.meta_90_dias) partes.push(`META 90 DIAS:\n${c.metas_90_dias ?? c.meta_90_dias}`);
+
+  const listas: [string, any][] = [
+    ['PRIORIDADES', c.prioridades],
+    ['COMPOSICAO CORPORAL', c.composicao_corporal],
+    ['FORCA', c.forca],
+    ['FLEXIBILIDADE', c.flexibilidade],
+    ['CARDIORRESPIRATORIO', c.cardiorrespiratorio],
+    ['RML', c.rml],
+    ['POSTURA', c.postura],
+    ['BIOMECANICA', c.biomecanica ?? c.biomecanica_corrida],
+    ['RECOMENDACOES', c.recomendacoes],
+    ['RECOMENDACOES PRATICAS', c.recomendacoes_praticas],
+    ['ENCAMINHAMENTOS', c.encaminhamentos ?? c.alertas_encaminhamento],
+    ['ALERTAS', c.alertas],
+  ];
+
+  listas.forEach(([titulo, valor]) => {
+    if (!valor) return;
+    if (Array.isArray(valor)) {
+      partes.push(`${titulo}:\n${valor.map((item: any) => {
+        if (typeof item === 'string') return `- ${item}`;
+        if (item && typeof item === 'object') {
+          const linha = [item.titulo, item.acao, item.prazo].filter(Boolean).join(': ');
+          return `- ${linha || Object.values(item).filter(Boolean).join(' - ')}`;
+        }
+        return `- ${String(item)}`;
+      }).join('\n')}`);
+      return;
+    }
+    if (typeof valor === 'object') {
+      const linhas = Object.entries(valor)
+        .filter(([, v]) => v != null && v !== '')
+        .map(([k, v]) => `- ${k.replace(/_/g, ' ')}: ${Array.isArray(v) ? v.join('; ') : String(v)}`);
+      if (linhas.length) partes.push(`${titulo}:\n${linhas.join('\n')}`);
+      return;
+    }
+    partes.push(`${titulo}:\n${valor}`);
+  });
+
+  return partes.join('\n\n').trim();
+}
+
 function textoAnaliseClinica(v: any): string {
   if (!v) return '';
   if (typeof v === 'string') return v;
@@ -638,10 +695,20 @@ function textoAnaliseClinica(v: any): string {
 
 function textoPlanoAcao(v: any, modo: 'clinico' | 'publico') {
   if (!v) return '';
-  const bruto = typeof v === 'string'
-    ? v
-    : String(v.plano_acao ?? v.planoAcao ?? '').trim();
-  if (bruto) return bruto;
+  const candidatos = typeof v === 'string'
+    ? [v]
+    : [
+        v.plano_acao,
+        v.planoAcao,
+        v.conteudo?.plano_acao,
+        v.conteudo?.planoAcao,
+        v.conteudo_paciente?.plano_acao,
+        v.conteudo_paciente?.planoAcao,
+      ];
+  for (const candidato of candidatos) {
+    const texto = renderPlanoAcaoText(candidato);
+    if (texto) return texto;
+  }
   if (modo === 'publico') return String(v.texto_paciente_editado ?? renderAiText(v.conteudo_paciente) ?? '').trim();
   return textoAnaliseClinica(v);
 }
@@ -2210,7 +2277,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>Prioridades, metas e recomendacoes para a proxima etapa</div>
             <div style={{ borderLeft:'4px solid #10b981', background:'#ecfdf5', borderRadius:12, padding:'14px 16px',
               fontSize:13, lineHeight:1.65, color:'#334155', whiteSpace:'pre-line' }}>
-              {formatAnaliseLeitura(plano).slice(0, 900)}{plano.length > 900 ? '...' : ''}
+              {plano.length > 900 ? `${formatAnaliseLeitura(plano).join('\n\n').slice(0, 900)}...` : formatAnaliseLeitura(plano).join('\n\n')}
             </div>
           </div>
         );

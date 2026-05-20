@@ -357,6 +357,71 @@ function textoAnalise(v:any): string {
   return '';
 }
 
+function textoPlanoAcao(v:any): string {
+  if(!v)return '';
+  const render=(c:any): string=>{
+    if(!c)return '';
+    if(typeof c==='string')return c.trim();
+    const partes:string[]=[];
+    if(c.texto)partes.push(String(c.texto));
+    if(c.resumo)partes.push(`RESUMO:\n${c.resumo}`);
+    if(c.resumo_executivo)partes.push(`RESUMO:\n${c.resumo_executivo}`);
+    if(c.resumo_clinico)partes.push(`RESUMO CLINICO:\n${c.resumo_clinico}`);
+    if(c.prioridades_clinicas)partes.push(`PRIORIDADES CLINICAS:\n${Array.isArray(c.prioridades_clinicas)?c.prioridades_clinicas.map((item:any)=>`- ${item}`).join('\n'):c.prioridades_clinicas}`);
+    if(c.metas_30_dias||c.meta_30_dias)partes.push(`META 30 DIAS:\n${c.metas_30_dias??c.meta_30_dias}`);
+    if(c.metas_60_dias||c.meta_60_dias)partes.push(`META 60 DIAS:\n${c.metas_60_dias??c.meta_60_dias}`);
+    if(c.metas_90_dias||c.meta_90_dias)partes.push(`META 90 DIAS:\n${c.metas_90_dias??c.meta_90_dias}`);
+    const listas:[string,any][]=[
+      ['PRIORIDADES',c.prioridades],
+      ['COMPOSICAO CORPORAL',c.composicao_corporal],
+      ['FORCA',c.forca],
+      ['FLEXIBILIDADE',c.flexibilidade],
+      ['CARDIORRESPIRATORIO',c.cardiorrespiratorio],
+      ['RML',c.rml],
+      ['POSTURA',c.postura],
+      ['BIOMECANICA',c.biomecanica??c.biomecanica_corrida],
+      ['RECOMENDACOES',c.recomendacoes],
+      ['RECOMENDACOES PRATICAS',c.recomendacoes_praticas],
+      ['ENCAMINHAMENTOS',c.encaminhamentos??c.alertas_encaminhamento],
+      ['ALERTAS',c.alertas],
+    ];
+    listas.forEach(([titulo,valor])=>{
+      if(!valor)return;
+      if(Array.isArray(valor)){
+        partes.push(`${titulo}:\n${valor.map((item:any)=>{
+          if(typeof item==='string')return `- ${item}`;
+          if(item&&typeof item==='object'){
+            const linha=[item.titulo,item.acao,item.prazo].filter(Boolean).join(': ');
+            return `- ${linha||Object.values(item).filter(Boolean).join(' - ')}`;
+          }
+          return `- ${String(item)}`;
+        }).join('\n')}`);
+      }else if(typeof valor==='object'){
+        const linhas=Object.entries(valor)
+          .filter(([,item])=>item!=null&&item!=='')
+          .map(([k,item])=>`- ${k.replace(/_/g,' ')}: ${Array.isArray(item)?item.join('; '):String(item)}`);
+        if(linhas.length)partes.push(`${titulo}:\n${linhas.join('\n')}`);
+      }else{
+        partes.push(`${titulo}:\n${valor}`);
+      }
+    });
+    return partes.join('\n\n').trim();
+  };
+  const candidatos=[
+    v.plano_acao,
+    v.planoAcao,
+    v.conteudo?.plano_acao,
+    v.conteudo?.planoAcao,
+    v.conteudo_paciente?.plano_acao,
+    v.conteudo_paciente?.planoAcao,
+  ];
+  for(const candidato of candidatos){
+    const texto=render(candidato);
+    if(texto)return texto;
+  }
+  return '';
+}
+
 function TooltipInfo({ texto, label='Ver detalhes', placement='bottom' }: { texto?: string | null; label?: string; placement?: 'top'|'bottom' }) {
   const [open,setOpen]=useState(false);
   if(!texto)return null;
@@ -651,6 +716,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const analisesPaciente=modulosAnalise
     .map(([k,label])=>({k,label,texto:textoAnalise((atual as any).analises_ia?.[k])}))
     .filter(i=>i.texto);
+  const planoAcaoPaciente=textoPlanoAcao((atual as any).analises_ia?.conclusao_global);
   const referenciasTexto=[
     ...REFERENCIAS_CLINICAS.geral,
     ...modulosAnalise.flatMap(([k])=>REFERENCIAS_CLINICAS[k]??[]),
@@ -1515,6 +1581,23 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       )}
 
       {/* 9. HISTÓRICO */}
+      {planoAcaoPaciente&&(
+        <Secao ordem={115} titulo="Plano de ação" sub="Prioridades, metas e recomendações para a próxima etapa">
+          <Card bg="#ecfdf5" style={{borderColor:'#bbf7d0'}}>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+              <div style={{borderLeft:'4px solid #10b981',paddingLeft:14,minWidth:0,flex:1}}>
+                <div style={{fontSize:13,lineHeight:1.7,color:'#334155',whiteSpace:'pre-line'}}>
+                  {planoAcaoPaciente.length>1100
+                    ? `${formatarTextoAnalise(planoAcaoPaciente).join('\n\n').slice(0,1100)}...`
+                    : formatarTextoAnalise(planoAcaoPaciente).join('\n\n')}
+                </div>
+              </div>
+              <TooltipInfo texto={planoAcaoPaciente} label="Ver plano de ação completo" placement="top"/>
+            </div>
+          </Card>
+        </Secao>
+      )}
+
       {analisesPaciente.length>0&&(
         <Secao ordem={116} titulo="Análises clínicas" sub="Interpretações geradas e revisadas pelo avaliador">
           <Card>
