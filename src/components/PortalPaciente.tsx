@@ -332,13 +332,27 @@ function valorParaTela(v:any): string {
 function textoAnalise(v:any): string {
   if(!v)return '';
   if(typeof v==='string')return v.trim();
-  const alvo=v.texto_editado??v.texto??v.conteudo;
-  if(typeof alvo==='string')return alvo.trim();
-  if(alvo&&typeof alvo==='object'){
-    return Object.entries(alvo)
-      .map(([k,val])=>`${humanLabel(k)}: ${valorParaTela(val)}`)
-      .filter(Boolean)
-      .join('\n');
+  const direto = [
+    v.texto_paciente_editado,
+    v.texto_pdf_editado,
+    v.texto_pdf,
+    v.versao_pdf,
+    v.versao_paciente,
+    v.mensagem_paciente,
+  ].find((item:any)=>typeof item==='string'&&item.trim());
+  if(direto)return String(direto).trim();
+  const cp=v.conteudo_paciente;
+  if(typeof cp==='string')return cp.trim();
+  if(cp&&typeof cp==='object'){
+    const texto = [cp.texto, cp.versao_pdf, cp.versao_paciente, cp.mensagem_paciente]
+      .find((item:any)=>typeof item==='string'&&item.trim());
+    if(texto)return String(texto).trim();
+  }
+  const conteudo=v.conteudo;
+  if(conteudo&&typeof conteudo==='object'){
+    const texto = [conteudo.versao_pdf, conteudo.versao_paciente, conteudo.mensagem_paciente]
+      .find((item:any)=>typeof item==='string'&&item.trim());
+    if(texto)return String(texto).trim();
   }
   return '';
 }
@@ -1297,12 +1311,6 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   );
                 })}
               </div>
-              {atual.analises_ia?.rml && (
-                <div style={{background:'#f0fdf4',borderLeft:'3px solid #10b981',borderRadius:'0 8px 8px 0',
-                  padding:'10px 14px',fontSize:11,color:'#166534',fontStyle:'italic',lineHeight:1.6}}>
-                  {typeof atual.analises_ia.rml === 'string' ? atual.analises_ia.rml : atual.analises_ia.rml?.texto_editado}
-                </div>
-              )}
             </Card>
           </Secao>
         );

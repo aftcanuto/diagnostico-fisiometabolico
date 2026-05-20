@@ -80,6 +80,7 @@ const ctx = {
 
 const iaMock = tipo => ({
   achados: [`Achado simulado para ${tipo}`],
+  versao_paciente: `Analise em versao PDF/paciente simulada para ${tipo}.`,
   interpretacao: `Interpretação simulada validando o módulo ${tipo}.`,
   riscos: [`Risco monitorável em ${tipo}`],
   beneficios: [`Benefício esperado ao corrigir ${tipo}`],
@@ -95,6 +96,7 @@ const analisesIA = Object.fromEntries(
         pontos_criticos: ['Monitorar assimetrias e composição corporal'],
         prioridades: [{ titulo: 'Prioridade simulada', acao: 'Manter acompanhamento', prazo: '6 semanas' }],
         mensagem_paciente: 'Mensagem simulada ao paciente.',
+        versao_paciente: 'Conclusao global em versao PDF/paciente simulada para teste completo.',
       }
     : tipo === 'evolucao'
       ? {
@@ -103,6 +105,7 @@ const analisesIA = Object.fromEntries(
           regressoes: ['Sem regressões críticas simuladas'],
           alertas: [],
           interpretacao: 'Evolução longitudinal simulada.',
+          versao_paciente: 'Evolucao em versao PDF/paciente simulada.',
           proximos_passos: ['Reavaliar em 6 a 8 semanas'],
         }
       : iaMock(tipo)

@@ -331,16 +331,32 @@ p, li { orphans: 3; widows: 3; }
 
 // ─── IA ──────────────────────────────────────────────────────────────────────
 
-function aiBlock(a: (AnaliseIA & {texto_editado?:string|null}) | undefined): string {
+function textoAnalisePdf(a: (AnaliseIA & {texto_editado?:string|null}) | undefined): string {
   if (!a) return '';
-  const body = a.texto_editado
-    ? `<p class="ai-text">${x(a.texto_editado)}</p>`
-    : [
-        a.interpretacao ? `<p class="ai-text" style="margin-bottom:8px">${x(a.interpretacao)}</p>` : '',
-        a.achados?.length    ? mkList('Achados', a.achados, '#374151') : '',
-        a.riscos?.length     ? mkList('âš  Riscos', a.riscos, '#b91c1c') : '',
-        a.recomendacoes?.length ? mkList('Recomendações', a.recomendacoes, '#374151') : '',
-      ].join('');
+  if (typeof a === 'string') return String(a).trim();
+  const direto = [
+    a.texto_paciente_editado,
+    (a as any).texto_pdf_editado,
+    (a as any).texto_pdf,
+    (a as any).versao_pdf,
+    (a as any).versao_paciente,
+    a.mensagem_paciente,
+  ].find(v => typeof v === 'string' && v.trim());
+  if (direto) return String(direto).trim();
+  const cp = a.conteudo_paciente;
+  if (typeof cp === 'string') return cp.trim();
+  if (cp && typeof cp === 'object') {
+    const texto = [cp.texto, cp.versao_pdf, cp.versao_paciente, cp.mensagem_paciente]
+      .find(v => typeof v === 'string' && v.trim());
+    if (texto) return String(texto).trim();
+  }
+  return '';
+}
+
+function aiBlock(a: (AnaliseIA & {texto_editado?:string|null}) | undefined): string {
+  const texto = textoAnalisePdf(a);
+  if (!texto) return '';
+  const body = `<p class="ai-text" style="white-space:pre-line">${x(texto)}</p>`;
   if (!body.trim()) return '';
   return `<div class="ai-box">
   <div class="ai-title">
@@ -481,7 +497,7 @@ function pgResumo(d: LaudoData): string {
   const somaTrio = soma?.endomorfia != null
     ? `${x(soma.endomorfia)}-${x(soma.mesomorfia ?? '—')}-${x(soma.ectomorfia ?? '—')}`
     : '';
-  const msg    = d.analisesIA?.conclusao_global?.texto_editado ?? d.analisesIA?.conclusao_global?.mensagem_paciente ?? '';
+  const msg    = textoAnalisePdf(d.analisesIA?.conclusao_global);
 
   const gorCor = pctG == null ? '#10b981' : d.paciente.sexo === 'M'
     ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
@@ -1145,9 +1161,8 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
   // Interpretação padrão
   const interpretacao = `A avaliação de resistência muscular localizada demonstrou o desempenho do paciente em testes dinâmicos e/ou isométricos, permitindo estimar a capacidade de sustentar contrações repetidas ou prolongadas com segurança técnica. Resultados reduzidos podem estar associados a menor tolerância ao esforço, fadiga precoce, pior estabilidade articular, maior risco de compensações biomecânicas e menor eficiência em atividades esportivas ou funcionais. A melhora desses indicadores tende a favorecer desempenho físico, controle postural, estabilidade do core, proteção articular e maior capacidade de sustentar esforços repetidos.`;
 
-  const aiHTML = ia?.texto_editado
-    ? `<div class="ai-box"><div class="ai-title">ðŸ”„ Análise clínica</div><div class="ai-text">${x(ia.texto_editado)}</div></div>`
-    : `<div class="ai-box"><div class="ai-title">ðŸ“‹ Interpretação</div><div class="ai-text">${x(interpretacao)}</div></div>`;
+  const aiHTML = aiBlock(ia) ||
+    `<div class="ai-box"><div class="ai-title">ðŸ“‹ Interpretação</div><div class="ai-text">${x(interpretacao)}</div></div>`;
 
   return pgModulo('Resistência Muscular (RML)', score, `
   <div style="font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">
@@ -1212,9 +1227,15 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
 
 function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
+  const textoPdf = textoAnalisePdf(c);
+  if (textoPdf) {
+    return pgModulo('Conclusão clínica', null, `
+      <p style="font-size:13px;color:#374151;line-height:1.75;white-space:pre-line">${x(textoPdf)}</p>
+    `);
+  }
   return pgModulo('Conclusão clínica', null, `
-  ${c.texto_editado?`<p style="font-size:13px;color:#374151;line-height:1.7">${x(c.texto_editado)}</p>`:`
-    ${c.resumo_executivo?`<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:16px">${x(c.resumo_executivo)}</p>`:''}
+  ${`
+    ${c.mensagem_paciente?`<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:16px">${x(c.mensagem_paciente)}</p>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
       ${c.pontos_fortes?.length?`<div style="background:#f0fdf4;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:8px">âœ“ Pontos fortes</div><ul style="padding-left:16px;font-size:12px;color:#166534">${c.pontos_fortes.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
       ${c.pontos_criticos?.length?`<div style="background:#fef2f2;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:8px">âš  Pontos críticos</div><ul style="padding-left:16px;font-size:12px;color:#991b1b">${c.pontos_criticos.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}

@@ -1872,6 +1872,38 @@ Implementado:
 
 Sem migration nesta rodada.
 
+## Analises de IA no PDF e no portal do paciente
+
+Em 20/05/2026 foi corrigida a exibicao das analises de IA no relatorio e no dashboard do paciente.
+
+Problema:
+
+- o relatorio estava exibindo conteudo tecnico completo da IA;
+- o combinado e que o PDF use apenas a versao destinada ao PDF/paciente, revisada no modulo de conclusao;
+- no dashboard do paciente, apenas a analise de RML aparecia em alguns cenarios, em vez de todas as analises liberadas na versao PDF/paciente.
+
+Implementado:
+
+- `src/lib/pdf/template.ts` agora usa um resolvedor unico para texto de IA do PDF;
+- o PDF prioriza `texto_paciente_editado`, `texto_pdf_editado`, `texto_pdf`, `versao_pdf`, `versao_paciente`, `mensagem_paciente` e conteudos equivalentes em `conteudo_paciente`;
+- textos tecnicos como `texto_editado`, `resumo_executivo`, listas estruturadas e objetos brutos nao entram mais automaticamente no PDF;
+- a conclusao clinica do relatorio usa somente a versao PDF/paciente quando existir;
+- `src/components/PortalPaciente.tsx` passou a aplicar a mesma regra para o dashboard do paciente;
+- removido o bloco antigo que exibia RML de forma isolada com texto tecnico;
+- `scripts/full-smoke-test.js` foi alinhado para testar a presenca de versoes PDF/paciente nas analises simuladas.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run predeploy` passou completo:
+  - auditoria do banco;
+  - smoke test de relatorio, dashboard clinico e dashboard paciente;
+  - formulas clinicas;
+  - backup em planilha;
+  - plano alimentar;
+  - TypeScript;
+  - lint.
+
 ## Atualizacao de referencia de pressao arterial
 
 Em 19/05/2026 foi atualizada a referencia clinica de sinais vitais.
