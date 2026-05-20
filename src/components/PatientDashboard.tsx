@@ -1,5 +1,5 @@
 'use client';
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { LineChart } from '@/components/ui/LineChart';
 import { BarChart } from '@/components/ui/BarChart';
 import { ZonasChart } from '@/components/ui/ZonasChart';
@@ -725,6 +725,8 @@ function formatAnaliseLeitura(texto: string) {
 
 function AnaliseInfoTooltip({ texto }: { texto: string }) {
   const [open, setOpen] = useState(false);
+  const [align, setAlign] = useState<'left' | 'right'>('left');
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   if (!texto) return null;
   const textoFormatado = formatAnaliseLeitura(texto);
   return (
@@ -733,9 +735,15 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
       style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
     >
       <button
+        ref={buttonRef}
         type="button"
         aria-label="Ver análise clínica"
-        onClick={(e)=>{e.stopPropagation();setOpen(v=>!v);}}
+        onClick={(e)=>{
+          e.stopPropagation();
+          const rect = buttonRef.current?.getBoundingClientRect();
+          setAlign(rect && rect.left < 460 ? 'left' : 'right');
+          setOpen(v=>!v);
+        }}
         style={{
           width: 28,
           height: 28,
@@ -756,7 +764,7 @@ function AnaliseInfoTooltip({ texto }: { texto: string }) {
         <div
           style={{
             position: 'absolute',
-            right: 0,
+            ...(align === 'left' ? { left: 0 } : { right: 0 }),
             bottom: 34,
             zIndex: 50,
             width: 420,

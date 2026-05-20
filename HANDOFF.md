@@ -1915,6 +1915,25 @@ Validacao:
 - `npx tsc --noEmit` passou sem erros;
 - `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
 
+## Posicionamento dos baloes de analise no dashboard clinico
+
+Em 20/05/2026 foi ajustado o posicionamento dos baloes de informacao das analises no dashboard clinico.
+
+Problema:
+
+- quando o icone de informacao ficava perto da margem esquerda da tela, o balao abria para a esquerda e parte do texto ficava escondida fora da area visivel.
+
+Implementado:
+
+- `src/components/PatientDashboard.tsx` agora mede a posicao do botao antes de abrir o balao;
+- se o botao estiver perto da margem esquerda, o balao abre para a direita;
+- em posicoes centrais/direitas, o comportamento anterior e preservado para evitar estouro lateral.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
 ## Quebra da analise global no PDF
 
 Em 20/05/2026 foi corrigida a exibicao da analise global no relatorio PDF.
