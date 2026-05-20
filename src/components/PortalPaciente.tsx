@@ -602,7 +602,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     cardiorrespiratorio: sc.cardiorrespiratorio ?? null,
   });
   const asc=ascBase;
-  const gorCor=pctG==null?'#10b981':paciente.sexo==='M'?(pctG<=15?'#10b981':pctG<=22?'#f59e0b':'#ef4444'):(pctG<=21?'#10b981':pctG<=29?'#f59e0b':'#ef4444');
+  const gorCor=pctG==null?'#10b981':paciente.sexo==='M'?(pctG<=17?'#10b981':pctG<=25?'#f59e0b':pctG<=29?'#f97316':'#ef4444'):(pctG<=21?'#10b981':pctG<=29?'#f59e0b':pctG<=32?'#f97316':'#ef4444');
 
   const zonas=atual.cardiorrespiratorio?.zonas as any;
   const zonasItems=Array.isArray(zonas)

@@ -170,12 +170,12 @@ const SIL_F: Record<number,string> = {
 function silhueta(sexo: 'M' | 'F', pctG?: number | null): string {
   const cor = pctG == null ? '#10b981'
     : sexo === 'M'
-      ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
+      ? pctG <= 17 ? '#10b981' : pctG <= 25 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
       : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : pctG <= 32 ? '#f97316' : '#ef4444';
 
   const nivel = pctG == null ? 1
     : sexo === 'M'
-      ? pctG <= 15 ? 0 : pctG <= 22 ? 1 : pctG <= 29 ? 2 : 3
+      ? pctG <= 17 ? 0 : pctG <= 25 ? 1 : pctG <= 29 ? 2 : 3
       : pctG <= 21 ? 0 : pctG <= 29 ? 1 : pctG <= 32 ? 2 : 3;
 
   const src = sexo === 'M' ? SIL_M[nivel] : SIL_F[nivel];
@@ -435,8 +435,12 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
 function pgCapa(d: LaudoData): string {
   const c = d.clinica;
   const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
-  const nomeLen = (d.paciente.nome ?? '').length;
-  const nomeFont = nomeLen > 58 ? 28 : nomeLen > 50 ? 31 : nomeLen > 44 ? 34 : nomeLen > 38 ? 37 : nomeLen > 32 ? 40 : nomeLen > 27 ? 43 : 50;
+  const nomePaciente = d.paciente.nome ?? '';
+  const nomePesoVisual = nomePaciente
+    .toUpperCase()
+    .split('')
+    .reduce((total, char) => total + (char === ' ' ? 0.36 : /[IJLT]/.test(char) ? 0.42 : /[MW]/.test(char) ? 0.86 : 0.66), 0);
+  const nomeFont = Math.max(25, Math.min(46, Math.floor(680 / Math.max(nomePesoVisual, 1))));
   const logoInner = c?.logo_url
     ? `<img src="${x(c.logo_url)}" style="width:48px;height:48px;object-fit:contain;display:block"/>`
     : `<span style="font-size:22px;font-weight:900;color:${x(c?.cor_primaria ?? '#059669')}">${x((c?.nome??'D').charAt(0))}</span>`;
@@ -461,7 +465,7 @@ function pgCapa(d: LaudoData): string {
 
     <div class="cover-main">
       <div class="cover-badge">Avaliação fisiometabólica</div>
-      <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.02;overflow:hidden;text-overflow:clip">${x(d.paciente.nome)}</h1>
+      <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.04;width:680px;max-width:100%;overflow:visible;text-overflow:clip">${x(nomePaciente)}</h1>
       <div class="cover-subtitle">Relatório técnico de composição corporal, capacidades funcionais e indicadores fisiometabólicos.</div>
       <div class="cover-chip-grid">
         ${[
@@ -500,7 +504,7 @@ function pgResumo(d: LaudoData): string {
   const msg    = textoAnalisePdf(d.analisesIA?.conclusao_global);
 
   const gorCor = pctG == null ? '#10b981' : d.paciente.sexo === 'M'
-    ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
+    ? pctG <= 17 ? '#10b981' : pctG <= 25 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
     : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : pctG <= 32 ? '#f97316' : '#ef4444';
 
   const statusLbl = pctG == null ? '—' : d.paciente.sexo === 'M'

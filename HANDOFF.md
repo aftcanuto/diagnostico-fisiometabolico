@@ -1872,6 +1872,27 @@ Implementado:
 
 Sem migration nesta rodada.
 
+## Coerencia da silhueta corporal no dashboard do paciente
+
+Em 20/05/2026 foi corrigida a coerencia visual da silhueta corporal exibida no dashboard do paciente, dashboard clinico e PDF.
+
+Problema:
+
+- em homens com percentual de gordura na faixa `Fitness`, a etiqueta aparecia corretamente como `Fitness`;
+- porem a forma e a cor da silhueta ainda seguiam limites visuais antigos, fazendo o corpo parecer de uma faixa superior.
+
+Implementado:
+
+- `src/components/ui/SilhuetaCircunferencias.tsx` agora usa os mesmos limites para etiqueta, forma e cor da silhueta;
+- para sexo masculino, a faixa `Fitness` foi alinhada ate 25% de gordura corporal;
+- para sexo feminino, a transicao visual tambem foi alinhada com a classificacao textual;
+- `src/lib/pdf/template.ts`, `src/components/PatientDashboard.tsx` e `src/components/PortalPaciente.tsx` foram ajustados para manter a mesma regra visual nos dashboards e no relatorio.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
 ## Analises de IA no PDF e no portal do paciente
 
 Em 20/05/2026 foi corrigida a exibicao das analises de IA no relatorio e no dashboard do paciente.
@@ -1903,6 +1924,26 @@ Validacao:
   - plano alimentar;
   - TypeScript;
   - lint.
+
+## Ajuste do nome do paciente na capa do PDF
+
+Em 20/05/2026 foi refinado o encaixe do nome do paciente na capa do relatorio.
+
+Problema:
+
+- nomes longos podiam sair da area segura de impressao da capa;
+- a regra anterior usava apenas quantidade de caracteres, sem considerar letras visualmente mais largas.
+
+Implementado:
+
+- `src/lib/pdf/template.ts` passou a calcular o tamanho da fonte pelo peso visual do nome;
+- letras largas e estreitas recebem pesos diferentes para preservar uma linha unica sem estourar a area imprimivel;
+- o titulo da capa agora usa largura maxima segura de 680px.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
 
 ## Atualizacao de referencia de pressao arterial
 

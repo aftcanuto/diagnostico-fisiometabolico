@@ -892,8 +892,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
   const pacienteNascimento = formatDashboardValue(paciente.data_nascimento);
   const avaliadorNome = formatDashboardValue(avaliador?.nome);
   const gorCor = pctG == null ? '#10b981' : pacienteSexo === 'M'
-    ? pctG <= 15 ? '#10b981' : pctG <= 22 ? '#f59e0b' : '#ef4444'
-    : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : '#ef4444';
+    ? pctG <= 17 ? '#10b981' : pctG <= 25 ? '#f59e0b' : pctG <= 29 ? '#f97316' : '#ef4444'
+    : pctG <= 21 ? '#10b981' : pctG <= 29 ? '#f59e0b' : pctG <= 32 ? '#f97316' : '#ef4444';
 
   const scoreItems = [
     { label: 'Postura', v: sc.postura, icon: User },

@@ -60,12 +60,15 @@ interface Props {
 
 function nivel(sexo: 'M'|'F', pct?: number|null) {
   if (pct == null) return 1;
-  return sexo === 'M' ? (pct<=15?0:pct<=22?1:pct<=29?2:3) : (pct<=21?0:pct<=29?1:pct<=32?2:3);
+  return sexo === 'M'
+    ? (pct<=17?0:pct<=25?1:pct<=29?2:3)
+    : (pct<=21?0:pct<=29?1:pct<=32?2:3);
 }
 function gorCor(sexo: 'M'|'F', pct?: number|null) {
   if (pct == null) return '#10b981';
-  return sexo === 'M' ? (pct<=15?'#10b981':pct<=22?'#f59e0b':'#ef4444')
-                      : (pct<=21?'#10b981':pct<=29?'#f59e0b':'#ef4444');
+  return sexo === 'M'
+    ? (pct<=17?'#10b981':pct<=25?'#f59e0b':pct<=29?'#f97316':'#ef4444')
+    : (pct<=21?'#10b981':pct<=29?'#f59e0b':pct<=32?'#f97316':'#ef4444');
 }
 function statusLbl(sexo: 'M'|'F', pct?: number|null) {
   if (pct == null) return '';
