@@ -4,6 +4,7 @@ import { renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { launchPdfBrowser } from '@/lib/pdf/browser';
 import { prepararPaginacaoLaudo } from '@/lib/pdf/pagination';
+import { hidratarImagensBiomecanicaParaPdf } from '@/lib/pdf/images';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -113,6 +114,8 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    const biomecanicaPdf = await hidratarImagensBiomecanicaParaPdf(biomecanica.data, admin);
+
     // Renderizar HTML
     const dadosLaudo = {
       clinica: clinica.data,
@@ -136,7 +139,7 @@ export async function GET(req: NextRequest) {
         flexibilidade: flexibilidade.data,
         rml: rml.data,
         cardiorrespiratorio: cardio.data,
-        biomecanica_corrida: biomecanica.data,
+        biomecanica_corrida: biomecanicaPdf,
       },
       scores: scoresRow.data ?? {
         global: null, postura: null,

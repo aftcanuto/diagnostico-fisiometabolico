@@ -4,6 +4,7 @@ import { renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { launchPdfBrowser } from '@/lib/pdf/browser';
 import { prepararPaginacaoLaudo } from '@/lib/pdf/pagination';
+import { hidratarImagensBiomecanicaParaPdf } from '@/lib/pdf/images';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -89,6 +90,8 @@ export async function GET(req: NextRequest) {
     };
   });
 
+  const biomecanicaPdf = await hidratarImagensBiomecanicaParaPdf(biomecanica.data, supabase);
+
   const dadosLaudo = {
     clinica: clinica.data,
     paciente: {
@@ -104,7 +107,7 @@ export async function GET(req: NextRequest) {
       anamnese: anamnese.data ? { ...anamnese.data, _campos: (anamnese.data as any)?.anamnese_templates?.campos ?? [] } : null, sinais_vitais: sinais_vitais.data,
       posturografia: posturografia.data, bioimpedancia: bioimpedancia.data,
       antropometria: antropometria.data,
-      forca: forca.data, flexibilidade: flexibilidade.data, rml: rml.data, cardiorrespiratorio: cardio.data, biomecanica_corrida: biomecanica.data,
+      forca: forca.data, flexibilidade: flexibilidade.data, rml: rml.data, cardiorrespiratorio: cardio.data, biomecanica_corrida: biomecanicaPdf,
     },
     scores: scoresRow.data ?? {
       global: null, postura: null, composicao_corporal: null, forca: null, cardiorrespiratorio: null,

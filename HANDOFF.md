@@ -1934,6 +1934,26 @@ Validacao:
 - `npx tsc --noEmit` passou sem erros;
 - `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
 
+## Imagens da biomecanica embutidas no PDF
+
+Em 20/05/2026 foi corrigido o carregamento das imagens da biomecanica no relatorio PDF.
+
+Problema:
+
+- o frame da biomecanica aparecia no PDF apenas como texto alternativo `Frame`, indicando que o Chromium do PDF nao conseguiu carregar a URL externa da imagem no momento da impressao.
+
+Implementado:
+
+- criado `src/lib/pdf/images.ts` para converter imagens da biomecanica em `data:image` antes de renderizar o HTML do PDF;
+- a conversao tenta primeiro baixar a imagem diretamente pelo Supabase Storage quando a URL for de Storage, inclusive em buckets privados;
+- caso nao seja Storage, tenta buscar a imagem por URL publica;
+- `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` agora hidratam o frame, imagens sagitais/posteriores e graficos cinematicos antes de chamar `renderLaudoHTML`.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
 ## Quebra da analise global no PDF
 
 Em 20/05/2026 foi corrigida a exibicao da analise global no relatorio PDF.
