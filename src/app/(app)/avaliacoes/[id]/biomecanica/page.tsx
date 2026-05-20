@@ -101,6 +101,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
   });
 
   const [graficos, setGraficos] = useState({
+    frame_url: '', foto_frame_url: '',
     ombro_url: '', cotovelo_url: '', quadril_url: '', joelho_url: '', tornozelo_url: '',
     sagital_1_url: '', sagital_2_url: '', sagital_3_url: '',
     posterior_1_url: '', posterior_2_url: '', posterior_3_url: '',
@@ -120,7 +121,7 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
         setMovimento(d.movimento ?? 'Corrida em esteira');
         setLinkVideo(d.link_video ?? '');
         setLinkVideoPosterior(d.link_video_posterior ?? '');
-        setFotoFrame(d.foto_frame_url ?? '');
+        setFotoFrame(d.foto_frame_url ?? (d.graficos as any)?.foto_frame_url ?? (d.graficos as any)?.frame_url ?? (d.graficos as any)?.frame ?? '');
         if (d.metricas) {
           const m = d.metricas as any;
           setMetricas(prev => ({ ...prev, ...Object.fromEntries(
@@ -183,6 +184,12 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
       return;
     }
     setFotoFrame(data.url);
+    const graficosAtualizados = { ...graficos, frame_url: data.url, foto_frame_url: data.url };
+    setGraficos(graficosAtualizados);
+    await upsertModulo('biomecanica_corrida', params.id, {
+      foto_frame_url: data.url,
+      graficos: graficosAtualizados,
+    });
   }
 
   const autoSaveValue = { velocidade, movimento, linkVideo, linkVideoPosterior, fotoFrame, metricas, angulos, comentariosAngulos, achados, recomendacoes, graficos, comentarioGraficos };
@@ -193,12 +200,15 @@ export default function BiomecanicaPage({ params }: { params: { id: string } }) 
       if (k === 'fator_esforco_tipo') met[k] = val;
       else { const n = parseFloat(val); if (!isNaN(n)) met[k] = n; }
     }
+    const graficosComFrame = v.fotoFrame
+      ? { ...v.graficos, frame_url: v.fotoFrame, foto_frame_url: v.fotoFrame }
+      : v.graficos;
     return upsertModulo('biomecanica_corrida', params.id, {
       velocidade_kmh: parseFloat(v.velocidade) || null,
       movimento: v.movimento, link_video: v.linkVideo, link_video_posterior: v.linkVideoPosterior, foto_frame_url: v.fotoFrame,
       metricas: met, angulos: buildAngulos(v.angulos),
       comentarios_angulos: v.comentariosAngulos,
-      achados: v.achados, recomendacoes: v.recomendacoes, graficos: v.graficos,
+      achados: v.achados, recomendacoes: v.recomendacoes, graficos: graficosComFrame,
       comentarios_graficos: { geral: v.comentarioGraficos },
     });
   };

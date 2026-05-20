@@ -1872,6 +1872,28 @@ Implementado:
 
 Sem migration nesta rodada.
 
+## Frame da biomecanica embutido no PDF
+
+Em 20/05/2026 foi reforcado o carregamento da imagem principal/frame da biomecanica da corrida no relatorio PDF.
+
+Problema:
+
+- as imagens dos planos sagital/posterior apareciam no PDF, mas a imagem principal do frame podia quebrar e exibir apenas o texto alternativo `Frame`;
+- o problema ocorria quando o valor salvo vinha em formato diferente do esperado pelo Puppeteer, como caminho cru do Storage, URL transformada/assinada do Supabase ou link externo.
+
+Implementado:
+
+- `src/lib/pdf/images.ts` passou a normalizar `NEXT_PUBLIC_SUPABASE_URL`, inclusive quando estiver configurado com `/rest/v1`;
+- o backend agora tenta baixar imagens diretamente do Supabase Storage antes de entregar o HTML ao Puppeteer;
+- foram adicionados tratamentos para URL publica do Storage, URL assinada, URL de renderizacao, caminho cru do bucket `biomecanica`, fallback legado para `posturografia` e links do Google Drive;
+- quando a imagem e encontrada, ela e embutida como `data:image/...;base64`, evitando falha de rede durante a geracao do PDF.
+- o formulario de biomecanica agora salva o frame imediatamente apos o upload, replicando o link em `foto_frame_url`, `graficos.frame_url` e `graficos.foto_frame_url`, no mesmo padrao dos uploads sagital/posterior.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
+
 ## Frame da biomecanica e plano de acao no PDF
 
 Em 20/05/2026 foram corrigidos dois pontos do relatorio PDF.
