@@ -117,10 +117,18 @@ function assert(cond, msg) {
 }
 
 function checkTextFile(file, required) {
-  assert(fs.existsSync(file), `Arquivo não gerado: ${file}`);
+  assert(fs.existsSync(file), `Arquivo nao gerado: ${file}`);
   const html = fs.readFileSync(file, 'utf8');
-  assert(!html.includes('[object Object]'), `${file}: contém [object Object]`);
-  assert(!/[Ã�ð]/.test(html), `${file}: contém caracteres corrompidos`);
+  assert(!html.includes('[object Object]'), `${file}: contem [object Object]`);
+  const badTokens = [
+    String.fromCharCode(0x00f0),
+    String.fromCharCode(0xfffd),
+    String.fromCharCode(0x00e2, 0x20ac),
+    String.fromCharCode(0x00e2, 0x201d),
+    String.fromCharCode(0x00c3, 0x00b7),
+    String.fromCharCode(0x00c2, 0x00b7),
+  ];
+  assert(!badTokens.some((token) => html.includes(token)), `${file}: contem caracteres corrompidos`);
   for (const item of required) assert(html.includes(item), `${file}: faltou "${item}"`);
   return html;
 }

@@ -453,11 +453,11 @@ function rotuloTracao(t: TracaoTeste) {
 
 function rotuloTeste(t: SPTechTeste): string {
   const art = t.articulacao === 'Outra' ? (t.nome_outra || 'Outra') : t.articulacao;
-  const mov = t.articulacao === 'Outra' ? (t.movimento_outra || '—') : t.movimento;
+  const mov = t.articulacao === 'Outra' ? (t.movimento_outra || '-') : t.movimento;
   const lat = t.articulacao === 'Outra'
     ? ({bilateral:'Bilateral',direito:'Direito',esquerdo:'Esquerdo'} as any)[t.lateralidade]
     : AXIAIS.has(t.articulacao) ? 'Bilateral' : '';
-  return `${art} — ${mov}${lat ? ` (${lat})` : ''}`;
+  return `${art} - ${mov}${lat ? ` (${lat})` : ''}`;
 }
 
 /* ══ SUBCOMPONENTE: painel de um lado ════════════════════ */
@@ -911,7 +911,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                       {/* Informativo para articulações axiais */}
                       {isAxial && (
                         <p className="text-xs text-slate-400 italic">
-                          Articulação axial — resultado único (bilateral).
+                          Articulação axial - resultado único (bilateral).
                         </p>
                       )}
 
@@ -1052,26 +1052,26 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                             </Field>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">FIM em Newton</div>
-                              <div className="text-lg font-bold text-slate-800">{dados.fim_n || 'â€”'} <span className="text-xs text-slate-400">N</span></div>
+                              <div className="text-lg font-bold text-slate-800">{dados.fim_n || '-'} <span className="text-xs text-slate-400">N</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">1RM estimado</div>
-                              <div className="text-lg font-bold text-slate-800">{dados.rm1_kg || '—'} <span className="text-xs text-slate-400">kg</span></div>
+                              <div className="text-lg font-bold text-slate-800">{dados.rm1_kg || '-'} <span className="text-xs text-slate-400">kg</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Forca relativa</div>
-                              <div className="text-lg font-bold text-slate-800">{dados.forca_relativa_kgf_kg || '—'} <span className="text-xs text-slate-400">kgf/kg</span></div>
+                              <div className="text-lg font-bold text-slate-800">{dados.forca_relativa_kgf_kg || '-'} <span className="text-xs text-slate-400">kgf/kg</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">RFD global</div>
-                              <div className="text-lg font-bold text-slate-800 whitespace-nowrap">{dados.rfd_kgf_s || '—'} <span className="text-xs text-slate-400">kgf/s</span></div>
+                              <div className="text-lg font-bold text-slate-800 whitespace-nowrap">{dados.rfd_kgf_s || '-'} <span className="text-xs text-slate-400">kgf/s</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3 col-span-2">
                               <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-2">RFD por janela</div>
                               <div className="grid grid-cols-3 gap-2 text-xs">
-                                <div className="whitespace-nowrap"><span className="text-slate-400">0-50 ms</span><br/><b>{dados.rfd_50_kgf_s || '—'}</b> kgf/s</div>
-                                <div className="whitespace-nowrap"><span className="text-slate-400">0-100 ms</span><br/><b>{dados.rfd_100_kgf_s || '—'}</b> kgf/s</div>
-                                <div className="whitespace-nowrap"><span className="text-slate-400">0-200 ms</span><br/><b>{dados.rfd_200_kgf_s || '—'}</b> kgf/s</div>
+                                <div className="whitespace-nowrap"><span className="text-slate-400">0-50 ms</span><br/><b>{dados.rfd_50_kgf_s || '-'}</b> kgf/s</div>
+                                <div className="whitespace-nowrap"><span className="text-slate-400">0-100 ms</span><br/><b>{dados.rfd_100_kgf_s || '-'}</b> kgf/s</div>
+                                <div className="whitespace-nowrap"><span className="text-slate-400">0-200 ms</span><br/><b>{dados.rfd_200_kgf_s || '-'}</b> kgf/s</div>
                               </div>
                             </div>
                           </div>
@@ -1091,7 +1091,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                       <div key={label} className="rounded-lg bg-slate-50 border border-slate-200 p-3">
                         <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">{label}</div>
                         <div className="text-lg font-bold text-slate-800">
-                          {valor || '—'} <span className="text-xs text-slate-400">{unidade}</span>
+                          {valor || '-'} <span className="text-xs text-slate-400">{unidade}</span>
                         </div>
                       </div>
                     ))}
@@ -1119,7 +1119,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardBody className="space-y-2">
             <p className="text-xs text-slate-500">
-              Relações agonista/antagonista — ex: Flexão/Extensão joelho E
+              Relações agonista/antagonista - ex: Flexão/Extensão joelho E
             </p>
             {modeloDinamometria === 'medeor' && spTechRelacoesAuto.length > 0 && (
               <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
@@ -1132,9 +1132,9 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="text-sm font-semibold text-slate-900">{relacao.nome}</div>
-                          <div className="text-[11px] text-slate-500">{relacao.lado} Â· {relacao.descricao}</div>
+                          <div className="text-[11px] text-slate-500">{relacao.lado} - {relacao.descricao}</div>
                           <div className="mt-1 text-[11px] text-slate-400">
-                            {relacao.numerador} Ã· {relacao.denominador}
+                            {relacao.numerador} / {relacao.denominador}
                           </div>
                         </div>
                         <div className="text-right">

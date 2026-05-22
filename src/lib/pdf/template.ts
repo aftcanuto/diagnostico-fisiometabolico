@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PDF Template v4 — Baseado no design v0.dev
  * Gauges com gradiente completo + triângulo indicador
  * Layout: capa · resumo dark · módulos white
@@ -790,7 +790,7 @@ function pgResumo(d: LaudoData): string {
   <!-- ── MENSAGEM DO PACIENTE ── -->
   ${msg ? `
   <div style="margin-top:18px;padding:16px 20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;display:flex;gap:12px;align-items:flex-start">
-    <div style="font-size:18px;flex-shrink:0">ðŸ’¬</div>
+    <div style="font-size:18px;flex-shrink:0">IA</div>
     <div style="font-size:12px;color:#166534;font-style:italic;line-height:1.65">${x(resumoTexto(msg))}</div>
   </div>` : ''}
 
@@ -891,7 +891,7 @@ function pgSinais(s: any, ia?: any): string {
   return `<div class="kpi-grid">
     ${pa?kpi('Pressão arterial',pa,'mmHg'):''}
     ${kpi('FC repouso',s.fc_repouso,'bpm')}
-    ${kpi('SpOâ‚‚',s.spo2,'%')}
+    ${kpi('SpO2',s.spo2,'%')}
     ${kpi('Temperatura',s.temperatura,'°C')}
     ${kpi('Freq. resp.',s.freq_respiratoria,'irpm')}
   </div>
@@ -939,7 +939,7 @@ function pgPostura(p: any, score: number | null, ia?: any): string {
   return `
     ${fotos?`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">${fotos}</div>`:''}
     <div class="sec-sub" style="margin-top:0">Achados posturais</div>
-    ${desv.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${desv.map(d=>`<span style="background:#fef2f2;color:#991b1b;font-size:11px;padding:4px 12px;border-radius:20px">${x(d)}</span>`).join('')}</div>`:'<span style="color:#10b981;font-size:13px;font-weight:500">âœ“ Sem desvios relevantes</span>'}
+    ${desv.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${desv.map(d=>`<span style="background:#fef2f2;color:#991b1b;font-size:11px;padding:4px 12px;border-radius:20px">${x(d)}</span>`).join('')}</div>`:'<span style="color:#10b981;font-size:13px;font-weight:500">Sem desvios relevantes</span>'}
     ${p.observacoes?`<p style="font-size:12px;color:#4b5563;margin-top:10px;line-height:1.6">${x(p.observacoes)}</p>`:''}
     ${score!=null?`<div style="display:inline-block;margin-top:12px;padding:5px 14px;background:linear-gradient(135deg,#059669,#059669cc);border-radius:100px;color:#0f172a;font-weight:700;font-size:13px">Score Postura: ${score}</div>`:''}
     ${aiBlock(ia)}`;
@@ -1137,8 +1137,8 @@ function pgForca(f: any, score: number | null, ia?: any): string {
       ${!isNaN(ap)?`<span class="asym-badge" style="background:${corA(t.classificacao_assimetria)}18;color:${corA(t.classificacao_assimetria)}">Assimetria ${ap.toFixed(1)}% · ${x(t.classificacao_assimetria)}</span>`:''}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${ladoCard(t.lado_d,'side-d','â—€ Lado Direito')}
-      ${ladoCard(t.lado_e,'side-e','Lado Esquerdo â–¶')}
+      ${ladoCard(t.lado_d,'side-d','Lado Direito')}
+      ${ladoCard(t.lado_e,'side-e','Lado Esquerdo')}
     </div>
   </div>`;}).join('')}
   ${trT.length?`<div class="sec-sub">Dinamometria por tração</div>
@@ -1287,7 +1287,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
   const interpretacao = `A avaliação de resistência muscular localizada demonstrou o desempenho do paciente em testes dinâmicos e/ou isométricos, permitindo estimar a capacidade de sustentar contrações repetidas ou prolongadas com segurança técnica. Resultados reduzidos podem estar associados a menor tolerância ao esforço, fadiga precoce, pior estabilidade articular, maior risco de compensações biomecânicas e menor eficiência em atividades esportivas ou funcionais. A melhora desses indicadores tende a favorecer desempenho físico, controle postural, estabilidade do core, proteção articular e maior capacidade de sustentar esforços repetidos.`;
 
   const aiHTML = aiBlock(ia) ||
-    `<div class="ai-box"><div class="ai-title">ðŸ“‹ Interpretação</div><div class="ai-text">${x(interpretacao)}</div></div>`;
+    `<div class="ai-box"><div class="ai-title">Interpretacao</div><div class="ai-text">${x(interpretacao)}</div></div>`;
 
   return pgModulo('Resistência Muscular (RML)', score, `
   <div style="font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">
@@ -1319,7 +1319,7 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
   return pgModulo('Cardiorrespiratório', score, `
   <div class="dark-block">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
-      ${c.vo2max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VOâ‚‚máx</div><div style="font-size:20px;font-weight:800;color:#16a34a;line-height:1">${c.vo2max}</div><div style="font-size:8px;color:#4b5563">ml/kg/min</div></div>`:''}
+      ${c.vo2max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VO2max</div><div style="font-size:20px;font-weight:800;color:#16a34a;line-height:1">${c.vo2max}</div><div style="font-size:8px;color:#4b5563">ml/kg/min</div></div>`:''}
       ${c.fc_limiar!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">FC Limiar</div><div style="font-size:20px;font-weight:800;color:#2563eb;line-height:1">${c.fc_limiar}</div><div style="font-size:8px;color:#4b5563">bpm</div></div>`:''}
       ${c.fc_max!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">FC Máx</div><div style="font-size:20px;font-weight:800;color:#f87171;line-height:1">${c.fc_max}</div><div style="font-size:8px;color:#4b5563">bpm</div></div>`:''}
       ${c.vam!=null?`<div><div style="font-size:8px;color:#6b7280;margin-bottom:4px">VAM</div><div style="font-size:20px;font-weight:800;color:#7c3aed;line-height:1">${c.vam}</div><div style="font-size:8px;color:#4b5563">km/h</div></div>`:''}
@@ -1341,7 +1341,7 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
   </div>`:''}
   ${Object.keys(zonas).length?`<div class="sec-sub">Zonas de treinamento Z1–Z5</div>
   <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-    ${['z1','z2','z3','z4','z5'].map((k,i)=>{const z=zonas[k];if(!z)return '';const pct=Math.round(z.max/(c.fc_max||200)*100);return `<div style="display:flex;align-items:center;gap:10px"><div style="width:80px;font-size:10px;font-weight:600;color:#374151">${['Z1 Regen.','Z2 Base','Z3 Aeróbico','Z4 Limiar','Z5 VOâ‚‚máx'][i]}</div><div style="flex:1;background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${zCores[i]};border-radius:999px"></div></div><div style="width:88px;font-size:10px;color:#6b7280;text-align:right">${z.min}–${z.max} bpm</div></div>`;}).join('')}
+    ${['z1','z2','z3','z4','z5'].map((k,i)=>{const z=zonas[k];if(!z)return '';const pct=Math.round(z.max/(c.fc_max||200)*100);return `<div style="display:flex;align-items:center;gap:10px"><div style="width:80px;font-size:10px;font-weight:600;color:#374151">${['Z1 Regen.','Z2 Base','Z3 Aerobico','Z4 Limiar','Z5 VO2max'][i]}</div><div style="flex:1;background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${zCores[i]};border-radius:999px"></div></div><div style="width:88px;font-size:10px;color:#6b7280;text-align:right">${z.min}–${z.max} bpm</div></div>`;}).join('')}
   </div>`:''}
   ${vel.length?`<div class="sec-sub">Velocidades por intensidade</div>
   <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="text-align:left;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Zona</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h mín</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h máx</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Pace mín</th></tr></thead>
@@ -1365,10 +1365,10 @@ function pgConclusao(d: LaudoData, pri: string): string {
   ${`
     ${c.mensagem_paciente?`<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:16px">${x(c.mensagem_paciente)}</p>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
-      ${c.pontos_fortes?.length?`<div style="background:#f0fdf4;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:8px">âœ“ Pontos fortes</div><ul style="padding-left:16px;font-size:12px;color:#166534">${c.pontos_fortes.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
-      ${c.pontos_criticos?.length?`<div style="background:#fef2f2;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:8px">âš  Pontos críticos</div><ul style="padding-left:16px;font-size:12px;color:#991b1b">${c.pontos_criticos.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
+      ${c.pontos_fortes?.length?`<div style="background:#f0fdf4;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#166534;margin-bottom:8px">Pontos fortes</div><ul style="padding-left:16px;font-size:12px;color:#166534">${c.pontos_fortes.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
+      ${c.pontos_criticos?.length?`<div style="background:#fef2f2;border-radius:10px;padding:14px"><div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:8px">Pontos criticos</div><ul style="padding-left:16px;font-size:12px;color:#991b1b">${c.pontos_criticos.map(p=>`<li style="margin-bottom:3px">${x(p)}</li>`).join('')}</ul></div>`:''}
     </div>
-    ${c.prioridades?.length?`<div>${c.prioridades.map((p,i)=>`<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><div style="min-width:28px;height:28px;border-radius:50%;background:${pri};color:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0">${i+1}</div><div><div style="font-weight:700;font-size:13px;color:#111827">${x(p.titulo)}</div><div style="color:#4b5563;font-size:12px">${x(p.acao)}</div><div style="color:#9ca3af;font-size:11px;margin-top:2px">â± ${x(p.prazo)}</div></div></div>`).join('')}</div>`:''}
+    ${c.prioridades?.length?`<div>${c.prioridades.map((p,i)=>`<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><div style="min-width:28px;height:28px;border-radius:50%;background:${pri};color:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0">${i+1}</div><div><div style="font-weight:700;font-size:13px;color:#111827">${x(p.titulo)}</div><div style="color:#4b5563;font-size:12px">${x(p.acao)}</div><div style="color:#9ca3af;font-size:11px;margin-top:2px">Prazo: ${x(p.prazo)}</div></div></div>`).join('')}</div>`:''}
     ${c.mensagem_paciente?`<div style="background:#eff6ff;border-left:4px solid ${pri};padding:14px 18px;border-radius:0 10px 10px 0;font-style:italic;color:#1e40af;font-size:13px;margin-top:10px">${x(c.mensagem_paciente)}</div>`:''}
   `}`);
 }
@@ -1422,7 +1422,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   };
 
   const corCls = (cls: string) => cls === 'ideal' ? '#10b981' : cls === 'atencao' ? '#f59e0b' : '#ef4444';
-  const lbCls  = (cls: string) => cls === 'ideal' ? 'Ideal âœ“' : cls === 'atencao' ? 'Atenção' : 'Fora do ideal';
+  const lbCls  = (cls: string) => cls === 'ideal' ? 'Ideal' : cls === 'atencao' ? 'Atencao' : 'Fora do ideal';
 
   const metricaCard = (titulo: string, valor: any, unidade: string) =>
     valor != null ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center">

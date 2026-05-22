@@ -27,6 +27,35 @@ Ao trabalhar de outro local ou em outra conversa, antes de alterar o projeto:
 
 Nenhuma mudanca deve ficar apenas na conversa ou apenas no codigo sem registro aqui.
 
+## Atualizacao 2026-05-22 - integridade textual antes do deploy
+
+Implementado:
+
+- criado `scripts/check-text-integrity.js` para bloquear caracteres corrompidos antes do deploy;
+- adicionado `npm run text:check`;
+- `npm run predeploy` agora roda a verificacao de integridade textual antes da auditoria do banco, smoke test, calculos, backup, nutricao, TypeScript e lint;
+- corrigidos textos corrompidos pontuais em PDF, dashboard do paciente e modulo de forca;
+- criada a migration `supabase/migrations/042_normalize_text_integrity.sql` para normalizar templates antigos de anamnese salvos com rotulos quebrados;
+- a migration 042 tambem padroniza o campo `historia_familiar` como `Historico de doenca na familia` dentro da secao `Historico medico`.
+
+Observacao:
+
+- a migration 042 contem textos corrompidos de proposito no lado esquerdo dos `replace()`, pois ela precisa reconhecer e corrigir registros antigos ja salvos no banco;
+- por isso, o verificador de texto ignora especificamente essa migration de reparo, mas continua bloqueando corrupcao acidental no restante do sistema.
+
+Validacao executada:
+
+- `node scripts/check-text-integrity.js` passou sem apontar novas ocorrencias fora das excecoes controladas.
+- `npm run predeploy` passou completo:
+  - integridade textual;
+  - auditoria do banco;
+  - smoke test de relatorio, dashboard clinico e dashboard do paciente;
+  - calculos clinicos;
+  - backup em planilha;
+  - plano alimentar;
+  - TypeScript;
+  - lint.
+
 ## Repositorio e deploy
 
 - GitHub: https://github.com/aftcanuto/diagnostico-fisiometabolico

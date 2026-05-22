@@ -19,7 +19,7 @@ interface Props {
   avaliacoes: AvaliacaoHidratada[];
 }
 
-/* â”€â”€ helpers â”€â”€ */
+/* helpers */
 function zCor(v:number|null){if(v==null)return'#94a3b8';if(v<=40)return'#ef4444';if(v<=70)return'#f59e0b';return'#10b981';}
 function zLabel(v:number|null){if(v==null)return'N/A';if(v<=40)return'Crítico';if(v<=70)return'Atenção';return'Ótimo';}
 function dlt(a:any,b:any){const x=Number(a),y=Number(b);if(!isFinite(x)||!isFinite(y)||a==null||b==null)return null;return+(x-y).toFixed(1);}
@@ -63,7 +63,7 @@ function TimelineDeltaPortal({ atual, anterior }: { atual: any; anterior: any })
   return <span style={{color:diff>0?'#059669':'#ef4444',fontWeight:600}}>{diff>0?`+${diff}`:diff} pontos vs. anterior</span>;
 }
 
-/* â”€â”€ Velocímetro HDR â”€â”€ */
+/* Velocimetro HDR */
 function Gauge({value,label,size=150}:{value:number|null;label:string;size?:number}) {
   const v=Math.max(0,Math.min(100,value??0));
   const r=size*0.36, cxg=size/2, cy=size*0.52;
@@ -203,7 +203,7 @@ function GaugePremium({value,size=250}:{value:number|null;size?:number}) {
   );
 }
 
-/* â”€â”€ Score ring â”€â”€ */
+/* Score ring */
 function ScoreRing({value,label,size=72}:{value:number|null;label:string;size?:number}) {
   const r=size*0.36,circ=2*Math.PI*r,pct=Math.max(0,Math.min(100,value??0));
   const dash=(pct/100)*circ,cor=zCor(value);
@@ -229,7 +229,7 @@ function ScoreRing({value,label,size=72}:{value:number|null;label:string;size?:n
   );
 }
 
-/* â”€â”€ Gráfico de barras para scores â”€â”€ */
+/* Grafico de barras para scores */
 function ScoresBarChart({series}:{series:{label:string;value:number|null;cor:string}[]}) {
   const max=100;
   return (
@@ -259,7 +259,7 @@ function ScoresBarChart({series}:{series:{label:string;value:number|null;cor:str
   );
 }
 
-/* â”€â”€ DeltaBadge â”€â”€ */
+/* DeltaBadge */
 function DeltaB({d,boa}:{d:number|null;boa:'subir'|'descer'}) {
   if(d==null||d===0)return null;
   const pos=d>0,bom=(boa==='subir'&&pos)||(boa==='descer'&&!pos);
@@ -270,7 +270,7 @@ function DeltaB({d,boa}:{d:number|null;boa:'subir'|'descer'}) {
   </span>;
 }
 
-/* â”€â”€ Card / Secao / Metrica â”€â”€ */
+/* Card / Secao / Metrica */
 function scoreNumero(v:any): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? Math.round(n) : null;
@@ -602,7 +602,7 @@ function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentar
   </div>;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• COMPONENTE PRINCIPAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* COMPONENTE PRINCIPAL */
 export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const hist=useMemo(()=>consolidarHistorico(avaliacoes),[avaliacoes]);
   const [sel,setSel]=useState(hist.ultima?.id??'');

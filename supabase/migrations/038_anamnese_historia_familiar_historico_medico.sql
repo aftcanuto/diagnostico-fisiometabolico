@@ -1,4 +1,4 @@
--- 038 - Reposiciona historico familiar dentro de historico medico
+﻿-- 038 - Reposiciona historico familiar dentro de historico medico
 
 update public.anamnese_templates t
 set campos = reorganizado.campos
@@ -14,7 +14,7 @@ from (
           jsonb_set(
             e.campo,
             '{label}',
-            to_jsonb('Histórico de doença na família'::text),
+            to_jsonb('Historico de doenca na familia'::text),
             true
           )
         else e.campo
@@ -44,3 +44,4 @@ where t.id = reorganizado.template_id
     from jsonb_array_elements(t.campos) as campo
     where campo ->> 'id' = 'historia_familiar'
   );
+
