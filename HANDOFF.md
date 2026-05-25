@@ -2127,6 +2127,29 @@ Validacao:
 - `npx tsc --noEmit` passou sem erros;
 - `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
 
+## Catalogo comercial publico de produtos
+
+Em 25/05/2026 foi iniciada a vitrine comercial publica da clinica.
+
+Implementado:
+
+- criada a migration `supabase/migrations/044_produtos_catalogo_comercial.sql`;
+- a tabela `produtos` agora possui campos comerciais:
+  - `beneficios` em JSONB;
+  - `cta_texto`;
+  - `cta_url`;
+  - `destaque_comercial`;
+- o formulario de produtos passou a permitir cadastrar beneficios comerciais, texto/link do CTA e destaque na vitrine;
+- criada a pagina publica unica `/catalogo/[clinicaId]`;
+- a pagina publica busca automaticamente os produtos ativos da clinica no banco, sempre refletindo novos produtos e edicoes;
+- a aba Produtos recebeu botoes para abrir e compartilhar a vitrine;
+- a auditoria e o smoke test passaram a validar os campos comerciais e a rota publica da vitrine.
+
+Observacao:
+
+- a pagina publica usa apenas produtos ativos e dados comerciais da clinica/produto;
+- para usar em producao, a migration 044 precisa ser rodada no Supabase antes de salvar os novos campos comerciais.
+
 ## Analises de IA no PDF e no portal do paciente
 
 Em 20/05/2026 foi corrigida a exibicao das analises de IA no relatorio e no dashboard do paciente.

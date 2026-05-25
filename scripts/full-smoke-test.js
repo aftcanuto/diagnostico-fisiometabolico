@@ -306,12 +306,34 @@ function main() {
     'produto_livre',
     'imagem_url',
     'produto-imagens',
+    'beneficios_texto',
+    'cta_texto',
+    'cta_url',
+    'destaque_comercial',
   ]);
   assertCodigoContem('supabase/migrations/043_produtos_schema_alignment.sql', [
     'anamnese_obrigatoria',
     'produto_livre',
     'tipo_produto',
     'imagem_url',
+  ]);
+  assertCodigoContem('supabase/migrations/044_produtos_catalogo_comercial.sql', [
+    'beneficios jsonb',
+    'cta_texto',
+    'cta_url',
+    'destaque_comercial',
+  ]);
+  assertCodigoContem('src/app/(app)/produtos/page.tsx', [
+    'ProductCatalogShareButton',
+    '/catalogo/',
+    'Abrir vitrine',
+  ]);
+  assertCodigoContem('src/app/catalogo/[clinicaId]/page.tsx', [
+    'createAdminClient',
+    'destaque_comercial',
+    'beneficios',
+    'cta_url',
+    'produtos',
   ]);
 
   console.log(JSON.stringify({

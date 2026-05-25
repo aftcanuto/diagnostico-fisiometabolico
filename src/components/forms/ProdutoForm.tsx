@@ -31,6 +31,10 @@ export function ProdutoForm({ id }: { id?: string }) {
     nome: '', descricao: '', duracao_minutos: '', preco: '',
     ativo: true, padrao: false, produto_livre: false, anamnese_obrigatoria: true,
     imagem_url: '',
+    beneficios_texto: '',
+    cta_texto: '',
+    cta_url: '',
+    destaque_comercial: false,
     modulos: TODOS_MODULOS,
   });
   const [loading, setLoading] = useState(!!id);
@@ -46,6 +50,10 @@ export function ProdutoForm({ id }: { id?: string }) {
         produto_livre: !!data.produto_livre,
         anamnese_obrigatoria: data.anamnese_obrigatoria ?? !!data.modulos?.anamnese,
         imagem_url: data.imagem_url ?? '',
+        beneficios_texto: Array.isArray(data.beneficios) ? data.beneficios.join('\n') : '',
+        cta_texto: data.cta_texto ?? '',
+        cta_url: data.cta_url ?? '',
+        destaque_comercial: !!data.destaque_comercial,
         duracao_minutos: data.duracao_minutos ?? '',
         preco: data.preco ?? '',
       });
@@ -64,11 +72,19 @@ export function ProdutoForm({ id }: { id?: string }) {
           ...(form.modulos ?? {}),
           anamnese: !!form.anamnese_obrigatoria,
         };
+    const { beneficios_texto, ...formPayload } = form;
     const payload = {
-      ...form,
+      ...formPayload,
       modulos: modulosPayload,
       clinica_id: clinicaId,
       imagem_url: form.imagem_url || null,
+      beneficios: String(beneficios_texto ?? '')
+        .split('\n')
+        .map(item => item.trim())
+        .filter(Boolean),
+      cta_texto: form.cta_texto || null,
+      cta_url: form.cta_url || null,
+      destaque_comercial: !!form.destaque_comercial,
       duracao_minutos: form.duracao_minutos === '' ? null : Number(form.duracao_minutos),
       preco: form.preco === '' ? null : Number(form.preco),
     };
@@ -130,6 +146,29 @@ export function ProdutoForm({ id }: { id?: string }) {
           <Field label="Descrição">
             <Textarea value={form.descricao ?? ''} onChange={e => setForm((f: any) => ({ ...f, descricao: e.target.value }))} />
           </Field>
+          <Field label="Beneficios comerciais">
+            <Textarea
+              value={form.beneficios_texto ?? ''}
+              onChange={e => setForm((f: any) => ({ ...f, beneficios_texto: e.target.value }))}
+              placeholder={'Um beneficio por linha\nEx: Avaliacao completa da composicao corporal\nEx: Relatorio em PDF para acompanhamento'}
+            />
+          </Field>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Texto do botao comercial">
+              <Input
+                value={form.cta_texto ?? ''}
+                onChange={e => setForm((f: any) => ({ ...f, cta_texto: e.target.value }))}
+                placeholder="Ex: Agendar avaliacao"
+              />
+            </Field>
+            <Field label="Link do botao comercial">
+              <Input
+                value={form.cta_url ?? ''}
+                onChange={e => setForm((f: any) => ({ ...f, cta_url: e.target.value }))}
+                placeholder="WhatsApp, site ou link de pagamento"
+              />
+            </Field>
+          </div>
           <Field label="Imagem ilustrativa">
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
               {form.imagem_url ? (
@@ -187,6 +226,10 @@ export function ProdutoForm({ id }: { id?: string }) {
                 }))}
               />
               Produto livre
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={!!form.destaque_comercial} onChange={e => setForm((f: any) => ({ ...f, destaque_comercial: e.target.checked }))} />
+              Destacar na vitrine
             </label>
           </div>
         </CardBody>

@@ -117,6 +117,10 @@ function audit() {
     && /anamnese_obrigatoria/i.test(sql)
     && /tipo_produto/i.test(sql)
     && /imagem_url/i.test(sql);
+  const hasProdutosCatalogoComercial = /beneficios\s+jsonb/i.test(sql)
+    && /cta_texto/i.test(sql)
+    && /cta_url/i.test(sql)
+    && /destaque_comercial/i.test(sql);
 
   const hasBioZRemoval = /drop\s+column\s+if\s+exists\s+impedancias/i.test(sql)
     && /drop\s+column\s+if\s+exists\s+impedancia_z/i.test(sql)
@@ -148,6 +152,7 @@ function audit() {
     !hasPlanoAcaoTemplates && 'Modelos de plano de acao nao encontrados nas migrations',
     !hasPlanoAlimentarTemplates && 'Templates de plano alimentar nao encontrados nas migrations',
     !hasProdutosFlexiveis && 'Campos de produtos flexiveis nao encontrados nas migrations',
+    !hasProdutosCatalogoComercial && 'Campos comerciais da vitrine de produtos nao encontrados nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',
     ...missingAiTypes.map(type => `Tipo de IA ausente no check: ${type}`),
   ].filter(Boolean);
@@ -176,6 +181,7 @@ function audit() {
       plano_acao_modelos: hasPlanoAcaoTemplates,
       plano_alimentar_modelos: hasPlanoAlimentarTemplates,
       produtos_flexiveis: hasProdutosFlexiveis,
+      produtos_catalogo_comercial: hasProdutosCatalogoComercial,
     },
     aiTypes: expectedAiTypes.length - missingAiTypes.length,
     errors,
