@@ -43,6 +43,17 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  if (link.avaliacao_id) {
+    await admin
+      .from('anamnese')
+      .upsert({
+        avaliacao_id: link.avaliacao_id,
+        template_id: link.template_id,
+        respostas,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'avaliacao_id' });
+  }
+
   await admin
     .from('paciente_anamnese_links')
     .update({ respondido_em: new Date().toISOString() })

@@ -76,6 +76,82 @@ async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) 
   return !erroMembroPaciente && !!membroPaciente;
 }
 
+async function importarAnamnesePreAtendimento(avaliacaoId: string) {
+  const admin = createAdminClient();
+  const { data: avaliacao } = await admin
+    .from('avaliacoes')
+    .select('id, paciente_id, clinica_id')
+    .eq('id', avaliacaoId)
+    .maybeSingle();
+
+  if (!avaliacao?.paciente_id || !avaliacao?.clinica_id) return null;
+
+  const colunas = 'id,enviado_em,template_id,respostas';
+  let resposta: any = null;
+
+  const { data: vinculada } = await admin
+    .from('paciente_anamnese_respostas')
+    .select(colunas)
+    .eq('avaliacao_id', avaliacaoId)
+    .eq('paciente_id', avaliacao.paciente_id)
+    .eq('clinica_id', avaliacao.clinica_id)
+    .order('enviado_em', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  resposta = vinculada;
+
+  if (!resposta) {
+    const { data: maisRecente } = await admin
+      .from('paciente_anamnese_respostas')
+      .select(colunas)
+      .eq('paciente_id', avaliacao.paciente_id)
+      .eq('clinica_id', avaliacao.clinica_id)
+      .is('avaliacao_id', null)
+      .order('enviado_em', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    resposta = maisRecente;
+  }
+
+  if (!resposta?.respostas || typeof resposta.respostas !== 'object') return null;
+
+  const payload = {
+    avaliacao_id: avaliacaoId,
+    template_id: resposta.template_id,
+    respostas: resposta.respostas,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: importada, error } = await admin
+    .from('anamnese')
+    .upsert(payload, { onConflict: 'avaliacao_id' })
+    .select('*')
+    .maybeSingle();
+
+  if (error) return null;
+  return importada;
+}
+
+function anamneseSemConteudo(row: any) {
+  if (!row) return true;
+  const respostas = row.respostas;
+  if (respostas && typeof respostas === 'object' && !Array.isArray(respostas) && Object.keys(respostas).length > 0) {
+    return false;
+  }
+
+  return ![
+    row.queixa_principal,
+    row.historia_doenca_atual,
+    row.medicamentos,
+    row.cirurgias,
+    row.alergias,
+    row.historia_familiar,
+    row.objetivos,
+  ].some(v => v != null && v !== '');
+}
+
 export async function GET(req: NextRequest) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
@@ -97,6 +173,10 @@ export async function GET(req: NextRequest) {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (tabela === 'anamnese' && anamneseSemConteudo(data)) {
+    const importada = await importarAnamnesePreAtendimento(avaliacaoId);
+    if (importada) return NextResponse.json({ data: importada });
+  }
   return NextResponse.json({ data });
 }
 

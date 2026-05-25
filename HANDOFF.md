@@ -2,6 +2,30 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Importacao automatica da anamnese pre-atendimento
+
+Em 25/05/2026 foi corrigido o fluxo em que o paciente respondia a anamnese pelo link, mas o avaliador precisava redigitar as respostas dentro da avaliacao.
+
+Problema:
+
+- o formulario publico gravava as respostas em `paciente_anamnese_respostas`;
+- o modulo de anamnese da avaliacao lia apenas a tabela `anamnese`;
+- quando a resposta nao era sincronizada com `anamnese`, a avaliacao abria vazia.
+
+Implementado:
+
+- `src/app/api/anamnese-publica/route.ts` agora, ao receber uma resposta de link vinculado a uma avaliacao, faz `upsert` automatico na tabela `anamnese`;
+- `src/app/api/modulos/route.ts` ganhou uma importacao de seguranca: se o modulo `anamnese` for aberto e ainda nao houver dados na avaliacao, o sistema busca a resposta pre-atendimento mais recente do paciente e importa automaticamente;
+- a importacao tambem cobre o caso em que o auto-save criou uma linha vazia de anamnese antes de o paciente responder;
+- a busca prioriza respostas vinculadas diretamente a avaliacao e, se nao houver, usa a resposta mais recente do paciente sem avaliacao vinculada;
+- `scripts/full-smoke-test.js` passou a validar que esse caminho de sincronizacao existe.
+
+Resultado esperado:
+
+- o paciente responde pelo link antes da consulta;
+- ao abrir a avaliacao, a anamnese ja aparece preenchida;
+- nao e mais necessario redigitar manualmente as respostas durante o atendimento.
+
 ## Varredura tecnica e protecao de produtos
 
 Em 25/05/2026 foi feita nova varredura minuciosa do sistema apos a correcao de produtos e score de forca por preensao palmar.

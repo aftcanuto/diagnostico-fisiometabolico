@@ -229,6 +229,14 @@ function main() {
   assertCodigoContem('src/app/api/anamnese-publica/route.ts', [
     'link.respondido_em',
     'Esta anamnese ja foi enviada',
+    ".from('anamnese')",
+    "onConflict: 'avaliacao_id'",
+  ]);
+  assertCodigoContem('src/app/api/modulos/route.ts', [
+    'importarAnamnesePreAtendimento',
+    'anamneseSemConteudo',
+    "tabela === 'anamnese'",
+    'paciente_anamnese_respostas',
   ]);
   assertCodigoContem('src/app/api/consentimento-publico/route.ts', [
     'link.aceito_em',
