@@ -11,7 +11,7 @@ import { calcIdade } from '@/lib/calculations/antropometria';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
 import { calcLimiteNatural } from '@/lib/calculations/limiteNatural';
 import {
-  scoreComposicaoCorporal, scoreCardio, scoreForca,
+  scoreComposicaoCorporal, scoreCardio, scoreForcaPorPreensao,
   scorePostura, scoreGlobal
 } from '@/lib/scores';
 import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck } from 'lucide-react';
@@ -318,15 +318,14 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 function calcularScoreForca(dados: any, sexo: any, idade: number): number | null {
   if (!dados) return null;
 
-  if (dados.preensao_dir_kgf != null && dados.preensao_esq_kgf != null) {
-    return scoreForca({
-      preensaoDir: Number(dados.preensao_dir_kgf),
-      preensaoEsq: Number(dados.preensao_esq_kgf),
+  const scorePreensao = scoreForcaPorPreensao({
+      preensaoDir: dados.preensao_dir_kgf,
+      preensaoEsq: dados.preensao_esq_kgf,
       sexo,
       idade,
       populacao: dados.populacao_ref ?? 'geral',
     });
-  }
+  if (scorePreensao != null) return scorePreensao;
 
   const assimetrias = [
     ...(Array.isArray(dados.sptech_testes) ? dados.sptech_testes : []),

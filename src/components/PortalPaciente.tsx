@@ -8,7 +8,7 @@ import { ZonasChart } from '@/components/ui/ZonasChart';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
 import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown, Info, Phone, Globe, MapPin, Instagram, Mail } from 'lucide-react';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
-import { scoreCardio, scoreComposicaoCorporal, scoreForca, scoreGlobal, scorePostura } from '@/lib/scores';
+import { scoreCardio, scoreComposicaoCorporal, scoreForcaPorPreensao, scoreGlobal, scorePostura } from '@/lib/scores';
 import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 
@@ -635,15 +635,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     imc: imc!=null?Number(imc):null,
     sexo: paciente.sexo,
   });
-  const forcaFallback=atual.forca?.preensao_dir_kgf!=null&&atual.forca?.preensao_esq_kgf!=null
-    ? scoreForca({
-      preensaoDir:Number(atual.forca.preensao_dir_kgf),
-      preensaoEsq:Number(atual.forca.preensao_esq_kgf),
+  const forcaFallback=scoreForcaPorPreensao({
+      preensaoDir:atual.forca?.preensao_dir_kgf,
+      preensaoEsq:atual.forca?.preensao_esq_kgf,
       sexo:paciente.sexo,
       idade:idadePaciente,
-      populacao:atual.forca.populacao_ref??'geral',
-    })
-    : null;
+      populacao:atual.forca?.populacao_ref??'geral',
+    });
   const flexFallback=flex?.melhor_resultado!=null
     ? scoreFlexibilidade(Number(flex.melhor_resultado), paciente.sexo, idadePaciente)
     : null;
@@ -655,11 +653,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     ...scBase,
     postura: scBase.postura ?? posturaFallback,
     composicao_corporal: scBase.composicao_corporal ?? composicaoFallback,
-    forca: scBase.forca ?? forcaFallback,
+    forca: (scBase.forca && scBase.forca > 0) ? scBase.forca : forcaFallback,
     flexibilidade: scBase.flexibilidade ?? flexFallback,
     cardiorrespiratorio: scBase.cardiorrespiratorio ?? cardioFallback,
   } as any;
-  sc.global = scBase.global ?? scoreGlobal({
+  sc.global = (scBase.global != null && !(forcaFallback != null && (!scBase.forca || scBase.forca <= 0)))
+    ? scBase.global
+    : scoreGlobal({
     postura: sc.postura ?? null,
     composicao_corporal: sc.composicao_corporal ?? null,
     forca: sc.forca ?? null,
@@ -1187,6 +1187,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 {atual.forca?.assimetria_percent!=null&&<Metrica label="Assimetria" valor={`${atual.forca.assimetria_percent}%`}/>}
               </div>
             </Card>
+          )}
+          {(atual.forca?.preensao_dir_kgf||atual.forca?.preensao_esq_kgf)&&
+            !((atual.forca as any)?.sptech_testes?.length>0)&&
+            !((atual.forca as any)?.tracao_testes?.length>0)&&(
+            <div style={{fontSize:12,lineHeight:1.6,color:'#475569',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'10px 12px',marginBottom:14}}>
+              A análise de força foi baseada na preensão palmar. A interpretação não contempla músculos específicos porque os testes de dinamometria isométrica não foram realizados.
+            </div>
           )}
           {(atual.forca as any)?.sptech_testes?.length>0&&(
             <Card style={{marginBottom:(atual.forca as any)?.sptech_relacoes?.length>0?14:0}}>

@@ -5,6 +5,7 @@
  */
 
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
+import { scoreForcaPorPreensao } from '@/lib/scores';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -1127,6 +1128,9 @@ function pgForca(f: any, score: number | null, ia?: any): string {
     ${kpi('Mão direita',f.preensao_dir_kgf,'kgf')}${kpi('Mão esquerda',f.preensao_esq_kgf,'kgf')}
     ${kpi('Força rel. D',f.forca_relativa_dir,'kgf/kg')}${kpi('Assimetria',f.assimetria_percent,'%')}
   </div>`:''}
+  ${(f.preensao_dir_kgf||f.preensao_esq_kgf)&&!spT.length&&!trT.length?`<div style="font-size:12px;line-height:1.6;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin:-6px 0 18px">
+    A análise de força foi baseada na preensão palmar. A interpretação não contempla músculos específicos porque os testes de dinamometria isométrica não foram realizados.
+  </div>`:''}
   ${spR.length?`<div style="background:#f9fafb;border-radius:10px;padding:14px 18px;margin-bottom:18px">
     <div class="sec-sub" style="margin-top:0">Relações musculares</div>
     ${spR.map((r:any)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:12px"><span style="color:#4b5563">${x(r.descricao)}</span><span style="font-weight:700">${r.percentual}%</span></div>`).join('')}
@@ -1724,6 +1728,16 @@ function pgRodape(d: LaudoData, pri: string): string {
 
 export function renderLaudoHTML(d: LaudoData): string {
   const m = d.modulos, ia = d.analisesIA??{};
+  const forcaPreensao = scoreForcaPorPreensao({
+    preensaoDir: d.dados.forca?.preensao_dir_kgf,
+    preensaoEsq: d.dados.forca?.preensao_esq_kgf,
+    sexo: d.paciente.sexo,
+    idade: d.paciente.idade,
+    populacao: d.dados.forca?.populacao_ref ?? 'geral',
+  });
+  if ((d.scores.forca == null || d.scores.forca <= 0) && forcaPreensao != null) {
+    d = { ...d, scores: { ...d.scores, forca: forcaPreensao } };
+  }
   const pri = d.clinica?.cor_primaria ?? '#059669';
   const footerLeft = d.clinica?.nome || 'Diagnóstico Fisiometabólico';
   const footerCenter = [d.avaliador.nome, d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');

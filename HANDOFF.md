@@ -2,6 +2,41 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Produtos e score de forca por preensao palmar
+
+Em 25/05/2026 foi corrigido o cadastro de produtos e o score de forca quando apenas a preensao palmar foi realizada.
+
+Problemas:
+
+- o cadastro de produto falhava em producao porque a coluna `anamnese_obrigatoria` ainda nao existia no banco;
+- avaliacoes com teste de preensao palmar, mas sem dinamometria isometrica Medeor/SPTech ou tracao, podiam exibir score de forca zerado;
+- dashboards e PDF precisavam deixar claro que a analise de forca estava baseada somente na preensao palmar.
+
+Implementado:
+
+- criada a migration `supabase/migrations/043_produtos_schema_alignment.sql`;
+- a migration alinha `produtos` com os campos `produto_livre`, `tipo_produto`, `anamnese_obrigatoria` e `imagem_url`;
+- criado `scoreForcaPorPreensao` em `src/lib/scores/index.ts`;
+- o modulo Revisao agora calcula o score de forca pela preensao palmar quando ela existe;
+- o dashboard clinico, dashboard do paciente e PDF usam o score por preensao quando o score salvo esta vazio ou zerado;
+- dashboards e PDF exibem observacao quando a analise de forca nao contempla musculos especificos por ausencia de dinamometria isometrica.
+
+Validacao:
+
+- `npm run predeploy` passou completo:
+  - checagem de textos;
+  - auditoria de banco;
+  - smoke test de relatorio, dashboard clinico e dashboard paciente;
+  - formulas clinicas;
+  - backup em planilha;
+  - plano alimentar;
+  - TypeScript;
+  - lint.
+
+Pendente operacional:
+
+- rodar a migration `043_produtos_schema_alignment.sql` no Supabase antes de testar o cadastro de produtos em producao.
+
 ## Regra obrigatoria de continuidade
 
 Toda e qualquer mudanca feita no projeto deve atualizar este arquivo no mesmo ciclo de trabalho.

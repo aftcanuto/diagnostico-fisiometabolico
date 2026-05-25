@@ -48,6 +48,28 @@ export function scoreForca(opts: {
   return Math.max(0, Math.min(100, Math.round(percentil - penal)));
 }
 
+export function scoreForcaPorPreensao(opts: {
+  preensaoDir?: number | string | null;
+  preensaoEsq?: number | string | null;
+  sexo: Sexo;
+  idade: number;
+  populacao?: PopulacaoRef;
+}): number | null {
+  const dir = Number(opts.preensaoDir);
+  const esq = Number(opts.preensaoEsq);
+  const hasDir = Number.isFinite(dir) && dir > 0;
+  const hasEsq = Number.isFinite(esq) && esq > 0;
+  if (!hasDir && !hasEsq) return null;
+
+  return scoreForca({
+    preensaoDir: hasDir ? dir : esq,
+    preensaoEsq: hasEsq ? esq : dir,
+    sexo: opts.sexo,
+    idade: opts.idade,
+    populacao: opts.populacao ?? 'geral',
+  });
+}
+
 /** Score cardio baseado em VO2max */
 export function scoreCardio(opts: {
   vo2max: number | null; sexo: Sexo; idade: number;

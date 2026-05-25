@@ -14,6 +14,7 @@ import { EditarPacienteModal } from '@/components/EditarPacienteModal';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
 import { upsertModulo } from '@/lib/modulos';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
+import { scoreForcaPorPreensao, scoreGlobal } from '@/lib/scores';
 
 interface Props {
   paciente: { nome: string; sexo: 'M' | 'F'; data_nascimento: string; email?: string | null; cpf?: string | null };
@@ -942,7 +943,26 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
     );
   }
 
-  const sc = atual.scores ?? {};
+  const scoreForcaPreensao = scoreForcaPorPreensao({
+    preensaoDir: (atual as any).forca?.preensao_dir_kgf,
+    preensaoEsq: (atual as any).forca?.preensao_esq_kgf,
+    sexo: paciente.sexo,
+    idade: calcIdade(paciente.data_nascimento),
+    populacao: (atual as any).forca?.populacao_ref ?? 'geral',
+  });
+  const sc = {
+    ...(atual.scores ?? {}),
+    forca: (atual.scores?.forca && atual.scores.forca > 0) ? atual.scores.forca : scoreForcaPreensao,
+  };
+  if (scoreForcaPreensao != null && (!atual.scores?.forca || atual.scores.forca <= 0)) {
+    sc.global = scoreGlobal({
+      postura: sc.postura ?? null,
+      composicao_corporal: sc.composicao_corporal ?? null,
+      forca: sc.forca ?? null,
+      flexibilidade: sc.flexibilidade ?? null,
+      cardiorrespiratorio: sc.cardiorrespiratorio ?? null,
+    });
+  }
   const ant = (d: string) => anterior?.scores?.[d] ?? null;
   const pctG   = atual.antropometria?.percentual_gordura ?? (atual as any).bioimpedancia?.percentual_gordura;
   const peso   = atual.antropometria?.peso ?? (atual as any).bioimpedancia?.peso_kg;
@@ -1651,6 +1671,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
+            {!((f as any)?.sptech_testes?.length > 0) && !((f as any)?.tracao_testes?.length > 0) && (
+              <div style={{fontSize:12,lineHeight:1.6,color:'#475569',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'10px 12px',marginTop:12}}>
+                A análise de força foi baseada na preensão palmar. A interpretação não contempla músculos específicos porque os testes de dinamometria isométrica não foram realizados.
+              </div>
+            )}
           </div>
         );
       })()}
