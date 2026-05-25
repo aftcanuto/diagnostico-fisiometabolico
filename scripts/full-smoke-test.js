@@ -293,6 +293,18 @@ function main() {
     "site = 'medfit.med.br'",
     'medfit.com.br',
   ]);
+  assertCodigoContem('src/components/forms/ProdutoForm.tsx', [
+    'anamnese_obrigatoria',
+    'produto_livre',
+    'imagem_url',
+    'produto-imagens',
+  ]);
+  assertCodigoContem('supabase/migrations/043_produtos_schema_alignment.sql', [
+    'anamnese_obrigatoria',
+    'produto_livre',
+    'tipo_produto',
+    'imagem_url',
+  ]);
 
   console.log(JSON.stringify({
     ok: true,

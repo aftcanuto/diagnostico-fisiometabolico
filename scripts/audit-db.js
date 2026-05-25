@@ -113,6 +113,10 @@ function audit() {
   const hasPlanoAcaoTemplates = /plano_acao_modelos[\s\S]*metas_30_dias/i.test(sql);
   const hasPlanoAlimentarTemplates = /plano_alimentar_modelos[\s\S]*proteina_g_kg/i.test(sql)
     && /plano_alimentar_modelos[\s\S]*agua_ml_kg/i.test(sql);
+  const hasProdutosFlexiveis = /produto_livre/i.test(sql)
+    && /anamnese_obrigatoria/i.test(sql)
+    && /tipo_produto/i.test(sql)
+    && /imagem_url/i.test(sql);
 
   const hasBioZRemoval = /drop\s+column\s+if\s+exists\s+impedancias/i.test(sql)
     && /drop\s+column\s+if\s+exists\s+impedancia_z/i.test(sql)
@@ -143,6 +147,7 @@ function audit() {
     !hasProtocolosStatus && 'Status de envios de protocolo nao encontrado nas migrations',
     !hasPlanoAcaoTemplates && 'Modelos de plano de acao nao encontrados nas migrations',
     !hasPlanoAlimentarTemplates && 'Templates de plano alimentar nao encontrados nas migrations',
+    !hasProdutosFlexiveis && 'Campos de produtos flexiveis nao encontrados nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',
     ...missingAiTypes.map(type => `Tipo de IA ausente no check: ${type}`),
   ].filter(Boolean);
@@ -170,6 +175,7 @@ function audit() {
       protocolo_envio_status: hasProtocolosStatus,
       plano_acao_modelos: hasPlanoAcaoTemplates,
       plano_alimentar_modelos: hasPlanoAlimentarTemplates,
+      produtos_flexiveis: hasProdutosFlexiveis,
     },
     aiTypes: expectedAiTypes.length - missingAiTypes.length,
     errors,

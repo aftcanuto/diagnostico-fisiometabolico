@@ -2,6 +2,27 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Varredura tecnica e protecao de produtos
+
+Em 25/05/2026 foi feita nova varredura minuciosa do sistema apos a correcao de produtos e score de forca por preensao palmar.
+
+Implementado:
+
+- `scripts/audit-db.js` passou a verificar explicitamente se as migrations contemplam produtos flexiveis;
+- a auditoria agora falha se nao encontrar `produto_livre`, `anamnese_obrigatoria`, `tipo_produto` e `imagem_url`;
+- `scripts/full-smoke-test.js` passou a validar que o formulario de produtos e a migration de alinhamento de produtos contem esses campos;
+- isso reduz o risco de uma nova versao chegar em producao sem o schema necessario para cadastrar produtos.
+
+Validacao:
+
+- `npm run predeploy` passou completo;
+- `npm run build` passou completo;
+- build gerou apenas aviso de cache do webpack, sem falha de compilacao, TypeScript ou lint.
+
+Observacao operacional:
+
+- o erro real de cadastro de produto em producao depende da migration `043_produtos_schema_alignment.sql` estar aplicada no Supabase.
+
 ## Produtos e score de forca por preensao palmar
 
 Em 25/05/2026 foi corrigido o cadastro de produtos e o score de forca quando apenas a preensao palmar foi realizada.
