@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ProductCatalogShareButton } from '@/components/ProductCatalogShareButton';
-import { Plus, Package, Check, ExternalLink } from 'lucide-react';
+import { Plus, Package, Check, ExternalLink, Settings } from 'lucide-react';
 
 const MODULOS_META: Record<string, string> = {
   anamnese: 'Anamnese',
@@ -39,6 +39,9 @@ export default async function ProdutosPage() {
           {clinicaId && (
             <>
               <ProductCatalogShareButton href={catalogoHref} />
+              <Link href="/produtos/catalogo">
+                <Button variant="secondary"><Settings className="w-4 h-4" /> Configurar vitrine</Button>
+              </Link>
               <Link href={catalogoHref} target="_blank">
                 <Button variant="secondary"><ExternalLink className="w-4 h-4" /> Abrir vitrine</Button>
               </Link>

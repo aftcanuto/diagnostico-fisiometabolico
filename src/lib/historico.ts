@@ -6,6 +6,8 @@
  * (mesmo formato retornado pela RPC paciente_dashboard_por_token).
  */
 
+import { resolverPercentualGordura } from '@/lib/bodyComposition';
+
 export interface AvaliacaoHidratada {
   id: string;
   data: string;
@@ -14,6 +16,8 @@ export interface AvaliacaoHidratada {
   scores?: any;
   antropometria?: any;
   bioimpedancia?: any;
+  fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | null;
+  percentual_gordura_relatorio?: number | null;
   forca?: any;
   flexibilidade?: any;
   cardiorrespiratorio?: any;
@@ -60,7 +64,7 @@ export function consolidarHistorico(avaliacoes: AvaliacaoHidratada[]): Historico
     penultima: ordenadas.length > 1 ? ordenadas[ordenadas.length - 2] : null,
     series: {
       peso:            serie(a => numeric(a.antropometria?.peso) ?? numeric((a as any).bioimpedancia?.peso_kg)),
-      pctGordura:      serie(a => numeric(a.antropometria?.percentual_gordura)),
+      pctGordura:      serie(a => resolverPercentualGordura(a, a.antropometria, a.bioimpedancia).valor),
       massaMagra:      serie(a => numeric(a.antropometria?.massa_magra)),
       imc:             serie(a => numeric(a.antropometria?.imc)),
       vo2max:          serie(a => numeric(a.cardiorrespiratorio?.vo2max)),

@@ -14,7 +14,9 @@ import { EditarPacienteModal } from '@/components/EditarPacienteModal';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
 import { upsertModulo } from '@/lib/modulos';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
-import { scoreForcaPorPreensao, scoreGlobal } from '@/lib/scores';
+import { scoreGlobal } from '@/lib/scores';
+import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
+import { resolverPercentualGordura } from '@/lib/bodyComposition';
 
 interface Props {
   paciente: { nome: string; sexo: 'M' | 'F'; data_nascimento: string; email?: string | null; cpf?: string | null };
@@ -943,13 +945,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
     );
   }
 
-  const scoreForcaPreensao = scoreForcaPorPreensao({
-    preensaoDir: (atual as any).forca?.preensao_dir_kgf,
-    preensaoEsq: (atual as any).forca?.preensao_esq_kgf,
-    sexo: paciente.sexo,
-    idade: calcIdade(paciente.data_nascimento),
-    populacao: (atual as any).forca?.populacao_ref ?? 'geral',
-  });
+  const scoreForcaPreensao = scoreForcaPorDadosPreensao((atual as any).forca, paciente.sexo, calcIdade(paciente.data_nascimento));
   const sc = {
     ...(atual.scores ?? {}),
     forca: (atual.scores?.forca && atual.scores.forca > 0) ? atual.scores.forca : scoreForcaPreensao,
@@ -964,7 +960,9 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
     });
   }
   const ant = (d: string) => anterior?.scores?.[d] ?? null;
-  const pctG   = atual.antropometria?.percentual_gordura ?? (atual as any).bioimpedancia?.percentual_gordura;
+  const gorduraAtual = resolverPercentualGordura(atual as any, atual.antropometria, (atual as any).bioimpedancia);
+  const gorduraAnterior = anterior ? resolverPercentualGordura(anterior as any, anterior.antropometria, (anterior as any).bioimpedancia) : null;
+  const pctG = gorduraAtual.valor;
   const peso   = atual.antropometria?.peso ?? (atual as any).bioimpedancia?.peso_kg;
   const mlg    = atual.antropometria?.massa_magra ?? (atual as any).bioimpedancia?.massa_livre_gordura_kg;
   const imc    = atual.antropometria?.imc ?? (atual as any).bioimpedancia?.imc;
@@ -1329,7 +1327,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Principais marcadores da avaliação selecionada</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10}}>
               <CompRow label="Peso"        atual={atual.antropometria?.peso}                  anterior={anterior?.antropometria?.peso}                  unidade=" kg"        direcao="descer_bom" />
-              <CompRow label="% Gordura"   atual={atual.antropometria?.percentual_gordura}     anterior={anterior?.antropometria?.percentual_gordura}     unidade="%"          direcao="descer_bom" />
+              <CompRow label="% Gordura"   atual={gorduraAtual.valor}                           anterior={gorduraAnterior?.valor}                         unidade="%"          direcao="descer_bom" />
               <CompRow label="Massa magra" atual={atual.antropometria?.massa_magra}            anterior={anterior?.antropometria?.massa_magra}            unidade=" kg"        direcao="subir_bom" />
               <CompRow label="IMC"         atual={atual.antropometria?.imc}                   anterior={anterior?.antropometria?.imc}                   unidade=""           direcao="descer_bom" />
               <CompRow label="VO₂máx"      atual={atual.cardiorrespiratorio?.vo2max}           anterior={anterior?.cardiorrespiratorio?.vo2max}           unidade=" ml/kg/min" direcao="subir_bom" />
@@ -1577,7 +1575,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['Peso', bio.peso_kg, 'kg', '#0f172a'],
           ['Altura', bio.altura_cm, 'cm', '#0f172a'],
           ['IMC', bio.imc, '', '#0f172a'],
-          ['Gordura corporal', bio.percentual_gordura, '%', '#f59e0b'],
+          ['Gordura corporal', (!gorduraAtual.fonteDefinida || gorduraAtual.fonte === 'bioimpedancia') ? bio.percentual_gordura : null, '%', '#f59e0b'],
           ['Massa livre de gordura', bio.massa_livre_gordura_kg, 'kg', '#10b981'],
           ['Massa muscular', bio.massa_muscular_kg, 'kg', '#10b981'],
           ['Agua corporal', bio.agua_corporal_pct ?? bio.agua_corporal_kg, bio.agua_corporal_pct != null ? '%' : 'kg', '#0f172a'],
@@ -1620,7 +1618,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['Peso', a.peso, 'kg', '#0f172a'],
           ['Estatura', a.estatura, 'cm', '#0f172a'],
           ['IMC', a.imc, '', '#0f172a'],
-          ['Gordura corporal', a.percentual_gordura, '%', '#f59e0b'],
+          ['Gordura corporal', (!gorduraAtual.fonteDefinida || gorduraAtual.fonte === 'antropometria') ? a.percentual_gordura : null, '%', '#f59e0b'],
           ['Massa magra', a.massa_magra, 'kg', '#10b981'],
           ['Massa ossea', a.massa_ossea, 'kg', '#0f172a'],
           ['RCQ', a.rcq, '', '#0f172a'],

@@ -2,6 +2,43 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Atualizacao 2026-05-26 - configuracao da vitrine de produtos
+
+Implementado:
+
+- criada a pagina `/produtos/catalogo` para editar os textos da vitrine publica de produtos;
+- adicionados campos configuraveis para titulo do cabecalho, texto de apoio, titulo do rodape e texto do rodape;
+- a tela de Produtos ganhou o botao `Configurar vitrine`;
+- o catalogo publico `/catalogo/[clinicaId]` passa a puxar esses textos da clinica, mantendo textos padrao quando os campos estiverem vazios;
+- criada a migration `supabase/migrations/046_catalogo_textos_clinica.sql`;
+- normalizacao do link de Instagram ajustada para handles, URLs completas e para corrigir a MedFit para `www.instagram.com/medfitsaude`.
+
+Pendente operacional:
+
+- aplicar a migration `046_catalogo_textos_clinica.sql` no Supabase antes do deploy/teste em producao.
+
+## Atualizacao 2026-05-25 - score de forca por preensao e fonte unica de gordura
+
+Implementado:
+
+- criado fluxo para definir uma fonte unica de percentual de gordura quando antropometria e bioimpedancia divergirem;
+- criada a migration `supabase/migrations/045_fonte_gordura_relatorio.sql` com `fonte_gordura_relatorio` e `percentual_gordura_relatorio` em `avaliacoes`;
+- o modulo Revisao agora alerta quando ha divergencia de percentual de gordura e permite escolher qual valor entra no dashboard e no relatorio;
+- dashboard clinico, portal do paciente, historico e PDF passam a respeitar a fonte escolhida;
+- bioimpedancia e antropometria deixam de exibir dois percentuais de gordura conflitantes quando uma fonte ja foi definida;
+- a silhueta corporal agora considera IMC e percentual de gordura para evitar classificacao visual incoerente, como atleta/fitness em caso de IMC alto e gordura elevada;
+- o score de forca passa a usar preensao palmar como fallback quando nao houver dinamometria isometrica especifica;
+- o relatorio PDF tambem usa o fallback de preensao palmar para evitar score de forca zerado quando o teste foi realizado.
+
+Pendente operacional:
+
+- aplicar a migration `045_fonte_gordura_relatorio.sql` no Supabase antes do deploy/teste em producao.
+
+Validacao:
+
+- `npm run predeploy` executado com sucesso em 25/05/2026;
+- TypeScript, lint, auditoria de banco, smoke test, formulas clinicas, previews e backup em planilha passaram sem erro bloqueante.
+
 ## Importacao automatica da anamnese pre-atendimento
 
 Em 25/05/2026 foi corrigido o fluxo em que o paciente respondia a anamnese pelo link, mas o avaliador precisava redigitar as respostas dentro da avaliacao.

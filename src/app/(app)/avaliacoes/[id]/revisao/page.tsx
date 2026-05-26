@@ -11,9 +11,11 @@ import { calcIdade } from '@/lib/calculations/antropometria';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
 import { calcLimiteNatural } from '@/lib/calculations/limiteNatural';
 import {
-  scoreComposicaoCorporal, scoreCardio, scoreForcaPorPreensao,
+  scoreComposicaoCorporal, scoreCardio,
   scorePostura, scoreGlobal
 } from '@/lib/scores';
+import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
+import { resolverPercentualGordura, type FonteGorduraRelatorio } from '@/lib/bodyComposition';
 import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export default function RevisaoPage({ params }: { params: { id: string } }) {
@@ -27,6 +29,8 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   const [limiteNatural, setLimiteNatural] = useState<any>(null);
   const [checklist, setChecklist] = useState<any[]>([]);
   const [confirmarAlertas, setConfirmarAlertas] = useState(false);
+  const [gorduraRelatorio, setGorduraRelatorio] = useState<any>(null);
+  const [salvandoFonteGordura, setSalvandoFonteGordura] = useState(false);
 
   useEffect(() => { (async () => {
     const { data: av } = await supabase.from('avaliacoes')
@@ -64,7 +68,9 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     const idade = calcIdade(av!.pacientes.data_nascimento);
     const sexo = av!.pacientes.sexo;
-    const pctGordura = antData?.percentual_gordura ?? bioData?.percentual_gordura ?? null;
+    const gorduraEscolhida = resolverPercentualGordura(av, antData, bioData);
+    setGorduraRelatorio(gorduraEscolhida);
+    const pctGordura = gorduraEscolhida.valor;
     const imc = antData?.imc ?? bioData?.imc ?? null;
     const composicao = pctGordura != null && imc != null
       ? scoreComposicaoCorporal({ pctGordura, imc, sexo })
@@ -90,7 +96,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       rml: rmlData,
       cardiorrespiratorio: crData,
       biomecanica_corrida: biomecData,
-    }, result, analisesData.data ?? []);
+    }, result, analisesData.data ?? [], gorduraEscolhida);
     setChecklist(checklistGerado);
 
     try {
@@ -119,6 +125,36 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     setState('ready');
   })(); }, [params.id, supabase]);
+
+  async function escolherFonteGordura(fonte: FonteGorduraRelatorio) {
+    if (!gorduraRelatorio) return;
+    const valor = fonte === 'antropometria' ? gorduraRelatorio.antropometria : gorduraRelatorio.bioimpedancia;
+    if (valor == null) return;
+    setSalvandoFonteGordura(true);
+    setMessage(null);
+    try {
+      const { error } = await supabase.from('avaliacoes').update({
+        fonte_gordura_relatorio: fonte,
+        percentual_gordura_relatorio: valor,
+      }).eq('id', params.id);
+      if (error) throw error;
+      const atualizado = {
+        ...gorduraRelatorio,
+        fonte,
+        fonteDefinida: true,
+        valor,
+        conflito: false,
+      };
+      setGorduraRelatorio(atualizado);
+      setAval((a: any) => ({ ...a, fonte_gordura_relatorio: fonte, percentual_gordura_relatorio: valor }));
+      setChecklist((itens) => itens.filter((item) => item.modulo !== 'gordura_relatorio'));
+      setMessage({ type: 'success', text: 'Fonte de gordura corporal definida para o relatorio.' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel salvar a fonte de gordura.' });
+    } finally {
+      setSalvandoFonteGordura(false);
+    }
+  }
 
   async function finalizar() {
     setMessage(null);
@@ -201,6 +237,42 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
           </div>
         </CardBody>
       </Card>
+
+      {gorduraRelatorio?.conflito && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <AlertTriangle className="inline w-4 h-4 mr-1 text-amber-500" />
+              Fonte da gordura corporal no relatorio
+            </CardTitle>
+          </CardHeader>
+          <CardBody>
+            <p className="mb-3 text-sm text-slate-600">
+              Bioimpedancia e antropometria apresentaram percentuais diferentes. Escolha qual valor deve aparecer no dashboard do paciente e no relatorio para evitar duplicidade.
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <button
+                type="button"
+                disabled={salvandoFonteGordura}
+                onClick={() => escolherFonteGordura('antropometria')}
+                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-brand-300 hover:bg-brand-50 disabled:opacity-60"
+              >
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Antropometria / dobras</div>
+                <div className="mt-1 text-3xl font-black text-slate-900">{gorduraRelatorio.antropometria}%</div>
+              </button>
+              <button
+                type="button"
+                disabled={salvandoFonteGordura}
+                onClick={() => escolherFonteGordura('bioimpedancia')}
+                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-brand-300 hover:bg-brand-50 disabled:opacity-60"
+              >
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Bioimpedancia</div>
+                <div className="mt-1 text-3xl font-black text-slate-900">{gorduraRelatorio.bioimpedancia}%</div>
+              </button>
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       {limiteNatural && (
         <Card>
@@ -318,13 +390,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 function calcularScoreForca(dados: any, sexo: any, idade: number): number | null {
   if (!dados) return null;
 
-  const scorePreensao = scoreForcaPorPreensao({
-      preensaoDir: dados.preensao_dir_kgf,
-      preensaoEsq: dados.preensao_esq_kgf,
-      sexo,
-      idade,
-      populacao: dados.populacao_ref ?? 'geral',
-    });
+  const scorePreensao = scoreForcaPorDadosPreensao(dados, sexo, idade);
   if (scorePreensao != null) return scorePreensao;
 
   const assimetrias = [
@@ -349,7 +415,7 @@ function calcularScoreForca(dados: any, sexo: any, idade: number): number | null
   return Math.max(0, Math.min(100, Math.round(85 - mediaAssimetria * 2)));
 }
 
-function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: any, analises: any[]) {
+function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: any, analises: any[], gorduraRelatorio?: any) {
   const itens: any[] = [];
   const mods = aval?.modulos_selecionados ?? {};
   const labels: Record<string, string> = {
@@ -364,6 +430,15 @@ function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: a
     cardiorrespiratorio: 'Cardiorrespiratório',
     biomecanica_corrida: 'Biomecânica da corrida',
   };
+
+  if (gorduraRelatorio?.conflito) {
+    itens.push({
+      nivel: 'critico',
+      modulo: 'gordura_relatorio',
+      titulo: 'Escolha a fonte de gordura corporal',
+      descricao: `Bioimpedancia (${gorduraRelatorio.bioimpedancia}%) e antropometria (${gorduraRelatorio.antropometria}%) estao diferentes. Defina qual valor deve entrar no dashboard e no relatorio.`,
+    });
+  }
 
   Object.entries(mods).forEach(([modulo, ativo]) => {
     if (!ativo || modulo === 'revisao') return;

@@ -29,6 +29,10 @@ type Clinica = {
   endereco?: string | null;
   cor_primaria?: string | null;
   cor_secundaria?: string | null;
+  catalogo_titulo?: string | null;
+  catalogo_subtitulo?: string | null;
+  catalogo_rodape_titulo?: string | null;
+  catalogo_rodape_texto?: string | null;
 };
 
 function normalizarUrl(url?: string | null) {
@@ -37,6 +41,19 @@ function normalizarUrl(url?: string | null) {
   if (!clean) return null;
   if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('mailto:')) return clean;
   return `https://${clean}`;
+}
+
+function normalizarInstagram(valor?: string | null, nomeClinica?: string | null) {
+  const clean = String(valor ?? '').trim();
+  if (!clean) return null;
+  const lower = clean.toLowerCase();
+  if (lower.includes('instagram.com/')) return normalizarUrl(clean);
+  if (clean.startsWith('@')) return `https://www.instagram.com/${clean.slice(1)}`;
+  if (!clean.includes('.') && !clean.includes('/')) return `https://www.instagram.com/${clean}`;
+  if (nomeClinica?.toLowerCase().includes('medfit') && lower.includes('medfit')) {
+    return 'https://www.instagram.com/medfitsaude';
+  }
+  return normalizarUrl(clean);
 }
 
 function whatsappUrl(telefone?: string | null) {
@@ -76,7 +93,7 @@ export default async function CatalogoPage({ params }: { params: { clinicaId: st
   const admin = createAdminClient();
   const { data: clinica } = await admin
     .from('clinicas')
-    .select('id,nome,logo_url,telefone,email,site,instagram,endereco,cor_primaria,cor_secundaria')
+    .select('id,nome,logo_url,telefone,email,site,instagram,endereco,cor_primaria,cor_secundaria,catalogo_titulo,catalogo_subtitulo,catalogo_rodape_titulo,catalogo_rodape_texto')
     .eq('id', params.clinicaId)
     .maybeSingle();
 
@@ -95,9 +112,12 @@ export default async function CatalogoPage({ params }: { params: { clinicaId: st
   const sec = clinica.cor_secundaria || '#0f766e';
   const site = normalizarUrl(clinica.site);
   const whatsapp = whatsappUrl(clinica.telefone);
-  const instagram = clinica.instagram
-    ? normalizarUrl(clinica.instagram.startsWith('@') ? `instagram.com/${clinica.instagram.slice(1)}` : clinica.instagram)
-    : null;
+  const instagram = normalizarInstagram(clinica.instagram, clinica.nome);
+  const tituloCatalogo = clinica.catalogo_titulo?.trim() || 'Escolha o produto ideal para sua avaliacao';
+  const subtituloCatalogo = clinica.catalogo_subtitulo?.trim()
+    || 'Conheca os servicos disponiveis, veja beneficios, valores e fale com a equipe para agendar ou tirar duvidas.';
+  const rodapeTitulo = clinica.catalogo_rodape_titulo?.trim() || clinica.nome;
+  const rodapeTexto = clinica.catalogo_rodape_texto?.trim() || clinica.endereco;
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -127,9 +147,9 @@ export default async function CatalogoPage({ params }: { params: { clinicaId: st
         <div className="overflow-hidden rounded-3xl p-8 text-white shadow-xl" style={{ background: `linear-gradient(135deg, ${pri}, ${sec})` }}>
           <div className="max-w-3xl">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/75">Catalogo da clinica</p>
-            <h1 className="text-3xl font-black leading-tight md:text-5xl">Escolha o produto ideal para sua avaliacao</h1>
+            <h1 className="text-3xl font-black leading-tight md:text-5xl">{tituloCatalogo}</h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-white/85 md:text-base">
-              Conheca os servicos disponiveis, veja beneficios, valores e fale com a equipe para agendar ou tirar duvidas.
+              {subtituloCatalogo}
             </p>
           </div>
         </div>
@@ -211,8 +231,8 @@ export default async function CatalogoPage({ params }: { params: { clinicaId: st
         <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-2xl font-black">{clinica.nome}</h2>
-              {clinica.endereco && <p className="mt-1 text-sm text-slate-500">{clinica.endereco}</p>}
+              <h2 className="text-2xl font-black">{rodapeTitulo}</h2>
+              {rodapeTexto && <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">{rodapeTexto}</p>}
             </div>
             <div className="flex flex-wrap gap-2">
               {whatsapp && <a className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-bold hover:bg-slate-50" href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> WhatsApp</a>}

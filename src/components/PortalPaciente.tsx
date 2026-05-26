@@ -8,7 +8,9 @@ import { ZonasChart } from '@/components/ui/ZonasChart';
 import { SilhuetaCircunferencias } from '@/components/ui/SilhuetaCircunferencias';
 import { Camera, ChevronDown, PlayCircle, TrendingUp, TrendingDown, Info, Phone, Globe, MapPin, Instagram, Mail } from 'lucide-react';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
-import { scoreCardio, scoreComposicaoCorporal, scoreForcaPorPreensao, scoreGlobal, scorePostura } from '@/lib/scores';
+import { scoreCardio, scoreComposicaoCorporal, scoreGlobal, scorePostura } from '@/lib/scores';
+import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
+import { resolverPercentualGordura } from '@/lib/bodyComposition';
 import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 
@@ -294,6 +296,19 @@ function normalizarUrl(url?: string | null) {
   if (semProtocolo === 'medfit.com.br') return 'https://medfit.med.br';
   if (/^https?:\/\//i.test(limpo)) return limpo;
   return `https://${limpo.replace(/^\/+/, '')}`;
+}
+
+function normalizarInstagram(valor?: string | null, nomeClinica?: string | null) {
+  const limpo = String(valor ?? '').trim();
+  if (!limpo) return '';
+  const lower = limpo.toLowerCase();
+  if (lower.includes('instagram.com/')) return normalizarUrl(limpo);
+  if (limpo.startsWith('@')) return `https://www.instagram.com/${limpo.slice(1)}`;
+  if (!limpo.includes('.') && !limpo.includes('/')) return `https://www.instagram.com/${limpo}`;
+  if (nomeClinica?.toLowerCase().includes('medfit') && lower.includes('medfit')) {
+    return 'https://www.instagram.com/medfitsaude';
+  }
+  return normalizarUrl(limpo);
 }
 
 function Secao({titulo,sub,children,ordem,score}:{titulo:string;sub?:string;children:React.ReactNode;ordem?:number;score?:any}) {
@@ -613,7 +628,9 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   if(!atual)return <div style={{textAlign:'center',padding:'60px 20px',color:'#94a3b8'}}>Nenhuma avaliação finalizada ainda.</div>;
 
   const scBase=atual.scores??{}, ascBase=ant?.scores??{};
-  const pctG=atual.antropometria?.percentual_gordura??(atual as any).bioimpedancia?.percentual_gordura;
+  const gorduraAtual = resolverPercentualGordura(atual as any, atual.antropometria, (atual as any).bioimpedancia);
+  const gorduraAnterior = ant ? resolverPercentualGordura(ant as any, ant.antropometria, (ant as any).bioimpedancia) : null;
+  const pctG=gorduraAtual.valor;
   const peso=atual.antropometria?.peso??(atual as any).bioimpedancia?.peso_kg;
   const mlg=atual.antropometria?.massa_magra??(atual as any).bioimpedancia?.massa_livre_gordura_kg;
   const imc=atual.antropometria?.imc??(atual as any).bioimpedancia?.imc;
@@ -635,13 +652,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     imc: imc!=null?Number(imc):null,
     sexo: paciente.sexo,
   });
-  const forcaFallback=scoreForcaPorPreensao({
-      preensaoDir:atual.forca?.preensao_dir_kgf,
-      preensaoEsq:atual.forca?.preensao_esq_kgf,
-      sexo:paciente.sexo,
-      idade:idadePaciente,
-      populacao:atual.forca?.populacao_ref??'geral',
-    });
+  const forcaFallback=scoreForcaPorDadosPreensao(atual.forca, paciente.sexo, idadePaciente);
   const flexFallback=flex?.melhor_resultado!=null
     ? scoreFlexibilidade(Number(flex.melhor_resultado), paciente.sexo, idadePaciente)
     : null;
@@ -959,7 +970,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 deltaMap={{
                   peso: dlt(peso, ant?.antropometria?.peso??(ant as any)?.bioimpedancia?.peso_kg),
                   imc:  dlt(imc,  ant?.antropometria?.imc??(ant as any)?.bioimpedancia?.imc),
-                  pctGordura: dlt(pctG, ant?.antropometria?.percentual_gordura??(ant as any)?.bioimpedancia?.percentual_gordura),
+                  pctGordura: dlt(pctG, gorduraAnterior?.valor),
                   massaMagra: dlt(mlg,  ant?.antropometria?.massa_magra??(ant as any)?.bioimpedancia?.massa_livre_gordura_kg),
                 }}
               />
@@ -1726,7 +1737,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Globe size={13}/> Site
               </a>}
-              {clinica?.instagram&&<a href={clinica.instagram.startsWith('http')?clinica.instagram:`https://instagram.com/${clinica.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer"
+              {normalizarInstagram(clinica?.instagram, clinica?.nome)&&<a href={normalizarInstagram(clinica?.instagram, clinica?.nome)} target="_blank" rel="noopener noreferrer"
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 11px',borderRadius:999,background:'rgba(255,255,255,.14)',color:'white',textDecoration:'none',fontSize:11,fontWeight:600,border:'1px solid rgba(255,255,255,.18)'}}>
                 <Instagram size={13}/> Instagram
               </a>}
