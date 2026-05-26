@@ -149,6 +149,13 @@ export function PacienteDocumentosCentral({
     () => avaliacoes.filter((a) => a.status === 'finalizada'),
     [avaliacoes],
   );
+  const consentimentosAceitosPorLink = useMemo(
+    () => dados.consentimentoLinks.filter((link) => link.aceito_em),
+    [dados.consentimentoLinks],
+  );
+  const totalTermosAceitos =
+    dados.consentimentoAceites.filter((a) => a.aceito_em && !a.revogado).length ||
+    consentimentosAceitosPorLink.length;
 
   const origem = typeof window === 'undefined' ? '' : window.location.origin;
   const linksAtivos = dados.portalTokens.length + dados.anamneseLinks.length + dados.consentimentoLinks.length;
@@ -183,7 +190,7 @@ export function PacienteDocumentosCentral({
 
       <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-5">
         <ResumoCard icone={<FileText />} rotulo="Laudos" valor={finalizadas.length} />
-        <ResumoCard icone={<ShieldCheck />} rotulo="Termos aceitos" valor={dados.consentimentoAceites.filter((a) => a.aceito_em && !a.revogado).length} />
+        <ResumoCard icone={<ShieldCheck />} rotulo="Termos aceitos" valor={totalTermosAceitos} />
         <ResumoCard icone={<ClipboardCheck />} rotulo="Anamneses" valor={dados.anamneseRespostas.length} />
         <ResumoCard icone={<MailCheck />} rotulo="Recomendações" valor={dados.protocoloEnvios.length} />
         <ResumoCard icone={<LinkIcon />} rotulo="Links ativos" valor={linksAtivos} />
@@ -229,6 +236,28 @@ export function PacienteDocumentosCentral({
                     {copiado === aceite.id ? 'Copiado' : 'Copiar'} <Copy className="w-3.5 h-3.5" />
                   </button>
                 ) : null}
+              />
+            );
+          }) : consentimentosAceitosPorLink.length ? consentimentosAceitosPorLink.slice(0, 4).map((link) => {
+            const modelo = Array.isArray(link.consentimento_modelos)
+              ? link.consentimento_modelos[0]
+              : link.consentimento_modelos;
+            const url = `${origem}/pre-atendimento/consentimento/${link.token}`;
+            return (
+              <Linha
+                key={link.id}
+                titulo={modelo?.nome ?? 'Termo aceito'}
+                descricao={`Aceito em ${dataCurta(link.aceito_em)}${modelo?.versao ? ` · v${modelo.versao}` : ''}`}
+                status="Aceito"
+                acao={(
+                  <button
+                    type="button"
+                    onClick={() => copiar(url, link.id)}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                  >
+                    {copiado === link.id ? 'Copiado' : 'Copiar'} <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
               />
             );
           }) : <Vazio texto="Nenhum termo aceito registrado." />}

@@ -12,6 +12,7 @@ Implementado:
 - usa as rotas ja existentes `/api/paciente-tokens`, `/api/consentimento-links`, `/api/anamnese-links` e `/api/protocolo-envios`;
 - se alguma estrutura opcional ainda nao existir no banco, a central nao quebra a tela e apenas mostra os blocos vazios;
 - permite copiar links ativos de portal, anamnese e termos diretamente pela central.
+- ajuste posterior: termos/TCLE aceitos agora aparecem na central mesmo quando o comprovante ainda nao veio por `consentimento_aceites`, usando o `aceito_em` salvo no proprio `consentimento_links` como fallback.
 
 Arquivos alterados:
 
