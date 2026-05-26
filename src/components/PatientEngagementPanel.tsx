@@ -8,12 +8,22 @@ import { Copy, FileCheck2, FileText, Mail, RefreshCcw, Send, X } from 'lucide-re
 
 function dataBR(valor?: string | null) {
   if (!valor) return '';
-  return new Date(valor).toLocaleDateString('pt-BR');
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return '';
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+  }).format(data);
 }
 
 function dataHoraBR(valor?: string | null) {
   if (!valor) return '';
-  return new Date(valor).toLocaleString('pt-BR');
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return '';
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: 'America/Sao_Paulo',
+  }).format(data);
 }
 
 function valorLegivel(valor: any): string {

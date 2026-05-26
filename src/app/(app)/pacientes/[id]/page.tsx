@@ -9,6 +9,16 @@ import { PacienteDocumentosCentral } from '@/components/PacienteDocumentosCentra
 import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw } from 'lucide-react';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
+function dataLongaBR(valor?: string | null) {
+  if (!valor) return 'Sem data';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return 'Sem data';
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'long',
+    timeZone: 'America/Sao_Paulo',
+  }).format(data);
+}
+
 export default async function PacienteDashboardPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
 
@@ -145,8 +155,8 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
                 <div className="flex items-center gap-4 p-4 bg-amber-50 border border-amber-200 rounded-xl hover:border-amber-300 transition cursor-pointer">
                   <Clock className="w-5 h-5 text-amber-500 flex-shrink-0"/>
                   <div className="flex-1">
-                    <div className="font-medium text-slate-800">
-                      {new Date(a.data).toLocaleDateString('pt-BR', { dateStyle: 'long' })}
+                  <div className="font-medium text-slate-800">
+                      {dataLongaBR(a.data)}
                     </div>
                     <div className="text-xs text-amber-600 mt-0.5">{a.tipo} · Em andamento — clique para continuar</div>
                   </div>
@@ -178,7 +188,7 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
                 <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
                 <div className="flex-1">
                   <div className="font-medium text-slate-800">
-                    {new Date(a.data).toLocaleDateString('pt-BR', { dateStyle: 'long' })}
+                    {dataLongaBR(a.data)}
                   </div>
                   <div className="text-xs text-slate-400 mt-0.5">{a.tipo} · Score global: {a.scores?.[0]?.global ?? '—'}</div>
                 </div>

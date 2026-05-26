@@ -45,7 +45,7 @@ export function scoreForca(opts: {
   const percentil = classificaPreensao(media, sexo, idade, populacao);
   const assim = assimetria(preensaoDir, preensaoEsq);
   const penal = assim > 15 ? 20 : assim > 10 ? 10 : 0;
-  return Math.max(0, Math.min(100, Math.round(percentil - penal)));
+  return Math.max(10, Math.min(100, Math.round(percentil - penal)));
 }
 
 export function scoreForcaPorPreensao(opts: {

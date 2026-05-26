@@ -2234,6 +2234,41 @@ Observacao:
 - a pagina publica usa apenas produtos ativos e dados comerciais da clinica/produto;
 - para usar em producao, a migration 044 precisa ser rodada no Supabase antes de salvar os novos campos comerciais.
 
+## Correção de avisos React na central do paciente
+
+Em 26/05/2026 foi corrigida a causa provável dos erros minificados do React `#425`, `#418` e `#423` que apareciam no console ao abrir a página do paciente.
+
+Problema:
+
+- a central de documentos e o painel de pré-atendimento formatavam datas com `toLocaleDateString`/`toLocaleString` sem fuso fixo;
+- em produção, isso podia gerar diferenças entre o HTML renderizado no servidor e o texto calculado no navegador, causando avisos de hidratação do React;
+- a tela carregava, mas o console ficava poluído e poderia esconder erros reais.
+
+Implementado:
+
+- `src/components/PacienteDocumentosCentral.tsx` passou a formatar datas com `Intl.DateTimeFormat` e fuso `America/Sao_Paulo`;
+- `src/components/PatientEngagementPanel.tsx` recebeu a mesma regra para datas e data/hora;
+- `src/app/(app)/pacientes/[id]/page.tsx` passou a usar uma função estável para datas longas das avaliações.
+
+Sem migration nesta rodada.
+
+## Score de forca pela preensao palmar
+
+Em 26/05/2026 foi corrigido o fluxo em que a avaliacao podia continuar exibindo score de forca zerado mesmo apos preencher ou alterar a preensao palmar.
+
+Problema:
+
+- o modulo de forca salvava os valores de preensao palmar, mas nao persistia imediatamente o score de forca;
+- em resultados muito baixos, a formula podia retornar 0, fazendo o checklist tratar um teste preenchido como score ausente;
+- ao reabrir uma avaliacao finalizada e alterar a preensao, o painel de revisao podia continuar mostrando o score antigo ate uma nova persistencia.
+
+Implementado:
+
+- `src/app/(app)/avaliacoes/[id]/forca/page.tsx` agora calcula e salva `scores.forca` sempre que houver preensao palmar valida;
+- `src/lib/scores/index.ts` passou a aplicar piso clinico de 10 pontos quando existe dado valido de preensao palmar, mantendo a classificacao como critica quando o resultado for muito baixo, mas sem confundir dado preenchido com dado ausente.
+
+Sem migration nesta rodada.
+
 ## Analises de IA no PDF e no portal do paciente
 
 Em 20/05/2026 foi corrigida a exibicao das analises de IA no relatorio e no dashboard do paciente.

@@ -5,12 +5,14 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { SaveIndicator } from '@/components/ui/SaveIndicator';
-import { buscarModulo, upsertModulo } from '@/lib/modulos';
+import { buscarModulo, upsertModulo, upsertScores } from '@/lib/modulos';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, ChevronDown, ChevronUp, Crosshair } from 'lucide-react';
 import { buildSteps } from '@/lib/steps';
 import { buscarDadosCorporaisBase } from '@/lib/avaliacaoBase';
+import { calcIdade } from '@/lib/calculations/antropometria';
+import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 
 /* ══ TIPOS ══════════════════════════════════════════════ */
 interface LadoData {
@@ -576,7 +578,7 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
     const dir = parseFloat(v.preensao_dir)||null;
     const esq = parseFloat(v.preensao_esq)||null;
     const peso = pesoCorporalBase ?? 75;
-    return upsertModulo('forca', params.id, {
+    const payload = {
       tipo_avaliacao: v.tipo_avaliacao, populacao_ref: v.populacao_ref,
       esporte_contexto: v.esporte_contexto,
       finalidade_teste: v.finalidade_teste,
@@ -593,7 +595,17 @@ export default function ForcaPage({ params }: { params: { id: string } }) {
       tem_algometria: v.temAlgometria,
       algometria: v.algPontos,
       testes: v.testes.filter(t=>t.nome),
-    });
+    };
+
+    await upsertModulo('forca', params.id, payload);
+
+    const paciente = aval?.pacientes;
+    if (paciente?.sexo && paciente?.data_nascimento) {
+      const scorePreensao = scoreForcaPorDadosPreensao(payload, paciente.sexo, calcIdade(paciente.data_nascimento));
+      if (scorePreensao != null) {
+        await upsertScores(params.id, { forca: scorePreensao });
+      }
+    }
   }, 2000);
 
   const tracaoRelacoesAuto = modeloDinamometria === 'tracao'

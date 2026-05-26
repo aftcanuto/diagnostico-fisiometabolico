@@ -91,7 +91,9 @@ function dataCurta(valor?: string | null) {
   if (!valor) return 'Sem data';
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return 'Sem data';
-  return data.toLocaleDateString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+  }).format(data);
 }
 
 function scoreGlobal(avaliacao: AvaliacaoResumo) {
