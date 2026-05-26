@@ -14,7 +14,7 @@ import {
   scoreComposicaoCorporal, scoreCardio,
   scorePostura, scoreGlobal
 } from '@/lib/scores';
-import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
+import { numeroClinico, scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura, type FonteGorduraRelatorio } from '@/lib/bodyComposition';
 import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck } from 'lucide-react';
 
@@ -96,7 +96,9 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       rml: rmlData,
       cardiorrespiratorio: crData,
       biomecanica_corrida: biomecData,
-    }, result, analisesData.data ?? [], gorduraEscolhida);
+    }, result, analisesData.data ?? [], gorduraEscolhida, {
+      forcaCalculadaPorPreensao: forca != null && foiCalculadaPorPreensao(foData) && !temDinamometriaEspecifica(foData),
+    });
     setChecklist(checklistGerado);
 
     try {
@@ -238,42 +240,6 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
         </CardBody>
       </Card>
 
-      {gorduraRelatorio?.conflito && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <AlertTriangle className="inline w-4 h-4 mr-1 text-amber-500" />
-              Fonte da gordura corporal no relatorio
-            </CardTitle>
-          </CardHeader>
-          <CardBody>
-            <p className="mb-3 text-sm text-slate-600">
-              Bioimpedancia e antropometria apresentaram percentuais diferentes. Escolha qual valor deve aparecer no dashboard do paciente e no relatorio para evitar duplicidade.
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <button
-                type="button"
-                disabled={salvandoFonteGordura}
-                onClick={() => escolherFonteGordura('antropometria')}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-brand-300 hover:bg-brand-50 disabled:opacity-60"
-              >
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Antropometria / dobras</div>
-                <div className="mt-1 text-3xl font-black text-slate-900">{gorduraRelatorio.antropometria}%</div>
-              </button>
-              <button
-                type="button"
-                disabled={salvandoFonteGordura}
-                onClick={() => escolherFonteGordura('bioimpedancia')}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-brand-300 hover:bg-brand-50 disabled:opacity-60"
-              >
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Bioimpedancia</div>
-                <div className="mt-1 text-3xl font-black text-slate-900">{gorduraRelatorio.bioimpedancia}%</div>
-              </button>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
       {limiteNatural && (
         <Card>
           <CardHeader>
@@ -317,6 +283,39 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
           </CardTitle>
         </CardHeader>
         <CardBody className="space-y-3">
+          {gorduraRelatorio?.conflito && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <div className="flex items-start gap-2 text-red-800">
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <div>
+                  <div className="font-semibold">Escolha a fonte de gordura corporal</div>
+                  <div className="text-sm">
+                    Bioimpedancia ({gorduraRelatorio.bioimpedancia}%) e antropometria ({gorduraRelatorio.antropometria}%) estao diferentes. Selecione abaixo qual valor entrara no dashboard e no relatorio.
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <button
+                  type="button"
+                  disabled={salvandoFonteGordura}
+                  onClick={() => escolherFonteGordura('antropometria')}
+                  className="rounded-xl border border-red-200 bg-white p-4 text-left transition hover:border-brand-400 hover:bg-brand-50 disabled:opacity-60"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Usar antropometria / dobras</div>
+                  <div className="mt-1 text-3xl font-black text-slate-900">{gorduraRelatorio.antropometria}%</div>
+                </button>
+                <button
+                  type="button"
+                  disabled={salvandoFonteGordura}
+                  onClick={() => escolherFonteGordura('bioimpedancia')}
+                  className="rounded-xl border border-red-200 bg-white p-4 text-left transition hover:border-brand-400 hover:bg-brand-50 disabled:opacity-60"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Usar bioimpedancia</div>
+                  <div className="mt-1 text-3xl font-black text-slate-900">{gorduraRelatorio.bioimpedancia}%</div>
+                </button>
+              </div>
+            </div>
+          )}
           {checklist.length === 0 ? (
             <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
               Nenhuma pendência crítica ou alerta encontrado.
@@ -415,7 +414,32 @@ function calcularScoreForca(dados: any, sexo: any, idade: number): number | null
   return Math.max(0, Math.min(100, Math.round(85 - mediaAssimetria * 2)));
 }
 
-function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: any, analises: any[], gorduraRelatorio?: any) {
+function foiCalculadaPorPreensao(dados: any) {
+  if (!dados) return false;
+  const dir = numeroClinico(dados.preensao_dir_kgf ?? dados.preensao_direita_kgf ?? dados.preensao_dir ?? dados.preensao_direita);
+  const esq = numeroClinico(dados.preensao_esq_kgf ?? dados.preensao_esquerda_kgf ?? dados.preensao_esq ?? dados.preensao_esquerda);
+  return (dir != null && dir > 0) || (esq != null && esq > 0);
+}
+
+function temDinamometriaEspecifica(dados: any) {
+  if (!dados) return false;
+  return [
+    ...(Array.isArray(dados.sptech_testes) ? dados.sptech_testes : []),
+    ...(Array.isArray(dados.tracao_testes) ? dados.tracao_testes : []),
+  ].some((t: any) =>
+    Number(t?.lado_d?.kgf ?? t?.lado_d?.fim_kgf ?? 0) > 0 ||
+    Number(t?.lado_e?.kgf ?? t?.lado_e?.fim_kgf ?? 0) > 0
+  );
+}
+
+function montarChecklist(
+  aval: any,
+  modulosDados: Record<string, any>,
+  scores: any,
+  analises: any[],
+  gorduraRelatorio?: any,
+  contexto?: { forcaCalculadaPorPreensao?: boolean }
+) {
   const itens: any[] = [];
   const mods = aval?.modulos_selecionados ?? {};
   const labels: Record<string, string> = {
@@ -477,7 +501,11 @@ function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: a
   }
 
   const scoresCriticos = Object.entries(scores ?? {})
-    .filter(([k, v]) => k !== 'global' && (v == null || Number(v) === 0))
+    .filter(([k, v]) => {
+      if (k === 'global') return false;
+      if (k === 'forca' && contexto?.forcaCalculadaPorPreensao) return false;
+      return v == null || Number(v) === 0;
+    })
     .map(([k]) => labels[k] ?? k.replace(/_/g, ' '));
   if (scoresCriticos.length) {
     itens.push({
@@ -485,6 +513,15 @@ function montarChecklist(aval: any, modulosDados: Record<string, any>, scores: a
       modulo: 'scores',
       titulo: 'Scores ausentes ou zerados',
       descricao: `Revise: ${scoresCriticos.join(', ')}.`,
+    });
+  }
+
+  if (contexto?.forcaCalculadaPorPreensao) {
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'forca_preensao',
+      titulo: 'Forca calculada pela preensao palmar',
+      descricao: 'O score de forca foi calculado pela preensao palmar. Como a dinamometria isometrica especifica nao foi preenchida, a analise muscular segmentar ficara limitada.',
     });
   }
 

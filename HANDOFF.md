@@ -2,6 +2,20 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Atualizacao 2026-05-26 - revisao: escolha de gordura e score de forca por preensao
+
+Implementado:
+
+- a pendencia de divergencia entre gordura por bioimpedancia e antropometria agora exibe os botoes de escolha dentro do proprio checklist de seguranca da Revisao;
+- o avaliador pode selecionar diretamente `Usar antropometria / dobras` ou `Usar bioimpedancia`;
+- ao selecionar a fonte, o sistema salva `fonte_gordura_relatorio` e `percentual_gordura_relatorio` na avaliacao e remove a pendencia critica;
+- o checklist passou a reconhecer a forca calculada por preensao palmar como score valido;
+- quando existe preensao palmar, mas nao ha dinamometria isometrica especifica, a Revisao mostra apenas um alerta explicativo de limitacao clinica, em vez de marcar Forca como score ausente/zerado.
+
+Pendente operacional:
+
+- sem nova migration nesta etapa; depende apenas da migration `045_fonte_gordura_relatorio.sql`, ja criada anteriormente.
+
 ## Atualizacao 2026-05-26 - configuracao da vitrine de produtos
 
 Implementado:
