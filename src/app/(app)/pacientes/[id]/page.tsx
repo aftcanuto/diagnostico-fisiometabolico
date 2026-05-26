@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { PatientDashboard } from '@/components/PatientDashboard';
 import { ShareTokenPanel } from '@/components/ShareTokenPanel';
 import { PatientEngagementPanel } from '@/components/PatientEngagementPanel';
+import { PacienteDocumentosCentral } from '@/components/PacienteDocumentosCentral';
 import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw } from 'lucide-react';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
@@ -121,6 +122,8 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
           <div className="text-xs text-slate-400">avaliação{totalFin !== 1 ? 'ões' : ''}</div>
         </div>
       </div>
+
+      <PacienteDocumentosCentral pacienteId={p.id} avaliacoes={avalsLista ?? []} />
 
       {/* Avaliações em andamento */}
       {emAndamento.length > 0 && (

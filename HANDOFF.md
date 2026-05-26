@@ -2,6 +2,38 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Atualizacao 2026-05-26 - central de documentos do paciente
+
+Implementado:
+
+- criada a `Central de documentos` dentro da pagina do paciente, sem transformar isso em modulo da avaliacao;
+- a central aparece logo apos o cabecalho do paciente e antes das listas de avaliacoes;
+- reune em um so painel: laudos/PDFs, termos e TCLE aceitos, anamneses pre-atendimento, recomendacoes pre-teste e links ativos;
+- usa as rotas ja existentes `/api/paciente-tokens`, `/api/consentimento-links`, `/api/anamnese-links` e `/api/protocolo-envios`;
+- se alguma estrutura opcional ainda nao existir no banco, a central nao quebra a tela e apenas mostra os blocos vazios;
+- permite copiar links ativos de portal, anamnese e termos diretamente pela central.
+
+Arquivos alterados:
+
+- `src/components/PacienteDocumentosCentral.tsx`;
+- `src/app/(app)/pacientes/[id]/page.tsx`.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run lint` passou sem erros.
+- `npm run predeploy` passou completo:
+  - integridade de textos;
+  - auditoria do banco;
+  - smoke test de relatorio, dashboard clinico e dashboard paciente;
+  - formulas clinicas;
+  - backup em planilha;
+  - plano alimentar;
+  - TypeScript;
+  - lint.
+
+Sem migration nesta rodada.
+
 ## Atualizacao 2026-05-26 - revisao: escolha de gordura e score de forca por preensao
 
 Implementado:
