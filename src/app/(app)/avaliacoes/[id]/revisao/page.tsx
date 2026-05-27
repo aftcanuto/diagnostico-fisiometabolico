@@ -31,6 +31,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   const [confirmarAlertas, setConfirmarAlertas] = useState(false);
   const [gorduraRelatorio, setGorduraRelatorio] = useState<any>(null);
   const [salvandoFonteGordura, setSalvandoFonteGordura] = useState(false);
+  const [contextoScores, setContextoScores] = useState<any>(null);
 
   useEffect(() => { (async () => {
     const { data: av } = await supabase.from('avaliacoes')
@@ -85,6 +86,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     const result = { postura, composicao_corporal: composicao, forca, flexibilidade, cardiorrespiratorio: cardio, global };
     setScores(result);
+    setContextoScores({ sexo, imc, postura, forca, flexibilidade, cardiorrespiratorio: cardio });
     const checklistGerado = montarChecklist(av, {
       anamnese: anData,
       sinais_vitais: svData,
@@ -130,16 +132,36 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
   async function escolherFonteGordura(fonte: FonteGorduraRelatorio) {
     if (!gorduraRelatorio) return;
-    const valor = fonte === 'antropometria' ? gorduraRelatorio.antropometria : gorduraRelatorio.bioimpedancia;
+    const valor =
+      fonte === 'antropometria' ? gorduraRelatorio.antropometria :
+      fonte === 'bioimpedancia' ? gorduraRelatorio.bioimpedancia :
+      fonte === 'maior' ? gorduraRelatorio.maior :
+      fonte === 'menor' ? gorduraRelatorio.menor :
+      gorduraRelatorio.valor;
     if (valor == null) return;
     setSalvandoFonteGordura(true);
     setMessage(null);
     try {
+      const composicaoAtualizada = contextoScores?.imc != null && contextoScores?.sexo
+        ? scoreComposicaoCorporal({ pctGordura: valor, imc: contextoScores.imc, sexo: contextoScores.sexo })
+        : scores?.composicao_corporal ?? null;
+      const scoresAtualizados = {
+        ...scores,
+        composicao_corporal: composicaoAtualizada,
+        global: scoreGlobal({
+          postura: contextoScores?.postura ?? scores?.postura ?? null,
+          composicao_corporal: composicaoAtualizada,
+          forca: contextoScores?.forca ?? scores?.forca ?? null,
+          flexibilidade: contextoScores?.flexibilidade ?? scores?.flexibilidade ?? null,
+          cardiorrespiratorio: contextoScores?.cardiorrespiratorio ?? scores?.cardiorrespiratorio ?? null,
+        }),
+      };
       const { error } = await supabase.from('avaliacoes').update({
         fonte_gordura_relatorio: fonte,
         percentual_gordura_relatorio: valor,
       }).eq('id', params.id);
       if (error) throw error;
+      await upsertScores(params.id, scoresAtualizados);
       const atualizado = {
         ...gorduraRelatorio,
         fonte,
@@ -148,6 +170,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
         conflito: false,
       };
       setGorduraRelatorio(atualizado);
+      setScores(scoresAtualizados);
       setAval((a: any) => ({ ...a, fonte_gordura_relatorio: fonte, percentual_gordura_relatorio: valor }));
       setChecklist((itens) => itens.filter((item) => item.modulo !== 'gordura_relatorio'));
       setMessage({ type: 'success', text: 'Fonte de gordura corporal definida para o relatorio.' });

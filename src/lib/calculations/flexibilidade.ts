@@ -51,9 +51,17 @@ export function scoreFlexibilidade(cm: number | null, sexo: Sexo, idade: number)
   if (cm == null) return null;
   const faixa = faixaEtaria(idade);
   const tab = sexo === 'M' ? TABELA_M[faixa] : TABELA_F[faixa];
-  // Score 0-100 baseado na tabela
-  const fraco = tab.regular - 10;
-  const range = tab.excelente - fraco;
-  const score = Math.round(((cm - fraco) / range) * 100);
-  return Math.max(0, Math.min(100, score));
+  const muitoFraco = tab.regular - 10;
+  const interp = (valor: number, min: number, max: number, outMin: number, outMax: number) => {
+    if (max === min) return outMin;
+    const pct = (valor - min) / (max - min);
+    return Math.round(outMin + pct * (outMax - outMin));
+  };
+
+  if (cm >= tab.excelente) return Math.min(100, interp(cm, tab.excelente, tab.excelente + 8, 90, 100));
+  if (cm >= tab.bom) return interp(cm, tab.bom, tab.excelente, 75, 89);
+  if (cm >= tab.medio) return interp(cm, tab.medio, tab.bom, 60, 74);
+  if (cm >= tab.regular) return interp(cm, tab.regular, tab.medio, 45, 59);
+  if (cm >= muitoFraco) return interp(cm, muitoFraco, tab.regular, 25, 44);
+  return 20;
 }

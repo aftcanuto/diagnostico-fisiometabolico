@@ -33,7 +33,7 @@ export interface LaudoData {
   avaliacao: {
     data: string;
     tipo: string;
-    fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | null;
+    fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | 'maior' | 'menor' | 'manual' | null;
     percentual_gordura_relatorio?: number | null;
   };
   modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };

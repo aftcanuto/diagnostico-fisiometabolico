@@ -16,7 +16,7 @@ export interface AvaliacaoHidratada {
   scores?: any;
   antropometria?: any;
   bioimpedancia?: any;
-  fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | null;
+  fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | 'maior' | 'menor' | 'manual' | null;
   percentual_gordura_relatorio?: number | null;
   forca?: any;
   flexibilidade?: any;

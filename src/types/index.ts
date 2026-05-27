@@ -36,7 +36,7 @@ export interface Avaliacao {
   status: 'em_andamento' | 'finalizada' | 'arquivada';
   modulos_selecionados: ModulosSelecionados;
   produto_id?: string | null;
-  fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | null;
+  fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | 'maior' | 'menor' | 'manual' | null;
   percentual_gordura_relatorio?: number | null;
 }
 

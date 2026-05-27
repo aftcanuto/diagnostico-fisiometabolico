@@ -37,7 +37,7 @@ assert.deepEqual(classificarWells(22, 'M', 46), {
   classificacao: 'Regular',
   percentil: 'P30-P49',
 });
-assert.equal(scoreFlexibilidade(22, 'M', 46), 52);
+assert.equal(scoreFlexibilidade(22, 'M', 46), 54);
 
 assert.equal(forcaRelativa(38, 76), 0.5);
 assert.equal(assimetria(38, 35), 7.89);

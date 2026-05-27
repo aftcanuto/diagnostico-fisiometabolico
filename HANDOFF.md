@@ -35,6 +35,29 @@ Validacao:
 
 Sem migration nesta rodada.
 
+## Refinamento de scores, fonte de gordura e silhueta corporal
+
+Em 26/05/2026 foram ajustadas regras de composicao corporal e flexibilidade apos validacao visual nos dashboards.
+
+Problema:
+
+- a escolha da fonte de gordura corporal podia ser salva, mas o score de composicao/global nao era recalculado imediatamente na revisao;
+- a silhueta corporal usava o IMC para elevar automaticamente o nivel visual para obesidade mesmo quando o percentual de gordura indicava apenas sobrepeso/atencao;
+- o score de flexibilidade linear deixava resultados classificados como fracos com nota muito proxima de zero, gerando leitura mais grave do que a classificacao clinica.
+
+Implementado:
+
+- `src/lib/bodyComposition.ts` passou a aceitar fontes `antropometria`, `bioimpedancia`, `maior`, `menor` e `manual`;
+- a classificacao visual da silhueta passou a priorizar o percentual de gordura quando ele existe, usando o IMC apenas como alerta complementar;
+- valores de gordura na faixa masculina 25-29% e feminina 29-32% agora aparecem como `Sobrepeso`, sem forcar silhueta de obesidade;
+- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` recalcula composicao corporal e score global assim que a fonte de gordura e escolhida;
+- `src/lib/calculations/flexibilidade.ts` passou a pontuar por bandas clinicas: fraco, regular, medio, bom e excelente, evitando notas artificialmente baixas para resultados fracos mas plausiveis.
+
+Validacao:
+
+- `npx tsc --noEmit` passou sem erros;
+- `npm run test:calculations` passou com as formulas principais.
+
 ## Atualizacao 2026-05-26 - revisao: escolha de gordura e score de forca por preensao
 
 Implementado:
