@@ -35,6 +35,23 @@ Validacao:
 
 Sem migration nesta rodada.
 
+## Checklist de fotos da posturografia
+
+Em 27/05/2026 foi corrigido o alerta incorreto de fotos incompletas na Revisao.
+
+Problema:
+
+- o formulario de posturografia salva as fotos nos campos `foto_anterior`, `foto_posterior`, `foto_lateral_dir` e `foto_lateral_esq`;
+- o checklist de finalizacao ainda procurava campos antigos como `foto_frente_url` e `foto_costas_url`;
+- por isso o alerta de fotos incompletas podia aparecer mesmo com as quatro fotos anexadas.
+
+Implementado:
+
+- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` agora valida os campos atuais;
+- a validacao tambem aceita aliases antigos para preservar compatibilidade com dados legados.
+
+Sem migration nesta rodada.
+
 ## Refinamento de scores, fonte de gordura e silhueta corporal
 
 Em 26/05/2026 foram ajustadas regras de composicao corporal e flexibilidade apos validacao visual nos dashboards.

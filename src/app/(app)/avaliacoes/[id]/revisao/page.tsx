@@ -501,8 +501,13 @@ function montarChecklist(
   });
 
   if (mods.posturografia && modulosDados.posturografia) {
-    const fotos = ['foto_frente_url', 'foto_costas_url', 'foto_lateral_dir_url', 'foto_lateral_esq_url'];
-    const faltando = fotos.filter(k => !modulosDados.posturografia?.[k]);
+    const fotos = [
+      ['foto_anterior', 'foto_frente_url', 'foto_frente'],
+      ['foto_posterior', 'foto_costas_url', 'foto_costas'],
+      ['foto_lateral_dir', 'foto_lateral_dir_url'],
+      ['foto_lateral_esq', 'foto_lateral_esq_url'],
+    ];
+    const faltando = fotos.filter(opcoes => !opcoes.some(k => Boolean(modulosDados.posturografia?.[k])));
     if (faltando.length) {
       itens.push({
         nivel: 'alerta',
