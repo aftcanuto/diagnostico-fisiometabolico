@@ -2388,3 +2388,32 @@ Implementado:
 - agora o mesmo botão salva criando a configuração quando não existe ou atualizando a configuração existente.
 
 Sem migration nesta rodada.
+## Central de evidencias legais dos termos e TCLE
+
+Em 27/05/2026 foi implementada a central de evidencias legais para consentimentos digitais.
+
+Implementado:
+
+- nova migration `047_central_evidencias_legais.sql`;
+- `consentimento_aceites` agora registra `texto_hash` e `comprovante_codigo`;
+- o hash SHA-256 e calculado a partir do texto aceito, token, data/hora do aceite e paciente;
+- aceite publico por token passou a devolver codigo do comprovante e hash de integridade;
+- criada pagina publica de comprovante em `/pre-atendimento/consentimento/[token]/comprovante`;
+- o comprovante exibe paciente, CPF, clinica, data/hora, IP, user agent, versao do texto, token, codigo e hash;
+- a pagina permite imprimir ou salvar PDF do comprovante;
+- central de documentos do paciente e painel de pre-atendimento passaram a abrir/copiar o link do comprovante em vez de apenas o link bruto do termo;
+- auditoria do banco passou a checar a presenca dos campos de evidencia legal.
+
+Observacao operacional:
+
+- antes do deploy em producao, aplicar no Supabase a migration `supabase/migrations/047_central_evidencias_legais.sql`;
+- os aceites antigos recebem codigo e hash retroativamente pela migration;
+- MAC address nao e coletavel com confiabilidade por navegador moderno, entao a evidencia usa IP, user agent, data/hora, versao do texto, snapshot do texto aceito, token e hash.
+
+Validacao:
+
+- `npm.cmd run predeploy` passou completo em 27/05/2026;
+- auditoria do banco confirmou 47 migrations, 32 tabelas com RLS, 99 policies e `consentimento_evidencias_legais: true`;
+- smoke test gerou previews do relatorio, dashboard clinico e dashboard do paciente;
+- formulas clinicas, backup em planilha, plano alimentar, TypeScript e lint passaram sem erro.
+- `npm.cmd run build` tambem passou; houve apenas aviso nao bloqueante de cache do webpack.

@@ -383,7 +383,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Comprovantes de aceite</div>
               <div className="space-y-2">
                 {aceites.slice(0, 8).map(a => {
-                  const comprovanteUrl = a.token ? `${origin}/pre-atendimento/consentimento/${a.token}` : '';
+                  const comprovanteUrl = a.token ? `${origin}/pre-atendimento/consentimento/${a.token}/comprovante` : '';
                   const revogado = !!a.revogado;
                   return (
                     <div key={`novo-${a.id}`} className={`flex flex-col gap-2 rounded-lg px-3 py-2 md:flex-row md:items-center ${revogado ? 'bg-amber-50' : 'bg-emerald-50'}`}>
@@ -394,6 +394,11 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
                         <div className={`text-xs ${revogado ? 'text-amber-800' : 'text-emerald-800'}`}>
                           Aceito em {dataBR(a.aceito_em)} · versão {a.texto_versao ?? '-'} · IP {a.ip ?? 'não registrado'}
                         </div>
+                        {(a.comprovante_codigo || a.texto_hash) && (
+                          <div className={`truncate font-mono text-[11px] ${revogado ? 'text-amber-700' : 'text-emerald-700'}`}>
+                            {a.comprovante_codigo ? `${a.comprovante_codigo} · ` : ''}{a.texto_hash ? `Hash: ${a.texto_hash}` : ''}
+                          </div>
+                        )}
                         {revogado && (
                           <div className="text-xs text-amber-800">
                             Revogado em {dataBR(a.revogado_em)} · {a.motivo_revogacao ?? 'sem motivo informado'}
@@ -403,7 +408,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
                       </div>
                       {comprovanteUrl && (
                         <Button size="sm" variant="secondary" onClick={() => copiar(comprovanteUrl, a.id)}>
-                          <Copy className="h-3 w-3" /> {copiado === a.id ? 'Copiado' : 'Comprovante'}
+                          <Copy className="h-3 w-3" /> {copiado === a.id ? 'Copiado' : 'Copiar comprovante'}
                         </Button>
                       )}
                       {!revogado && (

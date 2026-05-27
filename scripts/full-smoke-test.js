@@ -241,6 +241,19 @@ function main() {
   assertCodigoContem('src/app/api/consentimento-publico/route.ts', [
     'link.aceito_em',
     'Este termo ja foi aceito',
+    'texto_hash',
+    'comprovante_codigo',
+    'sha256',
+  ]);
+  assertCodigoContem('src/app/pre-atendimento/consentimento/[token]/comprovante/page.tsx', [
+    'Comprovante de aceite digital',
+    'Hash de integridade',
+    'Texto aceito',
+    'Revogacao registrada',
+  ]);
+  assertCodigoContem('src/components/PacienteDocumentosCentral.tsx', [
+    '/comprovante',
+    'comprovante_codigo',
   ]);
   assertCodigoContem('src/app/api/backup/avaliacoes/route.ts', [
     'Apenas administradores podem exportar o backup',

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash, randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
+
+function gerarHashEvidencia(texto: string, token: string, aceitoEm: string, pacienteId: string) {
+  return createHash('sha256')
+    .update(`${texto}|${token}|${aceitoEm}|${pacienteId}`)
+    .digest('hex');
+}
 
 export async function POST(req: NextRequest) {
   const { token } = await req.json();
@@ -22,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (link.aceito_em) {
     const { data: aceite } = await admin
       .from('consentimento_aceites')
-      .select('aceito_em,ip,user_agent,modelo_nome,texto_versao,revogado,revogado_em,motivo_revogacao')
+      .select('aceito_em,ip,user_agent,modelo_nome,texto_versao,revogado,revogado_em,motivo_revogacao,texto_hash,comprovante_codigo')
       .eq('token', token)
       .order('aceito_em', { ascending: false })
       .limit(1)
@@ -38,6 +45,8 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const userAgent = req.headers.get('user-agent');
   const aceitoEm = new Date().toISOString();
+  const textoHash = gerarHashEvidencia(modelo.texto, token, aceitoEm, link.paciente_id);
+  const comprovanteCodigo = `TCLE-${randomUUID().slice(0, 8).toUpperCase()}`;
 
   const { error } = await admin
     .from('consentimento_aceites')
@@ -50,6 +59,8 @@ export async function POST(req: NextRequest) {
       modelo_tipo: modelo.tipo,
       texto_versao: modelo.versao,
       texto_aceito: modelo.texto,
+      texto_hash: textoHash,
+      comprovante_codigo: comprovanteCodigo,
       ip,
       user_agent: userAgent,
       token,
@@ -71,6 +82,8 @@ export async function POST(req: NextRequest) {
       user_agent: userAgent,
       modelo_nome: modelo.nome,
       texto_versao: modelo.versao,
+      texto_hash: textoHash,
+      comprovante_codigo: comprovanteCodigo,
     },
   });
 }

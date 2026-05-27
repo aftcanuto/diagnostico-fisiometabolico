@@ -43,6 +43,8 @@ type ConsentimentoAceite = {
   modelo_nome?: string | null;
   modelo_tipo?: string | null;
   texto_versao?: number | null;
+  texto_hash?: string | null;
+  comprovante_codigo?: string | null;
   revogado?: boolean | null;
 };
 
@@ -222,12 +224,12 @@ export function PacienteDocumentosCentral({
 
         <Bloco titulo="Termos e TCLE" icone={<ShieldCheck />}>
           {dados.consentimentoAceites.length ? dados.consentimentoAceites.slice(0, 4).map((aceite) => {
-            const url = aceite.token ? `${origem}/pre-atendimento/consentimento/${aceite.token}` : '';
+            const url = aceite.token ? `${origem}/pre-atendimento/consentimento/${aceite.token}/comprovante` : '';
             return (
               <Linha
                 key={aceite.id}
                 titulo={aceite.modelo_nome ?? 'Termo aceito'}
-                descricao={`Aceito em ${dataCurta(aceite.aceito_em)}${aceite.texto_versao ? ` · v${aceite.texto_versao}` : ''}`}
+                descricao={`Aceito em ${dataCurta(aceite.aceito_em)}${aceite.texto_versao ? ` · v${aceite.texto_versao}` : ''}${aceite.comprovante_codigo ? ` · ${aceite.comprovante_codigo}` : ''}`}
                 status={aceite.revogado ? 'Revogado' : 'Aceito'}
                 acao={url ? (
                   <button
@@ -235,7 +237,7 @@ export function PacienteDocumentosCentral({
                     onClick={() => copiar(url, aceite.id)}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
                   >
-                    {copiado === aceite.id ? 'Copiado' : 'Copiar'} <Copy className="w-3.5 h-3.5" />
+                    {copiado === aceite.id ? 'Copiado' : 'Comprovante'} <Copy className="w-3.5 h-3.5" />
                   </button>
                 ) : null}
               />
@@ -244,7 +246,7 @@ export function PacienteDocumentosCentral({
             const modelo = Array.isArray(link.consentimento_modelos)
               ? link.consentimento_modelos[0]
               : link.consentimento_modelos;
-            const url = `${origem}/pre-atendimento/consentimento/${link.token}`;
+            const url = `${origem}/pre-atendimento/consentimento/${link.token}/comprovante`;
             return (
               <Linha
                 key={link.id}
@@ -257,7 +259,7 @@ export function PacienteDocumentosCentral({
                     onClick={() => copiar(url, link.id)}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
                   >
-                    {copiado === link.id ? 'Copiado' : 'Copiar'} <Copy className="w-3.5 h-3.5" />
+                    {copiado === link.id ? 'Copiado' : 'Comprovante'} <Copy className="w-3.5 h-3.5" />
                   </button>
                 )}
               />

@@ -109,6 +109,9 @@ function audit() {
   const hasBiomecanicaComentarios = /comentarios_graficos/i.test(sql) && /comentarios_angulos/i.test(sql);
   const hasAnamneseSingleUse = /paciente_anamnese_links[\s\S]*respondido_em/i.test(sql);
   const hasConsentimentoSingleUse = /consentimento_links[\s\S]*aceito_em/i.test(sql);
+  const hasConsentimentoEvidencias = /consentimento_aceites[\s\S]*texto_hash/i.test(sql)
+    && /consentimento_aceites[\s\S]*comprovante_codigo/i.test(sql)
+    && /digest\(/i.test(sql);
   const hasProtocolosStatus = /protocolo_envios[\s\S]*status/i.test(sql);
   const hasPlanoAcaoTemplates = /plano_acao_modelos[\s\S]*metas_30_dias/i.test(sql);
   const hasPlanoAlimentarTemplates = /plano_alimentar_modelos[\s\S]*proteina_g_kg/i.test(sql)
@@ -148,6 +151,7 @@ function audit() {
     !hasBiomecanicaComentarios && 'Campos de comentarios da biomecanica nao encontrados nas migrations',
     !hasAnamneseSingleUse && 'Controle de resposta unica da anamnese publica nao encontrado nas migrations',
     !hasConsentimentoSingleUse && 'Controle de aceite unico de consentimento nao encontrado nas migrations',
+    !hasConsentimentoEvidencias && 'Campos de evidencia legal de consentimento nao encontrados nas migrations',
     !hasProtocolosStatus && 'Status de envios de protocolo nao encontrado nas migrations',
     !hasPlanoAcaoTemplates && 'Modelos de plano de acao nao encontrados nas migrations',
     !hasPlanoAlimentarTemplates && 'Templates de plano alimentar nao encontrados nas migrations',
@@ -177,6 +181,7 @@ function audit() {
       bioimpedancia_z_removida: hasBioZRemoval,
       anamnese_publica_resposta_unica: hasAnamneseSingleUse,
       consentimento_publico_aceite_unico: hasConsentimentoSingleUse,
+      consentimento_evidencias_legais: hasConsentimentoEvidencias,
       protocolo_envio_status: hasProtocolosStatus,
       plano_acao_modelos: hasPlanoAcaoTemplates,
       plano_alimentar_modelos: hasPlanoAlimentarTemplates,

@@ -9,6 +9,8 @@ type ComprovanteAceite = {
   user_agent?: string | null;
   modelo_nome?: string | null;
   texto_versao?: number | null;
+  texto_hash?: string | null;
+  comprovante_codigo?: string | null;
   revogado?: boolean | null;
   revogado_em?: string | null;
   motivo_revogacao?: string | null;
@@ -54,9 +56,25 @@ export function PublicConsentimentoAccept({ token, aceiteInicial }: { token: str
   }
 
   if (concluido) {
+    const comprovanteUrl = `/pre-atendimento/consentimento/${token}/comprovante`;
     return (
       <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6">
-        <h2 className="text-xl font-bold text-emerald-900">{comprovante?.revogado ? 'Termo aceito e revogado' : 'Termo aceito'}</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-emerald-900">{comprovante?.revogado ? 'Termo aceito e revogado' : 'Termo aceito'}</h2>
+            {comprovante?.comprovante_codigo && (
+              <p className="mt-1 font-mono text-xs font-semibold text-emerald-700">{comprovante.comprovante_codigo}</p>
+            )}
+          </div>
+          <a
+            href={comprovanteUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50"
+          >
+            Abrir comprovante
+          </a>
+        </div>
         <p className="mt-2 text-sm text-emerald-800">
           {comprovante?.revogado
             ? 'Este comprovante registra o aceite original e a revogacao posterior.'
@@ -67,6 +85,10 @@ export function PublicConsentimentoAccept({ token, aceiteInicial }: { token: str
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Versao do termo</span>{comprovante?.texto_versao ?? '-'}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">IP registrado</span>{comprovante?.ip ?? 'Nao registrado'}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Token</span><span className="font-mono text-xs">{token}</span></div>
+          <div className="md:col-span-2">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Hash de integridade</span>
+            <span className="break-all font-mono text-xs">{comprovante?.texto_hash ?? 'Nao registrado'}</span>
+          </div>
           <div className="md:col-span-2"><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Dispositivo/navegador</span>{comprovante?.user_agent ?? 'Nao registrado'}</div>
           {comprovante?.revogado && (
             <div className="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">

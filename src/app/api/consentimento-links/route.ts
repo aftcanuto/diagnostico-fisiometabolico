@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const { data: aceites, error: aceitesError } = await admin
     .from('consentimento_aceites')
-    .select('id,aceito_em,modelo_id,modelo_nome,modelo_tipo,texto_versao,ip,user_agent,token,revogado,revogado_em,motivo_revogacao')
+    .select('id,aceito_em,modelo_id,modelo_nome,modelo_tipo,texto_versao,ip,user_agent,token,revogado,revogado_em,motivo_revogacao,texto_hash,comprovante_codigo')
     .eq('paciente_id', pacienteId)
     .order('aceito_em', { ascending: false })
     .limit(20);
