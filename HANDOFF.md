@@ -2435,3 +2435,31 @@ Implementado:
 Pendencia operacional:
 
 - validar em producao se a migration `033_planos_acao_alimentar.sql` ja foi rodada no Supabase antes de testar o fluxo aplicado.
+
+## Templates padrao de plano alimentar e bucket de produtos
+
+Em 28/05/2026 foram corrigidos dois pontos observados em producao: plano alimentar sem modelos ativos e upload de imagem comercial do produto retornando `Bucket not found`.
+
+Implementado:
+
+- a API `GET/POST /api/plano-alimentar` passou a usar a verificacao central `usuarioPodeAcessarAvaliacao`, aceitando avaliador responsavel e membros ativos da clinica;
+- criada migration `048_produto_imagens_bucket_hardening.sql` para garantir o bucket `produto-imagens`, limite de 5 MB, tipos PNG/JPEG/WebP/GIF e policies por pasta da clinica;
+- criada migration `049_planos_alimentares_templates_padrao.sql` com modelos padrao para:
+  - emagrecimento gradual;
+  - recomposicao corporal;
+  - hipertrofia muscular;
+  - performance em corrida;
+  - saude metabolica;
+  - manutencao e qualidade de vida;
+- a migration cadastra os modelos para clinicas existentes e cria trigger para toda nova clinica nascer com os templates alimentares;
+- os templates usam TMB/VET/macros/agua/fibras como ponto de partida editavel na finalizacao da avaliacao.
+
+Pendencia operacional:
+
+- aplicar no Supabase as migrations `048_produto_imagens_bucket_hardening.sql` e `049_planos_alimentares_templates_padrao.sql` antes de testar upload de produto e plano alimentar em producao.
+
+Validacao:
+
+- `npx.cmd tsc --noEmit` passou sem erros;
+- `npm.cmd run lint` passou sem erros;
+- `npm.cmd run db:audit` passou com 49 migrations, 32 tabelas com RLS, 103 policies e bucket `produto-imagens` validado.

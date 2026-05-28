@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { calcularPlanoAlimentar, type ModeloPlanoAlimentar, type SexoNutricional } from '@/lib/nutrition/planoAlimentar';
+import { usuarioPodeAcessarAvaliacao } from '@/lib/api/permissions';
 
 export const runtime = 'nodejs';
 
@@ -18,6 +19,9 @@ async function getUserId() {
 }
 
 async function carregarAvaliacaoPermitida(avaliacaoId: string, userId: string) {
+  const permitido = await usuarioPodeAcessarAvaliacao(userId, avaliacaoId);
+  if (!permitido) return { avaliacao: null, error: 'Sem permissao para esta avaliacao' };
+
   const admin = createAdminClient();
   const { data: avaliacao, error } = await admin
     .from('avaliacoes')
@@ -26,17 +30,6 @@ async function carregarAvaliacaoPermitida(avaliacaoId: string, userId: string) {
     .maybeSingle();
 
   if (error || !avaliacao) return { avaliacao: null, error: 'Avaliacao nao encontrada' };
-  if (avaliacao.avaliador_id === userId) return { avaliacao, error: null };
-
-  const { data: membro } = await admin
-    .from('clinica_membros')
-    .select('id')
-    .eq('clinica_id', avaliacao.clinica_id)
-    .eq('user_id', userId)
-    .eq('ativo', true)
-    .maybeSingle();
-
-  if (!membro) return { avaliacao: null, error: 'Sem permissao para esta avaliacao' };
   return { avaliacao, error: null };
 }
 
