@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { registrarEventoProntuarioAvaliacao } from '@/lib/prontuario';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const admin = createAdminClient();
   const { error } = await admin.from('avaliacoes').update(payload).eq('id', params.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  await registrarEventoProntuarioAvaliacao(admin, params.id, user.id).catch(() => null);
   return NextResponse.json({ ok: true });
 }
 

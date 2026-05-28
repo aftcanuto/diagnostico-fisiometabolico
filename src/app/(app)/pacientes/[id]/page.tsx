@@ -6,6 +6,7 @@ import { PatientDashboard } from '@/components/PatientDashboard';
 import { ShareTokenPanel } from '@/components/ShareTokenPanel';
 import { PatientEngagementPanel } from '@/components/PatientEngagementPanel';
 import { PacienteDocumentosCentral } from '@/components/PacienteDocumentosCentral';
+import { ProntuarioPaciente } from '@/components/ProntuarioPaciente';
 import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw } from 'lucide-react';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
@@ -54,6 +55,7 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
   const biomecMap: Record<string, any> = {};
   const analisesMap: Record<string, any> = {};
   const planoAlimentarMap: Record<string, any> = {};
+  let eventosProntuario: any[] = [];
   try {
     if (avalsCompletas?.length) {
       const ids = avalsCompletas.map((a: any) => a.id);
@@ -75,6 +77,16 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
         analisesMap[a.avaliacao_id][a.tipo] = a;
       });
     }
+  } catch {}
+
+  try {
+    const { data: eventos } = await admin
+      .from('prontuario_eventos')
+      .select('id, avaliacao_id, tipo, titulo, data_evento, status, resumo, achados, scores, conclusao')
+      .eq('paciente_id', params.id)
+      .order('data_evento', { ascending: false })
+      .order('created_at', { ascending: false });
+    eventosProntuario = eventos ?? [];
   } catch {}
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -138,6 +150,8 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
       </div>
 
       <PacienteDocumentosCentral pacienteId={p.id} avaliacoes={avalsLista ?? []} />
+
+      <ProntuarioPaciente eventos={eventosProntuario} />
 
       {/* Avaliações em andamento */}
       {emAndamento.length > 0 && (

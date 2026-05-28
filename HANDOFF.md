@@ -2488,3 +2488,25 @@ Em 28/05/2026 a vitrine publica de produtos e a listagem interna de Produtos pas
 Migration:
 
 - sem migration; ajuste somente de interface.
+
+## Prontuario longitudinal do paciente
+
+Em 28/05/2026 foi implementado o prontuario vinculado ao paciente para registrar a evolucao longitudinal das avaliacoes.
+
+Implementado:
+
+- nova migration `050_prontuario_paciente.sql`;
+- criacao das tabelas `prontuarios` e `prontuario_eventos`, com RLS por clinica;
+- trigger para criar automaticamente um prontuario quando um paciente e cadastrado ou vinculado a uma clinica;
+- ao finalizar uma avaliacao, o sistema importa automaticamente para o prontuario:
+  - data, tipo e status da avaliacao;
+  - scores globais e por modulo;
+  - achados/analises por modulo;
+  - conclusao global;
+  - plano de acao, quando existir;
+- a pagina do paciente passou a exibir o historico clinico longitudinal logo abaixo da central de documentos;
+- auditoria local passou a validar a existencia do prontuario nas migrations.
+
+Pendencia operacional:
+
+- aplicar a migration `050_prontuario_paciente.sql` no Supabase antes de testar o prontuario em producao.

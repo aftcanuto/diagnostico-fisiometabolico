@@ -37,6 +37,8 @@ const expectedTables = [
   'plano_acao_modelos',
   'plano_alimentar_modelos',
   'plano_alimentar_avaliacoes',
+  'prontuarios',
+  'prontuario_eventos',
 ];
 
 const expectedAiTypes = [
@@ -124,6 +126,9 @@ function audit() {
     && /cta_texto/i.test(sql)
     && /cta_url/i.test(sql)
     && /destaque_comercial/i.test(sql);
+  const hasProntuarioPaciente = /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?prontuarios/i.test(sql)
+    && /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?prontuario_eventos/i.test(sql)
+    && /garantir_prontuario_paciente/i.test(sql);
 
   const hasBioZRemoval = /drop\s+column\s+if\s+exists\s+impedancias/i.test(sql)
     && /drop\s+column\s+if\s+exists\s+impedancia_z/i.test(sql)
@@ -157,6 +162,7 @@ function audit() {
     !hasPlanoAlimentarTemplates && 'Templates de orientacao nutricional nao encontrados nas migrations',
     !hasProdutosFlexiveis && 'Campos de produtos flexiveis nao encontrados nas migrations',
     !hasProdutosCatalogoComercial && 'Campos comerciais da vitrine de produtos nao encontrados nas migrations',
+    !hasProntuarioPaciente && 'Prontuario longitudinal do paciente nao encontrado nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',
     ...missingAiTypes.map(type => `Tipo de IA ausente no check: ${type}`),
   ].filter(Boolean);
@@ -187,6 +193,7 @@ function audit() {
       plano_alimentar_modelos: hasPlanoAlimentarTemplates,
       produtos_flexiveis: hasProdutosFlexiveis,
       produtos_catalogo_comercial: hasProdutosCatalogoComercial,
+      prontuario_paciente: hasProntuarioPaciente,
     },
     aiTypes: expectedAiTypes.length - missingAiTypes.length,
     errors,
