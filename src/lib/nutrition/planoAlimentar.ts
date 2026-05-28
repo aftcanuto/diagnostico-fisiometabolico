@@ -1,4 +1,6 @@
 export type SexoNutricional = 'M' | 'F';
+export type FonteTmbPreferida = 'auto' | 'bioimpedancia' | 'antropometria' | 'mifflin_st_jeor';
+export type FonteTmbCalculada = 'bioimpedancia' | 'antropometria' | 'mifflin_st_jeor' | 'indisponivel';
 
 export interface DadosTmbPaciente {
   sexo?: SexoNutricional | null;
@@ -7,6 +9,7 @@ export interface DadosTmbPaciente {
   alturaCm?: number | null;
   tmbBioimpedancia?: number | null;
   tmbAntropometria?: number | null;
+  tmbFontePreferida?: FonteTmbPreferida | null;
 }
 
 export interface ModeloPlanoAlimentar {
@@ -21,7 +24,7 @@ export interface ModeloPlanoAlimentar {
 
 export interface ResultadoPlanoAlimentar {
   tmbKcal: number | null;
-  tmbOrigem: 'bioimpedancia' | 'antropometria' | 'mifflin_st_jeor' | 'indisponivel';
+  tmbOrigem: FonteTmbCalculada;
   vetKcal: number | null;
   proteinaG: number | null;
   carboidratoG: number | null;
@@ -39,21 +42,58 @@ function num(v: any): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function estimarTmb(dados: DadosTmbPaciente): Pick<ResultadoPlanoAlimentar, 'tmbKcal' | 'tmbOrigem'> {
-  const bio = num(dados.tmbBioimpedancia);
-  if (bio && bio > 0) return { tmbKcal: Math.round(bio), tmbOrigem: 'bioimpedancia' };
-
-  const antro = num(dados.tmbAntropometria);
-  if (antro && antro > 0) return { tmbKcal: Math.round(antro), tmbOrigem: 'antropometria' };
-
+function calcularMifflin(dados: DadosTmbPaciente): number | null {
   const peso = num(dados.pesoKg);
   const altura = num(dados.alturaCm);
   const idade = num(dados.idade);
-  if (!peso || !altura || !idade || !dados.sexo) return { tmbKcal: null, tmbOrigem: 'indisponivel' };
+  if (!peso || !altura || !idade || !dados.sexo) return null;
 
   const base = 10 * peso + 6.25 * altura - 5 * idade;
   const tmb = dados.sexo === 'M' ? base + 5 : base - 161;
-  return { tmbKcal: Math.round(tmb), tmbOrigem: 'mifflin_st_jeor' };
+  return Math.round(tmb);
+}
+
+export function listarFontesTmb(dados: DadosTmbPaciente) {
+  const bio = num(dados.tmbBioimpedancia);
+  const antro = num(dados.tmbAntropometria);
+  const mifflin = calcularMifflin(dados);
+
+  return [
+    {
+      id: 'bioimpedancia' as const,
+      label: 'Bioimpedancia',
+      valorKcal: bio && bio > 0 ? Math.round(bio) : null,
+      disponivel: Boolean(bio && bio > 0),
+    },
+    {
+      id: 'antropometria' as const,
+      label: 'Antropometria / dobras',
+      valorKcal: antro && antro > 0 ? Math.round(antro) : null,
+      disponivel: Boolean(antro && antro > 0),
+    },
+    {
+      id: 'mifflin_st_jeor' as const,
+      label: 'Estimativa Mifflin-St Jeor',
+      valorKcal: mifflin,
+      disponivel: Boolean(mifflin),
+    },
+  ];
+}
+
+export function estimarTmb(dados: DadosTmbPaciente): Pick<ResultadoPlanoAlimentar, 'tmbKcal' | 'tmbOrigem'> {
+  const fontes = listarFontesTmb(dados);
+  const preferida = dados.tmbFontePreferida && dados.tmbFontePreferida !== 'auto' ? dados.tmbFontePreferida : null;
+
+  if (preferida) {
+    const fonte = fontes.find((f) => f.id === preferida);
+    if (fonte?.disponivel && fonte.valorKcal) {
+      return { tmbKcal: fonte.valorKcal, tmbOrigem: fonte.id };
+    }
+  }
+
+  const fallback = fontes.find((f) => f.disponivel && f.valorKcal);
+  if (!fallback?.valorKcal) return { tmbKcal: null, tmbOrigem: 'indisponivel' };
+  return { tmbKcal: fallback.valorKcal, tmbOrigem: fallback.id };
 }
 
 export function calcularPlanoAlimentar(dados: DadosTmbPaciente, modelo: ModeloPlanoAlimentar = {}): ResultadoPlanoAlimentar {

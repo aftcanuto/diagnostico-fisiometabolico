@@ -67,7 +67,12 @@ export default async function ProdutosPage() {
                   <CardBody>
                     <div className="flex items-start gap-4">
                       {p.imagem_url ? (
-                        <img src={p.imagem_url} alt="" className="h-20 w-20 rounded-lg border border-slate-200 bg-slate-50 object-cover" />
+                        <span className="group relative block h-20 w-20 shrink-0">
+                          <img src={p.imagem_url} alt="" className="h-20 w-20 rounded-lg border border-slate-200 bg-slate-50 object-cover" />
+                          <span className="pointer-events-none absolute left-0 top-0 z-40 hidden w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl ring-1 ring-slate-900/5 group-hover:block">
+                            <img src={p.imagem_url} alt={`Imagem completa de ${p.nome}`} className="max-h-80 w-full rounded-xl object-contain" />
+                          </span>
+                        </span>
                       ) : (
                         <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50">
                           <Package className="h-7 w-7 text-slate-300" />

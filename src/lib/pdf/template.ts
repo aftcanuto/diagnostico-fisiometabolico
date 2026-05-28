@@ -1393,10 +1393,10 @@ function pgPlanoAlimentar(d: LaudoData, pri: string): string {
     const n = Number(v);
     return Number.isFinite(n) ? n.toLocaleString('pt-BR', { maximumFractionDigits: digits }) : '—';
   };
-  const objetivo = plano.objetivo ?? 'Plano aplicado';
+  const objetivo = plano.objetivo ?? 'Orientação aplicada';
   const origem = plano.tmb_origem ? `Origem da TMB: ${plano.tmb_origem}` : '';
   const obs = typeof plano.observacoes === 'string' ? plano.observacoes.trim() : '';
-  return pgModulo('Plano alimentar', null, `
+  return pgModulo('Orientação nutricional', null, `
     <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">
       TMB, VET e distribuicao de macronutrientes calculados a partir dos dados da avaliacao.
     </p>

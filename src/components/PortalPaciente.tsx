@@ -1639,13 +1639,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           ['Fibras', fmt(plano.fibras_g), 'g/dia'],
         ];
         return (
-          <Secao ordem={116} titulo="Plano alimentar" sub="TMB, VET e distribuição de macronutrientes">
+          <Secao ordem={116} titulo="Orientação nutricional" sub="TMB, VET e distribuição de macronutrientes">
             <Card>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:14}}>
                 <span style={{fontSize:10,fontWeight:800,color:'#1d4ed8',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:999,padding:'4px 10px',textTransform:'uppercase'}}>
                   {plano.objetivo ?? 'Aplicado'}
                 </span>
-                <TooltipInfo texto={tooltip} label="Ver detalhes do plano alimentar" placement="top"/>
+                <TooltipInfo texto={tooltip} label="Ver detalhes da orientação nutricional" placement="top"/>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10}}>
                 {metricas.map(([label,value,unit])=>(

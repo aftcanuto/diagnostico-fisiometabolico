@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { calcIdade } from '@/lib/calculations/antropometria';
-import { calcularPlanoAlimentar, type ModeloPlanoAlimentar, type SexoNutricional } from '@/lib/nutrition/planoAlimentar';
+import {
+  calcularPlanoAlimentar,
+  listarFontesTmb,
+  type FonteTmbPreferida,
+  type ModeloPlanoAlimentar,
+  type SexoNutricional,
+} from '@/lib/nutrition/planoAlimentar';
 import { usuarioPodeAcessarAvaliacao } from '@/lib/api/permissions';
 
 export const runtime = 'nodejs';
@@ -10,6 +16,12 @@ function numero(v: any): number | null {
   if (v == null || v === '') return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function normalizarFonteTmb(valor: unknown): FonteTmbPreferida {
+  return valor === 'bioimpedancia' || valor === 'antropometria' || valor === 'mifflin_st_jeor'
+    ? valor
+    : 'auto';
 }
 
 async function getUserId() {
@@ -84,6 +96,7 @@ export async function GET(req: NextRequest) {
 
   const avaliacaoId = req.nextUrl.searchParams.get('avaliacaoId');
   const modeloId = req.nextUrl.searchParams.get('modeloId');
+  const tmbFonte = normalizarFonteTmb(req.nextUrl.searchParams.get('tmbFonte'));
   if (!avaliacaoId) return NextResponse.json({ error: 'avaliacaoId obrigatorio' }, { status: 400 });
 
   const { avaliacao, error } = await carregarAvaliacaoPermitida(avaliacaoId, userId);
@@ -106,7 +119,7 @@ export async function GET(req: NextRequest) {
       .maybeSingle(),
   ]);
 
-  const dadosBase = await carregarDadosBase(avaliacao);
+  const dadosBase = { ...(await carregarDadosBase(avaliacao)), tmbFontePreferida: tmbFonte };
   const lista = modelos.data ?? [];
   const modeloPreview =
     lista.find((m: any) => m.id === modeloId) ??
@@ -118,6 +131,8 @@ export async function GET(req: NextRequest) {
     modelos: lista,
     aplicado: aplicado.data ?? null,
     dadosBase,
+    fontesTmb: listarFontesTmb(dadosBase),
+    tmbFonte,
     preview: montarPreview(modeloPreview, dadosBase),
   });
 }
@@ -126,7 +141,7 @@ export async function POST(req: NextRequest) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
 
-  const { avaliacaoId, modeloId, observacoes } = await req.json();
+  const { avaliacaoId, modeloId, observacoes, tmbFonte } = await req.json();
   if (!avaliacaoId || !modeloId) {
     return NextResponse.json({ error: 'Avaliacao e modelo sao obrigatorios' }, { status: 400 });
   }
@@ -143,10 +158,10 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   if (modeloError || !modelo) {
-    return NextResponse.json({ error: 'Modelo de plano alimentar nao encontrado' }, { status: 404 });
+    return NextResponse.json({ error: 'Modelo de orientacao nutricional nao encontrado' }, { status: 404 });
   }
 
-  const dadosBase = await carregarDadosBase(avaliacao);
+  const dadosBase = { ...(await carregarDadosBase(avaliacao)), tmbFontePreferida: normalizarFonteTmb(tmbFonte) };
   const calculo = calcularPlanoAlimentar(dadosBase, modelo);
   if (!calculo.tmbKcal || !calculo.vetKcal) {
     return NextResponse.json({ error: 'Dados insuficientes para calcular TMB e VET. Confira peso, altura, sexo e idade.' }, { status: 400 });

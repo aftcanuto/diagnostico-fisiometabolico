@@ -154,7 +154,7 @@ function audit() {
     !hasConsentimentoEvidencias && 'Campos de evidencia legal de consentimento nao encontrados nas migrations',
     !hasProtocolosStatus && 'Status de envios de protocolo nao encontrado nas migrations',
     !hasPlanoAcaoTemplates && 'Modelos de plano de acao nao encontrados nas migrations',
-    !hasPlanoAlimentarTemplates && 'Templates de plano alimentar nao encontrados nas migrations',
+    !hasPlanoAlimentarTemplates && 'Templates de orientacao nutricional nao encontrados nas migrations',
     !hasProdutosFlexiveis && 'Campos de produtos flexiveis nao encontrados nas migrations',
     !hasProdutosCatalogoComercial && 'Campos comerciais da vitrine de produtos nao encontrados nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',

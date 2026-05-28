@@ -64,7 +64,7 @@ export function PlanosTemplatesPanel({ clinicaId }: { clinicaId: string }) {
   return (
     <div className="space-y-6">
       <PlanoAcaoModelosPanel clinicaId={clinicaId} />
-      <PlanoAlimentarModelosPanel clinicaId={clinicaId} />
+      <OrientacaoNutricionalModelosPanel clinicaId={clinicaId} />
     </div>
   );
 }
@@ -156,7 +156,7 @@ function PlanoAcaoModelosPanel({ clinicaId }: { clinicaId: string }) {
   );
 }
 
-function PlanoAlimentarModelosPanel({ clinicaId }: { clinicaId: string }) {
+function OrientacaoNutricionalModelosPanel({ clinicaId }: { clinicaId: string }) {
   const supabase = useMemo(() => createClient(), []);
   const [modelos, setModelos] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<any>(ALIMENTAR_VAZIO);
@@ -197,7 +197,7 @@ function PlanoAlimentarModelosPanel({ clinicaId }: { clinicaId: string }) {
   }
 
   async function excluir() {
-    if (!selecionado.id || !confirm('Excluir este modelo de plano alimentar?')) return;
+    if (!selecionado.id || !confirm('Excluir este modelo de orientacao nutricional?')) return;
     const { error } = await supabase.from('plano_alimentar_modelos').delete().eq('id', selecionado.id);
     if (error) return setErro(error.message);
     setSelecionado(ALIMENTAR_VAZIO);
@@ -207,7 +207,7 @@ function PlanoAlimentarModelosPanel({ clinicaId }: { clinicaId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle><Utensils className="inline h-4 w-4 mr-1 text-brand-600" /> Templates de plano alimentar</CardTitle>
+        <CardTitle><Utensils className="inline h-4 w-4 mr-1 text-brand-600" /> Templates de orientacao nutricional</CardTitle>
       </CardHeader>
       <CardBody className="grid gap-5 lg:grid-cols-[280px,1fr]">
         <ListaModelos modelos={modelos} selecionado={selecionado} vazio={ALIMENTAR_VAZIO} onNovo={setSelecionado} onSelect={setSelecionado} />

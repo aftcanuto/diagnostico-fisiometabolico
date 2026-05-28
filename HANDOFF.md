@@ -2463,3 +2463,28 @@ Validacao:
 - `npx.cmd tsc --noEmit` passou sem erros;
 - `npm.cmd run lint` passou sem erros;
 - `npm.cmd run db:audit` passou com 49 migrations, 32 tabelas com RLS, 103 policies e bucket `produto-imagens` validado.
+
+## Orientacao nutricional e selecao da fonte da TMB
+
+Em 28/05/2026 a funcionalidade visivel de `plano alimentar` foi renomeada para `Orientacao nutricional`, mantendo os nomes internos de tabela/API para nao exigir mudanca de schema.
+
+Implementado:
+
+- tela de Revisao passou a permitir escolher a fonte da TMB antes de aplicar a orientacao nutricional;
+- opcoes disponiveis: automatica, bioimpedancia, antropometria/dobras e estimativa Mifflin-St Jeor;
+- se a fonte escolhida nao existir para aquela avaliacao, o calculo usa fallback seguro para a melhor fonte disponivel;
+- API `/api/plano-alimentar` passou a receber `tmbFonte` em GET/POST e devolver `fontesTmb` para a interface;
+- dashboard do paciente e PDF passaram a exibir `Orientacao nutricional`;
+- testes nutricionais cobrem escolha manual da fonte, fallback seguro e listagem de fontes disponiveis.
+
+Migration:
+
+- nao houve migration nesta rodada; as tabelas existentes continuam sendo `plano_alimentar_modelos` e `plano_alimentar_avaliacoes` por compatibilidade.
+
+## Vitrine de produtos - imagem completa no hover
+
+Em 28/05/2026 a vitrine publica de produtos e a listagem interna de Produtos passaram a manter o recorte elegante no card, mas exibir uma previa flutuante com a imagem completa ao passar o mouse sobre a imagem.
+
+Migration:
+
+- sem migration; ajuste somente de interface.

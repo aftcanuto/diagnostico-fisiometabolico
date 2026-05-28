@@ -166,10 +166,15 @@ export default async function CatalogoPage({ params }: { params: { clinicaId: st
               const ctaHref = hrefProduto(produto, clinica);
               const shareUrl = `/catalogo/${params.clinicaId}#produto-${produto.id}`;
               return (
-                <article key={produto.id} id={`produto-${produto.id}`} className="flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className="relative h-44 bg-slate-100">
+                <article key={produto.id} id={`produto-${produto.id}`} className="relative flex min-h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  <div className="group relative h-44 rounded-t-2xl bg-slate-100">
                     {produto.imagem_url ? (
-                      <img src={produto.imagem_url} alt="" className="h-full w-full object-cover" />
+                      <>
+                        <img src={produto.imagem_url} alt="" className="h-full w-full rounded-t-2xl object-cover" />
+                        <div className="pointer-events-none absolute left-1/2 top-3 z-40 hidden w-80 max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl ring-1 ring-slate-900/5 group-hover:block">
+                          <img src={produto.imagem_url} alt={`Imagem completa de ${produto.nome}`} className="max-h-96 w-full rounded-xl object-contain" />
+                        </div>
+                      </>
                     ) : (
                       <div className="grid h-full place-items-center text-slate-300">
                         <Package className="h-14 w-14" />

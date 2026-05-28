@@ -2342,7 +2342,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             border: '1px solid #dbeafe', boxShadow: '0 18px 44px rgba(59,130,246,.06)' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom: 6 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 700 }}>
-                <span>Plano alimentar</span>
+                <span>Orientacao nutricional</span>
                 <AnaliseInfoTooltip texto={tooltip} />
               </div>
               <span style={{ fontSize:10, fontWeight:800, color:'#1d4ed8', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:999, padding:'4px 10px', textTransform:'uppercase' }}>

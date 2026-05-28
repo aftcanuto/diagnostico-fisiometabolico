@@ -34,6 +34,7 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   const [contextoScores, setContextoScores] = useState<any>(null);
   const [planoNutricional, setPlanoNutricional] = useState<any>({ loading: true, modelos: [], aplicado: null, preview: null });
   const [modeloPlanoId, setModeloPlanoId] = useState('');
+  const [fonteTmbPlano, setFonteTmbPlano] = useState<'auto' | 'bioimpedancia' | 'antropometria' | 'mifflin_st_jeor'>('auto');
   const [observacoesPlano, setObservacoesPlano] = useState('');
   const [salvandoPlano, setSalvandoPlano] = useState(false);
 
@@ -133,20 +134,21 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
     setState('ready');
     carregarPlanoNutricional().catch((error) => {
-      console.error('[Revisao] Nao foi possivel carregar plano alimentar', error);
-      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar plano alimentar' }));
+      console.error('[Revisao] Nao foi possivel carregar orientacao nutricional', error);
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar orientacao nutricional' }));
     });
   // carregarPlanoNutricional usa params.id e atualiza apenas a area nutricional; manter fora das dependencias evita recarregar a revisao inteira a cada simulacao de modelo.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   })(); }, [params.id, supabase]);
 
-  async function carregarPlanoNutricional(modeloId?: string) {
+  async function carregarPlanoNutricional(modeloId?: string, fonteTmb = fonteTmbPlano) {
     const url = new URL('/api/plano-alimentar', window.location.origin);
     url.searchParams.set('avaliacaoId', params.id);
     if (modeloId) url.searchParams.set('modeloId', modeloId);
+    url.searchParams.set('tmbFonte', fonteTmb);
     const res = await fetch(url.toString(), { cache: 'no-store' });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel carregar plano alimentar');
+    if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel carregar orientacao nutricional');
     setPlanoNutricional({ ...json, loading: false });
     const selecionado = modeloId ?? json.aplicado?.modelo_id ?? json.preview?.modelo?.id ?? json.modelos?.[0]?.id ?? '';
     setModeloPlanoId(selecionado);
@@ -157,9 +159,19 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
     setModeloPlanoId(modeloId);
     setPlanoNutricional((p: any) => ({ ...p, loading: true }));
     try {
-      await carregarPlanoNutricional(modeloId);
+      await carregarPlanoNutricional(modeloId, fonteTmbPlano);
     } catch (error: any) {
-      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular plano alimentar' }));
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular orientacao nutricional' }));
+    }
+  }
+
+  async function trocarFonteTmbPlano(fonte: 'auto' | 'bioimpedancia' | 'antropometria' | 'mifflin_st_jeor') {
+    setFonteTmbPlano(fonte);
+    setPlanoNutricional((p: any) => ({ ...p, loading: true }));
+    try {
+      await carregarPlanoNutricional(modeloPlanoId, fonte);
+    } catch (error: any) {
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular orientacao nutricional' }));
     }
   }
 
@@ -171,14 +183,14 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
       const res = await fetch('/api/plano-alimentar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avaliacaoId: params.id, modeloId: modeloPlanoId, observacoes: observacoesPlano }),
+        body: JSON.stringify({ avaliacaoId: params.id, modeloId: modeloPlanoId, observacoes: observacoesPlano, tmbFonte: fonteTmbPlano }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar o plano alimentar.');
+      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar a orientacao nutricional.');
       setPlanoNutricional((p: any) => ({ ...p, aplicado: json.data, preview: { ...(p.preview ?? {}), calculo: json.calculo } }));
-      setMessage({ type: 'success', text: 'Plano alimentar aplicado nesta avaliacao.' });
+      setMessage({ type: 'success', text: 'Orientacao nutricional aplicada nesta avaliacao.' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar o plano alimentar.' });
+      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar a orientacao nutricional.' });
     } finally {
       setSalvandoPlano(false);
     }
@@ -429,14 +441,14 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
       <Card>
         <CardHeader>
-          <CardTitle><Utensils className="inline w-4 h-4 mr-1 text-brand-600" /> Plano alimentar</CardTitle>
+          <CardTitle><Utensils className="inline w-4 h-4 mr-1 text-brand-600" /> Orientacao nutricional</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
           {planoNutricional.loading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando sugestao nutricional...</div>
+            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando orientacao nutricional...</div>
           ) : planoNutricional.modelos?.length ? (
             <>
-              <div className="grid gap-3 md:grid-cols-[1fr,220px]">
+              <div className="grid gap-3 md:grid-cols-[1fr,240px,220px]">
                 <div>
                   <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Objetivo / template</label>
                   <select
@@ -446,6 +458,21 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
                   >
                     {planoNutricional.modelos.map((m: any) => (
                       <option key={m.id} value={m.id}>{m.nome} - {m.objetivo}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Fonte da TMB</label>
+                  <select
+                    value={fonteTmbPlano}
+                    onChange={(e) => trocarFonteTmbPlano(e.target.value as any)}
+                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-brand-400"
+                  >
+                    <option value="auto">Automatica - melhor disponivel</option>
+                    {(planoNutricional.fontesTmb ?? []).map((fonte: any) => (
+                      <option key={fonte.id} value={fonte.id} disabled={!fonte.disponivel}>
+                        {fonte.label}: {fonte.valorKcal ? `${fonte.valorKcal} kcal` : 'indisponivel'}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -476,16 +503,16 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-sm text-slate-500">
-                  {planoNutricional.aplicado ? 'Plano ja aplicado nesta avaliacao. Voce pode recalcular e sobrescrever.' : 'Escolha o objetivo para sugerir macros e salvar no laudo.'}
+                  {planoNutricional.aplicado ? 'Orientacao ja aplicada nesta avaliacao. Voce pode recalcular e sobrescrever.' : 'Escolha o objetivo e a fonte da TMB para sugerir macros e salvar no laudo.'}
                 </div>
                 <Button onClick={aplicarPlanoAlimentar} disabled={salvandoPlano || !modeloPlanoId}>
-                  {salvandoPlano ? 'Aplicando...' : 'Aplicar plano alimentar'}
+                  {salvandoPlano ? 'Aplicando...' : 'Aplicar orientacao nutricional'}
                 </Button>
               </div>
             </>
           ) : (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              Nenhum template de plano alimentar ativo foi cadastrado. Cadastre em Configuracoes para usar esta etapa.
+              Nenhum template de orientacao nutricional ativo foi cadastrado. Cadastre em Configuracoes para usar esta etapa.
             </div>
           )}
           {planoNutricional.error && <div className="text-sm text-red-600">{planoNutricional.error}</div>}
