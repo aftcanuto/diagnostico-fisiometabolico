@@ -2510,3 +2510,10 @@ Implementado:
 Pendencia operacional:
 
 - aplicar a migration `050_prontuario_paciente.sql` no Supabase antes de testar o prontuario em producao.
+
+Complemento em 28/05/2026:
+
+- a tela do paciente passou a ter o botao `Importar avaliacoes`, que traz para o prontuario avaliacoes finalizadas antes da criacao da funcionalidade;
+- adicionada a opcao `Lancar registro`, permitindo inserir informacoes externas ao sistema, como consultas, exames anteriores, documentos e retornos;
+- criada a API `/api/prontuario` para importar avaliacoes finalizadas e salvar registros manuais mantendo a verificacao de permissao por paciente/clinica;
+- nao houve nova migration neste complemento; ele usa as tabelas criadas pela migration `050_prontuario_paciente.sql`.

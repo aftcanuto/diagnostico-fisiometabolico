@@ -151,7 +151,7 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
 
       <PacienteDocumentosCentral pacienteId={p.id} avaliacoes={avalsLista ?? []} />
 
-      <ProntuarioPaciente eventos={eventosProntuario} />
+      <ProntuarioPaciente pacienteId={p.id} eventos={eventosProntuario} />
 
       {/* Avaliações em andamento */}
       {emAndamento.length > 0 && (
