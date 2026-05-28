@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     const [
       anamnese, sinais_vitais, posturografia, bioimpedancia,
       antropometria, forca, flexibilidade, rml, cardio, biomecanica,
-      scoresRow, avaliador, clinica, analises,
+      planoAlimentar, scoresRow, avaliador, clinica, analises,
     ] = await Promise.all([
       admin.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
       admin.from('rml').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      admin.from('plano_alimentar_avaliacoes').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).maybeSingle(),
       aval.clinica_id
@@ -140,6 +141,7 @@ export async function GET(req: NextRequest) {
         rml: rml.data,
         cardiorrespiratorio: cardio.data,
         biomecanica_corrida: biomecanicaPdf,
+        plano_alimentar: planoAlimentar.data,
       },
       scores: scoresRow.data ?? {
         global: null, postura: null,

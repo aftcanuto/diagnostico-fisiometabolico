@@ -2314,6 +2314,63 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         );
       })()}
 
+      {(() => {
+        const plano = (atual as any).plano_alimentar;
+        if (!plano) return null;
+        const fmt = (v: any, digits = 0) => {
+          const n = Number(v);
+          return Number.isFinite(n) ? n.toLocaleString('pt-BR', { maximumFractionDigits: digits }) : '—';
+        };
+        const observacao = typeof plano.observacoes === 'string' ? plano.observacoes : '';
+        const tooltip = [
+          `Objetivo: ${plano.objetivo ?? '—'}`,
+          `Origem da TMB: ${plano.tmb_origem ?? '—'}`,
+          observacao ? `Observações: ${observacao}` : '',
+        ].filter(Boolean).join('\n\n');
+        const metricas = [
+          ['TMB', fmt(plano.tmb_kcal), 'kcal'],
+          ['VET', fmt(plano.vet_kcal), 'kcal'],
+          ['Proteína', fmt(plano.proteina_g), 'g/dia'],
+          ['Carboidrato', fmt(plano.carboidrato_g), 'g/dia'],
+          ['Gordura', fmt(plano.gordura_g), 'g/dia'],
+          ['Água', fmt(plano.agua_ml), 'ml/dia'],
+          ['Fibras', fmt(plano.fibras_g), 'g/dia'],
+          ['Fator atividade', fmt(plano.fator_atividade, 2), ''],
+        ];
+        return (
+          <div style={{ order: 119, background: 'white', borderRadius: 18, padding: '24px 28px', color: '#0f172a',
+            border: '1px solid #dbeafe', boxShadow: '0 18px 44px rgba(59,130,246,.06)' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom: 6 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 700 }}>
+                <span>Plano alimentar</span>
+                <AnaliseInfoTooltip texto={tooltip} />
+              </div>
+              <span style={{ fontSize:10, fontWeight:800, color:'#1d4ed8', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:999, padding:'4px 10px', textTransform:'uppercase' }}>
+                {plano.objetivo ?? 'Aplicado'}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>TMB, VET e distribuicao de macronutrientes calculados a partir da avaliacao.</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
+              {metricas.map(([label, value, unit]) => (
+                <div key={label} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:'12px 14px' }}>
+                  <div style={{ fontSize:10, fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.7px', marginBottom:6 }}>{label}</div>
+                  <div style={{ display:'flex', alignItems:'baseline', gap:5 }}>
+                    <span style={{ fontSize:20, fontWeight:900, color:'#0f172a' }}>{value}</span>
+                    {unit && <span style={{ fontSize:11, color:'#64748b' }}>{unit}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {observacao && (
+              <div style={{ marginTop:12, borderLeft:'4px solid #3b82f6', background:'#eff6ff', borderRadius:12, padding:'12px 14px',
+                fontSize:13, lineHeight:1.65, color:'#334155', whiteSpace:'pre-line' }}>
+                {observacao}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       <div style={{ order: 120, background: 'white', borderRadius: 16, padding: '24px 28px', color: '#0f172a' }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Todas as avaliações</div>
         <div>

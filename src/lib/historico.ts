@@ -27,6 +27,7 @@ export interface AvaliacaoHidratada {
   rml?: any;
   analises_ia?: any;
   biomecanica_corrida?: any;
+  plano_alimentar?: any;
   modulos_selecionados?: any;
 }
 

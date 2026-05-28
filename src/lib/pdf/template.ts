@@ -37,7 +37,7 @@ export interface LaudoData {
     percentual_gordura_relatorio?: number | null;
   };
   modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };
-  dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any };
+  dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any; plano_alimentar?: any };
   scores: { global: number | null; postura: number | null; composicao_corporal: number | null; forca: number | null; flexibilidade?: number | null; cardiorrespiratorio: number | null; rml?: number | null };
   analisesIA?: Record<string, AnaliseIA & { texto_editado?: string | null }>;
   pdfConfig?: {
@@ -1386,6 +1386,38 @@ function pgPlanoAcao(d: LaudoData, pri: string): string {
   `)).join('');
 }
 
+function pgPlanoAlimentar(d: LaudoData, pri: string): string {
+  const plano = d.dados.plano_alimentar;
+  if (!plano) return '';
+  const fmt = (v: any, digits = 0) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toLocaleString('pt-BR', { maximumFractionDigits: digits }) : '—';
+  };
+  const objetivo = plano.objetivo ?? 'Plano aplicado';
+  const origem = plano.tmb_origem ? `Origem da TMB: ${plano.tmb_origem}` : '';
+  const obs = typeof plano.observacoes === 'string' ? plano.observacoes.trim() : '';
+  return pgModulo('Plano alimentar', null, `
+    <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">
+      TMB, VET e distribuicao de macronutrientes calculados a partir dos dados da avaliacao.
+    </p>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;color:#0f172a">${x(objetivo)}</div>
+      <div style="font-size:10px;font-weight:800;color:${pri};background:#ecfdf5;border:1px solid #bbf7d0;border-radius:999px;padding:5px 12px">${x(origem)}</div>
+    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+      ${kpi('TMB', fmt(plano.tmb_kcal), 'kcal')}
+      ${kpi('VET', fmt(plano.vet_kcal), 'kcal')}
+      ${kpi('Proteina', fmt(plano.proteina_g), 'g/dia')}
+      ${kpi('Carboidrato', fmt(plano.carboidrato_g), 'g/dia')}
+      ${kpi('Gordura', fmt(plano.gordura_g), 'g/dia')}
+      ${kpi('Agua', fmt(plano.agua_ml), 'ml/dia')}
+      ${kpi('Fibras', fmt(plano.fibras_g), 'g/dia')}
+      ${kpi('Fator atividade', fmt(plano.fator_atividade, 2), '')}
+    </div>
+    ${obs ? `<div style="background:#eff6ff;border-left:4px solid ${pri};border-radius:0 12px 12px 0;padding:14px 16px;font-size:12px;line-height:1.7;color:#334155;white-space:pre-line">${x(obs)}</div>` : ''}
+  `);
+}
+
 function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   if (!b) return '';
   const met: any = b.metricas ?? {};
@@ -1766,6 +1798,7 @@ export function renderLaudoHTML(d: LaudoData): string {
     m.biomecanica_corrida ? pgBiomecanica(d.dados.biomecanica_corrida, ia.biomecanica_corrida, pri) : '',
     ia.conclusao_global ? pgConclusao(d, pri) : '',
     ia.conclusao_global ? pgPlanoAcao(d, pri) : '',
+    d.dados.plano_alimentar ? pgPlanoAlimentar(d, pri) : '',
     ia.evolucao           ? pgModulo('Evolução longitudinal', null,
       '<p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.</p>',
       ia.evolucao) : '',

@@ -16,7 +16,7 @@ import {
 } from '@/lib/scores';
 import { numeroClinico, scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura, type FonteGorduraRelatorio } from '@/lib/bodyComposition';
-import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck, Utensils } from 'lucide-react';
 
 export default function RevisaoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -32,6 +32,10 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   const [gorduraRelatorio, setGorduraRelatorio] = useState<any>(null);
   const [salvandoFonteGordura, setSalvandoFonteGordura] = useState(false);
   const [contextoScores, setContextoScores] = useState<any>(null);
+  const [planoNutricional, setPlanoNutricional] = useState<any>({ loading: true, modelos: [], aplicado: null, preview: null });
+  const [modeloPlanoId, setModeloPlanoId] = useState('');
+  const [observacoesPlano, setObservacoesPlano] = useState('');
+  const [salvandoPlano, setSalvandoPlano] = useState(false);
 
   useEffect(() => { (async () => {
     const { data: av } = await supabase.from('avaliacoes')
@@ -128,7 +132,57 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
     }
 
     setState('ready');
+    carregarPlanoNutricional().catch((error) => {
+      console.error('[Revisao] Nao foi possivel carregar plano alimentar', error);
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar plano alimentar' }));
+    });
+  // carregarPlanoNutricional usa params.id e atualiza apenas a area nutricional; manter fora das dependencias evita recarregar a revisao inteira a cada simulacao de modelo.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   })(); }, [params.id, supabase]);
+
+  async function carregarPlanoNutricional(modeloId?: string) {
+    const url = new URL('/api/plano-alimentar', window.location.origin);
+    url.searchParams.set('avaliacaoId', params.id);
+    if (modeloId) url.searchParams.set('modeloId', modeloId);
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel carregar plano alimentar');
+    setPlanoNutricional({ ...json, loading: false });
+    const selecionado = modeloId ?? json.aplicado?.modelo_id ?? json.preview?.modelo?.id ?? json.modelos?.[0]?.id ?? '';
+    setModeloPlanoId(selecionado);
+    setObservacoesPlano(json.aplicado?.observacoes ?? json.preview?.modelo?.observacoes ?? '');
+  }
+
+  async function trocarModeloPlano(modeloId: string) {
+    setModeloPlanoId(modeloId);
+    setPlanoNutricional((p: any) => ({ ...p, loading: true }));
+    try {
+      await carregarPlanoNutricional(modeloId);
+    } catch (error: any) {
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular plano alimentar' }));
+    }
+  }
+
+  async function aplicarPlanoAlimentar() {
+    if (!modeloPlanoId) return;
+    setSalvandoPlano(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/plano-alimentar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avaliacaoId: params.id, modeloId: modeloPlanoId, observacoes: observacoesPlano }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar o plano alimentar.');
+      setPlanoNutricional((p: any) => ({ ...p, aplicado: json.data, preview: { ...(p.preview ?? {}), calculo: json.calculo } }));
+      setMessage({ type: 'success', text: 'Plano alimentar aplicado nesta avaliacao.' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar o plano alimentar.' });
+    } finally {
+      setSalvandoPlano(false);
+    }
+  }
 
   async function escolherFonteGordura(fonte: FonteGorduraRelatorio) {
     if (!gorduraRelatorio) return;
@@ -370,6 +424,71 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
               )}
             </>
           )}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle><Utensils className="inline w-4 h-4 mr-1 text-brand-600" /> Plano alimentar</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          {planoNutricional.loading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando sugestao nutricional...</div>
+          ) : planoNutricional.modelos?.length ? (
+            <>
+              <div className="grid gap-3 md:grid-cols-[1fr,220px]">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Objetivo / template</label>
+                  <select
+                    value={modeloPlanoId}
+                    onChange={(e) => trocarModeloPlano(e.target.value)}
+                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-brand-400"
+                  >
+                    {planoNutricional.modelos.map((m: any) => (
+                      <option key={m.id} value={m.id}>{m.nome} - {m.objetivo}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
+                  <div className="text-xs font-semibold uppercase tracking-wide">TMB usada</div>
+                  <div className="text-2xl font-black">{planoNutricional.preview?.calculo?.tmbKcal ?? planoNutricional.aplicado?.tmb_kcal ?? '-'} kcal</div>
+                  <div className="text-xs">Origem: {planoNutricional.preview?.calculo?.tmbOrigem ?? planoNutricional.aplicado?.tmb_origem ?? '-'}</div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-5">
+                <PlanoMetric label="VET" value={planoNutricional.preview?.calculo?.vetKcal ?? planoNutricional.aplicado?.vet_kcal} unit="kcal" />
+                <PlanoMetric label="Proteina" value={planoNutricional.preview?.calculo?.proteinaG ?? planoNutricional.aplicado?.proteina_g} unit="g" />
+                <PlanoMetric label="Carboidrato" value={planoNutricional.preview?.calculo?.carboidratoG ?? planoNutricional.aplicado?.carboidrato_g} unit="g" />
+                <PlanoMetric label="Gordura" value={planoNutricional.preview?.calculo?.gorduraG ?? planoNutricional.aplicado?.gordura_g} unit="g" />
+                <PlanoMetric label="Agua" value={planoNutricional.preview?.calculo?.aguaMl ?? planoNutricional.aplicado?.agua_ml} unit="ml" />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Observacoes do plano</label>
+                <textarea
+                  value={observacoesPlano}
+                  onChange={(e) => setObservacoesPlano(e.target.value)}
+                  className="min-h-[90px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm outline-none focus:border-brand-400"
+                  placeholder="Ajustes, distribuicao de refeicoes, observacoes clinicas ou nutricionais."
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm text-slate-500">
+                  {planoNutricional.aplicado ? 'Plano ja aplicado nesta avaliacao. Voce pode recalcular e sobrescrever.' : 'Escolha o objetivo para sugerir macros e salvar no laudo.'}
+                </div>
+                <Button onClick={aplicarPlanoAlimentar} disabled={salvandoPlano || !modeloPlanoId}>
+                  {salvandoPlano ? 'Aplicando...' : 'Aplicar plano alimentar'}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Nenhum template de plano alimentar ativo foi cadastrado. Cadastre em Configuracoes para usar esta etapa.
+            </div>
+          )}
+          {planoNutricional.error && <div className="text-sm text-red-600">{planoNutricional.error}</div>}
         </CardBody>
       </Card>
 
@@ -638,6 +757,17 @@ function Stat({ label, value, sub }: { label: string; value: any; sub?: string }
       <div className="text-xs text-slate-500">{label}</div>
       <div className="text-lg font-semibold text-slate-800">{value}</div>
       {sub && <div className="text-xs text-slate-500">{sub}</div>}
+    </div>
+  );
+}
+
+function PlanoMetric({ label, value, unit }: { label: string; value: any; unit: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="mt-1 text-xl font-black text-slate-900">
+        {value ?? '-'} <span className="text-xs font-medium text-slate-500">{unit}</span>
+      </div>
     </div>
   );
 }

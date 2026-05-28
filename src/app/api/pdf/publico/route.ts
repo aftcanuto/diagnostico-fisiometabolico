@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'avaliacao ainda nao liberada' }, { status: 403 });
   }
 
-  const [anamnese, sinais_vitais, posturografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
+  const [anamnese, sinais_vitais, posturografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, planoAlimentar, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
     supabase.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
     supabase.from('rml').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('cardiorrespiratorio').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('biomecanica_corrida').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+    supabase.from('plano_alimentar_avaliacoes').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('scores').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', tok.avaliador_id).maybeSingle(),
     supabase.from('avaliadores').select('nome, crefito_crm, especialidade').eq('id', aval.avaliador_id).maybeSingle(),
@@ -108,6 +109,7 @@ export async function GET(req: NextRequest) {
       posturografia: posturografia.data, bioimpedancia: bioimpedancia.data,
       antropometria: antropometria.data,
       forca: forca.data, flexibilidade: flexibilidade.data, rml: rml.data, cardiorrespiratorio: cardio.data, biomecanica_corrida: biomecanicaPdf,
+      plano_alimentar: planoAlimentar.data,
     },
     scores: scoresRow.data ?? {
       global: null, postura: null, composicao_corporal: null, forca: null, cardiorrespiratorio: null,

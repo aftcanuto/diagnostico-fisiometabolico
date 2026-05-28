@@ -55,6 +55,15 @@ export default async function PortalPacientePage({ params }: { params: { token: 
       .maybeSingle()
     : { data: null };
 
+  const avaliacaoIds = (avaliacoes ?? []).map((a: any) => a.id);
+  const { data: planosAlimentares } = avaliacaoIds.length
+    ? await supabase
+      .from('plano_alimentar_avaliacoes')
+      .select('*')
+      .in('avaliacao_id', avaliacaoIds)
+    : { data: [] };
+  const planoAlimentarMap = Object.fromEntries((planosAlimentares ?? []).map((p: any) => [p.avaliacao_id, p]));
+
   const normalizadas = (avaliacoes ?? []).map((a: any) => {
     const um = (v: any) => Array.isArray(v) ? (v[0] ?? null) : v;
     const analises = Array.isArray(a.analises_ia)
@@ -84,6 +93,7 @@ export default async function PortalPacientePage({ params }: { params: { token: 
       sinais_vitais: um(a.sinais_vitais),
       anamnese: um(a.anamnese),
       biomecanica_corrida: um(a.biomecanica_corrida),
+      plano_alimentar: planoAlimentarMap[a.id] ?? null,
       analises_ia: analises,
     };
   });

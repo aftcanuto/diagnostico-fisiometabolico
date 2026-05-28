@@ -53,20 +53,23 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
   const rmlMap: Record<string, any> = {};
   const biomecMap: Record<string, any> = {};
   const analisesMap: Record<string, any> = {};
+  const planoAlimentarMap: Record<string, any> = {};
   try {
     if (avalsCompletas?.length) {
       const ids = avalsCompletas.map((a: any) => a.id);
-      const [{ data: bios }, { data: flexs }, { data: rmls }, { data: biomecs }, { data: analises }] = await Promise.all([
+      const [{ data: bios }, { data: flexs }, { data: rmls }, { data: biomecs }, { data: analises }, { data: planosAlimentares }] = await Promise.all([
         admin.from('bioimpedancia').select('*').in('avaliacao_id', ids),
         admin.from('flexibilidade').select('*').in('avaliacao_id', ids),
         admin.from('rml').select('*').in('avaliacao_id', ids),
         admin.from('biomecanica_corrida').select('*').in('avaliacao_id', ids),
         admin.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado,conteudo_paciente,texto_paciente_editado,plano_acao').in('avaliacao_id', ids),
+        admin.from('plano_alimentar_avaliacoes').select('*').in('avaliacao_id', ids),
       ]);
       bios?.forEach((b: any) => { bioMap[b.avaliacao_id] = b; });
       flexs?.forEach((f: any) => { flexMap[f.avaliacao_id] = f; });
       rmls?.forEach((r: any) => { rmlMap[r.avaliacao_id] = r; });
       biomecs?.forEach((b: any) => { biomecMap[b.avaliacao_id] = b; });
+      planosAlimentares?.forEach((p: any) => { planoAlimentarMap[p.avaliacao_id] = p; });
       analises?.forEach((a: any) => {
         analisesMap[a.avaliacao_id] ??= {};
         analisesMap[a.avaliacao_id][a.tipo] = a;
@@ -89,6 +92,7 @@ export default async function PacienteDashboardPage({ params }: { params: { id: 
     rml:                 rmlMap[a.id] ?? null,
     cardiorrespiratorio: flat(a.cardiorrespiratorio),
     biomecanica_corrida: biomecMap[a.id] ?? null,
+    plano_alimentar:     planoAlimentarMap[a.id] ?? null,
     analises_ia:         analisesMap[a.id] ?? null,
     posturografia:       flat(a.posturografia),
     sinais_vitais:       flat(a.sinais_vitais),

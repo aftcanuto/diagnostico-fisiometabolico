@@ -2417,3 +2417,21 @@ Validacao:
 - smoke test gerou previews do relatorio, dashboard clinico e dashboard do paciente;
 - formulas clinicas, backup em planilha, plano alimentar, TypeScript e lint passaram sem erro.
 - `npm.cmd run build` tambem passou; houve apenas aviso nao bloqueante de cache do webpack.
+
+## Plano alimentar aplicado apos avaliacao
+
+Em 28/05/2026 o plano alimentar deixou de ser apenas template em Configuracoes e passou a ser aplicavel dentro da Revisao da avaliacao.
+
+Implementado:
+
+- nova API `POST/GET /api/plano-alimentar` para calcular, prever e aplicar plano alimentar por avaliacao;
+- a tela de Revisao agora lista os modelos ativos de plano alimentar, calcula TMB automaticamente e sugere VET, macros, agua e fibras conforme o objetivo escolhido;
+- o calculo usa a TMB da bioimpedancia quando existir, depois antropometria, e por fim Mifflin-St Jeor com dados do paciente;
+- o avaliador pode editar observacoes antes de aplicar o plano;
+- o plano aplicado e salvo em `plano_alimentar_avaliacoes`;
+- dashboard clinico, portal do paciente e PDF passam a exibir o plano alimentar aplicado;
+- nao houve nova migration nesta rodada, pois a tabela `plano_alimentar_avaliacoes` ja existe desde a migration `033_planos_acao_alimentar.sql`.
+
+Pendencia operacional:
+
+- validar em producao se a migration `033_planos_acao_alimentar.sql` ja foi rodada no Supabase antes de testar o fluxo aplicado.
