@@ -108,5 +108,73 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data });
   }
 
+  if (acao === 'editar_evento') {
+    const eventoId = String(body.eventoId ?? '');
+    const tipo = TIPOS_MANUAIS.has(String(body.tipo)) ? String(body.tipo) : 'observacao';
+    const titulo = String(body.titulo ?? '').trim();
+    const dataEvento = String(body.dataEvento ?? '').trim() || new Date().toISOString().slice(0, 10);
+    const resumo = String(body.resumo ?? '').trim();
+    const conclusao = String(body.conclusao ?? '').trim();
+
+    if (!eventoId) return NextResponse.json({ error: 'Registro invalido.' }, { status: 400 });
+    if (!titulo) return NextResponse.json({ error: 'Informe um titulo para o registro.' }, { status: 400 });
+    if (!resumo && !conclusao) {
+      return NextResponse.json({ error: 'Informe um resumo, achado ou conclusao.' }, { status: 400 });
+    }
+
+    const { data: existente, error: existenteError } = await admin
+      .from('prontuario_eventos')
+      .select('id, paciente_id')
+      .eq('id', eventoId)
+      .eq('paciente_id', pacienteId)
+      .maybeSingle();
+
+    if (existenteError || !existente?.id) {
+      return NextResponse.json({ error: existenteError?.message ?? 'Registro nao encontrado neste paciente.' }, { status: 404 });
+    }
+
+    const { error: updateError } = await admin
+      .from('prontuario_eventos')
+      .update({
+        tipo,
+        titulo,
+        data_evento: dataEvento,
+        resumo,
+        conclusao: conclusao || null,
+        origem: 'manual',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', eventoId)
+      .eq('paciente_id', pacienteId);
+
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (acao === 'excluir_evento') {
+    const eventoId = String(body.eventoId ?? '');
+    if (!eventoId) return NextResponse.json({ error: 'Registro invalido.' }, { status: 400 });
+
+    const { data: existente, error: existenteError } = await admin
+      .from('prontuario_eventos')
+      .select('id, paciente_id')
+      .eq('id', eventoId)
+      .eq('paciente_id', pacienteId)
+      .maybeSingle();
+
+    if (existenteError || !existente?.id) {
+      return NextResponse.json({ error: existenteError?.message ?? 'Registro nao encontrado neste paciente.' }, { status: 404 });
+    }
+
+    const { error: deleteError } = await admin
+      .from('prontuario_eventos')
+      .delete()
+      .eq('id', eventoId)
+      .eq('paciente_id', pacienteId);
+
+    if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
+
   return NextResponse.json({ error: 'Acao invalida' }, { status: 400 });
 }

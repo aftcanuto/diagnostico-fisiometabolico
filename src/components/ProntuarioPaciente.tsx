@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ClipboardList, FileText, Plus, RefreshCw, Save, X } from 'lucide-react';
+import { ClipboardList, FileText, Pencil, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
+
+const TIPOS_VISUAIS = ['servico', 'observacao', 'retorno', 'documento'];
 
 type EventoProntuario = {
   id: string;
@@ -41,10 +43,18 @@ function scoreLinha(scores?: Record<string, any> | null) {
 export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string; eventos: EventoProntuario[] }) {
   const router = useRouter();
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [form, setForm] = useState({
+    tipo: 'observacao',
+    dataEvento: new Date().toISOString().slice(0, 10),
+    titulo: '',
+    resumo: '',
+    conclusao: '',
+  });
+  const [editForm, setEditForm] = useState({
     tipo: 'observacao',
     dataEvento: new Date().toISOString().slice(0, 10),
     titulo: '',
@@ -99,6 +109,40 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
       resumo: '',
       conclusao: '',
     });
+    router.refresh();
+  }
+
+  function abrirEdicao(evento: EventoProntuario) {
+    setErro(null);
+    setMensagem(null);
+    setMostrarForm(false);
+    setEditandoId(evento.id);
+    setEditForm({
+      tipo: TIPOS_VISUAIS.includes(evento.tipo) ? evento.tipo : 'observacao',
+      dataEvento: evento.data_evento || new Date().toISOString().slice(0, 10),
+      titulo: evento.titulo ?? '',
+      resumo: evento.resumo ?? '',
+      conclusao: evento.conclusao ?? '',
+    });
+  }
+
+  async function salvarEdicao(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editandoId) return;
+    const json = await chamarApi({ acao: 'editar_evento', eventoId: editandoId, ...editForm });
+    if (!json) return;
+    setMensagem('Registro do prontuario atualizado.');
+    setEditandoId(null);
+    router.refresh();
+  }
+
+  async function excluirEvento(evento: EventoProntuario) {
+    const confirmar = window.confirm(`Excluir o registro "${evento.titulo}" do prontuario?`);
+    if (!confirmar) return;
+    const json = await chamarApi({ acao: 'excluir_evento', eventoId: evento.id });
+    if (!json) return;
+    setMensagem('Registro excluido do prontuario.');
+    if (editandoId === evento.id) setEditandoId(null);
     router.refresh();
   }
 
@@ -227,6 +271,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
           {ordenados.map((evento) => {
             const scores = scoreLinha(evento.scores);
             const achados = Object.values(evento.achados ?? {}).filter(Boolean).slice(0, 4);
+            const emEdicao = editandoId === evento.id;
             return (
               <article key={evento.id} className="p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -243,16 +288,109 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
                     <h3 className="mt-1 text-base font-bold text-slate-900">{evento.titulo}</h3>
                     {evento.resumo && <p className="mt-2 text-sm leading-relaxed text-slate-600">{evento.resumo}</p>}
                   </div>
-                  {evento.avaliacao_id && (
-                    <Link
-                      href={`/avaliacoes/${evento.avaliacao_id}/revisao`}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    {evento.avaliacao_id && (
+                      <Link
+                        href={`/avaliacoes/${evento.avaliacao_id}/revisao`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        Abrir avaliacao
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => abrirEdicao(evento)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                      <FileText className="h-3.5 w-3.5" />
-                      Abrir avaliacao
-                    </Link>
-                  )}
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => excluirEvento(evento)}
+                      disabled={salvando}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Excluir
+                    </button>
+                  </div>
                 </div>
+
+                {emEdicao && (
+                  <form onSubmit={salvarEdicao} className="mt-4 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Tipo
+                        <select
+                          value={editForm.tipo}
+                          onChange={(e) => setEditForm((v) => ({ ...v, tipo: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
+                        >
+                          <option value="observacao">Observacao</option>
+                          <option value="servico">Servico externo</option>
+                          <option value="retorno">Retorno</option>
+                          <option value="documento">Documento</option>
+                        </select>
+                      </label>
+                      <label className="text-sm font-semibold text-slate-700">
+                        Data
+                        <input
+                          type="date"
+                          value={editForm.dataEvento}
+                          onChange={(e) => setEditForm((v) => ({ ...v, dataEvento: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold text-slate-700">
+                        Titulo
+                        <input
+                          value={editForm.titulo}
+                          onChange={(e) => setEditForm((v) => ({ ...v, titulo: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Achados / observacoes
+                        <textarea
+                          value={editForm.resumo}
+                          onChange={(e) => setEditForm((v) => ({ ...v, resumo: e.target.value }))}
+                          rows={4}
+                          className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold text-slate-700">
+                        Conduta / conclusao
+                        <textarea
+                          value={editForm.conclusao}
+                          onChange={(e) => setEditForm((v) => ({ ...v, conclusao: e.target.value }))}
+                          rows={4}
+                          className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditandoId(null)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={salvando}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+                      >
+                        <Save className="h-4 w-4" />
+                        {salvando ? 'Salvando...' : 'Salvar alteracoes'}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 {scores.length > 0 && (
                   <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">

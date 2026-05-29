@@ -2517,3 +2517,10 @@ Complemento em 28/05/2026:
 - adicionada a opcao `Lancar registro`, permitindo inserir informacoes externas ao sistema, como consultas, exames anteriores, documentos e retornos;
 - criada a API `/api/prontuario` para importar avaliacoes finalizadas e salvar registros manuais mantendo a verificacao de permissao por paciente/clinica;
 - nao houve nova migration neste complemento; ele usa as tabelas criadas pela migration `050_prontuario_paciente.sql`.
+
+Complemento em 29/05/2026:
+
+- registros do prontuario agora podem ser editados ou excluidos diretamente no card do evento;
+- API `/api/prontuario` recebeu as acoes `editar_evento` e `excluir_evento`, sempre conferindo se o usuario tem acesso ao paciente antes de alterar/remover;
+- exclusao remove apenas o evento do prontuario, sem apagar a avaliacao original quando o registro veio de importacao;
+- sem nova migration; usa a tabela existente `prontuario_eventos`.
