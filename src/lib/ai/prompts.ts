@@ -104,7 +104,26 @@ export function promptFlexibilidade(ctx: PacienteContexto, dados: any) {
 export function promptCardio(ctx: PacienteContexto, dados: any) {
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: CARDIORRESPIRATÓRIO\n\nReferencias e limites obrigatorios:\n${referenciasModulo('cardiorrespiratorio')}\n\nDados:\n- VO₂máx: ${dados?.vo2max} ml/kg/min\n- L2: ${dados?.l2} km/h · VAM: ${dados?.vam} km/h\n- FCmáx: ${dados?.fc_max} bpm · FC repouso: ${dados?.fc_repouso} bpm\n- Zonas: ${JSON.stringify(dados?.zonas)}\n\nInterprete a capacidade CR considerando sexo/idade. Classifique o VO₂máx. Dê uma semana típica de treino com distribuição Z1-Z5 alinhada ao objetivo.`
+    user: `Modulo: CARDIORRESPIRATORIO
+
+Referencias e limites obrigatorios:
+${referenciasModulo('cardiorrespiratorio')}
+
+Dados principais:
+- Protocolo: ${dados?.protocolo ?? '-'}
+- VO2max: ${dados?.vo2max ?? '-'} ml/kg/min
+- Classificacao VO2: ${dados?.classificacao_vo2 ?? '-'}
+- FCmax: ${dados?.fc_max ?? '-'} bpm | FC repouso: ${dados?.fc_repouso ?? '-'} bpm | FC limiar: ${dados?.fc_limiar ?? '-'} bpm
+- L2: ${dados?.l2 ?? '-'} km/h | VAM: ${dados?.vam ?? '-'} km/h
+- Carga limiar: ${dados?.carga_limiar ?? '-'} km/h | Carga maxima: ${dados?.carga_max ?? '-'} km/h
+- VE maxima: ${dados?.ve_max ?? '-'} L/min
+- Tempo no limiar: ${dados?.ponto_limiar_tempo ?? '-'}
+- Recuperacao da FC: ${JSON.stringify(dados?.rec_fc ?? {})}
+- Zonas por FCmax (Z1-Z5): ${JSON.stringify(dados?.zonas ?? {})}
+- Zonas por limiar: ${JSON.stringify(dados?.zonas_limiar ?? [])}
+- Velocidades de treino: ${JSON.stringify(dados?.velocidades_treino ?? [])}
+
+Interprete a capacidade CR considerando sexo/idade. Classifique o VO2max, recuperacao de FC, limiar e velocidades de treino. De uma semana tipica de treino com distribuicao Z1-Z5 alinhada ao objetivo. Nao crie zonas acima de Z5.`
   };
 }
 
@@ -206,27 +225,23 @@ export function promptBiomecanica(ctx: PacienteContexto, dados: any) {
   const met = dados.metricas ?? {};
   const achados = dados.achados ?? {};
 
-  const REFERENCIAS: Record<string, {min:number;max:number;nome:string}> = {
-    cabeca:           { min:-13, max:-3,  nome:'Alinhamento da cabeça' },
-    tronco:           { min:8,   max:14,  nome:'Posicionamento do tronco' },
-    cotovelo:         { min:77,  max:87,  nome:'Cotovelo (MMSS)' },
-    joelho_posterior: { min:0,   max:97,  nome:'Joelho posterior' },
-    joelho_impacto:   { min:155, max:175, nome:'Joelho no impacto' },
-    overstride:       { min:0,   max:10,  nome:'Overstride' },
-  };
-
   const angulosTexto = Object.entries(ang).map(([k, v]: any) => {
-    const ref = REFERENCIAS[k];
-    return `${ref?.nome ?? k}: ${v.valor}° (ideal: ${v.ideal_min}° a ${v.ideal_max}°) — ${v.classificacao}`;
+    const nome = v.label ?? v.nome ?? k;
+    const ideal = v.ideal_min != null && v.ideal_max != null
+      ? `ideal informado no sistema: ${v.ideal_min} a ${v.ideal_max} graus`
+      : 'faixa ideal nao informada';
+    return `${nome}: ${v.valor ?? '-'} graus (${ideal}) - ${v.classificacao ?? 'sem classificacao'}`;
   }).join('\n');
 
   return {
-    system: `Você é um especialista em biomecânica da corrida. Analise os dados cinemáticos e emita uma interpretação clínica detalhada em PORTUGUÊS.
+    system: `Voce e um especialista em biomecanica da corrida. Analise os dados cinematicos e emita uma interpretacao clinica detalhada em portugues brasileiro.
 
 Paciente: ${ctx.nome}, ${ctx.sexo === 'M' ? 'masculino' : 'feminino'}, ${ctx.idade} anos.
-Velocidade de corrida: ${dados.velocidade_kmh ?? '—'} km/h.
+Velocidade de corrida: ${dados.velocidade_kmh ?? '-'} km/h.
 
-Retorne APENAS JSON válido:
+Use exclusivamente as faixas ideal_min/ideal_max recebidas em cada angulo. Nao invente nem substitua referencias numericas.
+
+Retorne APENAS JSON valido:
 {
   "achados": string[],
   "interpretacao": string,
@@ -234,25 +249,25 @@ Retorne APENAS JSON válido:
   "beneficios": string[],
   "recomendacoes": string[],
   "alertas": string[]
-}`,
+}` ,
     user: `Referencias e limites obrigatorios:
 ${referenciasModulo('biomecanica_corrida')}
 
-ÂNGULOS CINEMÁTICOS:\n${angulosTexto}
+ANGULOS CINEMATICOS:\n${angulosTexto}
 
-MÉTRICAS DA PASSADA:
-- Frequência de passos: ${met.frequencia_passos_ppm ?? '—'} ppm
-- Comprimento da passada: ${met.comprimento_passada_m ?? '—'} m
-- Contato solo: ${met.tempo_contato_solo_s ?? '—'} s
-- Fator de esforço: ${met.fator_esforco_pct ?? '—'}% (${met.fator_esforco_tipo ?? '—'})
+METRICAS DA PASSADA:
+- Frequencia de passos: ${met.frequencia_passos_ppm ?? '-'} ppm
+- Comprimento da passada: ${met.comprimento_passada_m ?? '-'} m
+- Contato solo: ${met.tempo_contato_solo_s ?? '-'} s
+- Fator de esforco: ${met.fator_esforco_pct ?? '-'}% (${met.fator_esforco_tipo ?? '-'})
 
-ACHADOS CLÍNICOS:
-${achados.mecanica_frenagem ? '⚠️ Mecânica de frenagem (overstride)' : ''}
-${achados.sobrecarga_articular ? '⚠️ Sobrecarga articular e muscular' : ''}
-${achados.deslocamento_cg ? '⚠️ Deslocamento do centro de gravidade' : ''}
-${achados.ineficiencia_propulsiva ? '⚠️ Ineficiência propulsiva' : ''}
-${achados.observacoes ? 'Observações: ' + achados.observacoes : ''}
+ACHADOS CLINICOS:
+${achados.mecanica_frenagem ? 'Mecanica de frenagem (overstride)' : ''}
+${achados.sobrecarga_articular ? 'Sobrecarga articular e muscular' : ''}
+${achados.deslocamento_cg ? 'Deslocamento do centro de gravidade' : ''}
+${achados.ineficiencia_propulsiva ? 'Ineficiencia propulsiva' : ''}
+${achados.observacoes ? 'Observacoes: ' + achados.observacoes : ''}
 
-Emita análise clínica detalhada.`
+Emita analise clinica detalhada.`
   };
 }

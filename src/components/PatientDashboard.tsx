@@ -1053,21 +1053,64 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
   const zonas = atual.cardiorrespiratorio?.zonas;
   const zonaCores=['#22c55e','#10b981','#f59e0b','#f97316','#ef4444'];
   const zonaNomes=['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO₂máx'];
-  const zonasItems = Array.isArray(zonas)
-    ? zonas.map((z:any,i:number)=>({
-      label:z.label??z.nome??`Z${i+1}`,
-      nome:zonaNomes[i]??z.nome??`Zona ${i+1}`,
-      min:Number(z.min??0),
-      max:Number(z.max??0),
-      cor:zonaCores[i]??'#10b981',
-    }))
-    : zonas ? [
-      { label: 'Z1', nome: 'Regenerativo', min: zonas.z1?.min ?? 0, max: zonas.z1?.max ?? 0, cor: zonaCores[0] },
-      { label: 'Z2', nome: 'Base aeróbica', min: zonas.z2?.min ?? 0, max: zonas.z2?.max ?? 0, cor: zonaCores[1] },
-      { label: 'Z3', nome: 'Aeróbico',      min: zonas.z3?.min ?? 0, max: zonas.z3?.max ?? 0, cor: zonaCores[2] },
-      { label: 'Z4', nome: 'Limiar',         min: zonas.z4?.min ?? 0, max: zonas.z4?.max ?? 0, cor: zonaCores[3] },
-      { label: 'Z5', nome: 'VO₂máx',         min: zonas.z5?.min ?? 0, max: zonas.z5?.max ?? 0, cor: zonaCores[4] },
-    ] : [];
+  const numeroValido = (valor: any) => {
+    const n = Number(valor);
+    return Number.isFinite(n) ? n : null;
+  };
+  const zonasItems = (() => {
+    const lista = Array.isArray(zonas)
+      ? zonas.slice(0, 5).map((z:any,i:number)=>({
+        label:`Z${i+1}`,
+        nome:zonaNomes[i]??z.nome??`Zona ${i+1}`,
+        min:numeroValido(z.min),
+        max:numeroValido(z.max),
+        cor:zonaCores[i]??'#10b981',
+      }))
+      : zonas ? [
+        { label: 'Z1', nome: 'Regenerativo', min: numeroValido(zonas.z1?.min), max: numeroValido(zonas.z1?.max), cor: zonaCores[0] },
+        { label: 'Z2', nome: 'Base aeróbica', min: numeroValido(zonas.z2?.min), max: numeroValido(zonas.z2?.max), cor: zonaCores[1] },
+        { label: 'Z3', nome: 'Aeróbico',      min: numeroValido(zonas.z3?.min), max: numeroValido(zonas.z3?.max), cor: zonaCores[2] },
+        { label: 'Z4', nome: 'Limiar',         min: numeroValido(zonas.z4?.min), max: numeroValido(zonas.z4?.max), cor: zonaCores[3] },
+        { label: 'Z5', nome: 'VO₂máx',         min: numeroValido(zonas.z5?.min), max: numeroValido(zonas.z5?.max), cor: zonaCores[4] },
+      ] : [];
+    return lista.filter(z => z.min != null || z.max != null).map(z => ({...z, min: z.min ?? 0, max: z.max ?? 0}));
+  })();
+  const velocidadesTreinoItems = (() => {
+    const raw = Array.isArray((atual.cardiorrespiratorio as any)?.velocidades_treino)
+      ? ((atual.cardiorrespiratorio as any).velocidades_treino as any[])
+      : [];
+    const defs = [
+      { label:'Z1', nome:'Regenerativo', intensidades:[60,65] },
+      { label:'Z2', nome:'Base aeróbica', intensidades:[70,75] },
+      { label:'Z3', nome:'Aeróbico', intensidades:[80,85] },
+      { label:'Z4', nome:'Limiar', intensidades:[90,95] },
+      { label:'Z5', nome:'VO₂máx', intensidades:[100] },
+    ];
+    return defs.map((def) => {
+      const valores = raw
+        .filter((v:any) => def.intensidades.includes(Number(v.intensidade)))
+        .flatMap((v:any) => [numeroValido(v.velocidade_min), numeroValido(v.velocidade), numeroValido(v.velocidade_max)])
+        .filter((v): v is number => v != null);
+      return {
+        ...def,
+        min: valores.length ? Math.min(...valores) : null,
+        max: valores.length ? Math.max(...valores) : null,
+      };
+    }).filter(z => z.min != null || z.max != null);
+  })();
+  const zonasLimiarItems = (() => {
+    const raw = Array.isArray((atual.cardiorrespiratorio as any)?.zonas_limiar)
+      ? ((atual.cardiorrespiratorio as any).zonas_limiar as any[])
+      : [];
+    return raw.slice(0, 5).map((z:any, i:number) => ({
+      label: `Z${i + 1}`,
+      nome: z.nome ?? zonaNomes[i] ?? `Zona ${i + 1}`,
+      bpm_min: numeroValido(z.bpm_min),
+      bpm_max: numeroValido(z.bpm_max),
+      pct_min: numeroValido(z.pct_min),
+      pct_max: numeroValido(z.pct_max),
+    })).filter(z => z.bpm_min != null || z.bpm_max != null || z.pct_min != null || z.pct_max != null);
+  })();
 
   const pri = '#059669';
 
@@ -1587,7 +1630,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         return (
           <div style={{order:45, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
             <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
-              <span>Bioimpedância</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.bioimpedancia)} /><ModuleScoreBadge score={sc.composicao_corporal}/>
+              <span>Bioimpedância</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.bioimpedancia)} />
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Composição corporal e dados metabólicos</div>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
@@ -1628,7 +1671,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         return (
           <div style={{order:55, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
             <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
-              <span>Antropometria</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.antropometria)} /><ModuleScoreBadge score={sc.composicao_corporal}/>
+              <span>Antropometria</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.antropometria)} />
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Medidas ISAK, dobras cutâneas e composição corporal</div>
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
@@ -2025,11 +2068,17 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['Classificacao', cardio.classificacao_vo2, '', '#0f172a'],
           ['FC limiar', cardio.fc_limiar, 'bpm', '#f59e0b'],
           ['FC maxima', cardio.fc_max, 'bpm', '#f87171'],
+          ['FC repouso', cardio.fc_repouso ?? sv?.fc_repouso, 'bpm', '#0f172a'],
+          ['L2', cardio.l2, 'km/h', '#0f172a'],
+          ['VAM', cardio.vam, 'km/h', '#7c3aed'],
+          ['Carga limiar', cardio.carga_limiar, 'km/h', '#10b981'],
+          ['Carga maxima', cardio.carga_max, 'km/h', '#f97316'],
+          ['VE maxima', cardio.ve_max, 'L/min', '#0f172a'],
+          ['Tempo no limiar', cardio.ponto_limiar_tempo, '', '#0f172a'],
           ['Pressao arterial', sv?.pa_sistolica != null && sv?.pa_diastolica != null ? `${sv.pa_sistolica}/${sv.pa_diastolica}` : null, 'mmHg', '#0f172a'],
-          ['FC repouso', sv?.fc_repouso, 'bpm', '#0f172a'],
           ['SpO2', sv?.spo2 != null ? `${sv.spo2}%` : null, '', '#0f172a'],
         ].filter(([,v]) => v != null && v !== '');
-        if (!itens.length && !cardio.protocolo) return null;
+        if (!itens.length && !cardio.protocolo && !velocidadesTreinoItems.length && !zonasLimiarItems.length) return null;
         return (
           <div style={{order: 90, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:700,marginBottom:4}}><span>Saude cardiovascular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /><ModuleScoreBadge score={sc.cardiorrespiratorio}/></div>
@@ -2038,6 +2087,29 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
             {cardio.protocolo && <div style={{marginTop:10}}><MetricLine label="Protocolo" value={cardio.protocolo}/></div>}
+            {velocidadesTreinoItems.length > 0 && (
+              <div style={{marginTop:16}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.6px',marginBottom:8}}>Velocidades de treino</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:8}}>
+                  {velocidadesTreinoItems.map((z) => {
+                    const valor = z.min != null && z.max != null && z.min !== z.max ? `${z.min}-${z.max}` : z.min ?? z.max;
+                    return <MetricLine key={z.label} label={`${z.label} · ${z.nome}`} value={valor} unit="km/h" color="#10b981"/>;
+                  })}
+                </div>
+              </div>
+            )}
+            {zonasLimiarItems.length > 0 && (
+              <div style={{marginTop:16}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.6px',marginBottom:8}}>Zonas por limiar</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:8}}>
+                  {zonasLimiarItems.map((z) => {
+                    const bpm = z.bpm_min != null || z.bpm_max != null ? `${z.bpm_min ?? '—'}-${z.bpm_max ?? '—'}` : '—';
+                    const pct = z.pct_min != null || z.pct_max != null ? ` · ${z.pct_min ?? '—'}-${z.pct_max ?? '—'}%` : '';
+                    return <MetricLine key={z.label} label={`${z.label} · ${z.nome}${pct}`} value={bpm} unit="bpm" color="#f59e0b"/>;
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}

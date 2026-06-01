@@ -2585,3 +2585,12 @@ Validacao em 29/05/2026:
   - orientacao nutricional;
   - TypeScript;
   - lint.
+## Ajustes em painel do paciente, cardio e referências cinemáticas
+
+Em 01/06/2026:
+- O dashboard do paciente deixou de repetir o score de composição corporal nos blocos detalhados de bioimpedância/antropometria, evitando leitura de FFMI com score incorreto.
+- Zonas de treino foram normalizadas para Z1-Z5 no dashboard e PDF.
+- Velocidades de treino passaram a ser agrupadas em Z1-Z5 para exibição.
+- Cardiorrespiratório passou a exibir campos avançados disponíveis: L2, VAM, cargas, VE, limiar, recuperação e zonas por limiar.
+- O prompt da IA de biomecânica passou a usar somente as faixas `ideal_min`/`ideal_max` salvas no sistema, sem substituir por referências internas divergentes.
+- Sem nova migration.

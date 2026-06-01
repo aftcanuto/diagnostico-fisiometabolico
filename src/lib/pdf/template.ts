@@ -1330,10 +1330,51 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
   `, ia);
 }
 
+function numeroPdf(valor: any): number | null {
+  const n = Number(valor);
+  return Number.isFinite(n) ? n : null;
+}
+
+function agruparVelocidadesTreino(vel: any[] = []) {
+  const defs = [
+    { label: 'Z1', nome: 'Regenerativo', intensidades: [60, 65] },
+    { label: 'Z2', nome: 'Base aerobica', intensidades: [70, 75] },
+    { label: 'Z3', nome: 'Aerobico', intensidades: [80, 85] },
+    { label: 'Z4', nome: 'Limiar', intensidades: [90, 95] },
+    { label: 'Z5', nome: 'VO2max', intensidades: [100] },
+  ];
+  return defs.map((def) => {
+    const valores = (Array.isArray(vel) ? vel : [])
+      .filter((v: any) => def.intensidades.includes(Number(v.intensidade)))
+      .flatMap((v: any) => [numeroPdf(v.velocidade_min), numeroPdf(v.velocidade), numeroPdf(v.velocidade_max)])
+      .filter((v): v is number => v != null);
+    return {
+      ...def,
+      tipo: `${def.label} - ${def.nome}`,
+      velocidade_min: valores.length ? Math.min(...valores) : null,
+      velocidade_max: valores.length ? Math.max(...valores) : null,
+      min: valores.length ? Math.min(...valores) : null,
+      max: valores.length ? Math.max(...valores) : null,
+    };
+  }).filter(z => z.min != null || z.max != null);
+}
+
+function normalizarZonasLimiar(zLim: any[] = []) {
+  const nomes = ['Regenerativo', 'Base aerobica', 'Aerobico', 'Limiar', 'VO2max'];
+  return (Array.isArray(zLim) ? zLim : []).slice(0, 5).map((z: any, i: number) => ({
+    label: `Z${i + 1}`,
+    nome: z.nome ?? nomes[i],
+    pct_min: numeroPdf(z.pct_min),
+    pct_max: numeroPdf(z.pct_max),
+    bpm_min: numeroPdf(z.bpm_min),
+    bpm_max: numeroPdf(z.bpm_max),
+  })).filter(z => z.pct_min != null || z.pct_max != null || z.bpm_min != null || z.bpm_max != null);
+}
+
 function pgCardio(c: any, score: number | null, ia?: any): string {
   if (!c) return '';
-  const zonas=c.zonas??{}, zPct:any[]=c.zonas_percentual??[], vel:any[]=c.velocidades_treino??[];
-  const recFC:Record<string,number>=c.rec_fc??{}, zLim:any[]=c.zonas_limiar??[];
+  const zonas=c.zonas??{}, vel=agruparVelocidadesTreino(c.velocidades_treino??[]);
+  const recFC:Record<string,number>=c.rec_fc??{}, zLim=normalizarZonasLimiar(c.zonas_limiar??[]);
   const zCores=['#6ee7b7','#34d399','#fbbf24','#f97316','#ef4444'];
   const rec60=recFC['60'];
   const recCor=rec60!=null?(rec60<=-20?'#10b981':rec60<=-12?'#f59e0b':'#ef4444'):'#6b7280';
