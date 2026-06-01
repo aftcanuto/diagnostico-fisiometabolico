@@ -163,6 +163,8 @@ export function PacienteDocumentosCentral({
 
   const origem = typeof window === 'undefined' ? '' : window.location.origin;
   const linksAtivos = dados.portalTokens.length + dados.anamneseLinks.length + dados.consentimentoLinks.length;
+  const comprovantePdfUrl = (token?: string | null) =>
+    token ? `${origem}/api/consentimento-comprovante?token=${encodeURIComponent(token)}` : '';
 
   async function copiar(texto: string, id: string) {
     try {
@@ -225,6 +227,7 @@ export function PacienteDocumentosCentral({
         <Bloco titulo="Termos e TCLE" icone={<ShieldCheck />}>
           {dados.consentimentoAceites.length ? dados.consentimentoAceites.slice(0, 4).map((aceite) => {
             const url = aceite.token ? `${origem}/pre-atendimento/consentimento/${aceite.token}/comprovante` : '';
+            const pdfUrl = comprovantePdfUrl(aceite.token);
             return (
               <Linha
                 key={aceite.id}
@@ -232,13 +235,25 @@ export function PacienteDocumentosCentral({
                 descricao={`Aceito em ${dataCurta(aceite.aceito_em)}${aceite.texto_versao ? ` · v${aceite.texto_versao}` : ''}${aceite.comprovante_codigo ? ` · ${aceite.comprovante_codigo}` : ''}`}
                 status={aceite.revogado ? 'Revogado' : 'Aceito'}
                 acao={url ? (
-                  <button
-                    type="button"
-                    onClick={() => copiar(url, aceite.id)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
-                  >
-                    {copiado === aceite.id ? 'Copiado' : 'Comprovante'} <Copy className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => copiar(url, aceite.id)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                    >
+                      {copiado === aceite.id ? 'Copiado' : 'Comprovante'} <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    {pdfUrl ? (
+                      <a
+                        href={pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                      >
+                        PDF <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    ) : null}
+                  </div>
                 ) : null}
               />
             );
@@ -247,6 +262,7 @@ export function PacienteDocumentosCentral({
               ? link.consentimento_modelos[0]
               : link.consentimento_modelos;
             const url = `${origem}/pre-atendimento/consentimento/${link.token}/comprovante`;
+            const pdfUrl = comprovantePdfUrl(link.token);
             return (
               <Linha
                 key={link.id}
@@ -254,13 +270,23 @@ export function PacienteDocumentosCentral({
                 descricao={`Aceito em ${dataCurta(link.aceito_em)}${modelo?.versao ? ` · v${modelo.versao}` : ''}`}
                 status="Aceito"
                 acao={(
-                  <button
-                    type="button"
-                    onClick={() => copiar(url, link.id)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
-                  >
-                    {copiado === link.id ? 'Copiado' : 'Comprovante'} <Copy className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => copiar(url, link.id)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                    >
+                      {copiado === link.id ? 'Copiado' : 'Comprovante'} <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <a
+                      href={pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                    >
+                      PDF <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 )}
               />
             );

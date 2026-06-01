@@ -2524,3 +2524,64 @@ Complemento em 29/05/2026:
 - API `/api/prontuario` recebeu as acoes `editar_evento` e `excluir_evento`, sempre conferindo se o usuario tem acesso ao paciente antes de alterar/remover;
 - exclusao remove apenas o evento do prontuario, sem apagar a avaliacao original quando o registro veio de importacao;
 - sem nova migration; usa a tabela existente `prontuario_eventos`.
+
+## Painel de saude do sistema, evidencias legais em PDF e teste visual do laudo
+
+Em 29/05/2026 foi adicionada uma camada administrativa para acompanhar a saude operacional do sistema e reforcar a rastreabilidade juridica dos aceites digitais.
+
+Implementado:
+
+- novo painel `Saude do sistema` em Configuracoes, visivel para owner/admin;
+- endpoint `/api/admin/health` validando:
+  - tabelas criticas do banco;
+  - buckets do Supabase Storage;
+  - variaveis de ambiente obrigatorias;
+  - configuracao de IA;
+  - carregamento do motor de PDF;
+  - ultima migration esperada e migrations registradas como aplicadas;
+- novo controle `sistema_migrations_aplicadas` para rastrear migrations aplicadas em producao;
+- arquivo `src/lib/system/migrations.ts` com a lista oficial de migrations esperadas pelo sistema;
+- exportacao em PDF do comprovante de aceite digital via `/api/consentimento-comprovante?token=...`;
+- comprovante de aceite passou a exibir:
+  - paciente;
+  - clinica;
+  - termo aceito;
+  - versao do texto;
+  - data/hora;
+  - IP;
+  - user-agent;
+  - codigo do comprovante;
+  - hash SHA-256 do texto aceito;
+  - texto integral aceito;
+- Central de Documentos do paciente passou a oferecer botao `PDF` para baixar/abrir o comprovante do aceite;
+- criado teste visual automatizado `scripts/test-pdf-visual.js` para detectar:
+  - imagens quebradas no preview do PDF;
+  - ausencia de dados de rodape;
+  - cards/blocos atravessando quebra de pagina ou area de rodape;
+- `npm run predeploy` agora tambem executa `npm run test:pdf-visual`;
+- auditoria de banco e healthcheck SQL foram atualizados para validar a tabela de migrations aplicadas.
+
+Migration:
+
+- aplicar em producao `supabase/migrations/051_system_health_and_evidence_pdf.sql`.
+
+Pendencia operacional:
+
+- apos aplicar a migration 051 no Supabase, abrir Configuracoes > Saude do sistema e confirmar se a lista de migrations pendentes ficou vazia;
+- caso alguma migration antiga tenha sido aplicada manualmente fora do padrao, registrar/ajustar na tabela `sistema_migrations_aplicadas`.
+
+Validacao em 29/05/2026:
+
+- corrigido fechamento do modulo de Antropometria no template do PDF;
+- ajustada a validacao do smoke test para a regra atual de analises clinicas exibidas no PDF;
+- `npm run predeploy` executado com sucesso;
+- checagens aprovadas:
+  - integridade de texto;
+  - auditoria de banco/RLS/buckets/migrations;
+  - smoke test completo dos previews;
+  - teste visual automatizado do PDF;
+  - calculos clinicos;
+  - backup em planilha;
+  - orientacao nutricional;
+  - TypeScript;
+  - lint.

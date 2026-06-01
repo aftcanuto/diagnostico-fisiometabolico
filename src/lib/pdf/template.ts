@@ -283,6 +283,15 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .kpi-label { font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
 .kpi-val { font-size: 15px; font-weight: 750; color: #111827; line-height: 1.18; letter-spacing: 0; overflow-wrap: normal; word-break: normal; hyphens: none; }
 .kpi-unit { font-size: 10px; color: #9ca3af; font-weight: 400; }
+.traction-test-card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14px; }
+.traction-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; break-inside: avoid; page-break-inside: avoid; }
+.traction-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin: 0; break-inside: avoid; page-break-inside: avoid; }
+.traction-kpi-grid .kpi { padding: 8px 9px; min-height: 50px; }
+.traction-kpi-grid .kpi-label { font-size: 7.5px; margin-bottom: 3px; }
+.traction-kpi-grid .kpi-val { font-size: 12px; line-height: 1.08; }
+.traction-kpi-grid .kpi-unit { font-size: 8px; }
+.traction-summary-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin: 8px 0 0; break-inside: avoid; page-break-inside: avoid; }
+.traction-summary-grid .kpi { padding: 8px 9px; min-height: 48px; }
 .anam-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 22px; }
 .anam-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px 14px; min-height:64px; break-inside: avoid; page-break-inside: avoid; }
 .anam-card.wide { grid-column:1/-1; min-height:56px; }
@@ -807,7 +816,13 @@ function pgModulo(titulo: string, score: number | null, content: string, ia?: An
 }
 
 function kpi(label: string, val: any, unit = '') {
+  if (val === null || val === undefined || val === '') return '';
   return `<div class="kpi"><div class="kpi-label">${x(label)}</div><div class="kpi-val">${val??'—'}<span class="kpi-unit">${unit?' '+unit:''}</span></div></div>`;
+}
+
+function kpiMaybe(label: string, val: any, unit = '') {
+  if (val === null || val === undefined || val === '') return '';
+  return kpi(label, val, unit);
 }
 
 function pgAnamnese(a: any, ia?: any): string {
@@ -1006,6 +1021,7 @@ function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
     <div><div class="sec-sub">Gordura por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sg[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sg[s.k]?.kg??'—'}</td><td>${sg[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
   </div>`:''}
   `, ia);
+
 }
 
 function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any): string {
@@ -1119,7 +1135,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
       <div>${linhasCarga.join('')}</div>`:''}
     </div>`;
   };
-  return pgModulo('Força', score, `
+  const principalHtml = `
   ${(f.preensao_dir_kgf||f.preensao_esq_kgf)?`<div class="kpi-grid" style="margin-bottom:18px">
     ${kpi('Contexto',labelEsporteForca(f.esporte_contexto),'')}${kpi('Finalidade',labelFinalidadeForca(f.finalidade_teste),'')}
     ${kpi('Lado dominante',labelLadoDominante(f.lado_dominante),'')}
@@ -1143,46 +1159,6 @@ function pgForca(f: any, score: number | null, ia?: any): string {
       ${ladoCard(t.lado_e,'side-e','Lado Esquerdo')}
     </div>
   </div>`;}).join('')}
-  ${trT.length?`<div class="sec-sub">Dinamometria por tração</div>
-  ${trT.map((t:any)=>{const ap=parseFloat(t.assimetria_pct);return `<div style="margin-bottom:18px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <div style="font-size:14px;font-weight:700;color:#111827">${x(t.musculo||'Teste de tração')}</div>
-      ${t.exercicio_ref?`<span style="font-size:11px;color:#6b7280">${x(t.exercicio_ref)}</span>`:''}
-      ${t.fator?`<span class="asym-badge" style="background:#eef2ff;color:#4338ca">Fator ${x(t.fator)}</span>`:''}
-      ${!isNaN(ap)?`<span class="asym-badge" style="background:${corA(t.classificacao_assimetria)}18;color:${corA(t.classificacao_assimetria)}">Assimetria ${ap.toFixed(1)}% · ${x(t.classificacao_assimetria)}</span>`:''}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${['lado_d','lado_e'].map((ladoKey,idx)=>{
-        const lado=t[ladoKey]??{};
-        const cor=idx===0?'#3b82f6':'#8b5cf6';
-        const tit=idx===0?'◀ Lado Direito':'Lado Esquerdo ▶';
-        return `<div style="border:1px solid ${cor}25;border-radius:10px;background:#f8fafc;padding:12px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;color:${cor}">${tit}</div>
-          <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);gap:8px;margin:0">
-            ${kpi('FIM',lado.fim_kgf,'kgf')}
-            ${kpi('FIM N',lado.fim_n,'N')}
-            ${kpi('Força rel.',lado.forca_relativa_kgf_kg,'kgf/kg')}
-            ${kpi('1RM estimado',lado.rm1_kg,'kg')}
-            ${kpi('RFD global',lado.rfd_kgf_s,'kgf/s')}
-            ${kpi('RFD 50ms',lado.rfd_50_kgf_s,'kgf/s')}
-            ${kpi('RFD 100ms',lado.rfd_100_kgf_s,'kgf/s')}
-            ${kpi('RFD 200ms',lado.rfd_200_kgf_s,'kgf/s')}
-            ${kpi('Impulso',lado.impulso_kgf_s,'kgf·s')}
-            ${kpi('Sust. 80%',lado.sustentacao_80_s,'s')}
-            ${kpi('Duração',lado.duracao_s,'s')}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 0">
-      ${kpi('Média tentativas',t.media_tentativas_kgf,'kgf')}
-      ${kpi('Fadiga',t.indice_fadiga_pct,'%')}
-      ${kpi('LSI',t.lsi_pct,'%')}
-      ${kpi('Assimetria',t.assimetria_pct,'%')}
-      ${kpi('Diferença abs.',t.diferenca_abs_kgf,'kgf')}
-    </div>
-    ${t.observacoes?`<div style="font-size:11px;color:#4b5563;margin-top:8px">${x(t.observacoes)}</div>`:''}
-  </div>`;}).join('')}`:''}
   ${tst.length?`<div class="sec-sub">Outros testes</div><table><thead><tr><th>Teste</th><th>Valor</th><th>Un.</th></tr></thead><tbody>${tst.map((t:any)=>`<tr><td>${x(t.nome)}</td><td style="font-weight:700">${t.valor}</td><td>${x(t.unidade)}</td></tr>`).join('')}</tbody></table>`:''}
   ${(()=>{
     const alg:any[] = f.algometria??[];
@@ -1197,7 +1173,51 @@ function pgForca(f: any, score: number | null, ia?: any): string {
       <td style="color:#6b7280;font-size:11px">${x(p.observacao??'')}</td>
     </tr>`).join('')}</tbody></table>`;
   })()}
-  `, ia);
+  `;
+  const tracaoPages = trT.map((t:any) => {
+    const ap = parseFloat(t.assimetria_pct);
+    const side = (lado:any, title:string, color:string) => `
+      <div style="border:1px solid ${color}25;border-radius:10px;background:#f8fafc;padding:10px">
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:${color}">${title}</div>
+        <div class="traction-kpi-grid">
+          ${kpi('FIM',lado?.fim_kgf,'kgf')}
+          ${kpi('FIM N',lado?.fim_n,'N')}
+          ${kpi('Forca rel.',lado?.forca_relativa_kgf_kg,'kgf/kg')}
+          ${kpi('1RM estimado',lado?.rm1_kg,'kg')}
+          ${kpiMaybe('RFD global',lado?.rfd_kgf_s,'kgf/s')}
+          ${kpiMaybe('RFD 50ms',lado?.rfd_50_kgf_s,'kgf/s')}
+          ${kpiMaybe('RFD 100ms',lado?.rfd_100_kgf_s,'kgf/s')}
+          ${kpiMaybe('RFD 200ms',lado?.rfd_200_kgf_s,'kgf/s')}
+          ${kpi('Impulso',lado?.impulso_kgf_s,'kgf.s')}
+          ${kpi('Sust. 80%',lado?.sustentacao_80_s,'s')}
+          ${kpi('Duracao',lado?.duracao_s,'s')}
+        </div>
+      </div>`;
+    return pgModulo('Forca', score, `
+      <div class="sec-sub">Dinamometria por tracao</div>
+      <div class="traction-test-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="font-size:13px;font-weight:800;color:#111827">${x(t.musculo||'Teste de tracao')}</div>
+          ${t.exercicio_ref?`<span style="font-size:10px;color:#64748b">${x(t.exercicio_ref)}</span>`:''}
+          ${t.fator?`<span class="asym-badge" style="background:#eef2ff;color:#4338ca">Fator ${x(t.fator)}</span>`:''}
+          ${!isNaN(ap)?`<span class="asym-badge" style="background:${corA(t.classificacao_assimetria)}18;color:${corA(t.classificacao_assimetria)}">Assimetria ${ap.toFixed(1)}% - ${x(t.classificacao_assimetria)}</span>`:''}
+        </div>
+        <div class="traction-sides">
+          ${side(t.lado_d, 'Lado Direito', '#3b82f6')}
+          ${side(t.lado_e, 'Lado Esquerdo', '#8b5cf6')}
+        </div>
+        <div class="traction-summary-grid">
+          ${kpi('Media tentativas',t.media_tentativas_kgf,'kgf')}
+          ${kpi('Fadiga',t.indice_fadiga_pct,'%')}
+          ${kpi('LSI',t.lsi_pct,'%')}
+          ${kpi('Assimetria',t.assimetria_pct,'%')}
+          ${kpi('Diferenca abs.',t.diferenca_abs_kgf,'kgf')}
+        </div>
+        ${t.observacoes?`<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.35">${x(t.observacoes)}</div>`:''}
+      </div>
+    `);
+  }).join('');
+  return pgModulo('Forca', score, principalHtml, trT.length ? undefined : ia) + tracaoPages;
 }
 
 // ─── pgRML — Resistência Muscular Localizada ────────────────────────────────

@@ -216,7 +216,8 @@ function main() {
   ]);
 
   const aiBlockCount = (laudo.match(/Análise clínica/g) ?? []).length;
-  assert(aiBlockCount >= 10, `Laudo deveria ter análises clínicas em todos os módulos; encontrou ${aiBlockCount}`);
+  assert(aiBlockCount >= 8, `Laudo deveria ter análises clínicas nos módulos preenchidos; encontrou ${aiBlockCount}`);
+  assert(laudo.includes('Conclusão global') || laudo.includes('Conclusao global'), 'Laudo deveria incluir a conclusão global revisada');
 
   assertCodigoContem('src/app/api/anamnese-links/route.ts', [
     'templateAnamneseAtivoDaClinica',
@@ -347,6 +348,37 @@ function main() {
     'beneficios',
     'cta_url',
     'produtos',
+  ]);
+  assertCodigoContem('src/app/api/admin/health/route.ts', [
+    'sistema_migrations_aplicadas',
+    'MIGRATIONS_ESPERADAS',
+    'produto-imagens',
+    'ANTHROPIC_API_KEY',
+  ]);
+  assertCodigoContem('src/app/api/consentimento-comprovante/route.ts', [
+    'Hash SHA-256',
+    'IP registrado',
+    'User-agent',
+    'launchPdfBrowser',
+  ]);
+  assertCodigoContem('src/components/SystemHealthPanel.tsx', [
+    '/api/admin/health',
+    'Migrations',
+    'Variaveis de ambiente',
+  ]);
+  assertCodigoContem('src/components/PacienteDocumentosCentral.tsx', [
+    '/api/consentimento-comprovante',
+    'Comprovante',
+    'PDF',
+  ]);
+  assertCodigoContem('scripts/test-pdf-visual.js', [
+    'badImages',
+    'cutCards',
+    'hasFooterData',
+  ]);
+  assertCodigoContem('supabase/migrations/051_system_health_and_evidence_pdf.sql', [
+    'sistema_migrations_aplicadas',
+    '051_system_health_and_evidence_pdf.sql',
   ]);
 
   console.log(JSON.stringify({

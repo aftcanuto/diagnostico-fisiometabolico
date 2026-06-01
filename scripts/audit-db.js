@@ -39,6 +39,7 @@ const expectedTables = [
   'plano_alimentar_avaliacoes',
   'prontuarios',
   'prontuario_eventos',
+  'sistema_migrations_aplicadas',
 ];
 
 const expectedAiTypes = [
@@ -129,6 +130,8 @@ function audit() {
   const hasProntuarioPaciente = /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?prontuarios/i.test(sql)
     && /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?prontuario_eventos/i.test(sql)
     && /garantir_prontuario_paciente/i.test(sql);
+  const hasSystemMigrations = /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?sistema_migrations_aplicadas/i.test(sql)
+    && /ULTIMA_MIGRATION_ESPERADA|051_system_health_and_evidence_pdf|sistema_migrations_aplicadas/i.test(sql);
 
   const hasBioZRemoval = /drop\s+column\s+if\s+exists\s+impedancias/i.test(sql)
     && /drop\s+column\s+if\s+exists\s+impedancia_z/i.test(sql)
@@ -163,6 +166,7 @@ function audit() {
     !hasProdutosFlexiveis && 'Campos de produtos flexiveis nao encontrados nas migrations',
     !hasProdutosCatalogoComercial && 'Campos comerciais da vitrine de produtos nao encontrados nas migrations',
     !hasProntuarioPaciente && 'Prontuario longitudinal do paciente nao encontrado nas migrations',
+    !hasSystemMigrations && 'Controle de migrations aplicadas nao encontrado nas migrations',
     hasForbiddenBioZCreate && 'Bioimpedancia parece manter campos de impedancia Z',
     ...missingAiTypes.map(type => `Tipo de IA ausente no check: ${type}`),
   ].filter(Boolean);
@@ -194,6 +198,7 @@ function audit() {
       produtos_flexiveis: hasProdutosFlexiveis,
       produtos_catalogo_comercial: hasProdutosCatalogoComercial,
       prontuario_paciente: hasProntuarioPaciente,
+      sistema_migrations_aplicadas: hasSystemMigrations,
     },
     aiTypes: expectedAiTypes.length - missingAiTypes.length,
     errors,

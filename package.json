@@ -11,10 +11,11 @@
     "text:check": "node scripts/check-text-integrity.js",
     "db:audit": "node scripts/audit-db.js",
     "test:full": "node scripts/full-smoke-test.js",
+    "test:pdf-visual": "node scripts/test-pdf-visual.js",
     "test:calculations": "tsx scripts/test-calculations.ts",
     "test:backup": "tsx scripts/test-backup-export.ts",
     "test:nutrition": "tsx scripts/test-nutrition.ts",
-    "predeploy": "npm run text:check && npm run db:audit && npm run test:full && npm run test:calculations && npm run test:backup && npm run test:nutrition && npx tsc --noEmit && npm run lint",
+    "predeploy": "npm run text:check && npm run db:audit && npm run test:full && npm run test:pdf-visual && npm run test:calculations && npm run test:backup && npm run test:nutrition && npx tsc --noEmit && npm run lint",
     "verify:release": "npm run predeploy && npm run build"
   },
   "dependencies": {
