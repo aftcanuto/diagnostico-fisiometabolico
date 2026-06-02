@@ -2647,3 +2647,11 @@ Em 02/06/2026:
 - Sem nova migration.
 - Validacao: `npx tsc --noEmit` nao aponta mais erros em `src/lib/pdf/template.ts`.
 - Pendencia separada: o build geral ainda aponta erros de sintaxe em `src/components/PatientDashboard.tsx` e `src/components/PortalPaciente.tsx`, que devem ser corrigidos em rodadas individuais.
+
+## Correcao pontual do score de forca por preensao palmar
+
+Em 02/06/2026:
+- Ajustado `src/lib/scores/index.ts` para calcular o score de forca por preensao palmar usando faixas clinicas por sexo e idade, com penalidade apenas por assimetria relevante.
+- O score de forca nao depende mais da populacao/finalidade para derrubar a nota quando apenas a preensao palmar foi realizada.
+- A avaliacao deve continuar informando que a interpretacao nao contempla musculaturas especificas quando a dinamometria isometrica especifica nao foi executada.
+- Sem nova migration.
