@@ -2594,3 +2594,19 @@ Em 01/06/2026:
 - Cardiorrespiratório passou a exibir campos avançados disponíveis: L2, VAM, cargas, VE, limiar, recuperação e zonas por limiar.
 - O prompt da IA de biomecânica passou a usar somente as faixas `ideal_min`/`ideal_max` salvas no sistema, sem substituir por referências internas divergentes.
 - Sem nova migration.
+
+## Correcao pontual do PDF sem mencao de IA
+
+Em 02/06/2026:
+- Removido o bloco verde de resumo clinico da primeira pagina interna do relatorio, evitando exposicao redundante da analise antes da secao de conclusao.
+- O bloco de interpretacao clinica do PDF passou a usar o rotulo "Analise clinica", sem exibir "IA" para o paciente.
+- Sem nova migration.
+
+## Correcao pontual do template do PDF
+
+Em 02/06/2026:
+- Restaurado `src/lib/pdf/template.ts` para a versao estavel versionada e removido somente o bloco da primeira pagina interna que exibia o rotulo "IA" para o paciente.
+- Objetivo desta rodada: recuperar a sintaxe do template do PDF sem misturar ajustes de dashboard ou scores.
+- Sem nova migration.
+- Validacao: `npx tsc --noEmit` nao aponta mais erros em `src/lib/pdf/template.ts`.
+- Pendencia separada: o build geral ainda aponta erros de sintaxe em `src/components/PatientDashboard.tsx` e `src/components/PortalPaciente.tsx`, que devem ser corrigidos em rodadas individuais.

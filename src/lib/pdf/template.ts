@@ -793,13 +793,6 @@ function pgResumo(d: LaudoData): string {
 
   </div>
 
-  <!-- ── MENSAGEM DO PACIENTE ── -->
-  ${msg ? `
-  <div style="margin-top:18px;padding:16px 20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;display:flex;gap:12px;align-items:flex-start">
-    <div style="font-size:18px;flex-shrink:0">IA</div>
-    <div style="font-size:12px;color:#166534;font-style:italic;line-height:1.65">${x(resumoTexto(msg))}</div>
-  </div>` : ''}
-
 </section>`;
 }
 
