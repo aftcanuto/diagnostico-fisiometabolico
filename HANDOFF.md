@@ -2,6 +2,15 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Limpeza de codificacao do dashboard clinico
+
+Em 02/06/2026:
+
+- removido caractere invisivel inicial de `src/components/PatientDashboard.tsx`, mantendo o conteudo funcional intacto;
+- objetivo desta rodada: reduzir risco de inconsistencias de parsing/build e textos estranhos em producao;
+- sem nova migration;
+- validacao: `npx tsc --noEmit` nao aponta erros em `src/components/PatientDashboard.tsx`.
+
 ## Correcao pontual do portal do paciente
 
 Em 02/06/2026:
