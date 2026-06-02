@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useMemo, useState } from 'react';
 import { consolidarHistorico, type AvaliacaoHidratada } from '@/lib/historico';
 import { calcIdade } from '@/lib/calculations/antropometria';

@@ -2,6 +2,15 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Correcao pontual do portal do paciente
+
+Em 02/06/2026:
+
+- restaurado `src/components/PortalPaciente.tsx` para a versao estavel versionada e removido o BOM inicial que podia contribuir para inconsistencias de parsing/build;
+- objetivo desta rodada: recuperar o portal publico do paciente sem misturar novas regras funcionais;
+- sem nova migration;
+- validacao: `npx tsc --noEmit` nao aponta mais erros em `src/components/PortalPaciente.tsx`.
+
 ## Correcao pontual do dashboard clinico
 
 Em 02/06/2026:
