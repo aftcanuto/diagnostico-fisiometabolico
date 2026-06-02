@@ -2,6 +2,16 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Correcao pontual do dashboard clinico
+
+Em 02/06/2026:
+
+- restaurado `src/components/PatientDashboard.tsx` para a versao estavel versionada para remover corrupcoes locais de sintaxe que quebravam a validacao TypeScript;
+- objetivo desta rodada: recuperar o dashboard clinico sem misturar ajustes do portal do paciente;
+- sem nova migration;
+- validacao: `npx tsc --noEmit` nao aponta mais erros em `src/components/PatientDashboard.tsx`;
+- pendencia separada: `src/components/PortalPaciente.tsx` ainda possui erros de sintaxe e deve ser corrigido em rodada individual.
+
 ## Atualizacao 2026-05-26 - central de documentos do paciente
 
 Implementado:
