@@ -2,6 +2,15 @@
 
 Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
 
+## Correcao pontual de acentuacao em labels
+
+Em 02/06/2026:
+
+- corrigidas labels visiveis sem acento em `src/lib/pdf/template.ts`, `src/components/PortalPaciente.tsx` e `src/components/PatientDashboard.tsx`;
+- exemplos corrigidos: `Forca` para `Força`, `Forca rel.` para `Força rel.` e `Saude cardiovascular` para `Saúde cardiovascular`;
+- sem nova migration;
+- validacao: `npx tsc --noEmit` passou sem erros.
+
 ## Limpeza de codificacao do dashboard clinico
 
 Em 02/06/2026:

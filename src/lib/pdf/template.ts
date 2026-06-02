@@ -1175,7 +1175,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
         <div class="traction-kpi-grid">
           ${kpi('FIM',lado?.fim_kgf,'kgf')}
           ${kpi('FIM N',lado?.fim_n,'N')}
-          ${kpi('Forca rel.',lado?.forca_relativa_kgf_kg,'kgf/kg')}
+          ${kpi('Força rel.',lado?.forca_relativa_kgf_kg,'kgf/kg')}
           ${kpi('1RM estimado',lado?.rm1_kg,'kg')}
           ${kpiMaybe('RFD global',lado?.rfd_kgf_s,'kgf/s')}
           ${kpiMaybe('RFD 50ms',lado?.rfd_50_kgf_s,'kgf/s')}
@@ -1186,7 +1186,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
           ${kpi('Duracao',lado?.duracao_s,'s')}
         </div>
       </div>`;
-    return pgModulo('Forca', score, `
+    return pgModulo('Força', score, `
       <div class="sec-sub">Dinamometria por tracao</div>
       <div class="traction-test-card">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
@@ -1210,7 +1210,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
       </div>
     `);
   }).join('');
-  return pgModulo('Forca', score, principalHtml, trT.length ? undefined : ia) + tracaoPages;
+  return pgModulo('Força', score, principalHtml, trT.length ? undefined : ia) + tracaoPages;
 }
 
 // ─── pgRML — Resistência Muscular Localizada ────────────────────────────────

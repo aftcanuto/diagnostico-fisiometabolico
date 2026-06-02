@@ -1256,7 +1256,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                       <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:8}}>
                         <Metrica label="FIM" valor={lado.fim_kgf || "-"} un="kgf"/>
                         <Metrica label="FIM N" valor={lado.fim_n || "-"} un="N"/>
-                        <Metrica label="Forca rel." valor={lado.forca_relativa_kgf_kg || "-"} un="kgf/kg"/>
+                        <Metrica label="Força rel." valor={lado.forca_relativa_kgf_kg || "-"} un="kgf/kg"/>
                         <Metrica label="1RM estimado" valor={lado.rm1_kg || "-"} un="kg"/>
                         <Metrica label="RFD global" valor={lado.rfd_kgf_s || "-"} un="kgf/s"/>
                         <Metrica label="RFD 50ms" valor={lado.rfd_50_kgf_s || "-"} un="kgf/s"/>
@@ -1720,7 +1720,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                     <TimelineChipPortal label="Global" value={a.scores?.global}/>
                     <TimelineChipPortal label="Postura" value={a.scores?.postura}/>
                     <TimelineChipPortal label="Composicao" value={a.scores?.composicao_corporal}/>
-                    <TimelineChipPortal label="Forca" value={a.scores?.forca}/>
+                    <TimelineChipPortal label="Força" value={a.scores?.forca}/>
                     <TimelineChipPortal label="Flex." value={a.scores?.flexibilidade}/>
                     <TimelineChipPortal label="Cardio" value={a.scores?.cardiorrespiratorio}/>
                     {a.scores?.rml!=null&&<TimelineChipPortal label="RML" value={a.scores.rml}/>}

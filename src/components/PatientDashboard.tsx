@@ -1590,7 +1590,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   <TimelineChip label="Global" value={a.scores?.global} />
                   <TimelineChip label="Postura" value={a.scores?.postura} />
                   <TimelineChip label="Composicao" value={a.scores?.composicao_corporal} />
-                  <TimelineChip label="Forca" value={a.scores?.forca} />
+                  <TimelineChip label="Força" value={a.scores?.forca} />
                   <TimelineChip label="Flex." value={a.scores?.flexibilidade} />
                   <TimelineChip label="Cardio" value={a.scores?.cardiorrespiratorio} />
                   {a.scores?.rml != null && <TimelineChip label="RML" value={a.scores.rml} />}
@@ -1697,8 +1697,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['Lado dominante', labelLadoDominante(f.lado_dominante), '', '#0f172a'],
           ['Preensao direita', f.preensao_dir_kgf, 'kgf', '#0f172a'],
           ['Preensao esquerda', f.preensao_esq_kgf, 'kgf', '#0f172a'],
-          ['Forca relativa direita', f.forca_relativa_dir, 'kgf/kg', '#0f172a'],
-          ['Forca relativa esquerda', f.forca_relativa_esq, 'kgf/kg', '#0f172a'],
+          ['Força relativa direita', f.forca_relativa_dir, 'kgf/kg', '#0f172a'],
+          ['Força relativa esquerda', f.forca_relativa_esq, 'kgf/kg', '#0f172a'],
           ['Assimetria', f.assimetria_percent, '%', '#f59e0b'],
           ['Modelo dinamometria', f.modelo_dinamometria, '', '#0f172a'],
         ].filter(([,v]) => v != null && v !== '');
@@ -1896,7 +1896,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                         {[
                           ['FIM', lado.fim_kgf, 'kgf'],
                           ['FIM', lado.fim_n, 'N'],
-                          ['Forca relativa', lado.forca_relativa_kgf_kg, 'kgf/kg'],
+                          ['Força relativa', lado.forca_relativa_kgf_kg, 'kgf/kg'],
                           ['1RM estimado', lado.rm1_kg, 'kg'],
                           ['RFD global', lado.rfd_kgf_s, 'kgf/s'],
                           ['RFD 50ms', lado.rfd_50_kgf_s, 'kgf/s'],
@@ -2081,7 +2081,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         if (!itens.length && !cardio.protocolo && !velocidadesTreinoItems.length && !zonasLimiarItems.length) return null;
         return (
           <div style={{order: 90, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:700,marginBottom:4}}><span>Saude cardiovascular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /><ModuleScoreBadge score={sc.cardiorrespiratorio}/></div>
+            <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:700,marginBottom:4}}><span>Saúde cardiovascular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /><ModuleScoreBadge score={sc.cardiorrespiratorio}/></div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aerobica, sinais vitais e zonas de treinamento</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
