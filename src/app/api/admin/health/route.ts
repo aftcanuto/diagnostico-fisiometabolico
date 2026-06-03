@@ -20,6 +20,11 @@ const TABELAS_CRITICAS = [
 
 const BUCKETS_CRITICOS = ['posturografia', 'branding', 'biomecanica', 'produto-imagens'];
 
+const TABLE_COUNT_COLUMNS: Record<string, string> = {
+  scores: 'avaliacao_id',
+  paciente_tokens: 'token',
+};
+
 const ENVS_CRITICAS = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
@@ -30,9 +35,10 @@ const ENVS_CRITICAS = [
 ];
 
 async function countRows(admin: any, table: string) {
+  const countColumn = TABLE_COUNT_COLUMNS[table] ?? 'id';
   const { count, error } = await admin
     .from(table)
-    .select('id', { count: 'exact', head: true });
+    .select(countColumn, { count: 'exact', head: true });
 
   return {
     table,

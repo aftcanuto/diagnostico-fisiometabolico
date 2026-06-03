@@ -2708,3 +2708,12 @@ Mudancas:
 
 Observacao:
 - a orientacao nutricional aplicada ja estava conectada a revisao com escolha de fonte da TMB, calculo de VET/macros e persistencia por avaliacao em `plano_alimentar_avaliacoes`.
+
+## Correcao do painel de saude do sistema
+
+Em 03/06/2026 foi corrigido um falso alerta no painel `Saude do sistema`.
+
+- O endpoint `/api/admin/health` agora conta registros de `scores` pela coluna `avaliacao_id`, pois essa tabela nao possui coluna `id`.
+- O endpoint `/api/admin/health` agora conta registros de `paciente_tokens` pela coluna `token`, pois essa tabela tambem nao possui coluna `id`.
+- Sem nova migration: o banco estava estruturalmente correto; o problema era apenas a forma como o painel fazia a checagem.
+- Validar em producao abrindo `Configuracoes > Saude do sistema` apos o deploy.
