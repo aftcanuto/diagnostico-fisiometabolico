@@ -16,7 +16,7 @@ import {
 } from '@/lib/scores';
 import { numeroClinico, scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura, type FonteGorduraRelatorio } from '@/lib/bodyComposition';
-import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck, Utensils } from 'lucide-react';
+import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
 
 export default function RevisaoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -37,6 +37,10 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   const [fonteTmbPlano, setFonteTmbPlano] = useState<'auto' | 'bioimpedancia' | 'antropometria' | 'mifflin_st_jeor'>('auto');
   const [observacoesPlano, setObservacoesPlano] = useState('');
   const [salvandoPlano, setSalvandoPlano] = useState(false);
+  const [planoAcao, setPlanoAcao] = useState<any>({ loading: true, modelos: [], aplicado: null });
+  const [modeloAcaoId, setModeloAcaoId] = useState('');
+  const [planoAcaoEdit, setPlanoAcaoEdit] = useState<any>(planoAcaoVazio());
+  const [salvandoPlanoAcao, setSalvandoPlanoAcao] = useState(false);
 
   useEffect(() => { (async () => {
     const { data: av } = await supabase.from('avaliacoes')
@@ -133,6 +137,10 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
     }
 
     setState('ready');
+    carregarPlanoAcao(av!.clinica_id, analisesData.data ?? []).catch((error) => {
+      console.error('[Revisao] Nao foi possivel carregar plano de acao', error);
+      setPlanoAcao((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar plano de acao' }));
+    });
     carregarPlanoNutricional().catch((error) => {
       console.error('[Revisao] Nao foi possivel carregar orientacao nutricional', error);
       setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar orientacao nutricional' }));
@@ -140,6 +148,63 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
   // carregarPlanoNutricional usa params.id e atualiza apenas a area nutricional; manter fora das dependencias evita recarregar a revisao inteira a cada simulacao de modelo.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   })(); }, [params.id, supabase]);
+
+  async function carregarPlanoAcao(clinicaId: string, analises?: any[]) {
+    const { data: modelos, error } = await supabase
+      .from('plano_acao_modelos')
+      .select('*')
+      .eq('clinica_id', clinicaId)
+      .eq('ativo', true)
+      .order('padrao', { ascending: false })
+      .order('objetivo')
+      .order('nome');
+    if (error) throw error;
+
+    const lista = modelos ?? [];
+    let analisesLista = analises;
+    if (!analisesLista) {
+      const res = await fetch(`/api/ia/editar?avaliacaoId=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel carregar analises');
+      analisesLista = json.data ?? [];
+    }
+
+    const aplicado = (analisesLista ?? []).find((a: any) => a.tipo === 'conclusao_global')?.plano_acao ?? null;
+    const modeloBase = lista.find((m: any) => m.id === aplicado?.modelo_id) ?? lista[0] ?? null;
+    const edit = normalizarPlanoAcao(aplicado ?? (modeloBase ? planoAcaoDeModelo(modeloBase) : planoAcaoVazio()));
+
+    setPlanoAcao({ loading: false, modelos: lista, aplicado });
+    setModeloAcaoId(edit.modelo_id ?? modeloBase?.id ?? '');
+    setPlanoAcaoEdit(edit);
+  }
+
+  function trocarModeloAcao(modeloId: string) {
+    setModeloAcaoId(modeloId);
+    const modelo = planoAcao.modelos?.find((m: any) => m.id === modeloId);
+    if (modelo) setPlanoAcaoEdit(planoAcaoDeModelo(modelo));
+  }
+
+  async function aplicarPlanoAcao() {
+    setSalvandoPlanoAcao(true);
+    setMessage(null);
+    try {
+      const payload = normalizarPlanoAcao({ ...planoAcaoEdit, modelo_id: modeloAcaoId || planoAcaoEdit.modelo_id });
+      const res = await fetch('/api/ia/editar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avaliacaoId: params.id, tipo: 'conclusao_global', planoAcao: payload }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar o plano de acao.');
+      setPlanoAcao((p: any) => ({ ...p, aplicado: payload }));
+      setPlanoAcaoEdit(payload);
+      setMessage({ type: 'success', text: 'Plano de acao aplicado nesta avaliacao.' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar o plano de acao.' });
+    } finally {
+      setSalvandoPlanoAcao(false);
+    }
+  }
 
   async function carregarPlanoNutricional(modeloId?: string, fonteTmb = fonteTmbPlano) {
     const url = new URL('/api/plano-alimentar', window.location.origin);
@@ -519,6 +584,82 @@ export default function RevisaoPage({ params }: { params: { id: string } }) {
         </CardBody>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle><ClipboardCheck className="inline w-4 h-4 mr-1 text-brand-600" /> Plano de acao pos-laudo</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          {planoAcao.loading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando modelos de plano de acao...</div>
+          ) : planoAcao.modelos?.length ? (
+            <>
+              <div className="grid gap-3 md:grid-cols-[1fr,220px]">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo de plano de acao</label>
+                  <select
+                    value={modeloAcaoId}
+                    onChange={(e) => trocarModeloAcao(e.target.value)}
+                    className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-brand-400"
+                  >
+                    {planoAcao.modelos.map((m: any) => (
+                      <option key={m.id} value={m.id}>{m.nome} - {m.objetivo}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
+                  <div className="text-xs font-semibold uppercase tracking-wide">Status</div>
+                  <div className="text-lg font-black">{planoAcao.aplicado ? 'Aplicado' : 'Nao aplicado'}</div>
+                  <div className="text-xs">Editavel antes de finalizar</div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <CampoPlanoAcao label="Prioridades clinicas" value={planoAcaoEdit.prioridades} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, prioridades: v }))} />
+                <CampoPlanoAcao label="Alertas de encaminhamento" value={planoAcaoEdit.alertas_encaminhamento} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, alertas_encaminhamento: v }))} />
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <CampoPlanoAcao label="Metas de 30 dias" value={planoAcaoEdit.metas_30_dias} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, metas_30_dias: v }))} />
+                <CampoPlanoAcao label="Metas de 60 dias" value={planoAcaoEdit.metas_60_dias} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, metas_60_dias: v }))} />
+                <CampoPlanoAcao label="Metas de 90 dias" value={planoAcaoEdit.metas_90_dias} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, metas_90_dias: v }))} />
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {[
+                  ['composicao_corporal', 'Composicao corporal'],
+                  ['forca', 'Forca'],
+                  ['flexibilidade', 'Flexibilidade'],
+                  ['cardiorrespiratorio', 'Cardiorrespiratorio'],
+                  ['rml', 'RML'],
+                  ['postura', 'Postura'],
+                  ['biomecanica', 'Biomecanica'],
+                ].map(([key, label]) => (
+                  <CampoPlanoAcao
+                    key={key}
+                    label={label}
+                    value={planoAcaoEdit.recomendacoes?.[key] ?? ''}
+                    onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, recomendacoes: { ...(p.recomendacoes ?? {}), [key]: v } }))}
+                  />
+                ))}
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Previa do que ira para dashboards e PDF</div>
+                <div className="max-h-48 overflow-auto whitespace-pre-line text-sm leading-relaxed text-slate-700">{textoPlanoAcaoPreview(planoAcaoEdit)}</div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm text-slate-500">Ao aplicar, o plano fica salvo na conclusao global e aparece no dashboard clinico, portal do paciente e PDF.</div>
+                <Button onClick={aplicarPlanoAcao} disabled={salvandoPlanoAcao || !modeloAcaoId}>
+                  {salvandoPlanoAcao ? 'Aplicando...' : 'Aplicar plano de acao'}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Nenhum modelo de plano de acao ativo foi cadastrado. Cadastre em Configuracoes para usar esta etapa.
+            </div>
+          )}
+          {planoAcao.error && <div className="text-sm text-red-600">{planoAcao.error}</div>}
+        </CardBody>
+      </Card>
+
       <AnalisesIAPanel
         avaliacaoId={params.id}
         modulosDisponiveis={aval.modulos_selecionados}
@@ -797,4 +938,77 @@ function PlanoMetric({ label, value, unit }: { label: string; value: any; unit: 
       </div>
     </div>
   );
+}
+
+function CampoPlanoAcao({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</label>
+      <textarea
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="min-h-[86px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm outline-none focus:border-brand-400"
+      />
+    </div>
+  );
+}
+
+function planoAcaoVazio() {
+  return {
+    modelo_id: '',
+    objetivo: 'personalizado',
+    nome: '',
+    prioridades: '',
+    metas_30_dias: '',
+    metas_60_dias: '',
+    metas_90_dias: '',
+    recomendacoes: {},
+    alertas_encaminhamento: '',
+  };
+}
+
+function planoAcaoDeModelo(modelo: any) {
+  return normalizarPlanoAcao({
+    modelo_id: modelo.id,
+    objetivo: modelo.objetivo,
+    nome: modelo.nome,
+    prioridades: modelo.prioridades,
+    metas_30_dias: modelo.metas_30_dias,
+    metas_60_dias: modelo.metas_60_dias,
+    metas_90_dias: modelo.metas_90_dias,
+    recomendacoes: modelo.recomendacoes ?? {},
+    alertas_encaminhamento: modelo.alertas_encaminhamento,
+  });
+}
+
+function normalizarPlanoAcao(valor: any) {
+  if (!valor) return planoAcaoVazio();
+  if (typeof valor === 'string') return { ...planoAcaoVazio(), prioridades: valor };
+  if (valor.texto && Object.keys(valor).length <= 2) return { ...planoAcaoVazio(), prioridades: valor.texto };
+  return {
+    ...planoAcaoVazio(),
+    ...valor,
+    recomendacoes: valor.recomendacoes && typeof valor.recomendacoes === 'object' ? valor.recomendacoes : {},
+  };
+}
+
+function textoPlanoAcaoPreview(plano: any) {
+  const recomendacoes = plano?.recomendacoes ?? {};
+  const areas = [
+    ['composicao_corporal', 'Composicao corporal'],
+    ['forca', 'Forca'],
+    ['flexibilidade', 'Flexibilidade'],
+    ['cardiorrespiratorio', 'Cardiorrespiratorio'],
+    ['rml', 'RML'],
+    ['postura', 'Postura'],
+    ['biomecanica', 'Biomecanica'],
+  ];
+  return [
+    plano?.prioridades ? `PRIORIDADES\n${plano.prioridades}` : '',
+    plano?.metas_30_dias ? `30 DIAS\n${plano.metas_30_dias}` : '',
+    plano?.metas_60_dias ? `60 DIAS\n${plano.metas_60_dias}` : '',
+    plano?.metas_90_dias ? `90 DIAS\n${plano.metas_90_dias}` : '',
+    ...areas.map(([key, label]) => recomendacoes[key] ? `${label.toUpperCase()}\n${recomendacoes[key]}` : ''),
+    plano?.alertas_encaminhamento ? `ALERTAS DE ENCAMINHAMENTO\n${plano.alertas_encaminhamento}` : '',
+  ].filter(Boolean).join('\n\n');
 }

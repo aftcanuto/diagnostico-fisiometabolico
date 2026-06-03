@@ -2694,3 +2694,17 @@ Em 03/06/2026:
 - Padronizado o titulo da secao equivalente no portal do paciente para "Dados vitais e corporais".
 - Removida mencao visual a "IA" do painel clinico, usando "Textos clinicos" e botao "Analises".
 - Sem nova migration.
+## Modelos padrao de plano de acao e aplicacao na revisao
+
+Em 03/06/2026 foi implementada a ponte pratica entre a biblioteca de modelos de plano de acao e a finalizacao da avaliacao.
+
+Mudancas:
+- criada a migration `supabase/migrations/052_plano_acao_templates_padrao.sql`;
+- a migration popula modelos padrao por clinica para recomposicao corporal, emagrecimento, hipertrofia, corrida, dor e performance;
+- novas clinicas passam a receber esses modelos automaticamente por trigger;
+- a tela de Revisao agora permite selecionar um modelo de plano de acao, editar prioridades, metas de 30/60/90 dias, recomendacoes por area e alertas;
+- ao aplicar, o plano e salvo em `analises_ia.plano_acao` no registro de `conclusao_global`;
+- dashboards e PDF continuam lendo o mesmo campo, portanto o plano aplicado entra automaticamente na devolutiva.
+
+Observacao:
+- a orientacao nutricional aplicada ja estava conectada a revisao com escolha de fonte da TMB, calculo de VET/macros e persistencia por avaliacao em `plano_alimentar_avaliacoes`.
