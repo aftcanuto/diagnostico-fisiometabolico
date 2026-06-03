@@ -2662,3 +2662,10 @@ Em 03/06/2026:
 - Incluido o score de RML no bloco de capacidades avaliadas do relatorio PDF.
 - Ajustada a regra de score de composicao corporal para reduzir punicao excessiva em sobrepeso moderado, mantendo criticidade para valores extremos.
 - Sem nova migration.
+
+## Correcao pontual do resumo inicial do PDF
+
+Em 03/06/2026:
+- Removida a chamada remanescente que preparava a conclusao global dentro da pagina inicial interna do relatorio.
+- A conclusao clinica e o plano de acao permanecem somente nas secoes proprias do PDF.
+- Sem nova migration.

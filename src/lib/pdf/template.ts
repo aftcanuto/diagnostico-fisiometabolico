@@ -632,7 +632,6 @@ function pgResumo(d: LaudoData): string {
   const somaTrio = soma?.endomorfia != null
     ? `${x(soma.endomorfia)}-${x(soma.mesomorfia ?? '—')}-${x(soma.ectomorfia ?? '—')}`
     : '';
-  const msg    = textoAnalisePdf(d.analisesIA?.conclusao_global);
 
   const composicaoVisual = classificarComposicaoCorporal({ sexo: d.paciente.sexo, pctGordura: pctG, imc });
   const gorCor = composicaoVisual.cor;
