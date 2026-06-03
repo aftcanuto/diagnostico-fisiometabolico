@@ -2677,3 +2677,11 @@ Em 03/06/2026:
 - A pagina agora renderiza sinais vitais junto ao resumo visual de dados corporais, com indicadores principais, silhueta e demais dados, seguindo o padrao do dashboard do paciente.
 - A secao tambem aparece quando houver bioimpedancia ou antropometria, mesmo sem anamnese exibida.
 - Sem nova migration.
+
+## Correcao pontual do cardiorrespiratorio avancado no portal do paciente
+
+Em 03/06/2026:
+- Ajustado `src/components/PortalPaciente.tsx` para renderizar velocidades de treino e zonas por limiar usando os dados normalizados.
+- O portal do paciente deixa de exibir Zona 6 a Zona 9 e linhas vazias com "- km/h" ou "- bpm".
+- A secao avancada passa a mostrar apenas Z1 a Z5 quando houver valores reais importados.
+- Sem nova migration.

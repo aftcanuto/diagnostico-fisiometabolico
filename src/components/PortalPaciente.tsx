@@ -698,6 +698,58 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   ]:[];
 
   // TODOS os scores — sempre exibir mesmo se null
+  const numeroValido=(v:any)=>{
+    if(v==null||v==='')return null;
+    const n=typeof v==='number'?v:Number(String(v).replace(',','.'));
+    return Number.isFinite(n)?n:null;
+  };
+  const fmtFaixa=(min:number|null,max:number|null)=>{
+    const fmt=(n:number)=>n.toLocaleString('pt-BR',{maximumFractionDigits:2});
+    if(min!=null&&max!=null&&Math.abs(min-max)>0.01)return `${fmt(min)} - ${fmt(max)}`;
+    if(min!=null)return fmt(min);
+    if(max!=null)return fmt(max);
+    return null;
+  };
+  const velocidadesTreinoItems=(()=>{
+    const raw=Array.isArray((atual.cardiorrespiratorio as any)?.velocidades_treino)
+      ?((atual.cardiorrespiratorio as any).velocidades_treino as any[])
+      :[];
+    const defs=[
+      {label:'Z1',nome:'Regenerativo',intensidades:[60,65],match:['z1','zona 1']},
+      {label:'Z2',nome:'Base aeróbica',intensidades:[70,75],match:['z2','zona 2']},
+      {label:'Z3',nome:'Aeróbico',intensidades:[80,85],match:['z3','zona 3']},
+      {label:'Z4',nome:'Limiar',intensidades:[90,95],match:['z4','zona 4']},
+      {label:'Z5',nome:'VO2máx',intensidades:[100],match:['z5','zona 5']},
+    ];
+    return defs.map((def)=>{
+      const valores=raw
+        .filter((z:any)=>{
+          const intensidade=numeroValido(z?.intensidade??z?.percentual??z?.pct);
+          const nome=String(z?.label??z?.nome??z?.zona??'').toLowerCase();
+          return (intensidade!=null&&def.intensidades.includes(intensidade))||def.match.some(m=>nome.includes(m));
+        })
+        .flatMap((z:any)=>[
+          numeroValido(z?.velocidade_min??z?.vel_min??z?.min),
+          numeroValido(z?.velocidade??z?.valor),
+          numeroValido(z?.velocidade_max??z?.vel_max??z?.max),
+        ])
+        .filter((v):v is number=>v!=null);
+      return {label:def.label,nome:def.nome,min:valores.length?Math.min(...valores):null,max:valores.length?Math.max(...valores):null};
+    }).filter(z=>z.min!=null||z.max!=null);
+  })();
+  const zonasLimiarItems=(()=>{
+    const raw=Array.isArray((atual.cardiorrespiratorio as any)?.zonas_limiar)
+      ?((atual.cardiorrespiratorio as any).zonas_limiar as any[])
+      :[];
+    const nomes=['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO2máx'];
+    return raw.slice(0,5).map((z:any,i:number)=>({
+      label:`Z${i+1}`,
+      nome:z?.descricao??nomes[i]??`Zona ${i+1}`,
+      min:numeroValido(z?.bpm_min??z?.fc_min??z?.min),
+      max:numeroValido(z?.bpm_max??z?.fc_max??z?.max),
+    })).filter(z=>z.min!=null||z.max!=null);
+  })();
+
   const allScores=[
     {label:'Postura',       v:sc.postura??null,             value:sc.postura??null,             ant:asc.postura,             cor:zCor(sc.postura??null)},
     {label:'Composição',    v:sc.composicao_corporal??null, value:sc.composicao_corporal??null, ant:asc.composicao_corporal, cor:zCor(sc.composicao_corporal??null)},
@@ -1137,7 +1189,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       )}
 
       {/* 4b. CARDIO AVANÇADO */}
-      {((atual.cardiorrespiratorio as any)?.rec_fc||(atual.cardiorrespiratorio as any)?.zonas_limiar?.length>0||(atual.cardiorrespiratorio as any)?.velocidades_treino?.length>0)&&(
+      {((atual.cardiorrespiratorio as any)?.rec_fc||zonasLimiarItems.length>0||velocidadesTreinoItems.length>0)&&(
         <Secao ordem={91} titulo="Cardiorrespiratório avançado" sub="Recuperação de frequência cardíaca, limiares e velocidades" score={sc.cardiorrespiratorio}>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
             {(atual.cardiorrespiratorio as any)?.rec_fc&&(
@@ -1150,29 +1202,35 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 </div>
               </Card>
             )}
-            {(atual.cardiorrespiratorio as any)?.velocidades_treino?.length>0&&(
+            {velocidadesTreinoItems.length>0&&(
               <Card>
                 <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Velocidades de treino</h3>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {(atual.cardiorrespiratorio as any).velocidades_treino.map((z:any,i:number)=>(
-                    <div key={i} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
-                      <span style={{fontWeight:700,color:'#334155'}}>{z.nome??z.zona??`Zona ${i+1}`}</span>
-                      <span style={{fontWeight:600,color:'#059669'}}>{z.min??z.vel_min} - {z.max??z.vel_max} km/h</span>
-                    </div>
-                  ))}
+                  {velocidadesTreinoItems.map((z)=>{
+                    const faixa=fmtFaixa(z.min,z.max);
+                    return faixa?(
+                      <div key={z.label} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
+                        <span style={{fontWeight:700,color:'#334155'}}>{z.label} - {z.nome}</span>
+                        <span style={{fontWeight:600,color:'#059669'}}>{faixa} km/h</span>
+                      </div>
+                    ):null;
+                  })}
                 </div>
               </Card>
             )}
-            {(atual.cardiorrespiratorio as any)?.zonas_limiar?.length>0&&(
+            {zonasLimiarItems.length>0&&(
               <Card>
                 <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Zonas por limiar</h3>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {(atual.cardiorrespiratorio as any).zonas_limiar.map((z:any,i:number)=>(
-                    <div key={i} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
-                      <span style={{fontWeight:700,color:'#334155'}}>{z.nome??z.zona??`Zona ${i+1}`}</span>
-                      <span style={{fontWeight:600,color:'#f59e0b'}}>{z.min??z.fc_min} - {z.max??z.fc_max} bpm</span>
-                    </div>
-                  ))}
+                  {zonasLimiarItems.map((z)=>{
+                    const faixa=fmtFaixa(z.min,z.max);
+                    return faixa?(
+                      <div key={z.label} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:10,alignItems:'center',fontSize:12,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
+                        <span style={{fontWeight:700,color:'#334155'}}>{z.label} - {z.nome}</span>
+                        <span style={{fontWeight:600,color:'#f59e0b'}}>{faixa} bpm</span>
+                      </div>
+                    ):null;
+                  })}
                 </div>
               </Card>
             )}
