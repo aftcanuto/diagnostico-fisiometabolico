@@ -676,6 +676,7 @@ function pgResumo(d: LaudoData): string {
     {label:'Composição',v:d.scores.composicao_corporal,icon:''},
     {label:'Força',v:d.scores.forca,icon:''},
     ...(d.scores.flexibilidade!=null?[{label:'Flexibilidade',v:d.scores.flexibilidade,icon:''}]:[]),
+    ...(d.scores.rml!=null?[{label:'RML',v:d.scores.rml,icon:''}]:[]),
     {label:'Cardio',v:d.scores.cardiorrespiratorio,icon:''},
   ];
   const scoreInfo: Record<string, { escopo: string; leitura: string }> = {
@@ -698,6 +699,10 @@ function pgResumo(d: LaudoData): string {
     Cardio: {
       escopo: 'VO2máx, FC e zonas de treino',
       leitura: 'Score 0-100; não é BPM isolado.',
+    },
+    RML: {
+      escopo: 'Resistencia muscular localizada',
+      leitura: 'Score 0-100 dos testes de resistencia.',
     },
   };
   const miniVelocimetro = (valor: number | null) => {

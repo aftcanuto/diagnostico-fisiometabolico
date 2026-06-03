@@ -11,9 +11,9 @@ export const scoreLabel = (s: number | null | undefined) =>
 /**
  * Score composicao corporal (0-100) baseado em %G e IMC.
  *
- * Faixas ideais estreitas para diferenciar atletas saudaveis
- * (%G otimo) de pessoas saudaveis porem comuns. So atinge 100 quem
- * esta realmente no ideal atletico; saudavel medio fica em 80-95.
+ * A faixa ideal continua privilegiando composicao corporal saudavel, mas
+ * evita classificar sobrepeso moderado como criticidade extrema quando os
+ * achados ainda estao em zona clinicamente manejavel.
  */
 export function scoreComposicaoCorporal(opts: {
   pctGordura: number | null;
@@ -23,15 +23,20 @@ export function scoreComposicaoCorporal(opts: {
   const { pctGordura, imc, sexo } = opts;
   if (pctGordura == null || imc == null) return null;
 
-  // Faixa ideal estreita %G (nivel atletico-saudavel)
-  // Homens: 10-15 otimo; Mulheres: 18-24 otimo
-  const idealG = sexo === 'M' ? [10, 15] : [18, 24];
-  const gScore = faixaScore(pctGordura, idealG[0], idealG[1], 6, 35);
+  const gordura = sexo === 'M'
+    ? { idealMin: 10, idealMax: 18, absMin: 5, absMax: 35 }
+    : { idealMin: 18, idealMax: 25, absMin: 10, absMax: 42 };
+  const gScore = faixaScore(
+    pctGordura,
+    gordura.idealMin,
+    gordura.idealMax,
+    gordura.absMin,
+    gordura.absMax,
+  );
 
-  // IMC ideal estreito 20-24 (centro da faixa saudavel OMS)
-  const imcScore = faixaScore(imc, 20, 24, 15, 35);
+  const imcScore = faixaScore(imc, 18.5, 25, 15, 40);
 
-  return Math.round(gScore * 0.6 + imcScore * 0.4);
+  return Math.round(gScore * 0.65 + imcScore * 0.35);
 }
 
 type SexoNormalizado = 'M' | 'F';

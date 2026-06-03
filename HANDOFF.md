@@ -2655,3 +2655,10 @@ Em 02/06/2026:
 - O score de forca nao depende mais da populacao/finalidade para derrubar a nota quando apenas a preensao palmar foi realizada.
 - A avaliacao deve continuar informando que a interpretacao nao contempla musculaturas especificas quando a dinamometria isometrica especifica nao foi executada.
 - Sem nova migration.
+
+## Correcao pontual do score de RML no PDF e composicao corporal
+
+Em 03/06/2026:
+- Incluido o score de RML no bloco de capacidades avaliadas do relatorio PDF.
+- Ajustada a regra de score de composicao corporal para reduzir punicao excessiva em sobrepeso moderado, mantendo criticidade para valores extremos.
+- Sem nova migration.
