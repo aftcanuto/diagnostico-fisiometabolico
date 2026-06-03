@@ -303,6 +303,20 @@ npm.cmd run predeploy
 5. Atualizar este `HANDOFF.md`.
 6. Commitar e subir.
 
+## Backup e restauracao
+
+Foi criado o arquivo `BACKUP.md` com o roteiro completo para restaurar o projeto em outro computador, incluindo:
+
+- repositorio GitHub;
+- variaveis de ambiente esperadas;
+- contas e acessos que precisam ficar guardados;
+- buckets e tabelas criticas do Supabase;
+- fluxo de restauracao local;
+- deploy em producao;
+- checklist manual apos restauracao.
+
+As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_SERVICE_ROLE_KEY` e `ANTHROPIC_API_KEY` em cofre de senhas ou arquivo criptografado externo.
+
 ## Ultima atualizacao deste handoff
 
-2026-06-03: arquivo reorganizado para continuidade do projeto, removendo duplicacoes e consolidando estado atual, migrations, regras, validacoes e pendencias.
+2026-06-03: arquivo reorganizado para continuidade do projeto, removendo duplicacoes e consolidando estado atual, migrations, regras, validacoes e pendencias. Adicionado registro do `BACKUP.md`.
