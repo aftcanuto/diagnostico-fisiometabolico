@@ -582,7 +582,7 @@ function QuickAiEditor({ avaliacaoId, analises, onSaved }: { avaliacaoId: string
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'13px 16px',background:'#f8fafc',borderBottom:'1px solid #e2e8f0'}}>
         <div>
           <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>Análises clínicas</div>
-          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>Textos de IA e comentários revisáveis</div>
+          <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>Textos clínicos e comentários revisáveis</div>
         </div>
         <button onClick={salvar} disabled={status==='saving'}
           style={{border:'1px solid #bbf7d0',background:'#f0fdf4',color:'#047857',borderRadius:10,padding:'7px 12px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
@@ -2493,7 +2493,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   {modo === 'clinico' && !emAndamento && (
                     <a href={`/avaliacoes/${a.id}/revisao`}>
                       <button style={btnStyle('rgba(255,255,255,.1)')}>
-                        <Sparkles size={12} /> IA
+                        <Sparkles size={12} /> Análises
                       </button>
                     </a>
                   )}

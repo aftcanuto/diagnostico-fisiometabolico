@@ -962,7 +962,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 2b. ANAMNESE E SINAIS */}
       {(anamneseItems.length>0||sv)&&(
-        <Secao ordem={20} titulo="Anamnese e sinais vitais" sub="Resumo dos dados clínicos preenchidos na avaliação">
+        <Secao ordem={20} titulo="Dados vitais e corporais" sub="Resumo dos dados clínicos preenchidos na avaliação">
           {anamneseItems.length>0&&(
             <Card style={{marginBottom:14}}>
               <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Anamnese</h3>

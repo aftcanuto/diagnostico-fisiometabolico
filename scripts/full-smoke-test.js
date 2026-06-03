@@ -56,7 +56,7 @@ const tipos = [
 ];
 
 const nomesRelatorio = {
-  anamnese: 'Anamnese',
+  anamnese: 'Dados Vitais e Corporais',
   sinais_vitais: 'Sinais Vitais',
   posturografia: 'Posturografia',
   bioimpedancia: 'Bioimpedância',
@@ -197,7 +197,7 @@ function main() {
   ]);
   const dashboardCliente = checkTextFile('preview-dashboard-cliente.html', [
     'Seu resultado geral',
-    'Anamnese',
+    'Dados vitais e corporais',
     'Sinais vitais',
     'FFMI',
     'Bioimpedância',

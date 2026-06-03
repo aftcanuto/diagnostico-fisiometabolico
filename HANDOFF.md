@@ -2685,3 +2685,12 @@ Em 03/06/2026:
 - O portal do paciente deixa de exibir Zona 6 a Zona 9 e linhas vazias com "- km/h" ou "- bpm".
 - A secao avancada passa a mostrar apenas Z1 a Z5 quando houver valores reais importados.
 - Sem nova migration.
+
+## Correcao pontual de rotulos e smoke test
+
+Em 03/06/2026:
+- Atualizado `scripts/full-smoke-test.js` para validar a secao atual "Dados Vitais e Corporais" no relatorio, em vez do titulo antigo "Anamnese".
+- Atualizado o smoke test do dashboard do paciente para validar "Dados vitais e corporais".
+- Padronizado o titulo da secao equivalente no portal do paciente para "Dados vitais e corporais".
+- Removida mencao visual a "IA" do painel clinico, usando "Textos clinicos" e botao "Analises".
+- Sem nova migration.
