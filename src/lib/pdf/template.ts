@@ -907,34 +907,87 @@ function pgSinais(s: any, ia?: any): string {
   ${aiBlock(ia)}`;
 }
 
-// Página combinada: Anamnese (metade sup) + Sinais Vitais (metade inf)
-function pgSinaisAnamnese(a: any, s: any, iaA: any, iaS: any, pri = '#059669'): string {
-  if (!a && !s) return '';
-  const pri2 = '#059669'; // fallback — será sobrescrito pelo pri do caller
-  const anamneseHtml = a ? pgAnamnese(a, iaA) : '';
-  if (!anamneseHtml && !s) return '';
+function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
+  const ant = d.dados.antropometria;
+  const bio = d.dados.bioimpedancia;
+  if (!ant && !bio) return '';
+
+  const toNum = (v: any): number | null => {
+    if (v == null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const fmt = (v: any, dec = 1) => {
+    const n = toNum(v);
+    if (n == null) return '—';
+    return n.toLocaleString('pt-BR', { maximumFractionDigits: dec });
+  };
+  const gorduraRelatorio = resolverPercentualGordura(d.avaliacao, ant, bio);
+  const pctG = toNum(gorduraRelatorio.valor);
+  const peso = toNum(ant?.peso ?? bio?.peso_kg ?? bio?.peso);
+  const altura = toNum(ant?.estatura ?? ant?.altura ?? bio?.altura_cm ?? bio?.estatura_cm);
+  const imc = toNum(ant?.imc ?? bio?.imc);
+  const massaMagra = toNum(ant?.massa_magra ?? bio?.massa_livre_gordura_kg ?? bio?.massa_magra_kg);
+  const tmb = toNum(bio?.taxa_metabolica_basal_kcal ?? bio?.tmb ?? ant?.taxa_metabolica_basal_kcal ?? ant?.metabolismo_basal);
+  const rcq = toNum(ant?.rcq ?? bio?.rcq);
+  const agua = toNum(bio?.agua_corporal_pct ?? bio?.agua_corporal_percentual ?? bio?.agua_corporal_kg);
+  const gorduraVisceral = toNum(bio?.gordura_visceral);
+  const visual = classificarComposicaoCorporal({ sexo: d.paciente.sexo, pctGordura: pctG, imc });
+  const somatotipo = ant?.somatotipo?.classificacao ?? ant?.somatotipo_classificacao ?? null;
+  const row = (label: string, value: string, unit = '', color = '#0f172a') => value === '—' ? '' : `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:8px;background:#f8fafc">
+      <span style="font-size:11px;color:#475569">${x(label)}</span>
+      <strong style="font-size:13px;color:${color};white-space:nowrap">${x(value)}${unit ? `<small style="font-size:9px;color:#94a3b8;margin-left:3px">${x(unit)}</small>` : ''}</strong>
+    </div>`;
+
+  return `<div style="margin-top:18px">
+    <div class="sec-sub">Dados corporais</div>
+    <div style="border:1px solid #e2e8f0;border-radius:14px;padding:18px;background:#ffffff;display:grid;grid-template-columns:1.1fr 150px 1.1fr;gap:20px;align-items:center;break-inside:avoid;page-break-inside:avoid">
+      <div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:7px">Indicadores principais</div>
+        <div style="display:grid;gap:7px">
+          ${row('Gordura corporal', fmt(pctG, 2), '%', zoneColor(d.scores.composicao_corporal))}
+          ${row('Metabolismo basal', fmt(tmb, 0), 'kcal')}
+          ${row('RCQ', fmt(rcq, 2))}
+          ${somatotipo ? row('Somatotipo', String(somatotipo)) : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+        ${silhueta(d.paciente.sexo, pctG, imc)}
+        <span style="display:inline-block;border:1px solid ${visual.cor}55;background:${visual.cor}12;color:${visual.cor};padding:4px 12px;border-radius:999px;font-size:10px;font-weight:700">${x(visual.label)}</span>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:7px">Demais dados</div>
+        <div style="display:grid;gap:7px">
+          ${row('Peso', fmt(peso, 1), 'kg')}
+          ${row('Altura', fmt(altura, 0), 'cm')}
+          ${row('IMC', fmt(imc, 2))}
+          ${row('Massa magra', fmt(massaMagra, 2), 'kg', '#059669')}
+          ${row('Água corporal', fmt(agua, 1), bio?.agua_corporal_kg ? 'kg' : '%')}
+          ${row('Gordura visceral', fmt(gorduraVisceral, 0))}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Página combinada: sinais vitais + resumo corporal visual
+function pgSinaisAnamnese(d: LaudoData, s: any, iaS: any, pri = '#059669'): string {
+  const corpoHtml = pgResumoCorporalRelatorio(d, pri);
+  if (!s && !corpoHtml) return '';
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
-    <h2 class="mod-title">Anamnese &amp; Sinais Vitais</h2>
+    <h2 class="mod-title">Dados Vitais e Corporais</h2>
   </div>
 
-  <!-- ── METADE SUPERIOR: Anamnese ── -->
-  ${anamneseHtml ? `<div style="padding:20px 0 18px;border-bottom:2px dashed #e5e7eb">
-    <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-      <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
-      Anamnese
-    </div>
-    ${anamneseHtml}
-  </div>` : ''}
-
-  <!-- ── METADE INFERIOR: Sinais Vitais ── -->
-  ${s ? `<div style="padding:20px 0 0">
+  ${s ? `<div style="padding:20px 0 18px;border-bottom:${corpoHtml ? '2px dashed #e5e7eb' : '0'}">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Sinais Vitais
     </div>
     ${pgSinais(s, iaS)}
   </div>` : ''}
+  ${corpoHtml}
 </section>`;
 }
 
@@ -1830,11 +1883,11 @@ export function renderLaudoHTML(d: LaudoData): string {
     pgCapa(d),
     pgResumo(d),
     // Ordem cronologica dos modulos da avaliacao
-    (m.anamnese || m.sinais_vitais)
+    (m.sinais_vitais || m.bioimpedancia || m.antropometria)
       ? pgSinaisAnamnese(
-          m.anamnese      ? d.dados.anamnese      : null,
+          d,
           m.sinais_vitais ? d.dados.sinais_vitais : null,
-          ia.anamnese, ia.sinais_vitais, pri)
+          ia.sinais_vitais, pri)
       : '',
     m.posturografia
       ? pgPosturaFlex(

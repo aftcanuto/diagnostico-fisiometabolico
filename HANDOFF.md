@@ -2669,3 +2669,11 @@ Em 03/06/2026:
 - Removida a chamada remanescente que preparava a conclusao global dentro da pagina inicial interna do relatorio.
 - A conclusao clinica e o plano de acao permanecem somente nas secoes proprias do PDF.
 - Sem nova migration.
+
+## Correcao pontual da secao Dados Vitais e Corporais no PDF
+
+Em 03/06/2026:
+- A antiga secao "Anamnese & Sinais Vitais" do relatorio passa a ser "Dados Vitais e Corporais".
+- A pagina agora renderiza sinais vitais junto ao resumo visual de dados corporais, com indicadores principais, silhueta e demais dados, seguindo o padrao do dashboard do paciente.
+- A secao tambem aparece quando houver bioimpedancia ou antropometria, mesmo sem anamnese exibida.
+- Sem nova migration.
