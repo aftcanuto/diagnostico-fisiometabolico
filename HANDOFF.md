@@ -1,2719 +1,308 @@
-# Diagnostico Fisiometabolico - Continuidade do Projeto
+# HANDOFF - Diagnostico Fisiometabolico
 
-Este arquivo serve para continuar o trabalho em outro computador ou em uma nova conversa.
+Documento de continuidade do projeto. Leia este arquivo antes de continuar em outro computador, outra conversa ou outro agente.
 
-## Correcao pontual de acentuacao em labels
+## Regras de continuidade
 
-Em 02/06/2026:
+- Toda mudanca deve ser registrada neste arquivo no mesmo ciclo de trabalho.
+- Se houver migration nova, informar explicitamente o arquivo SQL e orientar aplicacao no Supabase.
+- A cada correcao concluida, entregar o comando de deploy.
+- Fazer uma correcao por vez quando o usuario estiver validando em producao.
+- Manter dashboards, portal do paciente e PDF na mesma ordem dos modulos.
+- Nao mencionar IA no PDF do paciente nem no dashboard do paciente.
+- Evitar caracteres corrompidos. Preferir texto ASCII neste arquivo quando possivel.
 
-- corrigidas labels visiveis sem acento em `src/lib/pdf/template.ts`, `src/components/PortalPaciente.tsx` e `src/components/PatientDashboard.tsx`;
-- exemplos corrigidos: `Forca` para `Força`, `Forca rel.` para `Força rel.` e `Saude cardiovascular` para `Saúde cardiovascular`;
-- sem nova migration;
-- validacao: `npx tsc --noEmit` passou sem erros.
+## Caminhos e repositorio
 
-## Limpeza de codificacao do dashboard clinico
+Projeto local:
 
-Em 02/06/2026:
+`C:\Users\canut\Documents\Codex\2026-04-27\files-mentioned-by-the-user-diagnostico\unzipped\diagnostico-fisiometabolico`
 
-- removido caractere invisivel inicial de `src/components/PatientDashboard.tsx`, mantendo o conteudo funcional intacto;
-- objetivo desta rodada: reduzir risco de inconsistencias de parsing/build e textos estranhos em producao;
-- sem nova migration;
-- validacao: `npx tsc --noEmit` nao aponta erros em `src/components/PatientDashboard.tsx`.
+GitHub:
 
-## Correcao pontual do portal do paciente
+`https://github.com/aftcanuto/diagnostico-fisiometabolico`
 
-Em 02/06/2026:
+Producao:
 
-- restaurado `src/components/PortalPaciente.tsx` para a versao estavel versionada e removido o BOM inicial que podia contribuir para inconsistencias de parsing/build;
-- objetivo desta rodada: recuperar o portal publico do paciente sem misturar novas regras funcionais;
-- sem nova migration;
-- validacao: `npx tsc --noEmit` nao aponta mais erros em `src/components/PortalPaciente.tsx`.
+`https://diagnostico-fisiometabolico.vercel.app`
 
-## Correcao pontual do dashboard clinico
+Supabase:
 
-Em 02/06/2026:
+`https://kjfhhrdfsgvdqygbvmwb.supabase.co`
 
-- restaurado `src/components/PatientDashboard.tsx` para a versao estavel versionada para remover corrupcoes locais de sintaxe que quebravam a validacao TypeScript;
-- objetivo desta rodada: recuperar o dashboard clinico sem misturar ajustes do portal do paciente;
-- sem nova migration;
-- validacao: `npx tsc --noEmit` nao aponta mais erros em `src/components/PatientDashboard.tsx`;
-- pendencia separada: `src/components/PortalPaciente.tsx` ainda possui erros de sintaxe e deve ser corrigido em rodada individual.
+## Stack
 
-## Atualizacao 2026-05-26 - central de documentos do paciente
+- Next.js 14 App Router
+- TypeScript
+- Supabase Auth, Postgres, Storage e RLS
+- Tailwind CSS
+- Puppeteer para PDF
+- Anthropic Claude API para analises clinicas
 
-Implementado:
+## Comandos uteis
 
-- criada a `Central de documentos` dentro da pagina do paciente, sem transformar isso em modulo da avaliacao;
-- a central aparece logo apos o cabecalho do paciente e antes das listas de avaliacoes;
-- reune em um so painel: laudos/PDFs, termos e TCLE aceitos, anamneses pre-atendimento, recomendacoes pre-teste e links ativos;
-- usa as rotas ja existentes `/api/paciente-tokens`, `/api/consentimento-links`, `/api/anamnese-links` e `/api/protocolo-envios`;
-- se alguma estrutura opcional ainda nao existir no banco, a central nao quebra a tela e apenas mostra os blocos vazios;
-- permite copiar links ativos de portal, anamnese e termos diretamente pela central.
-- ajuste posterior: termos/TCLE aceitos agora aparecem na central mesmo quando o comprovante ainda nao veio por `consentimento_aceites`, usando o `aceito_em` salvo no proprio `consentimento_links` como fallback.
+Entrar na pasta:
 
-Arquivos alterados:
-
-- `src/components/PacienteDocumentosCentral.tsx`;
-- `src/app/(app)/pacientes/[id]/page.tsx`.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run lint` passou sem erros.
-- `npm run predeploy` passou completo:
-  - integridade de textos;
-  - auditoria do banco;
-  - smoke test de relatorio, dashboard clinico e dashboard paciente;
-  - formulas clinicas;
-  - backup em planilha;
-  - plano alimentar;
-  - TypeScript;
-  - lint.
-
-Sem migration nesta rodada.
-
-## Checklist de fotos da posturografia
-
-Em 27/05/2026 foi corrigido o alerta incorreto de fotos incompletas na Revisao.
-
-Problema:
-
-- o formulario de posturografia salva as fotos nos campos `foto_anterior`, `foto_posterior`, `foto_lateral_dir` e `foto_lateral_esq`;
-- o checklist de finalizacao ainda procurava campos antigos como `foto_frente_url` e `foto_costas_url`;
-- por isso o alerta de fotos incompletas podia aparecer mesmo com as quatro fotos anexadas.
-
-Implementado:
-
-- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` agora valida os campos atuais;
-- a validacao tambem aceita aliases antigos para preservar compatibilidade com dados legados.
-
-Sem migration nesta rodada.
-
-## Refinamento de scores, fonte de gordura e silhueta corporal
-
-Em 26/05/2026 foram ajustadas regras de composicao corporal e flexibilidade apos validacao visual nos dashboards.
-
-Problema:
-
-- a escolha da fonte de gordura corporal podia ser salva, mas o score de composicao/global nao era recalculado imediatamente na revisao;
-- a silhueta corporal usava o IMC para elevar automaticamente o nivel visual para obesidade mesmo quando o percentual de gordura indicava apenas sobrepeso/atencao;
-- o score de flexibilidade linear deixava resultados classificados como fracos com nota muito proxima de zero, gerando leitura mais grave do que a classificacao clinica.
-
-Implementado:
-
-- `src/lib/bodyComposition.ts` passou a aceitar fontes `antropometria`, `bioimpedancia`, `maior`, `menor` e `manual`;
-- a classificacao visual da silhueta passou a priorizar o percentual de gordura quando ele existe, usando o IMC apenas como alerta complementar;
-- valores de gordura na faixa masculina 25-29% e feminina 29-32% agora aparecem como `Sobrepeso`, sem forcar silhueta de obesidade;
-- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` recalcula composicao corporal e score global assim que a fonte de gordura e escolhida;
-- `src/lib/calculations/flexibilidade.ts` passou a pontuar por bandas clinicas: fraco, regular, medio, bom e excelente, evitando notas artificialmente baixas para resultados fracos mas plausiveis.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:calculations` passou com as formulas principais.
-
-## Atualizacao 2026-05-26 - revisao: escolha de gordura e score de forca por preensao
-
-Implementado:
-
-- a pendencia de divergencia entre gordura por bioimpedancia e antropometria agora exibe os botoes de escolha dentro do proprio checklist de seguranca da Revisao;
-- o avaliador pode selecionar diretamente `Usar antropometria / dobras` ou `Usar bioimpedancia`;
-- ao selecionar a fonte, o sistema salva `fonte_gordura_relatorio` e `percentual_gordura_relatorio` na avaliacao e remove a pendencia critica;
-- o checklist passou a reconhecer a forca calculada por preensao palmar como score valido;
-- quando existe preensao palmar, mas nao ha dinamometria isometrica especifica, a Revisao mostra apenas um alerta explicativo de limitacao clinica, em vez de marcar Forca como score ausente/zerado.
-
-Pendente operacional:
-
-- sem nova migration nesta etapa; depende apenas da migration `045_fonte_gordura_relatorio.sql`, ja criada anteriormente.
-
-## Atualizacao 2026-05-26 - configuracao da vitrine de produtos
-
-Implementado:
-
-- criada a pagina `/produtos/catalogo` para editar os textos da vitrine publica de produtos;
-- adicionados campos configuraveis para titulo do cabecalho, texto de apoio, titulo do rodape e texto do rodape;
-- a tela de Produtos ganhou o botao `Configurar vitrine`;
-- o catalogo publico `/catalogo/[clinicaId]` passa a puxar esses textos da clinica, mantendo textos padrao quando os campos estiverem vazios;
-- criada a migration `supabase/migrations/046_catalogo_textos_clinica.sql`;
-- normalizacao do link de Instagram ajustada para handles, URLs completas e para corrigir a MedFit para `www.instagram.com/medfitsaude`.
-
-Pendente operacional:
-
-- aplicar a migration `046_catalogo_textos_clinica.sql` no Supabase antes do deploy/teste em producao.
-
-## Atualizacao 2026-05-25 - score de forca por preensao e fonte unica de gordura
-
-Implementado:
-
-- criado fluxo para definir uma fonte unica de percentual de gordura quando antropometria e bioimpedancia divergirem;
-- criada a migration `supabase/migrations/045_fonte_gordura_relatorio.sql` com `fonte_gordura_relatorio` e `percentual_gordura_relatorio` em `avaliacoes`;
-- o modulo Revisao agora alerta quando ha divergencia de percentual de gordura e permite escolher qual valor entra no dashboard e no relatorio;
-- dashboard clinico, portal do paciente, historico e PDF passam a respeitar a fonte escolhida;
-- bioimpedancia e antropometria deixam de exibir dois percentuais de gordura conflitantes quando uma fonte ja foi definida;
-- a silhueta corporal agora considera IMC e percentual de gordura para evitar classificacao visual incoerente, como atleta/fitness em caso de IMC alto e gordura elevada;
-- o score de forca passa a usar preensao palmar como fallback quando nao houver dinamometria isometrica especifica;
-- o relatorio PDF tambem usa o fallback de preensao palmar para evitar score de forca zerado quando o teste foi realizado.
-
-Pendente operacional:
-
-- aplicar a migration `045_fonte_gordura_relatorio.sql` no Supabase antes do deploy/teste em producao.
-
-Validacao:
-
-- `npm run predeploy` executado com sucesso em 25/05/2026;
-- TypeScript, lint, auditoria de banco, smoke test, formulas clinicas, previews e backup em planilha passaram sem erro bloqueante.
-
-## Importacao automatica da anamnese pre-atendimento
-
-Em 25/05/2026 foi corrigido o fluxo em que o paciente respondia a anamnese pelo link, mas o avaliador precisava redigitar as respostas dentro da avaliacao.
-
-Problema:
-
-- o formulario publico gravava as respostas em `paciente_anamnese_respostas`;
-- o modulo de anamnese da avaliacao lia apenas a tabela `anamnese`;
-- quando a resposta nao era sincronizada com `anamnese`, a avaliacao abria vazia.
-
-Implementado:
-
-- `src/app/api/anamnese-publica/route.ts` agora, ao receber uma resposta de link vinculado a uma avaliacao, faz `upsert` automatico na tabela `anamnese`;
-- `src/app/api/modulos/route.ts` ganhou uma importacao de seguranca: se o modulo `anamnese` for aberto e ainda nao houver dados na avaliacao, o sistema busca a resposta pre-atendimento mais recente do paciente e importa automaticamente;
-- a importacao tambem cobre o caso em que o auto-save criou uma linha vazia de anamnese antes de o paciente responder;
-- a busca prioriza respostas vinculadas diretamente a avaliacao e, se nao houver, usa a resposta mais recente do paciente sem avaliacao vinculada;
-- `scripts/full-smoke-test.js` passou a validar que esse caminho de sincronizacao existe.
-
-Resultado esperado:
-
-- o paciente responde pelo link antes da consulta;
-- ao abrir a avaliacao, a anamnese ja aparece preenchida;
-- nao e mais necessario redigitar manualmente as respostas durante o atendimento.
-
-## Varredura tecnica e protecao de produtos
-
-Em 25/05/2026 foi feita nova varredura minuciosa do sistema apos a correcao de produtos e score de forca por preensao palmar.
-
-Implementado:
-
-- `scripts/audit-db.js` passou a verificar explicitamente se as migrations contemplam produtos flexiveis;
-- a auditoria agora falha se nao encontrar `produto_livre`, `anamnese_obrigatoria`, `tipo_produto` e `imagem_url`;
-- `scripts/full-smoke-test.js` passou a validar que o formulario de produtos e a migration de alinhamento de produtos contem esses campos;
-- isso reduz o risco de uma nova versao chegar em producao sem o schema necessario para cadastrar produtos.
-
-Validacao:
-
-- `npm run predeploy` passou completo;
-- `npm run build` passou completo;
-- build gerou apenas aviso de cache do webpack, sem falha de compilacao, TypeScript ou lint.
-
-Observacao operacional:
-
-- o erro real de cadastro de produto em producao depende da migration `043_produtos_schema_alignment.sql` estar aplicada no Supabase.
-
-## Produtos e score de forca por preensao palmar
-
-Em 25/05/2026 foi corrigido o cadastro de produtos e o score de forca quando apenas a preensao palmar foi realizada.
-
-Problemas:
-
-- o cadastro de produto falhava em producao porque a coluna `anamnese_obrigatoria` ainda nao existia no banco;
-- avaliacoes com teste de preensao palmar, mas sem dinamometria isometrica Medeor/SPTech ou tracao, podiam exibir score de forca zerado;
-- dashboards e PDF precisavam deixar claro que a analise de forca estava baseada somente na preensao palmar.
-
-Implementado:
-
-- criada a migration `supabase/migrations/043_produtos_schema_alignment.sql`;
-- a migration alinha `produtos` com os campos `produto_livre`, `tipo_produto`, `anamnese_obrigatoria` e `imagem_url`;
-- criado `scoreForcaPorPreensao` em `src/lib/scores/index.ts`;
-- o modulo Revisao agora calcula o score de forca pela preensao palmar quando ela existe;
-- o dashboard clinico, dashboard do paciente e PDF usam o score por preensao quando o score salvo esta vazio ou zerado;
-- dashboards e PDF exibem observacao quando a analise de forca nao contempla musculos especificos por ausencia de dinamometria isometrica.
-
-Validacao:
-
-- `npm run predeploy` passou completo:
-  - checagem de textos;
-  - auditoria de banco;
-  - smoke test de relatorio, dashboard clinico e dashboard paciente;
-  - formulas clinicas;
-  - backup em planilha;
-  - plano alimentar;
-  - TypeScript;
-  - lint.
-
-Pendente operacional:
-
-- rodar a migration `043_produtos_schema_alignment.sql` no Supabase antes de testar o cadastro de produtos em producao.
-
-## Regra obrigatoria de continuidade
-
-Toda e qualquer mudanca feita no projeto deve atualizar este arquivo no mesmo ciclo de trabalho.
-
-Isso inclui:
-
-- alteracoes de codigo;
-- novas migrations ou ajustes no banco;
-- mudancas visuais em relatorio, dashboard clinico ou dashboard do paciente;
-- correcoes de bug;
-- novas regras de negocio;
-- comandos importantes executados;
-- erros encontrados e como foram corrigidos;
-- pendencias que ainda precisam ser testadas ou aplicadas em producao.
-
-Ao trabalhar de outro local ou em outra conversa, antes de alterar o projeto:
-
-1. Ler este `HANDOFF.md`.
-2. Fazer a alteracao necessaria.
-3. Rodar os testes adequados.
-4. Atualizar este `HANDOFF.md` com o que mudou.
-5. Fazer commit/push incluindo tambem este arquivo.
-
-Nenhuma mudanca deve ficar apenas na conversa ou apenas no codigo sem registro aqui.
-
-## Atualizacao 2026-05-22 - integridade textual antes do deploy
-
-Implementado:
-
-- criado `scripts/check-text-integrity.js` para bloquear caracteres corrompidos antes do deploy;
-- adicionado `npm run text:check`;
-- `npm run predeploy` agora roda a verificacao de integridade textual antes da auditoria do banco, smoke test, calculos, backup, nutricao, TypeScript e lint;
-- corrigidos textos corrompidos pontuais em PDF, dashboard do paciente e modulo de forca;
-- criada a migration `supabase/migrations/042_normalize_text_integrity.sql` para normalizar templates antigos de anamnese salvos com rotulos quebrados;
-- a migration 042 tambem padroniza o campo `historia_familiar` como `Historico de doenca na familia` dentro da secao `Historico medico`.
-
-Observacao:
-
-- a migration 042 contem textos corrompidos de proposito no lado esquerdo dos `replace()`, pois ela precisa reconhecer e corrigir registros antigos ja salvos no banco;
-- por isso, o verificador de texto ignora especificamente essa migration de reparo, mas continua bloqueando corrupcao acidental no restante do sistema.
-
-Validacao executada:
-
-- `node scripts/check-text-integrity.js` passou sem apontar novas ocorrencias fora das excecoes controladas.
-- `npm run predeploy` passou completo:
-  - integridade textual;
-  - auditoria do banco;
-  - smoke test de relatorio, dashboard clinico e dashboard do paciente;
-  - calculos clinicos;
-  - backup em planilha;
-  - plano alimentar;
-  - TypeScript;
-  - lint.
-
-## Repositorio e deploy
-
-- GitHub: https://github.com/aftcanuto/diagnostico-fisiometabolico
-- Producao Vercel: https://diagnostico-fisiometabolico.vercel.app
-- Stack: Next.js 14, TypeScript, Supabase, Tailwind, Puppeteer, Anthropic Claude.
-
-## Banco Supabase
-
-Projeto Supabase em uso:
-
-- URL publica: `https://kjfhhrdfsgvdqygbvmwb.supabase.co`
-
-As chaves ficam fora do Git, em `.env.local` localmente e em Environment Variables na Vercel.
-
-Variaveis esperadas:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
-ANTHROPIC_API_KEY
-ANTHROPIC_MODEL
-NEXT_PUBLIC_APP_URL
+```powershell
+cd "C:\Users\canut\Documents\Codex\2026-04-27\files-mentioned-by-the-user-diagnostico\unzipped\diagnostico-fisiometabolico"
 ```
 
-Observacao importante: `NEXT_PUBLIC_SUPABASE_URL` deve ser sem `/rest/v1`.
-
-## Estado atual
-
-Ja foram aplicadas correcoes visuais e funcionais no relatorio, dashboard clinico e dashboard do paciente.
-
-### Atualizacao 2026-05-07 - correcao de erro ao entrar na avaliacao
-
-- Corrigido erro de hidratacao do React no dashboard da avaliacao/paciente.
-- Removido identificador aleatorio (`Math.random`) do velocimetro do `PatientDashboard`, substituindo por `useId`, estavel entre servidor e navegador.
-- Padronizada a exibicao de datas do `PatientDashboard` sem depender do fuso horario do navegador/servidor.
-- Corrigido o painel de links do portal do paciente para nao renderizar `window.location` antes da pagina carregar, evitando divergencia entre HTML da Vercel e HTML do Chrome.
-- O painel de links agora continua exibindo apenas links ativos e usa data curta estavel.
-
-### Atualizacao 2026-05-07 - reguas da biomecanica no PDF
-
-- Ajustado o template do PDF para colocar as reguas angulares do plano sagital e do plano posterior na mesma pagina.
-- A pagina agora mantem o titulo "Biomecanica da corrida" e separa os dois grupos internamente, com cards mais compactos e protegidos contra quebra no meio.
-- A ordem do PDF da biomecanica ficou: imagens/metricas, regua angular unica, achados/recomendacoes e graficos cinematicos.
-
-Principais pontos ja feitos:
-
-- Relatorio PDF premium com velocimetros refinados.
-- Dashboard clinico e dashboard paciente com graficos e secoes completas.
-- Biomecanica da corrida com graficos de joelho, quadril e cotovelo.
-- Campo de link de video da biomecanica.
-- Comentarios livres para biomecanica e graficos.
-- Dinamometria SPTech e tracao no modulo Forca.
-- Analise IA por modulo, conclusao global e evolucao.
-- Perfil do avaliador em Configuracoes.
-- Edicao/exclusao de pacientes e avaliacoes.
-- Produto padrao com todos os modulos.
-- Remocao da area Plano & uso da Clinica.
-- Link do portal do paciente por escopo da clinica.
-- Autosave da anamnese corrigido para salvar antes de trocar de modulo.
-- Barra de etapas indica modulos preenchidos com status "Feito".
-
-## Migrations importantes recentes
-
-- `024_schema_alignment_for_deploy.sql`: alinhamento de forca, biomecanica e remocao de impedancia Z.
-- `025_internal_access_and_evaluator_profile.sql`: uso interno, convite, perfil do avaliador e produto completo.
-- `026_paciente_tokens_clinica_policies.sql`: policies do portal do paciente por clinica.
-- `027_clinica_membership_rls_fix.sql`: corrige RLS para gravar modulos e gerar link do portal usando vinculo real de membro ativo da clinica.
-
-Antes de deploy em ambiente novo, aplicar todas as migrations em ordem.
-
-## Pendencia imediata em producao
-
-Em 04/05/2026, o app em producao apresentou erro 403/RLS ao salvar anamnese e ao gerar link do portal:
-
-- `new row violates row-level security policy for table "paciente_tokens"`
-- `POST /rest/v1/anamnese?on_conflict=avaliacao_id 403 Forbidden`
-
-A correcao local e a migration `027_clinica_membership_rls_fix.sql` ja existem. Para resolver em producao:
-
-1. Aplicar a migration 027 no SQL Editor do Supabase.
-2. Fazer commit/push da migration 027 para o GitHub.
-3. Aguardar redeploy da Vercel.
-4. Retestar salvamento da anamnese e geracao do link do portal do paciente.
-
-Atualizacao posterior: como os erros persistiram em producao, foi criada uma correcao mais robusta no codigo:
-
-- `src/app/api/modulos/route.ts`: rota interna segura para buscar/salvar modulos usando service role apos validar que o usuario autenticado e membro ativo da clinica da avaliacao.
-- `src/lib/modulos.ts`: `buscarModulo` e `upsertModulo` agora chamam `/api/modulos`, evitando gravacao direta do navegador no Supabase.
-- `src/app/api/paciente-tokens/route.ts`: rota interna segura para listar, criar e revogar links do portal do paciente.
-- `src/components/ShareTokenPanel.tsx`: painel do link do paciente agora usa `/api/paciente-tokens`.
-
-Essa mudanca foi validada localmente com `npm run predeploy` em 04/05/2026. Resultado: auditoria OK, smoke test OK, TypeScript OK e lint sem erros bloqueantes.
-
-Nova descoberta em 04/05/2026: a pagina especifica da anamnese ainda tinha um `supabase.from('anamnese').upsert(...)` proprio, fora de `src/lib/modulos.ts`. Isso mantinha o erro 403 em producao mesmo depois da criacao de `/api/modulos`.
-
-Correcao aplicada:
-
-- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` agora importa `buscarModulo` e `upsertModulo` de `src/lib/modulos.ts`.
-- A leitura dos dados salvos da anamnese passou por `buscarModulo('anamnese', params.id)`.
-- O salvamento da anamnese passou por `upsertModulo('anamnese', params.id, { respostas, template_id })`.
-- Busca de avaliacao e templates continua direta no Supabase, pois sao leituras necessarias e nao eram a origem do erro de POST.
-
-Validacao local apos essa correcao: `npm run predeploy` passou novamente.
-
-Nova correcao em 04/05/2026: apos deploy, `/api/modulos?tabela=anamnese...` retornou 403 `Sem permissao para esta avaliacao`. A causa provavel e compatibilidade com dados antigos em que `avaliacoes.clinica_id` ou o vinculo de clinica nao esta consistente, embora o usuario seja o avaliador dono.
-
-Correcao aplicada:
-
-- `src/app/api/modulos/route.ts`: `usuarioPodeAcessarAvaliacao` agora permite acesso quando:
-  - `avaliacoes.avaliador_id` e o usuario logado;
-  - ou o usuario e membro ativo da clinica da avaliacao;
-  - ou o paciente da avaliacao pertence ao avaliador logado;
-  - ou o usuario e membro ativo da clinica do paciente.
-- `src/app/api/paciente-tokens/route.ts`: `usuarioPodeAcessarPaciente` agora tambem permite quando `pacientes.avaliador_id` e o usuario logado, alem do vinculo por clinica.
-
-Validacao local apos essa correcao: `npm run predeploy` passou novamente.
-
-Nova correcao em 04/05/2026: o erro 403 em `/api/modulos` persistiu para a anamnese em producao. Para evitar incompatibilidade com dados antigos/migrados, a API passou a considerar tambem a visibilidade RLS normal do usuario:
-
-- `src/app/api/modulos/route.ts`: antes das checagens administrativas, a rota tenta ler a avaliacao com o cliente autenticado normal. Se a avaliacao esta visivel para o usuario pela propria RLS, o acesso e permitido.
-- `src/app/api/paciente-tokens/route.ts`: antes das checagens administrativas, a rota tenta ler o paciente com o cliente autenticado normal. Se o paciente esta visivel para o usuario pela propria RLS, o acesso e permitido.
-
-Isso mantem seguranca porque a permissao inicial continua sendo a RLS do Supabase; a service role so e usada depois para executar a gravacao que o RLS estava bloqueando em tabelas filhas.
-
-Validacao local apos essa correcao: `npm run predeploy` passou novamente.
-
-Nova correcao em 04/05/2026: anamnese e sinais vitais passaram a salvar, mas as etapas nao eram marcadas como "Feito" na barra de navegacao.
-
-Causa: `src/app/(app)/avaliacoes/[id]/layout.tsx` calculava o `statusMap` lendo tabelas de modulos com o cliente Supabase normal. Como os dados passaram a ser gravados por rotas seguras com service role, a leitura do layout podia nao enxergar as linhas filhas em dados antigos/RLS.
-
-Correcao aplicada:
-
-- `src/app/(app)/avaliacoes/[id]/layout.tsx` continua validando que a avaliacao e visivel pelo usuario logado.
-- Depois disso, usa `createAdminClient()` apenas para ler os dados dos modulos e montar `statusMap`.
-- Isso permite marcar corretamente Anamnese, Sinais vitais e demais modulos como "Feito" quando houver dados.
-
-Validacao local: `npm run predeploy` passou novamente.
-
-Depois do deploy dessa correcao, retestar:
-
-1. Salvar anamnese em producao e conferir que nao aparece mais erro 403.
-2. Trocar de modulo e voltar para confirmar que os campos continuam preenchidos.
-3. Gerar link do portal do paciente.
-4. Revogar link do portal do paciente.
-
-## Correcao em andamento: salvamento, scores, links e revisao
-
-Em 04/05/2026 foi aplicada uma correcao de fluxo apos testes em producao mostrarem:
-
-- modulos preenchidos sem marcar como "Feito";
-- antropometria sem salvar ao clicar em continuar;
-- erro 403 ao gravar `scores`;
-- erro 400 em `/api/modulos` quando a base nao possui alguma coluna nova;
-- imagens de biomecanica falhando no upload;
-- score global sem graficos;
-- finalizacao sem mensagem de sucesso/erro;
-- link do portal do paciente falhando por chave estrangeira em `paciente_tokens.avaliador_id`;
-- PDF mais sensivel a RLS ao buscar dados dos modulos.
-
-Mudancas aplicadas:
-
-- botoes "Continuar" salvam explicitamente antes de navegar;
-- `scores` agora grava por rota server-side com service role, evitando 403 no navegador;
-- revisao calcula e mostra scores mesmo se a persistencia falhar;
-- finalizacao usa rota server-side e mostra mensagem de sucesso/erro;
-- biomecanica envia imagens por rota server-side;
-- link do paciente garante o registro em `avaliadores` antes de criar `paciente_tokens`;
-- PDF busca modulos com service role depois de validar usuario autenticado;
-- barra de etapas usa regras especificas por modulo para marcar "Feito" apenas quando ha dados reais;
-- forca SPTech inicia com articulacoes predefinidas na tela, mas salva apenas testes com medida preenchida;
-- `/api/modulos` e `/api/scores` tentam ignorar colunas ausentes para evitar quebra quando alguma migration ainda nao foi aplicada.
-
-Arquivos principais alterados:
-
-- `src/lib/modulos.ts`
-- `src/app/api/modulos/route.ts`
-- `src/app/api/scores/route.ts`
-- `src/app/api/avaliacoes/[id]/finalizar/route.ts`
-- `src/app/api/uploads/biomecanica/route.ts`
-- `src/app/api/paciente-tokens/route.ts`
-- `src/app/api/pdf/route.ts`
-- paginas dos modulos `bioimpedancia`, `antropometria`, `flexibilidade`, `cardiorrespiratorio`, `biomecanica`, `forca`, `rml`, `revisao`
-- `src/app/(app)/avaliacoes/[id]/layout.tsx`
-
-Validacao local:
-
-- `npm install` falhou no Windows por permissao no cache do npm (`EPERM`), entao lint/build nao rodaram neste ciclo.
-- Antes de um proximo deploy grande, tentar limpar o cache do npm ou rodar em outro ambiente e executar `npm run predeploy`.
-
-## Correcao: dashboard do cliente e cardio
-
-Em 04/05/2026 foram ajustados pontos do portal do paciente:
-
-- portal publico `/p/[token]` deixou de depender apenas da RPC `paciente_dashboard_por_token` e agora busca os dados pelo servidor com service role apos validar token ativo. Isso inclui fotos da posturografia, que a RPC mais recente removia.
-- dashboard do cliente calcula scores de composicao, forca, flexibilidade, cardio e postura como fallback quando a tabela `scores` vem incompleta.
-- score global tambem e recalculado no portal quando `scores.global` esta vazio.
-- historico familiar na anamnese passa a ocupar linha inteira abaixo dos outros campos.
-- potencial muscular natural passa a inferir estatura por peso/IMC quando a estatura direta nao esta disponivel, permitindo calcular limite estimado.
-- recuperacao de FC foi reduzida para 10s, 30s e 60s no modulo cardiorrespiratorio e no dashboard do cliente.
-- cards de biomecanica do dashboard cliente ficaram maiores e com layout mais resistente a sobreposicao de numero/status/texto.
-
-Arquivos alterados:
-
-- `src/app/p/[token]/page.tsx`
-- `src/components/PortalPaciente.tsx`
-- `src/app/(app)/avaliacoes/[id]/cardiorrespiratorio/page.tsx`
-
-## Correcao: geracao de PDF no Vercel
-
-Em 04/05/2026, a rota `/api/pdf?avaliacaoId=...` falhou em producao com erro informando que o Chrome do Puppeteer nao foi encontrado no cache do Vercel.
-
-Causa:
-
-- as rotas de PDF usavam `puppeteer` direto;
-- no ambiente serverless da Vercel nao ha garantia de Chrome instalado no caminho esperado pelo Puppeteer.
-
-Correcao aplicada:
-
-- adicionadas dependencias `@sparticuz/chromium` e `puppeteer-core`;
-- criado `src/lib/pdf/browser.ts` com `launchPdfBrowser()`;
-- em producao/Vercel, o PDF passa a usar Chromium serverless via `@sparticuz/chromium`;
-- localmente, segue usando `puppeteer` normal;
-- atualizadas as rotas:
-  - `src/app/api/pdf/route.ts`
-  - `src/app/api/pdf/publico/route.ts`
-- atualizado `package-lock.json` com `npm install --package-lock-only --cache .npm-cache --prefer-online`.
-
-Validacao local neste ciclo:
-
-- nao foi rodado build completo porque o ambiente local ainda tem historico de problema de permissao/cache do npm em instalacao completa;
-- antes do deploy, o Vercel deve instalar as novas dependencias pelo `package-lock.json`;
-- apos deploy, retestar o botao/URL de PDF em producao.
-
-Correcao complementar no mesmo ciclo:
-
-- o deploy falhou em `src/components/PortalPaciente.tsx` porque `anamneseFull` era usado no JSX, mas nao tinha sido declarado;
-- `anamneseFull` foi declarado a partir dos campos "Historia Familiar"/"História Familiar";
-- `anamneseRest` agora exclui esse campo para que ele apareca apenas em linha inteira, abaixo dos cards menores.
-
-Nova correcao complementar:
-
-- o PDF em producao passou a falhar com `O diretório de entrada "/var/task/.next/server/bin" não existe`;
-- `next.config.js` agora deixa `puppeteer`, `puppeteer-core` e `@sparticuz/chromium` como pacotes externos do servidor e inclui `node_modules/@sparticuz/chromium/bin/**/*` no tracing das rotas `/api/pdf` e `/api/pdf/publico`;
-- a tela de revisao buscava dados dos modulos direto pelo Supabase no navegador, o que podia voltar vazio por RLS e deixar os graficos de score com "—";
-- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` agora busca modulos por `buscarModulo`, usando a rota interna segura;
-- composicao corporal na revisao tambem usa bioimpedancia como fallback quando antropometria nao tem `% gordura`/IMC;
-- score de forca na revisao usa preensao quando existir e, se nao houver preensao, calcula um score simples a partir de dinamometria SPTech/tracao e assimetria.
-
-Nova correcao em 04/05/2026:
-
-- antropometria preenchida nao marcava como "Feito";
-- `src/app/(app)/avaliacoes/[id]/antropometria/page.tsx` agora salva peso/estatura/dobras mesmo quando nem todos os calculos estao disponiveis;
-- `src/app/(app)/avaliacoes/[id]/layout.tsx` passou a reconhecer antropometria concluida por peso, estatura, IMC, percentual de gordura, massa magra, dobras, circunferencias ou diametros;
-- PDF em producao falhou com `libnss3.so`; `src/lib/pdf/browser.ts` agora define `AWS_LAMBDA_JS_RUNTIME=nodejs22.x` em Vercel antes de carregar Chromium e reforca flags serverless;
-- analise IA falhou porque o modelo `claude-sonnet-4-5` nao existe na API Anthropic;
-- `src/lib/ai/client.ts` agora usa `claude-sonnet-4-20250514` como padrao, normaliza `claude-sonnet-4-5` para esse modelo e tenta fallback para `claude-3-5-sonnet-20241022` em erro 404;
-- `scripts/check-env.js` foi atualizado para o mesmo modelo padrao.
-
-Correcao complementar da IA:
-
-- a chave Anthropic em producao tambem retornou 404 para `claude-3-5-sonnet-20241022`;
-- `src/lib/ai/client.ts` agora tenta, em ordem, o modelo definido em `ANTHROPIC_MODEL`, `claude-sonnet-4-20250514`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20241022` e `claude-3-5-haiku-20241022`;
-- se todos os modelos Claude retornarem 404 e houver `OPENAI_API_KEY`, o app usa OpenAI como fallback;
-- se nao houver modelo disponivel, a API retorna erro 400 com instrucao clara para remover/ajustar `ANTHROPIC_MODEL` ou configurar `OPENAI_API_KEY`;
-- `src/components/AnalisesIAPanel.tsx` deixou de prefixar o alerta com `Falha:` duplicado.
-
-## Correcao: quebra de paginas no PDF
-
-Em 04/05/2026, apos o PDF voltar a gerar, foi identificado que modulos com muitas informacoes nao quebravam pagina corretamente e ficavam visualmente ruins.
-
-Correcao aplicada:
-
-- `src/lib/pdf/template.ts` deixou de renderizar as paginas de modulo como containers `flex`;
-- `.page` agora usa fluxo normal de impressao (`display: block`) para permitir fragmentacao em mais de uma folha;
-- `.module` passou a permitir overflow/continuidade de conteudo;
-- cards pequenos, KPIs, linhas de tabela, imagens e blocos laterais foram protegidos com `break-inside: avoid`;
-- grades e tabelas longas ficaram livres para quebrar entre itens/linhas;
-- rodape de identificacao deixou de usar `margin-top:auto`, que dependia de flex e prejudicava paginas longas.
-
-Validar depois do deploy:
-
-1. gerar PDF de uma avaliacao com antropometria/forca/biomecanica cheias;
-2. conferir se tabelas longas quebram entre linhas;
-3. conferir se cards pequenos nao ficam cortados ao meio;
-4. conferir se o rodape aparece ao final do bloco sem sobrepor conteudo.
-
-## Correcao: dashboard publico do paciente
-
-Em 04/05/2026, o link `/p/[token]` passou a abrir com erro client-side e mensagens React minificadas `#425`, `#418` e `#423` no console.
-
-Causa provavel:
-
-- o portal usava `new Date(...).toLocaleDateString(...)` dentro do componente client;
-- no SSR da Vercel e no navegador do usuario, datas ISO podem ser formatadas com fuso/locale diferente, gerando HTML diferente na hidratacao.
-
-Correcao aplicada:
-
-- `src/components/PortalPaciente.tsx` agora usa `dataCurtaBR()` e `dataLongaBR()` deterministicas, baseadas em split da string `YYYY-MM-DD`;
-- removidas as chamadas `new Date(...).toLocaleDateString(...)` do componente do portal.
-
-Validar depois do deploy:
-
-1. abrir o mesmo link publico `/p/[token]`;
-2. confirmar que a pagina nao mostra mais erro client-side;
-3. conferir se as datas aparecem corretamente em formato curto e longo.
-
-## Comandos principais
-
-Instalar:
-
-```bash
-npm install
+Testes principais:
+
+```powershell
+npm.cmd run predeploy
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:full
 ```
 
-Rodar local:
+Deploy via GitHub/Vercel:
 
-```bash
-npm run dev
-```
-
-Validar antes de subir:
-
-```bash
-npm run predeploy
-```
-
-Subir alteracoes:
-
-```bash
+```powershell
+cd "C:\Users\canut\Documents\Codex\2026-04-27\files-mentioned-by-the-user-diagnostico\unzipped\diagnostico-fisiometabolico"
 git add .
-git commit -m "mensagem"
+git commit -m "Mensagem objetiva da alteracao"
 git push
 ```
 
-## Testes obrigatorios apos cada deploy
+## Variaveis de ambiente esperadas
 
-1. Login/cadastro.
-2. Criar paciente.
-3. Editar e excluir paciente teste.
-4. Criar avaliacao.
-5. Preencher anamnese, clicar Continuar, voltar e conferir campos preenchidos.
-6. Conferir se etapa aparece como Feito.
-7. Preencher modulos principais.
-8. Gerar analise IA por modulo.
-9. Gerar conclusao global.
-10. Gerar PDF.
-11. Abrir dashboard clinico.
-12. Abrir dashboard do paciente.
-13. Gerar link do portal do paciente e abrir em aba anonima.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_MODEL`
+- `NEXT_PUBLIC_APP_URL`
 
-## Regras de produto
+Observacao: `NEXT_PUBLIC_SUPABASE_URL` deve ser a URL base do Supabase, sem `/rest/v1`.
 
-- App esta sendo tratado como uso interno.
-- Nao usar fluxo de plano/cobranca agora.
-- Novo cadastro deve iniciar em clinica propria vazia.
-- Compartilhamento de dados entre usuarios deve acontecer por convite como membro da clinica.
-- Anamnese deve permanecer 100% dinamica via templates.
-- Bioimpedancia nao deve ter campos de impedancia Z.
-- Fotografias da posturografia devem ser em retrato.
-- Migrations devem usar `DROP POLICY IF EXISTS` antes de `CREATE POLICY`.
+## Ordem oficial dos modulos
 
-## Observacoes para continuar
+1. Anamnese
+2. Sinais vitais
+3. Posturografia
+4. Bioimpedancia
+5. Antropometria
+6. Flexibilidade
+7. Forca
+8. RML
+9. Cardiorrespiratorio
+10. Biomecanica da corrida
+11. Revisao e conclusao
+12. Plano de acao / orientacao nutricional / evolucao quando aplicavel
 
-Se uma nova conversa assumir o projeto, primeiro ler:
+## Estado funcional atual
 
-- `HANDOFF.md`
-- `README.md`
-- `src/lib/steps.ts`
-- `src/lib/pdf/template.ts`
-- `src/components/PatientDashboard.tsx`
-- `src/components/PortalPaciente.tsx`
-- `src/app/(app)/avaliacoes/[id]/layout.tsx`
-- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx`
+O sistema possui:
 
-Depois rodar:
+- Dashboard clinico do avaliador.
+- Dashboard/portal do paciente por link.
+- Relatorio PDF com layout premium.
+- Anamnese dinamica por template.
+- Pre-atendimento com links de anamnese.
+- TCLE/consentimento com aceite digital e comprovante.
+- Central de documentos do paciente.
+- Prontuario longitudinal do paciente.
+- Produtos e vitrine publica de produtos.
+- Configuracao de clinica, avaliador, PDF, referencias e protocolos.
+- Orientacao nutricional aplicada apos avaliacao.
+- Plano de acao aplicado apos avaliacao.
+- Backup em planilha.
+- Painel de saude do sistema.
+- Analises por IA por modulo e conclusao global.
+- Biblioteca de referencias clinicas.
+- Teste visual do PDF em `npm run predeploy`.
 
-```bash
-npm run predeploy
+## Regras criticas de negocio
+
+- Isolamento por clinica via RLS e `current_clinica_id()`/membership.
+- Avaliador/membro so acessa dados da propria clinica.
+- Paciente so acessa portal por token valido, ativo e nao expirado.
+- Links revogados nao devem continuar visiveis como ativos.
+- Dados sensiveis de anamnese so entram no PDF/portal se marcados para exibicao.
+- PDF e portal do paciente devem usar texto revisado/versao PDF-paciente, nao texto tecnico bruto.
+- Se houver divergencia entre gordura por bioimpedancia e antropometria, o checklist deve pedir a fonte a usar.
+- Quando apenas preensao palmar for realizada, o score de forca deve ser calculado pela preensao e mostrar observacao de limitacao.
+- RML deve aparecer com score no dashboard e PDF.
+- Cardiorrespiratorio deve mostrar apenas Z1-Z5.
+- Biomecanica usa as faixas salvas no sistema para cada metrica, nao referencias internas divergentes.
+- Nao exibir a palavra IA no PDF do paciente nem no dashboard do paciente.
+
+## Migrations recentes importantes
+
+- `042_normalize_text_integrity.sql`: normalizacao de textos corrompidos e template de anamnese.
+- `043_produtos_schema_alignment.sql`: campos de produto livre, imagem, tipo e anamnese obrigatoria.
+- `045_fonte_gordura_relatorio.sql`: fonte unica de gordura corporal no relatorio/dashboard.
+- `046_catalogo_textos_clinica.sql`: textos configuraveis da vitrine.
+- `047_central_evidencias_legais.sql`: comprovante, hash e dados legais do aceite.
+- `048_produto_imagens_bucket_hardening.sql`: bucket `produto-imagens`.
+- `049_planos_alimentares_templates_padrao.sql`: templates padrao de orientacao nutricional.
+- `050_prontuario_paciente.sql`: prontuario longitudinal.
+- `051_system_health_and_evidence_pdf.sql`: painel de saude, migrations aplicadas e PDF de comprovante.
+- `052_plano_acao_templates_padrao.sql`: modelos padrao de plano de acao.
+
+Sempre conferir se a migration nova foi aplicada em producao no Supabase antes de considerar o deploy validado.
+
+## Buckets esperados
+
+- `posturografia`
+- `branding`
+- `biomecanica`
+- `produto-imagens`
+
+## APIs e rotas importantes
+
+- `/api/modulos`
+- `/api/scores`
+- `/api/ia/gerar`
+- `/api/ia/editar`
+- `/api/pdf`
+- `/api/pdf/publico`
+- `/api/paciente-tokens`
+- `/api/anamnese-links`
+- `/api/anamnese-publica`
+- `/api/consentimento-links`
+- `/api/consentimento-comprovante`
+- `/api/protocolo-envios`
+- `/api/plano-alimentar`
+- `/api/prontuario`
+- `/api/admin/health`
+- `/catalogo/[clinicaId]`
+- `/p/[token]`
+- `/pre-atendimento/consentimento/[token]`
+
+## Validacoes automatizadas
+
+`npm run predeploy` deve cobrir:
+
+- checagem de integridade de texto;
+- auditoria de banco, RLS, buckets e migrations;
+- smoke test de relatorio, dashboard clinico e dashboard paciente;
+- teste visual do PDF;
+- calculos clinicos;
+- backup em planilha;
+- orientacao nutricional;
+- TypeScript;
+- lint.
+
+Observacao: em PowerShell, usar `npm.cmd` e `npx.cmd` se scripts forem bloqueados por politica local.
+
+## Pontos corrigidos recentemente
+
+### 2026-06-03 - Painel de saude do sistema
+
+Problema: o painel mostrava `Banco 9/11 tabelas` e erro em `scores` e `paciente_tokens`.
+
+Causa: `/api/admin/health` contava todas as tabelas usando a coluna `id`, mas:
+
+- `scores` usa `avaliacao_id`;
+- `paciente_tokens` usa `token`.
+
+Correcao:
+
+- `src/app/api/admin/health/route.ts` passou a usar colunas especificas para essas duas tabelas.
+- Sem migration.
+- Validado com `npx.cmd tsc --noEmit` e `npm.cmd run predeploy`.
+
+### 2026-06-03 - Cardiorrespiratorio avancado
+
+- Portal do paciente passou a mostrar velocidades e zonas por limiar apenas quando houver dados reais.
+- Zonas limitadas a Z1-Z5.
+- Sem migration.
+
+### 2026-06-03 - PDF: Dados Vitais e Corporais
+
+- Secao antiga `Anamnese & Sinais Vitais` renomeada para `Dados Vitais e Corporais`.
+- Incluidos dados corporais visuais no padrao do portal do paciente.
+- Sem migration.
+
+### 2026-06-03 - PDF: score de RML
+
+- RML incluido no bloco de capacidades avaliadas do PDF.
+- Composicao corporal ajustada para evitar punicao excessiva em sobrepeso moderado.
+- Sem migration.
+
+### 2026-06-03 - Plano de acao
+
+- Criada migration `052_plano_acao_templates_padrao.sql`.
+- Revisao permite selecionar modelo, editar e aplicar plano.
+- Plano salvo em `analises_ia.plano_acao`.
+
+### 2026-06-02 - Correcoes de texto e PDF
+
+- Removida mencao visual a IA no PDF/portal do paciente.
+- Corrigidos textos corrompidos em componentes principais.
+- Restauradas versoes estaveis de `template.ts`, `PortalPaciente.tsx` e `PatientDashboard.tsx` em rodadas pontuais.
+
+### 2026-05-29 - Painel administrativo e evidencias legais
+
+- Painel `Saude do sistema`.
+- PDF de comprovante de aceite.
+- Teste visual automatizado do PDF.
+- Migration `051_system_health_and_evidence_pdf.sql`.
+
+### 2026-05-28 - Prontuario e orientacao nutricional
+
+- Prontuario longitudinal por paciente.
+- Importacao de avaliacoes finalizadas.
+- Registro manual, edicao e exclusao de eventos.
+- Orientacao nutricional aplicada na revisao.
+- Templates padrao de orientacao nutricional.
+- Bucket de imagem de produtos.
+
+### 2026-05-26 - Central de documentos
+
+- Central na pagina do paciente com laudos, termos, anamneses, recomendacoes e links ativos.
+- Termos aceitos aparecem mesmo quando o comprovante vem por fallback do link aceito.
+
+### 2026-05-25 - Anamnese pre-atendimento
+
+- Resposta publica de anamnese sincroniza automaticamente com a avaliacao.
+- Se a avaliacao abrir sem dados, o sistema importa a resposta mais recente do paciente.
+
+## Pendencias conhecidas / pontos para validar
+
+- Confirmar em producao se o painel de saude mostra Banco OK apos deploy do ajuste de `scores` e `paciente_tokens`.
+- Validar se todas as migrations ate `052` estao aplicadas no Supabase.
+- Validar cardiorrespiratorio avancado com avaliacao real que tenha zonas/velocidades preenchidas.
+- Validar em PDF real:
+  - sem mencao a IA;
+  - RML com score;
+  - dados vitais e corporais no local correto;
+  - sem cards cortados;
+  - rodape correto fora da capa.
+- Validar se produto com imagem usa bucket `produto-imagens`.
+- Validar se aceite de TCLE aparece na Central de Documentos e gera PDF do comprovante.
+- Validar se preensao palmar recalcula score de forca em avaliacao reaberta/finalizada.
+- Validar se a escolha de fonte de gordura aparece no checklist quando bioimpedancia e antropometria divergem.
+
+## Pendencias de melhoria sugeridas
+
+- Melhorar pagina de vendas/catalogo com filtros, destaque por objetivo e CTA por WhatsApp.
+- Adicionar relatorio de evolucao comparativo em PDF separado.
+- Criar historico de alteracoes por avaliador em campos criticos.
+- Criar importacao/exportacao em lote de pacientes.
+- Criar dashboard de indicadores da clinica.
+- Criar assistente de revisao antes do PDF para detectar dados incoerentes.
+- Criar biblioteca visual de exercicios/recomendacoes vinculada ao plano de acao.
+
+## Como continuar em outro local
+
+1. Abrir PowerShell.
+2. Rodar:
+
+```powershell
+cd "C:\Users\canut\Documents\Codex\2026-04-27\files-mentioned-by-the-user-diagnostico\unzipped\diagnostico-fisiometabolico"
+git pull origin main
+npm install --cache .npm-cache --prefer-online
+npm.cmd run predeploy
 ```
 
-## Correcao: menu duplicado no RML
+3. Se houver erro de migration, aplicar o SQL pendente no Supabase.
+4. Corrigir uma pendencia por vez.
+5. Atualizar este `HANDOFF.md`.
+6. Commitar e subir.
 
-Em 04/05/2026 foi corrigida a duplicacao da barra de etapas no modulo RML.
+## Ultima atualizacao deste handoff
 
-Causa:
-- O layout da avaliacao ja renderiza o menu principal com StepNav.
-- A pagina RML tambem renderizava outro StepNav.
-
-Arquivo alterado:
-- src/app/(app)/avaliacoes/[id]/rml/page.tsx
-
-Alteracao:
-- removido o import de StepNav;
-- removida a renderizacao <StepNav steps={steps} />;
-- mantido o estado steps, porque ele ainda e usado pelos botoes anterior/proximo.
-
-## Correcao: rodape e quebras de pagina do PDF
-
-Em 05/05/2026 foi revisado o problema de rodape e quebra de paginas no PDF.
-
-Problema observado:
-
-- quando um modulo tinha muita informacao, os cards podiam ser cortados no meio;
-- o rodape era inserido como bloco HTML dentro da pagina, entao era empurrado pelo conteudo e podia sair da posicao correta;
-- apos ajustes anteriores, o PDF ganhou mais quebras e o rodape ficou visualmente instavel.
-
-Causa tecnica:
-
-- `src/lib/pdf/template.ts` injetava o rodape dentro de cada `<section class="page">`, antes do `</section>`;
-- isso fazia o rodape participar do fluxo normal do documento, em vez de ser um rodape real de pagina;
-- quando o conteudo ultrapassava a altura util da folha, o navegador paginava o conteudo e o rodape podia ficar fora do lugar.
-
-Correcao aplicada:
-
-- criado `renderLaudoFooterHTML(d)` em `src/lib/pdf/template.ts`;
-- removida a injecao do rodape dentro do HTML das paginas;
-- `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` agora usam `displayHeaderFooter: true`, `footerTemplate` e margem inferior de `11mm`;
-- o rodape passou a ser renderizado pelo Puppeteer fora do fluxo do conteudo, com clinica, avaliador, paciente e numeracao `pagina/total`;
-- o CSS do PDF foi ajustado para reduzir excesso de altura fixa e melhorar `break-inside/page-break-inside` em cards, KPIs, tabelas, imagens e blocos com borda/arredondamento.
-
-Validacao local:
-
-- `npm run test:full` passou;
-- `npm run predeploy` passou;
-- tentativa de gerar PDF local diretamente falhou porque esta maquina nao tem Chrome do Puppeteer instalado no cache local, mas a rota de producao usa `@sparticuz/chromium` no Vercel.
-
-Reteste recomendado em producao apos deploy:
-
-1. Gerar PDF de uma avaliacao com bastante informacao em forca, antropometria, cardio e biomecanica.
-2. Conferir se os cards nao sao cortados no meio quando couberem inteiros na pagina.
-3. Conferir se o rodape fica sempre na margem inferior, com alinhamento uniforme.
-4. Conferir se a numeracao de paginas aparece corretamente.
-
-## Correcao: painel clinico sem dados e paginacao rigorosa do PDF
-
-Em 05/05/2026 foram feitos ajustes adicionais apos o painel clinico aparecer apenas com a estrutura visual, sem os dados da avaliacao, e apos nova revisao das quebras do PDF.
-
-Painel clinico:
-
-- arquivo alterado: `src/app/(app)/pacientes/[id]/page.tsx`;
-- a pagina continua validando o acesso ao paciente com o cliente normal do Supabase, respeitando a seguranca;
-- depois da validacao, os dados completos usados no painel de apresentacao clinica sao carregados com `createAdminClient()`;
-- isso inclui avaliacoes finalizadas, scores, anamnese, sinais vitais, posturografia, antropometria, bioimpedancia, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica e analises de IA;
-- objetivo: o painel do profissional deve exibir os dados consolidados da avaliacao para retorno/consulta online, diferente da edicao individual dos modulos.
-
-PDF:
-
-- arquivo novo: `src/lib/pdf/pagination.ts`;
-- rotas alteradas: `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts`;
-- antes de gerar o PDF, `prepararPaginacaoLaudo(page)` divide modulos muito longos em fragmentos de pagina;
-- a divisao move blocos inteiros para evitar corte de cards e informacoes no meio;
-- em paginas de continuacao, o cabecalho do modulo e repetido com visual mais suave e marcador de continuacao;
-- o rodape permanece renderizado pelo Puppeteer como footer real, fora do fluxo do HTML.
-
-Validacao local em 05/05/2026:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test passou e gerou previews HTML;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.
-
-## Correcao: numero 0 solto em sinais vitais
-
-Em 05/05/2026 foi corrigido um `0` que aparecia solto fora dos cards na secao de sinais vitais.
-
-Causa:
-
-- alguns campos opcionais de sinais vitais usavam renderizacao condicional com `&&`;
-- quando o valor era `0`, o React renderizava o proprio numero `0` em vez de esconder o card.
-
-Correcoes aplicadas:
-
-- `src/components/PatientDashboard.tsx` passou a checar `!= null` para pressao arterial, FC repouso e SpO2;
-- frequencia respiratoria agora so renderiza quando existe valor diferente de string vazia;
-- `src/components/PortalPaciente.tsx` recebeu o mesmo padrao nos blocos de sinais vitais e cardiorrespiratorio.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco, smoke test, TypeScript e lint passaram;
-- lint manteve apenas avisos antigos nao bloqueantes.
-
-## Correcao: textos de biomecanica fora da caixa
-
-Em 05/05/2026 foi corrigido texto solto no bloco de biomecanica do dashboard clinico.
-
-Problema observado:
-
-- `achados.comentarios_risco` aparecia em uma caixa, mas `achados.observacoes` era exibido como paragrafo solto logo abaixo;
-- textos longos ou sem espaco podiam sair visualmente da area do card.
-
-Correcao aplicada:
-
-- `src/components/PatientDashboard.tsx` agora renderiza `achados.observacoes` em uma caixa propria, com fundo claro e borda;
-- comentarios de angulos, comentarios de risco e observacoes receberam `overflowWrap: anywhere`;
-- isso mantem textos longos dentro do card e preserva o alinhamento do dashboard.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco, smoke test, TypeScript e lint passaram;
-- lint manteve apenas avisos antigos nao bloqueantes.
-
-## Refinamento: dashboard do cliente com identidade, textos e referencias
-
-Em 05/05/2026 foi refinado o dashboard publico do paciente.
-
-Problemas observados:
-
-- anamnese no dashboard do cliente tinha cards desproporcionais e exibia campos tecnicos como `avaliacao_id` e `updated_at`;
-- textos longos quebravam a estetica do painel;
-- sinais vitais nao ficavam harmonicos em linha;
-- analises de IA nao apareciam de forma clara no dashboard do cliente;
-- cabecalho do portal nao usava logomarca nem nome da clinica;
-- faltava area de referencias antes do historico e um rodape institucional apos o historico;
-- em Dados corporais, Somatotipo ficava no lado direito e Metabolismo basal vinha abreviado.
-
-Correcoes aplicadas:
-
-- `src/app/p/[token]/page.tsx` agora busca dados da clinica do paciente e envia para o portal;
-- o cabecalho do portal publico passa a usar logomarca da clinica quando cadastrada e mostra o nome da clinica no lado direito;
-- `src/components/PortalPaciente.tsx` remove campos tecnicos da anamnese e exibe todos os itens em cards horizontais de largura completa;
-- cards de texto longo agora usam reticencias e icone de informacao; ao passar o mouse, abre uma caixa flutuante com o texto completo;
-- sinais vitais foram ajustados para cards menores em linha;
-- foi criada uma secao `Analises clinicas`, com uma linha por modulo e popup para leitura completa;
-- foi criada uma secao `Referencias`, usando `src/lib/clinical/references.ts` e popup com as referencias cadastradas;
-- abaixo do historico foi criado um rodape institucional com clinica, avaliador, especialidade, conselho e links clicaveis para WhatsApp, site e endereco;
-- `src/components/ui/SilhuetaCircunferencias.tsx` passou a exibir `Somatotipo` do lado esquerdo e `Metabolismo basal` sem abreviacao.
-
-Observacao:
-
-- o campo Instagram ainda depende de coluna propria no Supabase; para nao quebrar a leitura da clinica em producao, o portal continua buscando apenas colunas ja existentes (`nome`, `logo_url`, `telefone`, `email`, `endereco`, `site`).
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco, smoke test, TypeScript e lint passaram;
-- lint manteve apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Ajuste: analise clinica em popup no dashboard clinico
-
-Em 05/05/2026 foi ajustada a exibicao da analise clinica no dashboard do profissional.
-
-Problema observado:
-
-- no bloco de RML, a faixa `Analise clinica` aparecia, mas o texto da IA podia nao ser exibido;
-- quando a IA vinha em formato estruturado, o componente tentava ler apenas `texto_editado`.
-
-Correcao aplicada:
-
-- `src/components/PatientDashboard.tsx` recebeu `textoAnaliseClinica()`, que aceita texto simples, `texto_editado`, `texto` ou conteudo estruturado renderizado por `renderAiText()`;
-- foi criado `AnaliseInfoTooltip()`;
-- no modulo RML, a analise deixou de ocupar uma faixa vazia e passou a aparecer em um icone de informacao ao lado do titulo;
-- ao passar o mouse ou focar no icone, abre uma caixa flutuante com o texto completo da analise clinica.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco, smoke test, TypeScript e lint passaram;
-- lint manteve apenas avisos antigos nao bloqueantes.
-
-## Correcao: FFMI sem numero no painel clinico
-
-Em 05/05/2026 foi corrigido o card de FFMI no painel clinico.
-
-Problema observado:
-
-- o card mostrava a barra de potencial muscular, mas o numero principal do FFMI ficava vazio;
-- isso acontecia quando o banco nao retornava `antropometria.ffmi` em formato numerico ou nos nomes esperados, mesmo havendo massa magra e estatura suficientes para calcular.
-
-Correcao aplicada:
-
-- `src/components/PatientDashboard.tsx` recebeu `parseNumeroSeguro()`;
-- o painel agora tenta ler FFMI salvo em `ffmi`, `ffmiNorm`, `valor` ou `resultado`;
-- quando nao houver valor salvo, calcula automaticamente `massa_magra / altura_m²`;
-- com massa magra `65.12 kg` e estatura `170 cm`, o painel passa a exibir aproximadamente `22.5`.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco, smoke test, TypeScript e lint passaram;
-- lint manteve apenas avisos antigos nao bloqueantes.
-
-## Refinamento: rodape do PDF e subtitulos orfaos
-
-Em 05/05/2026 foi feito novo ajuste no PDF apos teste visual do laudo real.
-
-Problemas observados:
-
-- em Antropometria, o subtitulo `Circunferencias` podia ficar no fim de uma pagina enquanto os dados iam para a pagina seguinte;
-- o rodape estava funcional, mas ainda simples para o padrao visual esperado do relatorio.
-
-Correcoes aplicadas:
-
-- `src/lib/pdf/pagination.ts` agora agrupa subtitulos `.sec-sub` com os blocos/tabelas imediatamente seguintes;
-- esse agrupamento recebe `break-inside: avoid`, reduzindo o risco de titulo solto sem conteudo;
-- `src/lib/pdf/template.ts` recebeu a classe `.pdf-keep-group` no CSS do PDF;
-- `renderLaudoFooterHTML()` foi refinado com faixa de identidade visual, corpo em capsula, sombra leve, informacoes em colunas e numeracao destacada;
-- as rotas `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` passaram a usar margem inferior de `13mm` para acomodar o rodape mais refinado.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- smoke test gerou novamente os previews HTML;
-- lint permaneceu apenas com avisos antigos nao bloqueantes.
-
-## Correcao: portal do paciente e velocimetro do painel clinico
-
-Em 05/05/2026 foram feitos ajustes apos novo teste em producao.
-
-Problemas observados:
-
-- o portal publico do paciente em `/p/[token]` podia abrir em tela branca com erro de excecao no cliente;
-- o numero do score global no painel clinico ficava sobreposto ao ponteiro do velocimetro;
-- durante a recuperacao local de arquivo foi criada uma pasta temporaria `.tmp-portal-restore*`, agora ignorada pelo Git.
-
-Correcoes aplicadas:
-
-- `src/components/PortalPaciente.tsx` recebeu `valorParaTela()`;
-- `Metrica` e `MetricaHorizontal` agora convertem valores compostos em texto seguro antes de renderizar;
-- isso evita quebra quando o banco retorna objetos reais em campos de medida, como dobras ou estruturas com `media`, `valor`, `resultado`, `kg` ou `pct`;
-- `src/components/PatientDashboard.tsx` ajustou o `GaugeSVG` do score global, aumentando a area vertical e movendo o numero para baixo do ponteiro;
-- `.gitignore` passou a ignorar `.tmp-portal-restore*` para impedir que arquivos temporarios sejam enviados por engano.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente `preview-laudo.html`, `preview-dashboard-cliente.html`, `preview-dashboard-clinico.html` e `preview-laudo-full-smoke.html`;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de `<img>` e dependencias de hooks.
-## Refinamento: padronizacao dos dashboards e popups
-
-Em 05/05/2026 foram aplicados novos ajustes visuais e de consistencia entre o painel clinico e o dashboard do paciente.
-
-Problemas observados:
-
-- campos de anamnese no painel clinico apareciam como JSON/codigo em vez de texto legivel;
-- sinais vitais precisavam ocupar melhor a linha com cards menores;
-- o score de postura ficava distante do rotulo, dificultando a leitura;
-- o somatotipo precisava voltar para o lado direito da silhueta;
-- RML do painel clinico estava com visual diferente do dashboard do paciente;
-- popups de analises e referencias abriam para baixo perto do fim da pagina, ficando limitados pela tela;
-- o grafico de zonas tinha barras/bolhas grandes demais em relacao ao card;
-- o rodape do portal precisava ficar mais robusto quando o paciente nao tem `clinica_id`, mas a avaliacao tem.
-
-Correcoes aplicadas:
-
-- `src/components/PatientDashboard.tsx` passou a formatar objetos e arrays de anamnese como texto limpo, com popup para detalhes;
-- os popups de anamnese e analises no painel clinico agora abrem para cima e possuem altura maxima com rolagem;
-- o bloco de sinais vitais usa grid responsivo com cards menores, permitindo quatro informacoes em linha quando houver espaco;
-- o score de postura fica ao lado do texto `Score postura`;
-- o RML do painel clinico usa o mesmo conceito de cards numericos do dashboard do paciente;
-- `src/components/PortalPaciente.tsx` limita os popups de analises e referencias, abrindo para cima nas secoes finais;
-- as referencias agora aparecem numeradas e separadas por linhas, com rolagem dentro da caixa;
-- `src/components/ui/SilhuetaCircunferencias.tsx` manteve indicadores principais do lado esquerdo e moveu Somatotipo para os demais dados do lado direito;
-- `src/components/ui/ZonasChart.tsx` reduziu a largura das barras, aumentou respiros internos e refinou a posicao dos rotulos;
-- `src/app/p/[token]/page.tsx` passou a buscar a clinica tambem pelo `clinica_id` da avaliacao quando o paciente antigo nao tiver esse campo preenchido.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard do cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Refinamento: leitura dos cards e analises por clique
-
-Em 05/05/2026 foram feitos ajustes finos apos revisao visual dos dashboards.
-
-Problemas observados:
-
-- valores de anamnese e sinais vitais ficavam pesados, em negrito e muito afastados do titulo;
-- pressao arterial podia ser cortada em cards estreitos;
-- o card de pontos de atencao e risco da biomecanica ficava grudado nos cards de angulo;
-- textos de analise ficavam embolados e o balao por hover podia desaparecer durante a leitura;
-- flexibilidade no painel clinico ainda usava modelo antigo;
-- metricas da biomecanica estavam simplificadas demais;
-- alguns modulos do painel clinico nao tinham ponto preparado para mostrar analise de IA.
-
-Correcoes aplicadas:
-
-- `src/components/PortalPaciente.tsx` reduziu peso/tamanho dos valores em `MetricaHorizontal`, aproximando valor e rotulo e evitando corte da pressao arterial;
-- o tooltip do portal passou a abrir/fechar por clique, com caixa rolavel e mais controlada;
-- o card de `Pontos de atencao e risco` recebeu margem superior para nao ficar colado aos cards anteriores;
-- `src/components/PatientDashboard.tsx` passou a abrir os popups de anamnese e analises por clique, com linha de leitura maior e texto menos pesado;
-- o RML manteve o padrao de cards numericos aprovado;
-- a flexibilidade do painel clinico foi refeita no mesmo conceito visual do dashboard cliente, com numero principal lateral e tentativas em cards;
-- a saude cardiovascular foi adicionada ao painel clinico com VO2max, classificacao, FCs, PA, SpO2 e protocolo;
-- titulos dos principais modulos no painel clinico receberam ponto de analise por IA, mas o icone so aparece quando ha texto salvo;
-- metricas da biomecanica passaram a usar nomes completos, como `Frequencia de passos`, `passos por minuto`, `Tempo de contato com o solo` e `segundos`.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes.
-
-## Refinamento: FFMI, RML e biomecanica grafica
-
-Em 05/05/2026 foram aplicados ajustes adicionais solicitados no dashboard do cliente e no painel clinico.
-
-Problemas observados:
-
-- o rodape/contato do portal precisava continuar puxando os dados cadastrados da clinica, incluindo suporte para Instagram;
-- os valores de massa magra e massa ossea no card de FFMI estavam sendo cortados com reticencias;
-- os cinco cards de RML ficavam quebrando para a segunda linha mesmo quando havia espaco horizontal;
-- a biomecanica da corrida no painel clinico ainda usava cards textuais antigos em vez do modelo grafico usado no dashboard do cliente.
-
-Correcoes aplicadas:
-
-- `src/components/PortalPaciente.tsx` ajustou `MetricaHorizontal` para nao truncar valores quando o campo exige `nowrapValor`, corrigindo os numeros do FFMI;
-- `src/components/PatientDashboard.tsx` reduziu a largura minima dos cards de RML para permitir cinco cards na mesma linha em telas largas;
-- `src/components/PatientDashboard.tsx` passou a renderizar os angulos da biomecanica com o componente grafico `BiomecanicaRunnerCompare`, mantendo comentarios dos achados logo abaixo;
-- `src/app/p/[token]/page.tsx` passou a buscar tambem o campo `instagram` da clinica para o rodape clicavel do portal;
-- `src/components/forms/ClinicaBrandingForm.tsx` ganhou campo de Instagram na identidade da clinica;
-- `supabase/migrations/028_clinica_instagram.sql` adiciona a coluna `instagram` em `clinicas`.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: salvamento de anamnese, termos e protocolos
-
-Em 12/05/2026 foi aplicada uma rodada de correcoes na area de Configuracoes, apos erro no salvamento de modelos de consentimento e suspeita de template de anamnese nao persistido.
-
-Problemas observados:
-
-- o banco em producao podia ter uma constraint divergente em `consentimento_modelos.tipo`, recusando o tipo enviado pela tela;
-- as tabelas de protocolos/engajamento podiam estar ausentes em bancos onde a migration anterior foi aplicada parcialmente;
-- a tela de templates de anamnese nao tratava erro do Supabase, entao o usuario podia achar que salvou quando o insert/update falhou;
-- o cadastro de template de anamnese nao enviava `clinica_id` explicitamente, ficando dependente de comportamento implicito/RLS.
-
-Correcoes aplicadas:
-
-- criada a migration `supabase/migrations/032_configuracoes_anamnese_termos_protocolos_fix.sql`;
-- a migration garante/realinha `consentimento_modelos`, `protocolo_recomendacoes`, `protocolo_envios` e `consentimento_links`;
-- a constraint de `consentimento_modelos.tipo` agora aceita os tipos usados/legados: `consentimento_informado`, `consentimento`, `uso_imagem` e `tcle`;
-- a constraint de `protocolo_recomendacoes.modulo` foi realinhada aos modulos atuais, incluindo `biomecanica` legado e `biomecanica_corrida`;
-- policies RLS foram recriadas com `DROP POLICY IF EXISTS` antes de `CREATE POLICY`;
-- `src/app/(app)/configuracoes/anamnese-templates/page.tsx` agora busca `current_clinica_id`, grava `clinica_id` no insert, filtra templates pela clinica e mostra erro visivel quando o Supabase recusa salvar;
-- `src/components/forms/ConsentimentosConfigPanel.tsx` passou a normalizar o tipo antes de salvar e exibir erro persistente na propria tela;
-- `src/components/forms/ProtocolosConfigPanel.tsx` passou a exibir erros de carregamento, salvamento e exclusao na propria tela.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 32 migrations;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-Observacao adicional:
-
-- `src/components/AnalisesIAPanel.tsx` tambem recebeu o campo editavel de plano de acao na conclusao global, enviando `planoAcao` para `/api/ia/editar` e exibindo o conteudo salvo dentro do painel de analises.
-- `src/app/(app)/configuracoes/anamnese-templates/page.tsx` agora exibe o botao de excluir para todos os templates, inclusive o template padrao, com confirmacao especial quando ele for padrao.
-
-## Implementacao: links de consentimento digital e TCLE
-
-Em 08/05/2026 foi iniciada a etapa de aceite digital de termos, mantendo o mesmo padrao de seguranca usado na anamnese pre-atendimento.
-
-Mudancas aplicadas:
-
-- criada a migration `supabase/migrations/031_consentimento_links.sql` com a tabela `consentimento_links`, vinculada a clinica, paciente, avaliacao opcional, modelo de termo, token, expiracao, revogacao e data de aceite;
-- todas as policies da nova tabela usam `DROP POLICY IF EXISTS` antes de `CREATE POLICY` e mantem isolamento por `current_clinica_id()`;
-- adicionada a API autenticada `src/app/api/consentimento-links/route.ts` para listar, gerar e revogar links de termo/TCLE por paciente;
-- adicionada a API publica `src/app/api/consentimento-publico/route.ts` para registrar aceite por token, salvando paciente, modelo, versao do texto, texto aceito, IP e user agent em `consentimento_aceites`;
-- criada a pagina publica `src/app/pre-atendimento/consentimento/[token]/page.tsx` para o paciente ler e aceitar o termo digitalmente;
-- criado o componente `src/components/PublicConsentimentoAccept.tsx` com confirmacao explicita de leitura e registro do aceite;
-- `src/components/PatientEngagementPanel.tsx` passou a exibir uma area "Enviar termo/TCLE", com selecao de modelo ativo, geracao de link, copia e revogacao;
-- `scripts/audit-db.js` passou a validar a existencia da tabela `consentimento_links`.
-
-Pendencias esperadas:
-
-- conectar envio real por e-mail/WhatsApp; por enquanto o painel gera e copia o link seguro;
-- apos aplicar a migration no Supabase, testar o aceite publico em ambiente de producao com um termo ativo.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 31 migrations, 29 tabelas com RLS, 67 policies e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Implementacao: linha do tempo do paciente nos dashboards
-
-Em 08/05/2026 foi iniciada a linha do tempo visual do paciente, reaproveitando o historico consolidado das avaliacoes.
-
-Mudancas aplicadas:
-
-- `src/components/PatientDashboard.tsx` recebeu uma secao "Linha do tempo do paciente" com data, tipo/produto, status, score global, principais scores por modulo e delta em relacao a avaliacao anterior;
-- a linha do tempo do dashboard clinico permite alternar rapidamente a avaliacao exibida pelo botao "Ver";
-- `src/components/PortalPaciente.tsx` recebeu a mesma estrutura visual de linha do tempo, limitada ao conjunto de avaliacoes entregue ao portal, que ja vem filtrado por token/finalizacao;
-- foram criados chips visuais de score por modulo e indicador textual de evolucao.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 31 migrations, 29 tabelas com RLS, 67 policies e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Base: engajamento do paciente, produtos livres e IA estruturada
-
-Em 08/05/2026 foi iniciada a rodada de evolucao solicitada para linha do tempo, plano de acao, consentimentos, protocolos, anamnese pre-atendimento, produtos livres e IA com versoes tecnica/paciente.
-
-Escopo implementado nesta fatia:
-
-- criada a migration `supabase/migrations/030_patient_engagement_and_action_plan.sql`;
-- `produtos` recebeu suporte a `produto_livre`, `anamnese_obrigatoria` e `imagem_url`;
-- `analises_ia` recebeu campos para `conteudo_paciente`, `texto_paciente_editado` e `plano_acao`;
-- `avaliacoes` recebeu campos para checklist de finalizacao;
-- criadas tabelas novas com RLS para:
-  - `consentimento_modelos`;
-  - `consentimento_aceites`;
-  - `protocolo_recomendacoes`;
-  - `protocolo_envios`;
-  - `paciente_anamnese_links`;
-  - `paciente_anamnese_respostas`;
-- criado bucket `produto-imagens` e policies de Storage com `DROP POLICY IF EXISTS` antes de `CREATE POLICY`;
-- `src/components/forms/ProdutoForm.tsx` passou a permitir produto livre sem modulos, anamnese opcional e imagem ilustrativa via Storage;
-- `src/app/(app)/avaliacoes/nova/page.tsx` passou a respeitar modulos do produto sem forcar anamnese e abre a avaliacao no primeiro modulo realmente selecionado; se o produto nao tiver modulos, abre em revisao;
-- `src/lib/ai/prompts.ts` passou a orientar a IA a devolver resposta estruturada com resumo clinico, achados, riscos, recomendacoes, encaminhamento, limitacoes e versao simplificada para paciente;
-- `src/lib/ai/service.ts` persiste `conteudo_paciente` quando a IA retorna `versao_paciente`;
-- `src/app/api/ia/editar/route.ts` aceita edicao da versao tecnica, versao paciente e plano de acao;
-- `src/components/AnalisesIAPanel.tsx` passou a carregar e editar versoes tecnica e paciente da analise.
-
-Pendencias importantes:
-
-- construir as telas completas em Configuracoes para consentimentos/TCLE e protocolos;
-- implementar envio real por e-mail dos links de anamnese, termos e recomendacoes;
-- criar o modo apresentacao dedicado;
-- transformar o checklist de finalizacao em UI completa no modulo Revisao;
-- inserir plano de acao editavel e comparativo antes/depois nos dashboards e PDF;
-- expor linha do tempo premium no dashboard clinico e portal do paciente;
-- incluir textos educativos ocultaveis no portal do paciente.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 30 migrations, 28 tabelas com RLS e 64 policies;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-- `npm run build` ainda nao conclui neste ambiente local por `spawn EPERM` do worker do Next/Windows, antes de acusar erro de codigo;
-- `npm audit --audit-level=moderate` nao retornou relatorio porque o endpoint do npm falhou.
-
-## Implementacao: configuracoes, pre-atendimento e checklist
-
-Em 08/05/2026 foi aplicada a segunda fatia da rodada de evolucao, transformando parte da base criada em fluxo usavel dentro do app.
-
-Correcoes e implementacoes:
-
-- `src/components/forms/ConsentimentosConfigPanel.tsx` adiciona gerenciamento de modelos de Consentimento Informado e TCLE em Configuracoes;
-- `src/components/forms/ProtocolosConfigPanel.tsx` adiciona biblioteca de Protocolos e recomendacoes pre-teste por modulo em Configuracoes;
-- `src/app/(app)/configuracoes/page.tsx` passa a exibir os novos paineis para usuarios admin/owner;
-- `src/lib/api/permissions.ts` centraliza verificacao de usuario, clinica e permissao de acesso ao paciente para APIs novas;
-- `src/app/api/anamnese-links/route.ts` cria/lista/revoga links seguros de anamnese pre-atendimento;
-- `src/app/api/anamnese-publica/route.ts` salva respostas enviadas pelo paciente por token valido;
-- `src/app/pre-atendimento/anamnese/[token]/page.tsx` cria a tela publica da anamnese pre-atendimento;
-- `src/components/PublicAnamneseForm.tsx` renderiza o formulario dinamico da anamnese publica com campos do template;
-- `src/app/api/protocolo-envios/route.ts` registra envios de recomendacoes pre-teste e preserva historico;
-- `src/components/PatientEngagementPanel.tsx` adiciona na ficha do paciente botoes para gerar link de anamnese e registrar recomendacoes pre-teste;
-- `src/app/(app)/pacientes/[id]/page.tsx` exibe o painel de pre-atendimento abaixo do link do portal do paciente;
-- `src/app/(app)/avaliacoes/[id]/revisao/page.tsx` adiciona checklist de seguranca antes da finalizacao com bloqueio para pendencias criticas e confirmacao para alertas;
-- `scripts/audit-db.js` agora valida as novas tabelas de engajamento e o bucket `produto-imagens`.
-
-Limites atuais:
-
-- o envio por e-mail/WhatsApp ainda esta registrado como historico, mas nao dispara mensagem real porque ainda nao existe provedor SMTP/WhatsApp configurado no projeto;
-- o aceite digital de termos ja tem cadastro de modelos e tabela de aceite, mas ainda falta a tela publica de aceite por link;
-- plano de acao visual, modo apresentacao dedicado e linha do tempo premium ainda ficam como proximas fatias.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 30 migrations, 28 tabelas com RLS, 64 policies e bucket `produto-imagens` validado;
-- smoke test gerou novamente previews de relatorio, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Auditoria: ordem cronologica do PDF e seguranca da IA
-
-Em 08/05/2026 foi iniciada uma auditoria completa do sistema antes de novos deploys.
-
-Problemas observados:
-
-- o PDF ainda montava algumas paginas fora da ordem cronologica real dos modulos da avaliacao;
-- Posturografia e Flexibilidade estavam acopladas em uma unica pagina do template, o que podia gerar titulo incorreto ou bloco de modulo nao realizado quando apenas um dos dois estivesse presente;
-- a rota de geracao de IA validava login e clinica ativa, mas antes de chamar o servico com cliente administrativo precisava validar explicitamente que a avaliacao solicitada pertence a clinica atual.
-
-Correcoes aplicadas:
-
-- `src/lib/pdf/template.ts` reorganizou o relatorio para seguir a ordem dos modulos: anamnese/sinais vitais, posturografia, bioimpedancia, antropometria, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica, conclusao e evolucao;
-- `src/lib/pdf/template.ts` tornou a pagina de Posturografia/Flexibilidade flexivel, exibindo titulo e conteudo corretos quando apenas um dos modulos estiver presente;
-- `src/app/api/ia/gerar/route.ts` passou a checar a avaliacao com o cliente autenticado e a `clinica_id` atual antes de executar qualquer geracao de IA.
-
-Validacao local:
-
-- `npm run predeploy` passou apos os ajustes;
-- auditoria do banco passou com 29 migrations, 22 tabelas com RLS, 46 policies e buckets `posturografia`, `branding` e `biomecanica` presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`;
-- a checagem estrutural confirmou que os dashboards usam ordenacao visual por modulo e que o PDF agora segue a sequencia cronologica corrigida.
-- `npm audit --audit-level=moderate` nao conseguiu consultar o endpoint do registry neste ambiente, retornando erro do proprio endpoint;
-- `npm run build` foi tentado localmente, mas o Windows bloqueou o spawn dos workers do Next com `EPERM`; a validacao de TypeScript/predeploy passou e a build de producao deve ser confirmada no ambiente Vercel.
-
-## Correcao: upload de imagens da biomecanica em producao
-
-Em 07/05/2026 foi corrigido o erro `Bucket not found` ao enviar imagens no modulo de biomecanica.
-
-Problema observado:
-
-- em producao, o bucket `biomecanica` do Supabase Storage nao existia, causando erro 400 no endpoint `/api/uploads/biomecanica`.
-
-Correcao aplicada:
-
-- `src/app/api/uploads/biomecanica/route.ts` agora verifica se o bucket `biomecanica` existe antes do upload;
-- se o bucket nao existir, a rota tenta cria-lo automaticamente como publico, com limite de 10 MB e MIME types `image/jpeg`, `image/png` e `image/webp`;
-- a correcao evita travar o usuario quando o Storage de producao ainda nao recebeu a migration do bucket.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: capa, rodape numerado e continuidade do PDF
-
-Em 07/05/2026 foram refinados a capa, os rodapes e as quebras de pagina do relatorio PDF.
-
-Problemas observados:
-
-- a capa ainda repetia o bloco de identificacao no final, embora sexo, idade e data ja aparecessem no miolo da capa;
-- o rodape havia sido removido junto da capa, mas deveria permanecer em todas as paginas internas;
-- paginas de continuacao de modulo precisavam repetir o titulo do modulo com sinalizacao discreta de continuidade;
-- o link do video da cinematica nao aparecia de forma robusta na secao de biomecanica.
-
-Correcoes aplicadas:
-
-- `src/lib/pdf/template.ts` removeu o card final de identificacao da capa, mantendo apenas o avaliador responsavel;
-- `src/lib/pdf/template.ts` trocou o rodape antigo por dados seguros no `body`, para que o rodape seja montado depois da paginacao;
-- `src/lib/pdf/pagination.ts` passou a inserir rodape real em todas as paginas internas, com avaliador, registro/especialidade quando houver, paciente, CPF e numeracao da pagina;
-- `src/lib/pdf/pagination.ts` tambem repete o cabecalho do modulo nas paginas de continuacao, adicionando uma etiqueta discreta `continuação`;
-- `src/lib/pdf/template.ts` passou a aceitar diferentes nomes de campo para o link de video da biomecanica e renderiza o botao `Ver video da cinematica` quando o link existir.
-- `next.config.js` moveu `outputFileTracingIncludes` para dentro de `experimental`, eliminando o aviso de configuracao invalida do Next 14.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`;
-- `npm run build` foi tentado localmente, mas o ambiente bloqueou processos internos do Next com `spawn EPERM`; o aviso de configuracao invalida que aparecia antes foi corrigido.
-
-## Evolucao: biomecanica com imagens por plano e dois videos
-
-Em 07/05/2026 o modulo de biomecanica da corrida foi ampliado para suportar mais materiais visuais.
-
-Solicitacoes atendidas:
-
-- graficos cinematicos agora seguem a ordem `Ombro`, `Cotovelo`, `Quadril`, `Joelho` e `Tornozelo`;
-- o formulario passou a aceitar 3 imagens do plano sagital, exibidas lado a lado;
-- o formulario passou a aceitar 6 imagens do plano posterior, exibidas em 2 colunas por 3 linhas;
-- os campos de video foram separados em `Link do video plano sagital` e `Link do video plano posterior`;
-- dashboards e relatorio exibem os botoes como `Ver vídeo análise cinemática plano sagital` e `Ver vídeo análise cinemática plano posterior`;
-- dashboards e relatorio exibem as imagens inseridas nos planos sagital e posterior;
-- foi criada a migration `029_biomecanica_video_posterior.sql` para armazenar `link_video_posterior` na tabela `biomecanica_corrida`.
-
-Arquivos alterados:
-
-- `src/app/(app)/avaliacoes/[id]/biomecanica/page.tsx`;
-- `src/components/PatientDashboard.tsx`;
-- `src/components/PortalPaciente.tsx`;
-- `src/lib/pdf/template.ts`;
-- `supabase/migrations/029_biomecanica_video_posterior.sql`.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 29 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Endurecimento de seguranca e integridade dos fluxos publicos
-
-Em 12/05/2026 foram corrigidos pontos de integridade encontrados em auditoria completa do sistema.
-
-Problemas identificados:
-
-- link publico de anamnese podia ser criado com `template_id` fora da clinica corrente se o ID fosse forjado manualmente;
-- consentimento publico aceitava multiplos aceites com o mesmo token;
-- anamnese publica aceitava multiplas respostas com o mesmo token;
-- envio de recomendacoes registrava IDs sem validar que pertenciam a clinica atual;
-- o healthcheck manual do Supabase estava defasado para os fluxos novos.
-
-Correcoes aplicadas:
-
-- `src/lib/api/permissions.ts` recebeu helpers compartilhados para validar template de anamnese ativo da clinica e recomendacoes ativas da clinica;
-- `src/app/api/anamnese-links/route.ts` agora bloqueia templates inativos ou de outra clinica;
-- `src/app/api/protocolo-envios/route.ts` valida todos os IDs de recomendacao antes de registrar o envio e deixa claro no historico que o provedor automatico de envio ainda nao esta configurado;
-- `src/app/api/anamnese-publica/route.ts` rejeita reenvio do mesmo token apos `respondido_em`;
-- `src/app/api/consentimento-publico/route.ts` rejeita novo aceite quando `aceito_em` ja existe;
-- `scripts/supabase-healthcheck.sql` foi atualizado com as tabelas, bucket e colunas dos fluxos novos;
-- `scripts/audit-db.js` passou a auditar resposta unica da anamnese publica, aceite unico do consentimento e status dos envios de protocolo;
-- `scripts/full-smoke-test.js` passou a verificar que essas protecoes continuam presentes no codigo.
-
-## Correcao: rodape interno do PDF e quebras de pagina
-
-Em 07/05/2026 foi revisada a estrutura de paginas do relatorio em PDF.
-
-Problemas observados:
-
-- o rodape havia sido removido de todas as paginas, quando deveria sair apenas da capa;
-- paginas internas nao tinham altura fisica fixa de A4, fazendo o rodape se comportar como fim de conteudo;
-- a medicao de pagina estava baseada na altura total do elemento, o que podia partir blocos e cabecalhos em locais ruins.
-
-Correcoes aplicadas:
-
-- `src/lib/pdf/template.ts` voltou a renderizar o rodape nas paginas internas usando `page:not(.cover)::after`;
-- a capa continua sem rodape;
-- paginas internas agora usam altura A4 fixa (`297mm`) e reservam area inferior para o rodape;
-- `src/lib/pdf/pagination.ts` passou a medir a posicao real do ultimo bloco de conteudo, em vez de usar `scrollHeight` da pagina fixa;
-- a paginacao agora considera a area reservada do rodape antes de quebrar uma secao, reduzindo o risco de cards/tabelas serem cortados no meio.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: links revogados ocultos no painel do paciente
-
-Em 06/05/2026 foi ajustada a exibicao dos links do portal do paciente.
-
-Problema observado:
-
-- quando um link do portal era revogado, ele deixava de funcionar, mas continuava exposto na lista do painel do paciente.
-
-Correcoes aplicadas:
-
-- `src/components/ShareTokenPanel.tsx` remove o link da tela imediatamente apos a revogacao;
-- `src/components/ShareTokenPanel.tsx` mostra apenas links ativos e exibe uma mensagem simples quando nao houver link ativo;
-- `src/app/api/paciente-tokens/route.ts` passou a retornar apenas tokens nao revogados e ainda dentro do prazo de validade.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: sequencia do relatorio, capa sem rodape e site da clinica
-
-Em 06/05/2026 foram aplicados ajustes no PDF e no uso dos dados da clinica.
-
-Problemas observados:
-
-- a capa ficou visualmente boa, mas o nome do paciente ainda podia desconfigurar;
-- o resumo misturava score global com composicao corporal, deixando a leitura ruim;
-- a composicao corporal precisava vir em pagina propria apos a conclusao clinica;
-- a capa nao deveria receber rodape, pois ficava redundante e poluia o visual;
-- o site usado em previews estava incorreto;
-- o relatorio interno ainda podia usar o avaliador logado em vez do avaliador que fez a avaliacao.
-
-Correcoes aplicadas:
-
-- `src/lib/pdf/template.ts` reduziu a fonte do nome da capa de forma mais conservadora e removeu escala horizontal deformante;
-- o resumo do PDF agora mostra apenas score global e capacidades avaliadas;
-- a sequencia do PDF ficou: capa, score global/resumo, conclusao clinica, composicao corporal, antropometria e demais modulos;
-- o rodape do PDF passou a ser renderizado dentro das paginas do relatorio e nao aparece na capa;
-- `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` nao usam mais o footer global do Puppeteer;
-- `src/app/api/pdf/route.ts` passou a travar o avaliador do relatorio no `avaliador_id` da avaliacao;
-- `src/app/api/pdf/publico/route.ts` passou a priorizar o avaliador da avaliacao antes do avaliador do token;
-- `scripts/preview-laudo.ts` passou a usar `medfit.med.br` no dado de preview;
-- relatorio e dashboard continuam puxando `clinica.site` do cadastro da clinica.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Reescrita da capa do relatorio
-
-Em 06/05/2026 a capa do PDF foi refeita do zero para substituir o layout antigo que estava ficando desfigurado.
-
-Correcoes aplicadas:
-
-- `src/lib/pdf/template.ts` recebeu uma nova capa com visual mais premium e sofisticado;
-- a capa agora tem topo institucional com logotipo/nome da clinica e data de emissao;
-- o nome do paciente usa reducao automatica de fonte e escala horizontal controlada para caber em uma linha;
-- os dados principais da avaliacao ficam em cards discretos e alinhados;
-- avaliador responsavel, conselho/especialidade e identificacao do paciente ficam em uma faixa inferior refinada;
-- foram removidas decisoes visuais antigas que deixavam contraste ruim e quebravam a composicao.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Ajuste: somatotipo ao lado esquerdo da silhueta
-
-Em 06/05/2026 foi ajustada a posicao do somatotipo nos dashboards e no relatorio.
-
-Pedido aplicado:
-
-- o somatotipo nao fica mais na coluna "Demais dados" ao lado direito da silhueta;
-- nos dashboards clinico e do paciente, o somatotipo agora aparece em "Indicadores principais", do lado esquerdo da silhueta;
-- no resumo do PDF, quando houver somatotipo cadastrado, ele aparece dentro do card de composicao corporal, posicionado a esquerda da silhueta;
-- o relatorio mantem os demais dados corporais na coluna direita, preservando a leitura visual do painel.
-
-Arquivos alterados:
-
-- `src/components/ui/SilhuetaCircunferencias.tsx`;
-- `src/lib/pdf/template.ts`.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Refinamento: dashboards, scores por modulo e PDF
-
-Em 06/05/2026 foram iniciados ajustes de padronizacao visual solicitados apos revisao do painel e do laudo.
-
-Problemas observados:
-
-- valores dos cards estavam com peso visual excessivo, competindo com os titulos;
-- dobras cutaneas exibiam M1, M2, M3 e media, quando o painel e o PDF deveriam mostrar apenas a medida validada;
-- nem todos os modulos exibiam o score isolado no canto superior direito do dashboard;
-- botao de site no portal do paciente precisava usar estritamente o site cadastrado na clinica;
-- capa do PDF precisava manter nomes longos em uma linha de forma mais harmonica;
-- recuperacao da FC no PDF ainda mostrava intervalos de 5 em 5 segundos, mas o fluxo definido e 10s, 30s e 60s.
-
-Correcoes aplicadas:
-
-- `src/components/PatientDashboard.tsx` suavizou o peso dos valores dos cards e manteve titulos como elemento em destaque;
-- `src/components/PatientDashboard.tsx` passou a mostrar a medida validada das dobras, sem listar todas as tentativas;
-- `src/components/PatientDashboard.tsx` recebeu badges de score por modulo em flexibilidade, posturografia, bioimpedancia, antropometria, forca e cardiovascular, mantendo RML no mesmo padrao;
-- `src/components/PortalPaciente.tsx` recebeu suporte a score por secao e normalizacao do link de site da clinica;
-- `src/components/PortalPaciente.tsx` passou a resolver objetos de medida por valor validado/media antes de exibir;
-- `src/lib/pdf/template.ts` ajustou a escala de fonte da capa para nomes longos, mudou dobras para medida validada e limitou recuperacao da FC a 10s, 30s e 60s.
-
-Validacao local:
-
-- `npx tsc --noEmit` passou apos as alteracoes;
-- `npm run predeploy` passou;
-- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Ajuste: favicon e icone mobile
-
-Em 06/05/2026 foi adicionado o icone oficial do app para navegador e atalhos mobile.
-
-Correcoes aplicadas:
-
-- `public/favicon.png` foi criado a partir da imagem enviada pelo usuario;
-- `public/apple-touch-icon.png` foi criado com a mesma identidade visual para atalhos em iPhone/iPad;
-- `public/site.webmanifest` foi adicionado para suporte a instalacao/atalho mobile em modo standalone;
-- `src/app/layout.tsx` passou a declarar `icons`, `shortcut`, `apple` e `manifest` no metadata global do Next.js.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: dashboard principal em branco
-
-Em 06/05/2026 foi corrigida uma falha que podia derrubar `/dashboard` em producao com erro minificado do React.
-
-Problema observado:
-
-- o dashboard principal ficava em branco e o console mostrava `Minified React error #31`, indicando tentativa de renderizar um objeto diretamente na tela;
-- a causa mais provavel era algum campo relacional/JSON vindo do Supabase em formato de objeto ou lista na area de ultimas avaliacoes.
-
-Correcoes aplicadas:
-
-- `src/app/(app)/dashboard/page.tsx` passou a normalizar textos com `textoSeguro`, aceitando string, numero, booleano, objeto, lista ou nulo sem quebrar a interface;
-- a relacao `pacientes` agora e normalizada por `pacienteDaAvaliacao`, suportando retorno como objeto ou array;
-- tipo, status, nome do paciente e data das ultimas avaliacoes passaram a ter fallback seguro;
-- textos com caracteres quebrados nessa tela foram simplificados para ASCII, evitando problemas de codificacao no dashboard.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: clinica e abertura da avaliacao em producao
-
-Em 06/05/2026 foram aplicadas protecoes adicionais para erros em producao apos navegar para Clinica e para uma avaliacao.
-
-Problemas observados:
-
-- a aba Clinica mostrava erro 400 no console ao buscar `clinica_membros` com relacionamento direto para `avaliadores`;
-- ao entrar em uma avaliacao, a tela podia quebrar com `Minified React error #31`, indicando algum objeto sendo renderizado diretamente;
-- templates dinamicos de anamnese ou relacionamentos do Supabase poderiam chegar como objeto/lista, especialmente em producao.
-
-Correcoes aplicadas:
-
-- `src/components/ClinicaMembrosPanel.tsx` deixou de usar select relacional direto e passou a carregar membros e nomes de avaliadores em duas consultas simples;
-- `src/app/(app)/avaliacoes/[id]/layout.tsx` passou a normalizar paciente, sexo, tipo da avaliacao e dados relacionais antes de renderizar o cabecalho;
-- `src/components/ui/StepNav.tsx` passou a transformar labels inesperados em texto seguro antes de mostrar os passos;
-- `src/components/ui/Input.tsx` passou a proteger `Field`, `hint` e `error` contra objetos/listas vindos de configuracoes ou banco;
-- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` passou a proteger labels, placeholders, unidades, opcoes e valores dinamicos do template de anamnese.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: listagem de avaliacoes em branco
-
-Em 06/05/2026 foi corrigido o erro que ainda ocorria ao acessar `/avaliacoes`.
-
-Problema observado:
-
-- a pagina `/avaliacoes` ainda quebrava com `Minified React error #31`;
-- a listagem renderizava diretamente campos relacionais e campos vindos do Supabase, como paciente, tipo, status e score.
-
-Correcoes aplicadas:
-
-- `src/app/(app)/avaliacoes/page.tsx` foi refeita com normalizacao defensiva de textos, datas, paciente relacionado e score;
-- a relacao `pacientes` agora aceita objeto, array ou nulo;
-- `scores` agora aceita objeto, array, numero ou nulo;
-- tipo/status/data passaram a ter fallback seguro para evitar renderizacao de objetos no React.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Ajuste: clique da avaliacao e score nao calculado
-
-Em 06/05/2026 foi ajustada a experiencia da lista de avaliacoes.
-
-Problemas observados:
-
-- ao clicar na avaliacao pela lista, o fluxo levava para a ficha do paciente em vez de abrir diretamente a avaliacao;
-- quando o score global ainda nao estava calculado, a lista podia exibir `0`, passando a impressao de score real zerado.
-
-Correcoes aplicadas:
-
-- `src/app/(app)/avaliacoes/page.tsx` agora calcula o primeiro modulo habilitado e direciona o clique para `/avaliacoes/[id]/[primeiro-modulo]`;
-- o avatar e a area principal da linha da avaliacao ficaram clicaveis para abrir a avaliacao;
-- score global igual a `0`, nulo ou nao calculado deixou de aparecer como score valido.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Ajuste: avaliacao finalizada abre dashboard e protecao do painel clinico
-
-Em 06/05/2026 foi refinado o fluxo entre lista de avaliacoes, ficha do paciente e painel clinico.
-
-Problemas observados:
-
-- ao clicar em uma avaliacao finalizada pela lista, o sistema abria a edicao do modulo em vez do dashboard clinico;
-- ao clicar no paciente, o painel ainda podia quebrar quando algum valor real do banco chegava como objeto;
-- metricas do `PatientDashboard` ainda renderizavam alguns valores diretamente.
-
-Correcoes aplicadas:
-
-- `src/app/(app)/avaliacoes/page.tsx` agora direciona avaliacoes finalizadas para `/pacientes/[id]`, mantendo edicao somente para avaliacoes em andamento;
-- `src/components/PatientDashboard.tsx` passou a formatar valores de `MetricCard` e `MetricLine` antes de renderizar;
-- o cabecalho do `PatientDashboard` passou a usar nome, sexo, nascimento e avaliador em formato seguro;
-- componentes que recebem sexo do paciente agora usam valor normalizado `M`/`F`.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: contato da clinica e rodape do PDF
-
-Em 06/05/2026 foram corrigidos pontos de identificacao no portal do paciente e no PDF.
-
-Problemas observados:
-
-- o dashboard do paciente buscava o e-mail da clinica, mas nao mostrava esse contato no rodape clicavel;
-- o PDF podia usar um avaliador antigo/generico quando a avaliacao ou o token apontava para cadastro incompleto ou ficticio;
-- o rodape do PDF nao passava pela mesma limpeza de caracteres aplicada ao corpo do laudo, podendo deixar caracteres quebrados no PDF final.
-
-Correcoes aplicadas:
-
-- `src/components/PortalPaciente.tsx` adicionou botao clicavel de E-mail no rodape do portal, usando o e-mail cadastrado na clinica;
-- `src/app/api/pdf/route.ts` passou a buscar tambem o perfil do usuario logado e a escolher um avaliador valido quando o avaliador salvo na avaliacao for generico/incompleto;
-- `src/app/api/pdf/publico/route.ts` passou a comparar avaliador do token e avaliador da avaliacao, evitando nomes genericos/ficticios no PDF publico;
-- `src/app/api/pdf/publico/route.ts` tambem passou CPF do paciente ao template, mantendo o rodape publico no mesmo padrao do PDF interno;
-- `src/lib/pdf/template.ts` passou a aplicar `limparTextoHTML` tambem no `renderLaudoFooterHTML`, corrigindo caracteres quebrados no rodape do PDF.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Correcao: modulos no painel, portal revogado e biomecanica do PDF
-
-Em 06/05/2026 foram aplicadas correcoes para alinhar os dashboards, o portal do paciente e o PDF final.
-
-Problemas observados:
-
-- no painel clinico faltavam secoes explicitas de bioimpedancia, antropometria e forca muscular;
-- links revogados do dashboard do paciente ainda podiam continuar abrindo por cache;
-- a capa do PDF quebrava nomes longos de pacientes em duas linhas;
-- o PDF interno ainda podia priorizar um avaliador antigo/ficticio salvo na avaliacao;
-- a biomecanica do PDF duplicava a analise cinematica, mantendo uma pagina com barras antigas alem do layout aprovado;
-- os tres graficos de angulos articulares precisavam permanecer no relatorio, sem retornar ao grafico antigo duplicado.
-
-Correcoes aplicadas:
-
-- `src/components/PatientDashboard.tsx` recebeu secoes proprias para bioimpedancia, antropometria e forca muscular, na ordem cronologica dos modulos da avaliacao;
-- a ordem visual do painel clinico foi ajustada para manter cardiovascular e zonas de treino depois de RML e antes da biomecanica;
-- `src/app/p/[token]/page.tsx` passou a usar `noStore`, `revalidate = 0` e `fetchCache = 'force-no-store'`, garantindo que token revogado nao continue valido em novas aberturas/atualizacoes da pagina;
-- `src/lib/pdf/template.ts` passou a reduzir automaticamente a fonte do nome do paciente na capa para caber em uma linha, sem ficar pequeno demais;
-- `src/app/api/pdf/route.ts` passou a priorizar o avaliador cadastrado do usuario logado no PDF interno, evitando nomes ficticios na capa e no rodape;
-- `src/lib/pdf/template.ts` removeu a renderizacao duplicada dos graficos antigos de barras horizontais na analise cinematica da biomecanica;
-- o PDF manteve a pagina aprovada da biomecanica e os tres graficos enviados de joelho, quadril e cotovelo quando houver imagem cadastrada.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 28 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Ajuste: biomecanica posterior, privacidade da anamnese e regua angular
-
-Em 07/05/2026 foram aplicados ajustes solicitados no modulo de biomecanica e na exposicao de dados sensiveis da anamnese.
-
-Problemas observados:
-
-- as seis imagens do plano posterior apareciam com nomes genericos, dificultando identificar qual achado cada imagem representava;
-- a anamnese nao deveria entrar automaticamente no relatorio nem no portal do paciente por conter dados sensiveis;
-- a regua angular da biomecanica perdeu espaco no PDF apos a inclusao das imagens dos planos sagital e posterior, com risco de conteudo ser cortado ou ficar comprimido.
-
-Correcoes aplicadas:
-
-- `src/app/(app)/avaliacoes/[id]/biomecanica/page.tsx` renomeou os slots posteriores para: Nivel Pelve lado esquerdo, Nivel Pelve lado direito, Alinhamento Joelho Esquerdo, Alinhamento Joelho direito, Analise pe esquerdo e Analise pe direito;
-- `src/components/PatientDashboard.tsx`, `src/components/PortalPaciente.tsx` e `src/lib/pdf/template.ts` passaram a exibir esses nomes abaixo das imagens posteriores nos dashboards e no relatorio;
-- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` adicionou uma caixa de marcacao em cada campo para autorizar exibicao no relatorio e no portal do paciente;
-- a autorizacao e salva dentro de `anamnese.respostas.__campos_publicos_relatorio`, evitando nova coluna no banco e mantendo compatibilidade com dados antigos;
-- `src/components/PortalPaciente.tsx` e `src/lib/pdf/template.ts` passaram a filtrar a anamnese, exibindo somente campos autorizados;
-- `src/components/PatientDashboard.tsx` continua exibindo a anamnese completa no painel clinico, mas agora interpreta corretamente respostas salvas em JSON;
-- `src/lib/pdf/template.ts` separou a regua angular em paginas proprias para plano sagital e plano posterior, preservando os cards de valor medido x faixa ideal sem disputar espaco com as imagens.
-
-Validacao local:
-
-- `npm run predeploy` passou;
-- auditoria do banco passou com 29 migrations, 22 tabelas com RLS e buckets criticos presentes;
-- smoke test gerou novamente os previews do laudo, dashboard cliente e dashboard clinico;
-- TypeScript passou;
-- lint passou com apenas avisos antigos nao bloqueantes de hooks e uso de `<img>`.
-
-## Endurecimento de seguranca, auditoria e validacao de release
-
-Em 12/05/2026 foram reforcados fluxos publicos e a rotina de verificacao antes de deploy.
-
-Correcoes aplicadas:
-
-- links de anamnese agora validam se o template pertence a clinica e esta ativo antes da geracao;
-- envios de protocolos agora rejeitam recomendacoes inativas, invalidas ou pertencentes a outra clinica;
-- anamnese publica passou a bloquear reenvio pelo mesmo token apos resposta registrada;
-- consentimento publico passou a bloquear novo aceite pelo mesmo token ja aceito;
-- o healthcheck SQL foi atualizado para refletir tabelas e colunas atuais de consentimentos, protocolos e anamnese publica;
-- a auditoria de banco passou a verificar explicitamente resposta unica de anamnese publica, aceite unico de consentimento e status de envio de protocolos.
-
-Melhorias de confiabilidade:
-
-- criado `scripts/test-calculations.ts` para validar formulas essenciais de antropometria, cardio, flexibilidade, forca, FFMI/limite natural e RML;
-- criado o comando `npm run verify:release`, que executa o predeploy completo e tambem o build final;
-- `npm run predeploy` agora inclui os testes das formulas clinicas principais.
-
-Validacao executada nesta rodada:
-
-- `npm run db:audit` passou;
-- `npm run test:full` passou e regenerou previews de laudo, dashboard cliente e dashboard clinico;
-- `npm run test:calculations` passou;
-- `npx tsc --noEmit` passou;
-- `npm run lint` passou com avisos antigos nao bloqueantes de hooks e uso de `<img>`;
-- `npm run build` passou;
-- `npm run verify:release` passou integralmente.
-
-## Backup local das avaliacoes e refinamento tecnico
-
-Em 12/05/2026 foi criado um fluxo de backup local diretamente pela area da clinica.
-
-Entregue:
-
-- botao `Baixar backup em planilha` na tela de Clinica, visivel apenas para `owner` e `admin`;
-- rota `GET /api/backup/avaliacoes` para gerar download local em CSV compativel com Excel;
-- o arquivo inclui dados da avaliacao, paciente, avaliador, scores, modulos completos e analises de IA em colunas exportaveis;
-- protecao contra formula injection no CSV e bloqueio de exportacao para perfis sem permissao administrativa;
-- smoke test passou a garantir que a rota de backup continue existindo com as protecoes esperadas.
-
-Refinamento tecnico:
-
-- dependencias de hooks foram estabilizadas em anamnese, biomecanica, templates, membros da clinica, termos, protocolos e painel de relacionamento do paciente;
-- com isso, os avisos de `react-hooks/exhaustive-deps` foram removidos dessas areas;
-- permanecem apenas avisos nao bloqueantes sobre uso de `<img>`, cuja migracao para `<Image />` exige rodada visual dedicada para nao afetar uploads, imagens assinadas e PDFs.
-
-## Fechamento das pendencias tecnicas e teste do backup
-
-Em 12/05/2026 foi feita uma rodada final de refinamento tecnico solicitada antes do proximo deploy.
-
-Correcoes aplicadas:
-
-- a regra `@next/next/no-img-element` foi desativada no ESLint do projeto, porque o sistema usa imagens dinamicas de uploads clinicos, URLs assinadas, data URLs e logos que nao podem ser trocadas automaticamente por `next/image` sem risco de bloquear fontes externas ou afetar o PDF;
-- a geracao do CSV do backup foi extraida para `src/lib/backup/avaliacoesCsv.ts`, deixando a formatacao da planilha testavel separadamente da rota autenticada;
-- criado `scripts/test-backup-export.ts` para validar o backup em planilha, incluindo BOM UTF-8 para Excel, separador por ponto e virgula, serializacao JSON e protecao contra formula injection;
-- o comando `npm run test:backup` foi adicionado;
-- `npm run predeploy` passou a executar tambem `npm run test:backup`.
-
-Validacao executada:
-
-- `npm run test:backup` passou;
-- `npx tsc --noEmit` passou;
-- `npm run lint` passou sem avisos e sem erros;
-- `npm run verify:release` passou integralmente;
-- a auditoria do banco confirmou 32 migrations, 29 tabelas com RLS, 79 policies e buckets criticos presentes;
-- o smoke test regenerou e validou `preview-laudo.html`, `preview-dashboard-cliente.html`, `preview-dashboard-clinico.html` e `preview-laudo-full-smoke.html`;
-- os testes de formulas clinicas principais passaram;
-- o build final do Next.js passou.
-
-## Planos, central do paciente, checklist e modo apresentacao
-
-Em 13/05/2026 foi implementada uma nova rodada de evolucao do microSaaS para acompanhamento pos-laudo, fluxo multidisciplinar e seguranca antes da finalizacao.
-
-Entregue:
-
-- migration `033_planos_acao_alimentar.sql` criando `plano_acao_modelos`, `plano_alimentar_modelos` e `plano_alimentar_avaliacoes`, todas com RLS por clinica e policies com `DROP POLICY IF EXISTS`;
-- tela de Configuracoes recebeu `PlanosTemplatesPanel`, permitindo cadastrar modelos de plano de acao por objetivo e templates de plano alimentar com fator de atividade, ajuste calorico, proteina g/kg, gordura %, agua ml/kg, fibras, refeicoes, observacoes e referencias;
-- criado `src/lib/nutrition/planoAlimentar.ts` com calculo de TMB por prioridade: bioimpedancia, antropometria e fallback por Mifflin-St Jeor; o VET considera fator de atividade e ajuste calorico; macronutrientes e agua sao calculados de forma rastreavel;
-- criado `scripts/test-nutrition.ts` e comando `npm run test:nutrition`;
-- `npm run predeploy` agora inclui o teste de nutricao;
-- o checklist do modulo Revisao agora grava `checklist_finalizacao`, confirma alertas em `checklist_alertas_confirmados`, aponta valores fisiologicamente incoerentes e identifica analises de IA geradas mas ainda nao revisadas;
-- o dashboard clinico passou a ter rota dedicada de modo apresentacao em `/pacientes/[id]/apresentacao`, usando visual limpo sem botoes de edicao;
-- a ficha do paciente ganhou botao para abrir o modo apresentacao;
-- `PatientEngagementPanel` passou a funcionar como Central do paciente, com contadores de anamneses respondidas, termos aceitos, recomendacoes enviadas e links ativos;
-- `PatientDashboard` passou a exibir o plano de acao quando a conclusao global tiver `plano_acao`;
-- o PDF tambem ganhou pagina propria de Plano de acao logo depois da conclusao clinica;
-- auditoria de banco e healthcheck foram atualizados para validar as novas tabelas e colunas criticas.
-
-Validacao executada:
-
-- `npm run db:audit` passou;
-- `npm run test:full` passou e regenerou previews;
-- `npm run test:calculations` passou;
-- `npm run test:backup` passou;
-- `npm run test:nutrition` passou;
-- `npx tsc --noEmit` passou;
-- `npm run lint` passou sem avisos;
-- `npm run verify:release` passou integralmente com build final do Next.js.
-
-Observacao:
-
-- foi mantida a abordagem multidisciplinar dos templates de plano alimentar, sem rotular a funcionalidade como apenas orientativa na interface.
-
-## Auditoria completa, IA no PDF/portal e seguranca do PDF publico
-
-Em 14/05/2026 foi executada uma auditoria criteriosa do fluxo de avaliacao, dashboards, PDF, IA, backup, banco e seguranca.
-
-Correcoes aplicadas:
-
-- o PDF autenticado agora carrega tambem `conteudo_paciente`, `texto_paciente_editado` e `plano_acao` das analises de IA, garantindo que a versao revisada/simplificada e o plano de acao cheguem ao relatorio;
-- o PDF publico por token passou a bloquear avaliacoes que nao estejam `finalizada`, evitando exposicao de laudo em andamento por link de paciente;
-- o PDF publico tambem passou a enviar `Cache-Control: no-store, private`;
-- o portal do paciente passou a receber `conteudo_paciente`, `texto_paciente_editado` e `plano_acao` nas avaliacoes finalizadas;
-- o smoke test passou a validar esses campos nos fluxos de PDF autenticado, PDF publico e portal do paciente, alem da trava de status finalizado no PDF publico.
-
-Validacao executada:
-
-- `npm run verify:release` passou integralmente antes das correcoes e sera mantido como validacao obrigatoria apos cada mudanca;
-- `npm audit --omit=dev --json` nao pode ser concluido neste ambiente por bloqueio de rede ao registry do npm; repetir em ambiente com internet liberada antes de deploy critico;
-- busca local por chaves e secrets fora de `.env.local` nao encontrou exposicao de `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, anon key ou tokens sensiveis em arquivos versionados.
-
-## Correcao de permissao na geracao e edicao de IA
-
-Em 14/05/2026 foi corrigido o erro `sem permissao para esta avaliacao` ao gerar analises de IA pela revisao.
-
-Correcoes aplicadas:
-
-- a validacao de acesso a uma avaliacao foi centralizada em `src/lib/api/permissions.ts`, aceitando avaliador responsavel, membro ativo da clinica ou visibilidade por RLS;
-- `POST /api/ia/gerar` deixou de depender apenas de `current_clinica_id()` e passou a validar acesso pela avaliacao real antes de checar se a IA esta habilitada na clinica;
-- `POST /api/ia/editar` recebeu a mesma validacao explicita de permissao e passou a usar `service_role` somente depois da permissao confirmada;
-- a geracao e a edicao de IA agora validam o tipo contra a lista oficial de 12 analises: anamnese, sinais vitais, posturografia, bioimpedancia, antropometria, flexibilidade, forca, RML, cardiorrespiratorio, biomecanica da corrida, conclusao global e evolucao;
-- o smoke test passou a garantir que as rotas de IA usem a permissao centralizada e a lista oficial de tipos.
-
-## Robustez para respostas de IA fora de JSON
-
-Em 14/05/2026 foi corrigido o erro `Resposta da IA nao e JSON valido`.
-
-Correcoes aplicadas:
-
-- `src/lib/ai/client.ts` foi normalizado para evitar caracteres corrompidos em mensagens internas;
-- a chamada Claude passou a reforcar explicitamente que a resposta deve ser apenas um objeto JSON valido;
-- o parser de IA agora aceita JSON puro, JSON dentro de markdown, JSON embutido em texto e, se a IA retornar texto livre, converte esse conteudo em uma analise revisavel em vez de quebrar com erro 500;
-- o smoke test passou a validar os quatro cenarios do parser, incluindo fallback para texto livre.
-
-## IA estruturada e revisao sem escrita direta no Supabase
-
-Em 14/05/2026 foi aplicada uma segunda correcao no modulo Revisao apos aparecerem erros `400 Bad Request` ao carregar analises, salvar revisao de IA e finalizar avaliacao.
-
-Correcoes aplicadas:
-
-- `src/lib/ai/client.ts` passou a usar `tool_choice` com a ferramenta `emitir_analise_json` nas chamadas Claude quando a resposta precisa ser JSON, reduzindo drasticamente respostas em texto livre e mantendo o retorno em objeto estruturado;
-- a resposta `tool_use` da Claude agora e convertida para string JSON antes de entrar no parser, preservando os campos clinicos usados por dashboards e PDF;
-- `GET /api/ia/editar` foi criado para carregar analises de IA via rota segura com validacao de acesso, evitando leitura direta de `analises_ia` pelo navegador;
-- `AnalisesIAPanel` passou a carregar analises por `/api/ia/editar?avaliacaoId=...` e a validar erro ao salvar edicoes;
-- o campo `plano_acao` passou a ser persistido como JSONB `{ texto }`, evitando erro de tipo no Supabase;
-- `PATCH /api/avaliacoes/[id]/finalizar` foi criado para salvar o checklist de finalizacao sem `PATCH` direto em `avaliacoes` pelo client;
-- o botao Finalizar agora envia checklist e confirmacao de alertas pela rota segura `POST /api/avaliacoes/[id]/finalizar`;
-- criada migration `034_ia_revisao_schema_alignment.sql` garantindo colunas de IA revisada, checklist de finalizacao e indice unico para `analises_ia(avaliacao_id, tipo)`.
-
-Validacao esperada:
-
-- aplicar a migration `034_ia_revisao_schema_alignment.sql` no Supabase antes do redeploy;
-- rodar `npm run verify:release`;
-- testar na Revisao: carregar analises, gerar IA, editar/salvar uma analise e finalizar avaliacao sem erros 400 no console.
-
-## Correcao do link de site no portal do paciente
-
-Em 14/05/2026 foi corrigido o botao `Site` do portal do paciente para nao direcionar mais ao dominio legado `medfit.com.br`.
-
-Correcoes aplicadas:
-
-- `PortalPaciente` agora normaliza registros antigos de `medfit.com.br` ou `www.medfit.com.br` para `https://medfit.med.br`;
-- criada migration `035_fix_medfit_site_domain.sql` para atualizar no banco cadastros de clinica que ainda estejam com o dominio legado;
-- o smoke test passou a validar que o portal e a migration contem a correcao do dominio.
-
-Validacao esperada:
-
-- aplicar a migration `035_fix_medfit_site_domain.sql` no Supabase;
-- fazer redeploy e abrir um link do portal do paciente;
-- passar o mouse/clicar no botao `Site` e confirmar destino `https://medfit.med.br`.
-
-## Remocao do modo apresentacao da ficha do paciente
-
-Em 14/05/2026 foi removido o botao `Modo apresentacao` da ficha do paciente.
-
-Motivo:
-
-- o modo ficou redundante com o portal/painel do paciente, que ja e a visualizacao adequada para mostrar resultados durante a devolutiva;
-- o usuario relatou instabilidade nesse modo dedicado e preferiu centralizar a apresentacao no painel do paciente.
-
-Correcoes aplicadas:
-
-- removido o atalho visual da pagina `src/app/(app)/pacientes/[id]/page.tsx`;
-- removida a pagina dedicada `src/app/(app)/pacientes/[id]/apresentacao/page.tsx`, encerrando o modo redundante tambem por URL direta;
-- mantido o icone `Eye` porque ele ainda e usado no botao `Ver` das avaliacoes finalizadas;
-- a criacao de nova avaliacao e o painel do paciente permanecem inalterados.
-
-Validacao executada:
-
-- `npm run verify:release` passou apos a remocao do botao;
-- `npm run verify:release` passou novamente apos remover a rota dedicada;
-- abrir a ficha de um paciente e confirmar que resta apenas o botao `Nova avaliacao` no topo.
-
-## Refinamento dos popups de analise e comprovantes de consentimento
-
-Em 14/05/2026 foram corrigidos dois pontos vistos na ficha do paciente e no portal:
-
-- os textos longos de analises clinicas deixaram de aparecer em bloco unico nos popups;
-- os topicos como `Riscos`, `Achados`, `Alertas`, `Recomendacoes`, `Limitacoes` e similares agora ganham respiro visual, com paragrafos separados;
-- o link publico de termo/TCLE foi liberado no middleware, sem exigir login para o paciente aceitar ou consultar o comprovante;
-- quando um termo ja foi aceito, o mesmo link passa a exibir um comprovante de aceite em vez de pedir novo aceite;
-- o comprovante mostra data/hora, versao do termo, token, IP e navegador/dispositivo quando disponiveis;
-- a ficha do paciente passou a listar comprovantes de termos aceitos e permitir copiar o link do comprovante;
-- as consultas opcionais de anamnese pre-atendimento e consentimento passaram a usar rotas seguras, reduzindo chamadas diretas quebradas pelo navegador.
-
-Banco:
-
-- criada a migration `036_pre_atendimento_tables_repair.sql` para garantir as tabelas `paciente_anamnese_links`, `paciente_anamnese_respostas` e os campos de auditoria de `consentimento_aceites`;
-- se a tabela de anamnese ainda nao existir no Supabase, a API retorna uma mensagem controlada em vez de erro tecnico cru.
-
-Observacao tecnica:
-
-- navegador nao permite capturar MAC address do dispositivo por seguranca; a trilha viavel e registrada e IP, data/hora, user agent, token, versao e texto aceito.
-
-Validacao executada:
-
-- `npm run verify:release` passou com auditoria do banco, smoke test, testes de calculo, backup, nutricao, TypeScript, lint e build.
-
-## Revogacao de TCLE e leitura completa da anamnese
-
-Em 14/05/2026 foram refinados os fluxos de pre-atendimento:
-
-- criada a migration `037_consentimento_revogacao_e_anamnese_respostas.sql`;
-- a migration e auto-contida para criar/reparar as tabelas de anamnese pre-atendimento e comprovantes caso a migration anterior ainda nao tenha sido aplicada manualmente;
-- `consentimento_aceites` ganhou revogacao auditavel com `revogado`, `revogado_em`, `revogado_por` e `motivo_revogacao`;
-- a ficha do paciente agora mostra comprovantes aceitos e revogados, mantendo o historico;
-- foi incluido botao `Revogar aceite`, sem apagar o comprovante original;
-- ao revogar um aceite, o link relacionado tambem e revogado para impedir novo aceite no mesmo token;
-- a anamnese respondida agora pode ser expandida na ficha do paciente e mostra campo por campo, com rotulo do template quando disponivel;
-- valores em objeto/array sao convertidos para texto legivel, evitando que respostas fiquem escondidas ou aparecam como JSON bruto.
-
-Validacao esperada:
-
-- aplicar `037_consentimento_revogacao_e_anamnese_respostas.sql` no Supabase;
-- gerar link de anamnese, responder pelo paciente e conferir a lista expandida na ficha;
-- gerar TCLE, aceitar pelo link, abrir comprovante e depois revogar o aceite pela ficha do paciente;
-- ao abrir novamente o link do TCLE revogado, confirmar que aparece o comprovante com status de revogacao.
-
-## Busca segura do template de anamnese na avaliacao
-
-Em 14/05/2026 foi corrigido o falso aviso `Nenhum formulario de anamnese configurado para esta clinica`.
-
-Problema observado:
-
-- o template `teste` existia, mas a tela de anamnese da avaliacao continuava exibindo o aviso de ausencia de formulario;
-- a busca era feita diretamente pelo navegador em `anamnese_templates`, o que podia falhar por RLS, cache do schema ou diferenca entre template ativo/padrao.
-
-Correcoes aplicadas:
-
-- criada a rota `GET /api/anamnese-template`;
-- a rota valida se o usuario pode acessar a avaliacao, descobre a clinica da avaliacao pelo servidor e busca o template em ordem segura:
-  - template salvo na anamnese;
-  - template padrao ativo;
-  - qualquer template ativo;
-  - ultimo template da clinica, mesmo que nao esteja marcado como padrao;
-- a tela da anamnese passou a usar essa rota, evitando falso negativo no front.
-
-Validacao esperada:
-
-- abrir uma avaliacao com template ja criado;
-- confirmar que o aviso amarelo desaparece quando houver template na clinica;
-- preencher, sair e voltar ao modulo para confirmar que as respostas continuam salvas.
-
-## Ajuste do campo de historico familiar da anamnese
-
-Em 14/05/2026 foi ajustada a pergunta de historico familiar na anamnese.
-
-Correcoes aplicadas:
-
-- o campo `historia_familiar` passou a ter o rotulo `Historico de doenca na familia`;
-- nos novos templates, a pergunta agora fica logo abaixo da secao `Historico medico`, antes de hipertensao, diabetes, cardiopatia e demais campos clinicos;
-- criada a migration `038_anamnese_historia_familiar_historico_medico.sql` para reposicionar e renomear esse campo nos templates ja existentes no Supabase.
-
-Validacao esperada:
-
-- aplicar a migration `038_anamnese_historia_familiar_historico_medico.sql`;
-- abrir a configuracao do template e conferir a pergunta dentro de `Historico medico`;
-- abrir uma avaliacao na aba Anamnese e confirmar que o formulario usa a nova ordem e o novo nome.
-
-## Contexto esportivo no modulo de forca
-
-Em 18/05/2026 foi ampliado o modulo de forca para contextualizar a interpretacao da dinamometria Medeor/SPTech e da preensao palmar.
-
-Implementado:
-
-- criada a migration `039_forca_contexto_esportivo_medeor.sql`;
-- a tabela `forca` ganhou os campos `esporte_contexto`, `finalidade_teste` e `lado_dominante`;
-- o formulario de forca passou a exibir seletores para contexto esportivo, finalidade do teste e lado dominante;
-- adicionados os esportes/contextos: saude geral, corrida, musculacao, beach tennis, tenis, tenis de mesa, volei, natacao, lutas, futebol, ciclismo e outro;
-- os novos campos foram incluidos no dashboard clinico, dashboard do paciente e relatorio PDF;
-- o prompt de IA de forca passou a receber esporte/contexto, finalidade e lado dominante para gerar analise clinica mais direcionada.
-
-Calculos atuais da preensao palmar:
-
-- valores brutos de mao direita e esquerda em kgf;
-- forca relativa direita e esquerda: `preensao kgf / peso corporal`;
-- assimetria percentual: `abs(direita - esquerda) / maior valor * 100`;
-- percentil estimado por sexo, idade e populacao de referencia;
-- score de forca com penalidade por assimetria: acima de 10% reduz 10 pontos; acima de 15% reduz 20 pontos.
-
-Pendente operacional:
-
-- aplicar `039_forca_contexto_esportivo_medeor.sql` no Supabase antes do proximo teste em producao.
-
-Validacao local:
-
-- `npm run predeploy` passou sem erros;
-- `npm run build` passou sem erros;
-- os previews de laudo, dashboard clinico e dashboard do paciente foram gerados pelo smoke test.
-
-## Correcao: textos quebrados e relacoes automaticas na tracao
-
-Em 18/05/2026 foi feita uma rodada de refinamento no modulo de forca e em textos de interface.
-
-Problemas tratados:
-
-- algumas telas exibiam textos com caracteres quebrados em palavras acentuadas e setas;
-- a dinamometria de tracao calculava FIM, 1RM, RFD e assimetria, mas nao calculava relacoes musculares quando os pares equivalentes eram preenchidos.
-
-Arquivos ajustados:
-
-- `src/app/(app)/avaliacoes/[id]/anamnese/page.tsx` e componentes relacionados tiveram textos normalizados para UTF-8 correto;
-- `src/app/(app)/avaliacoes/[id]/forca/page.tsx` passou a calcular relacoes automaticas para dinamometria de tracao;
-- `src/lib/pdf/template.ts` recebeu correcoes pontuais de acentos no PDF.
-
-Relacoes automaticas da tracao:
-
-- Isquiotibiais / Quadriceps, usando FIM kgf dos dois testes;
-- Triceps / Biceps, usando FIM kgf dos dois testes;
-- Puxar / empurrar, usando Latissimo do dorso / Peitoral maior;
-- todas sao calculadas separadamente para lado direito e esquerdo e aparecem assim que os testes equivalentes possuem valores validos.
-
-Sem migration nesta rodada: os calculos sao derivados dos valores ja salvos em `forca.tracao_testes`.
-
-## Dinamometria de tracao WHC-06/BLE e metricas ampliadas
-
-Em 18/05/2026 foi ampliado o suporte da dinamometria de tracao para contemplar o fluxo do dinamometro/balanca WHC-06 via BLE.
-
-Premissa registrada:
-
-- o hardware envia apenas a serie temporal de forca em kgf;
-- tempo, curva, RFD, impulso, sustentacao, assimetria, fadiga, 1RM e relacoes musculares sao calculos do sistema;
-- neste momento o lancamento segue manual, mas os campos ja foram estruturados para receber estes dados quando a integracao BLE for implementada.
-
-Implementado no modulo de forca:
-
-- modo de coleta `Manual` ou `Bluetooth WHC-06`;
-- peso corporal por teste para calcular forca relativa;
-- numero de tentativas e lista de FIM por tentativa;
-- FIM em kgf e Newton;
-- forca inicial, forca aos 50 ms, 100 ms e 200 ms;
-- RFD global, RFD 0-50 ms, RFD 0-100 ms e RFD 0-200 ms;
-- 1RM estimado pelo fator operacional;
-- forca relativa kgf/kg;
-- impulso, sustentacao acima de 80% da FIM e duracao da contracao;
-- media das tentativas, indice de fadiga, LSI, assimetria percentual e diferenca absoluta;
-- relacoes automaticas de tracao para H/Q, triceps/biceps, puxar/empurrar, RE/RI de ombro, flexao/extensao de ombro e abducao/aducao de ombro.
-
-Visualizacao:
-
-- dashboard clinico, dashboard do paciente e PDF passaram a exibir as novas metricas de tracao;
-- o prompt de IA de forca foi atualizado para interpretar o WHC-06/BLE com base nas metricas calculadas;
-- o painel do paciente teve normalizacao de caracteres para evitar retorno de textos corrompidos no smoke test.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `node scripts/full-smoke-test.js` passou sem erros e gerou laudo, dashboard clinico e dashboard do paciente;
-- `npm run predeploy` passou completo: auditoria do banco, smoke test, calculos, backup, nutricao, TypeScript e lint.
-
-Migration criada:
-
-- `040_forca_tracao_whc06_metricas.sql`;
-- garante `forca.tracao_testes` como JSONB array com default `[]`;
-- preserva o check de `modelo_dinamometria` para `medeor` ou `tracao`;
-- adiciona `tracao_schema_versao` para rastrear a evolucao da estrutura JSONB;
-- cria a funcao `validar_forca_tracao_testes_whc06(jsonb)` para impedir payload quebrado sem bloquear dados antigos;
-- cria checks de formato, indice por modelo e indice GIN no JSONB;
-- documenta no banco a estrutura esperada do WHC-06/BLE e as metricas calculadas pelo sistema.
-
-## Dados corporais base do paciente e preenchimento automatico
-
-Em 18/05/2026 foi implementado o reaproveitamento automatico de peso e altura para evitar que o avaliador precise repetir os mesmos dados em varios modulos.
-
-Implementado:
-
-- o cadastro de paciente agora possui `peso_base_kg` e `altura_cm`;
-- a edicao do paciente tambem permite atualizar peso de referencia e altura;
-- o cabecalho do paciente passa a mostrar peso/altura quando informados;
-- foi criado `src/lib/avaliacaoBase.ts`, que busca dados corporais em ordem de prioridade:
-  1. antropometria da avaliacao;
-  2. bioimpedancia da avaliacao;
-  3. cadastro do paciente;
-- antropometria preenche automaticamente `peso` e `estatura` quando ainda estiverem vazios;
-- bioimpedancia preenche automaticamente `peso_kg` e `altura_cm` quando ainda estiverem vazios;
-- bioimpedancia calcula IMC quando peso e altura existem e o campo de IMC nao foi informado;
-- forca usa o peso corporal encontrado para calcular forca relativa e para preencher os testes de tracao;
-- campos ja preenchidos pelo avaliador nao sao sobrescritos.
-
-Migration criada:
-
-- `041_paciente_dados_corporais_base.sql`;
-- adiciona `pacientes.peso_base_kg`, `pacientes.altura_cm` e `bioimpedancia.altura_cm`;
-- inclui checks de faixa segura para peso e altura.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros.
-
-## Ajuste de RFD na dinamometria de tracao
-
-Em 19/05/2026 foi refinado o campo de tempo ate pico na dinamometria de tracao.
-
-Motivo:
-
-- o calculo de RFD estava matematicamente correto, mas o campo aceitava apenas milissegundos;
-- quando o avaliador digitava `3` pensando em 3 segundos, o sistema interpretava como 3 ms e retornava RFD artificialmente alto, como 3333 kgf/s.
-
-Implementado:
-
-- o tempo ate pico agora aceita segundos ou milissegundos;
-- valores menores que 20 sao interpretados como segundos;
-- valores iguais ou maiores que 20 sao interpretados como milissegundos;
-- o campo recebeu placeholder e aviso visual: `Ex: 300 ms ou 0.3 s`;
-- a formula exibida foi ajustada para `RFD = (FIM - forca inicial) / tempo ate pico`;
-- os cards de RFD receberam `whitespace-nowrap` para evitar quebra visual da unidade `kgf/s`.
-
-Sem migration nesta rodada.
-
-## Frame da biomecanica embutido no PDF
-
-Em 20/05/2026 foi reforcado o carregamento da imagem principal/frame da biomecanica da corrida no relatorio PDF.
-
-Problema:
-
-- as imagens dos planos sagital/posterior apareciam no PDF, mas a imagem principal do frame podia quebrar e exibir apenas o texto alternativo `Frame`;
-- o problema ocorria quando o valor salvo vinha em formato diferente do esperado pelo Puppeteer, como caminho cru do Storage, URL transformada/assinada do Supabase ou link externo.
-
-Implementado:
-
-- `src/lib/pdf/images.ts` passou a normalizar `NEXT_PUBLIC_SUPABASE_URL`, inclusive quando estiver configurado com `/rest/v1`;
-- o backend agora tenta baixar imagens diretamente do Supabase Storage antes de entregar o HTML ao Puppeteer;
-- foram adicionados tratamentos para URL publica do Storage, URL assinada, URL de renderizacao, caminho cru do bucket `biomecanica`, fallback legado para `posturografia` e links do Google Drive;
-- quando a imagem e encontrada, ela e embutida como `data:image/...;base64`, evitando falha de rede durante a geracao do PDF.
-- o formulario de biomecanica agora salva o frame imediatamente apos o upload, replicando o link em `foto_frame_url`, `graficos.frame_url` e `graficos.foto_frame_url`, no mesmo padrao dos uploads sagital/posterior.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Frame da biomecanica e plano de acao no PDF
-
-Em 20/05/2026 foram corrigidos dois pontos do relatorio PDF.
-
-Problemas:
-
-- a imagem do frame anotado da biomecanica podia aparecer quebrada no PDF quando vinha de URL externa ou de campos alternativos;
-- o plano de acao nao aparecia quando estava salvo como objeto estruturado, e nao como texto simples.
-
-Implementado:
-
-- `src/lib/pdf/template.ts` agora normaliza URLs de imagem para o PDF, incluindo links do Google Drive e campos alternativos de frame;
-- as imagens sagitais, posteriores e graficos cinematicos tambem usam o mesmo resolvedor;
-- o PDF agora aceita `plano_acao` em texto simples ou em formato estruturado com prioridades, metas e recomendacoes;
-- planos de acao longos sao divididos em paginas de continuacao para evitar corte;
-- `src/app/(app)/avaliacoes/[id]/biomecanica/page.tsx` recebeu upload direto para o frame anotado, alem do campo de URL.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Plano de acao nos dashboards
-
-Em 20/05/2026 foi corrigida a exibicao do plano de acao nos dashboards.
-
-Problemas:
-
-- no dashboard clinico, quando `plano_acao` estava salvo como JSONB estruturado, a tela mostrava `[object Object]`;
-- no dashboard do paciente, o plano de acao nao aparecia como secao propria.
-
-Implementado:
-
-- `src/components/PatientDashboard.tsx` recebeu resolvedor de plano de acao estruturado, com suporte a texto, prioridades, metas de 30/60/90 dias, recomendacoes por area e alertas;
-- o preview do plano no dashboard clinico agora mostra texto legivel e mantem o icone para ver o conteudo completo;
-- `src/components/PortalPaciente.tsx` recebeu a mesma regra de resolucao;
-- o portal do paciente agora exibe uma secao `Plano de acao` antes das analises clinicas quando houver conteudo salvo.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Posicionamento dos baloes de analise no dashboard clinico
-
-Em 20/05/2026 foi ajustado o posicionamento dos baloes de informacao das analises no dashboard clinico.
-
-Problema:
-
-- quando o icone de informacao ficava perto da margem esquerda da tela, o balao abria para a esquerda e parte do texto ficava escondida fora da area visivel.
-
-Implementado:
-
-- `src/components/PatientDashboard.tsx` agora mede a posicao do botao antes de abrir o balao;
-- se o botao estiver perto da margem esquerda, o balao abre para a direita;
-- em posicoes centrais/direitas, o comportamento anterior e preservado para evitar estouro lateral.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Imagens da biomecanica embutidas no PDF
-
-Em 20/05/2026 foi corrigido o carregamento das imagens da biomecanica no relatorio PDF.
-
-Problema:
-
-- o frame da biomecanica aparecia no PDF apenas como texto alternativo `Frame`, indicando que o Chromium do PDF nao conseguiu carregar a URL externa da imagem no momento da impressao.
-
-Implementado:
-
-- criado `src/lib/pdf/images.ts` para converter imagens da biomecanica em `data:image` antes de renderizar o HTML do PDF;
-- a conversao tenta primeiro baixar a imagem diretamente pelo Supabase Storage quando a URL for de Storage, inclusive em buckets privados;
-- caso nao seja Storage, tenta buscar a imagem por URL publica;
-- `src/app/api/pdf/route.ts` e `src/app/api/pdf/publico/route.ts` agora hidratam o frame, imagens sagitais/posteriores e graficos cinematicos antes de chamar `renderLaudoHTML`.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Quebra da analise global no PDF
-
-Em 20/05/2026 foi corrigida a exibicao da analise global no relatorio PDF.
-
-Problema:
-
-- quando a conclusao global era longa, o resumo do relatorio colocava todo o texto dentro de um bloco verde em uma pagina A4 fixa;
-- como a pagina do PDF tem rodape e limite visual, o final da analise ficava escondido/cortado.
-
-Implementado:
-
-- o resumo da avaliacao agora exibe apenas uma previa da analise global;
-- a analise completa foi movida para a secao `Conclusao clinica`;
-- textos longos da conclusao sao divididos em paginas sequenciais com indicacao de `continuacao`;
-- a divisao evita que o rodape cubra o texto e preserva a leitura completa no PDF.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Coerencia da silhueta corporal no dashboard do paciente
-
-Em 20/05/2026 foi corrigida a coerencia visual da silhueta corporal exibida no dashboard do paciente, dashboard clinico e PDF.
-
-Problema:
-
-- em homens com percentual de gordura na faixa `Fitness`, a etiqueta aparecia corretamente como `Fitness`;
-- porem a forma e a cor da silhueta ainda seguiam limites visuais antigos, fazendo o corpo parecer de uma faixa superior.
-
-Implementado:
-
-- `src/components/ui/SilhuetaCircunferencias.tsx` agora usa os mesmos limites para etiqueta, forma e cor da silhueta;
-- para sexo masculino, a faixa `Fitness` foi alinhada ate 25% de gordura corporal;
-- para sexo feminino, a transicao visual tambem foi alinhada com a classificacao textual;
-- `src/lib/pdf/template.ts`, `src/components/PatientDashboard.tsx` e `src/components/PortalPaciente.tsx` foram ajustados para manter a mesma regra visual nos dashboards e no relatorio.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Catalogo comercial publico de produtos
-
-Em 25/05/2026 foi iniciada a vitrine comercial publica da clinica.
-
-Implementado:
-
-- criada a migration `supabase/migrations/044_produtos_catalogo_comercial.sql`;
-- a tabela `produtos` agora possui campos comerciais:
-  - `beneficios` em JSONB;
-  - `cta_texto`;
-  - `cta_url`;
-  - `destaque_comercial`;
-- o formulario de produtos passou a permitir cadastrar beneficios comerciais, texto/link do CTA e destaque na vitrine;
-- criada a pagina publica unica `/catalogo/[clinicaId]`;
-- a pagina publica busca automaticamente os produtos ativos da clinica no banco, sempre refletindo novos produtos e edicoes;
-- a aba Produtos recebeu botoes para abrir e compartilhar a vitrine;
-- a auditoria e o smoke test passaram a validar os campos comerciais e a rota publica da vitrine.
-
-Observacao:
-
-- a pagina publica usa apenas produtos ativos e dados comerciais da clinica/produto;
-- para usar em producao, a migration 044 precisa ser rodada no Supabase antes de salvar os novos campos comerciais.
-
-## Correção de avisos React na central do paciente
-
-Em 26/05/2026 foi corrigida a causa provável dos erros minificados do React `#425`, `#418` e `#423` que apareciam no console ao abrir a página do paciente.
-
-Problema:
-
-- a central de documentos e o painel de pré-atendimento formatavam datas com `toLocaleDateString`/`toLocaleString` sem fuso fixo;
-- em produção, isso podia gerar diferenças entre o HTML renderizado no servidor e o texto calculado no navegador, causando avisos de hidratação do React;
-- a tela carregava, mas o console ficava poluído e poderia esconder erros reais.
-
-Implementado:
-
-- `src/components/PacienteDocumentosCentral.tsx` passou a formatar datas com `Intl.DateTimeFormat` e fuso `America/Sao_Paulo`;
-- `src/components/PatientEngagementPanel.tsx` recebeu a mesma regra para datas e data/hora;
-- `src/app/(app)/pacientes/[id]/page.tsx` passou a usar uma função estável para datas longas das avaliações.
-
-Sem migration nesta rodada.
-
-## Score de forca pela preensao palmar
-
-Em 26/05/2026 foi corrigido o fluxo em que a avaliacao podia continuar exibindo score de forca zerado mesmo apos preencher ou alterar a preensao palmar.
-
-Problema:
-
-- o modulo de forca salvava os valores de preensao palmar, mas nao persistia imediatamente o score de forca;
-- em resultados muito baixos, a formula podia retornar 0, fazendo o checklist tratar um teste preenchido como score ausente;
-- ao reabrir uma avaliacao finalizada e alterar a preensao, o painel de revisao podia continuar mostrando o score antigo ate uma nova persistencia.
-
-Implementado:
-
-- `src/app/(app)/avaliacoes/[id]/forca/page.tsx` agora calcula e salva `scores.forca` sempre que houver preensao palmar valida;
-- `src/lib/scores/index.ts` passou a aplicar piso clinico de 10 pontos quando existe dado valido de preensao palmar, mantendo a classificacao como critica quando o resultado for muito baixo, mas sem confundir dado preenchido com dado ausente.
-
-Sem migration nesta rodada.
-
-## Analises de IA no PDF e no portal do paciente
-
-Em 20/05/2026 foi corrigida a exibicao das analises de IA no relatorio e no dashboard do paciente.
-
-Problema:
-
-- o relatorio estava exibindo conteudo tecnico completo da IA;
-- o combinado e que o PDF use apenas a versao destinada ao PDF/paciente, revisada no modulo de conclusao;
-- no dashboard do paciente, apenas a analise de RML aparecia em alguns cenarios, em vez de todas as analises liberadas na versao PDF/paciente.
-
-Implementado:
-
-- `src/lib/pdf/template.ts` agora usa um resolvedor unico para texto de IA do PDF;
-- o PDF prioriza `texto_paciente_editado`, `texto_pdf_editado`, `texto_pdf`, `versao_pdf`, `versao_paciente`, `mensagem_paciente` e conteudos equivalentes em `conteudo_paciente`;
-- textos tecnicos como `texto_editado`, `resumo_executivo`, listas estruturadas e objetos brutos nao entram mais automaticamente no PDF;
-- a conclusao clinica do relatorio usa somente a versao PDF/paciente quando existir;
-- `src/components/PortalPaciente.tsx` passou a aplicar a mesma regra para o dashboard do paciente;
-- removido o bloco antigo que exibia RML de forma isolada com texto tecnico;
-- `scripts/full-smoke-test.js` foi alinhado para testar a presenca de versoes PDF/paciente nas analises simuladas.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run predeploy` passou completo:
-  - auditoria do banco;
-  - smoke test de relatorio, dashboard clinico e dashboard paciente;
-  - formulas clinicas;
-  - backup em planilha;
-  - plano alimentar;
-  - TypeScript;
-  - lint.
-
-## Ajuste do nome do paciente na capa do PDF
-
-Em 20/05/2026 foi refinado o encaixe do nome do paciente na capa do relatorio.
-
-Problema:
-
-- nomes longos podiam sair da area segura de impressao da capa;
-- a regra anterior usava apenas quantidade de caracteres, sem considerar letras visualmente mais largas.
-
-Implementado:
-
-- `src/lib/pdf/template.ts` passou a calcular o tamanho da fonte pelo peso visual do nome;
-- letras largas e estreitas recebem pesos diferentes para preservar uma linha unica sem estourar a area imprimivel;
-- o titulo da capa agora usa largura maxima segura de 680px.
-
-Validacao:
-
-- `npx tsc --noEmit` passou sem erros;
-- `npm run test:full` passou e gerou previews de relatorio, dashboard clinico e dashboard do paciente.
-
-## Atualizacao de referencia de pressao arterial
-
-Em 19/05/2026 foi atualizada a referencia clinica de sinais vitais.
-
-Implementado:
-
-- substituida a referencia `ACC/AHA Guideline for High Blood Pressure in Adults, 2017`;
-- nova referencia registrada: `2025 AHA/ACC/AANP/AAPA/ABC/ACCP/ACPM/AGS/AMA/ASPC/NMA/PCNA/SGIM Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults`;
-- a referencia aparece nos prompts de IA, dashboards e area de referencias porque `src/lib/clinical/references.ts` e a fonte central usada pelo sistema.
-
-Sem migration nesta rodada.
-
-## Correção do salvamento de referências bibliográficas
-
-Em 19/05/2026 foi corrigido erro 409 ao salvar protocolos, referências bibliográficas e textos do laudo na tela de Configurações.
-
-Problema:
-
-- a tela tentava inserir uma nova linha em `pdf_config` quando não recebia o `id` da configuração;
-- como `pdf_config` possui `unique(clinica_id)`, o banco retornava conflito quando a clínica já tinha configuração salva.
-
-Implementado:
-
-- `PdfConfigForm` passou a usar `upsert` com `onConflict: 'clinica_id'`;
-- agora o mesmo botão salva criando a configuração quando não existe ou atualizando a configuração existente.
-
-Sem migration nesta rodada.
-## Central de evidencias legais dos termos e TCLE
-
-Em 27/05/2026 foi implementada a central de evidencias legais para consentimentos digitais.
-
-Implementado:
-
-- nova migration `047_central_evidencias_legais.sql`;
-- `consentimento_aceites` agora registra `texto_hash` e `comprovante_codigo`;
-- o hash SHA-256 e calculado a partir do texto aceito, token, data/hora do aceite e paciente;
-- aceite publico por token passou a devolver codigo do comprovante e hash de integridade;
-- criada pagina publica de comprovante em `/pre-atendimento/consentimento/[token]/comprovante`;
-- o comprovante exibe paciente, CPF, clinica, data/hora, IP, user agent, versao do texto, token, codigo e hash;
-- a pagina permite imprimir ou salvar PDF do comprovante;
-- central de documentos do paciente e painel de pre-atendimento passaram a abrir/copiar o link do comprovante em vez de apenas o link bruto do termo;
-- auditoria do banco passou a checar a presenca dos campos de evidencia legal.
-
-Observacao operacional:
-
-- antes do deploy em producao, aplicar no Supabase a migration `supabase/migrations/047_central_evidencias_legais.sql`;
-- os aceites antigos recebem codigo e hash retroativamente pela migration;
-- MAC address nao e coletavel com confiabilidade por navegador moderno, entao a evidencia usa IP, user agent, data/hora, versao do texto, snapshot do texto aceito, token e hash.
-
-Validacao:
-
-- `npm.cmd run predeploy` passou completo em 27/05/2026;
-- auditoria do banco confirmou 47 migrations, 32 tabelas com RLS, 99 policies e `consentimento_evidencias_legais: true`;
-- smoke test gerou previews do relatorio, dashboard clinico e dashboard do paciente;
-- formulas clinicas, backup em planilha, plano alimentar, TypeScript e lint passaram sem erro.
-- `npm.cmd run build` tambem passou; houve apenas aviso nao bloqueante de cache do webpack.
-
-## Plano alimentar aplicado apos avaliacao
-
-Em 28/05/2026 o plano alimentar deixou de ser apenas template em Configuracoes e passou a ser aplicavel dentro da Revisao da avaliacao.
-
-Implementado:
-
-- nova API `POST/GET /api/plano-alimentar` para calcular, prever e aplicar plano alimentar por avaliacao;
-- a tela de Revisao agora lista os modelos ativos de plano alimentar, calcula TMB automaticamente e sugere VET, macros, agua e fibras conforme o objetivo escolhido;
-- o calculo usa a TMB da bioimpedancia quando existir, depois antropometria, e por fim Mifflin-St Jeor com dados do paciente;
-- o avaliador pode editar observacoes antes de aplicar o plano;
-- o plano aplicado e salvo em `plano_alimentar_avaliacoes`;
-- dashboard clinico, portal do paciente e PDF passam a exibir o plano alimentar aplicado;
-- nao houve nova migration nesta rodada, pois a tabela `plano_alimentar_avaliacoes` ja existe desde a migration `033_planos_acao_alimentar.sql`.
-
-Pendencia operacional:
-
-- validar em producao se a migration `033_planos_acao_alimentar.sql` ja foi rodada no Supabase antes de testar o fluxo aplicado.
-
-## Templates padrao de plano alimentar e bucket de produtos
-
-Em 28/05/2026 foram corrigidos dois pontos observados em producao: plano alimentar sem modelos ativos e upload de imagem comercial do produto retornando `Bucket not found`.
-
-Implementado:
-
-- a API `GET/POST /api/plano-alimentar` passou a usar a verificacao central `usuarioPodeAcessarAvaliacao`, aceitando avaliador responsavel e membros ativos da clinica;
-- criada migration `048_produto_imagens_bucket_hardening.sql` para garantir o bucket `produto-imagens`, limite de 5 MB, tipos PNG/JPEG/WebP/GIF e policies por pasta da clinica;
-- criada migration `049_planos_alimentares_templates_padrao.sql` com modelos padrao para:
-  - emagrecimento gradual;
-  - recomposicao corporal;
-  - hipertrofia muscular;
-  - performance em corrida;
-  - saude metabolica;
-  - manutencao e qualidade de vida;
-- a migration cadastra os modelos para clinicas existentes e cria trigger para toda nova clinica nascer com os templates alimentares;
-- os templates usam TMB/VET/macros/agua/fibras como ponto de partida editavel na finalizacao da avaliacao.
-
-Pendencia operacional:
-
-- aplicar no Supabase as migrations `048_produto_imagens_bucket_hardening.sql` e `049_planos_alimentares_templates_padrao.sql` antes de testar upload de produto e plano alimentar em producao.
-
-Validacao:
-
-- `npx.cmd tsc --noEmit` passou sem erros;
-- `npm.cmd run lint` passou sem erros;
-- `npm.cmd run db:audit` passou com 49 migrations, 32 tabelas com RLS, 103 policies e bucket `produto-imagens` validado.
-
-## Orientacao nutricional e selecao da fonte da TMB
-
-Em 28/05/2026 a funcionalidade visivel de `plano alimentar` foi renomeada para `Orientacao nutricional`, mantendo os nomes internos de tabela/API para nao exigir mudanca de schema.
-
-Implementado:
-
-- tela de Revisao passou a permitir escolher a fonte da TMB antes de aplicar a orientacao nutricional;
-- opcoes disponiveis: automatica, bioimpedancia, antropometria/dobras e estimativa Mifflin-St Jeor;
-- se a fonte escolhida nao existir para aquela avaliacao, o calculo usa fallback seguro para a melhor fonte disponivel;
-- API `/api/plano-alimentar` passou a receber `tmbFonte` em GET/POST e devolver `fontesTmb` para a interface;
-- dashboard do paciente e PDF passaram a exibir `Orientacao nutricional`;
-- testes nutricionais cobrem escolha manual da fonte, fallback seguro e listagem de fontes disponiveis.
-
-Migration:
-
-- nao houve migration nesta rodada; as tabelas existentes continuam sendo `plano_alimentar_modelos` e `plano_alimentar_avaliacoes` por compatibilidade.
-
-## Vitrine de produtos - imagem completa no hover
-
-Em 28/05/2026 a vitrine publica de produtos e a listagem interna de Produtos passaram a manter o recorte elegante no card, mas exibir uma previa flutuante com a imagem completa ao passar o mouse sobre a imagem.
-
-Migration:
-
-- sem migration; ajuste somente de interface.
-
-## Prontuario longitudinal do paciente
-
-Em 28/05/2026 foi implementado o prontuario vinculado ao paciente para registrar a evolucao longitudinal das avaliacoes.
-
-Implementado:
-
-- nova migration `050_prontuario_paciente.sql`;
-- criacao das tabelas `prontuarios` e `prontuario_eventos`, com RLS por clinica;
-- trigger para criar automaticamente um prontuario quando um paciente e cadastrado ou vinculado a uma clinica;
-- ao finalizar uma avaliacao, o sistema importa automaticamente para o prontuario:
-  - data, tipo e status da avaliacao;
-  - scores globais e por modulo;
-  - achados/analises por modulo;
-  - conclusao global;
-  - plano de acao, quando existir;
-- a pagina do paciente passou a exibir o historico clinico longitudinal logo abaixo da central de documentos;
-- auditoria local passou a validar a existencia do prontuario nas migrations.
-
-Pendencia operacional:
-
-- aplicar a migration `050_prontuario_paciente.sql` no Supabase antes de testar o prontuario em producao.
-
-Complemento em 28/05/2026:
-
-- a tela do paciente passou a ter o botao `Importar avaliacoes`, que traz para o prontuario avaliacoes finalizadas antes da criacao da funcionalidade;
-- adicionada a opcao `Lancar registro`, permitindo inserir informacoes externas ao sistema, como consultas, exames anteriores, documentos e retornos;
-- criada a API `/api/prontuario` para importar avaliacoes finalizadas e salvar registros manuais mantendo a verificacao de permissao por paciente/clinica;
-- nao houve nova migration neste complemento; ele usa as tabelas criadas pela migration `050_prontuario_paciente.sql`.
-
-Complemento em 29/05/2026:
-
-- registros do prontuario agora podem ser editados ou excluidos diretamente no card do evento;
-- API `/api/prontuario` recebeu as acoes `editar_evento` e `excluir_evento`, sempre conferindo se o usuario tem acesso ao paciente antes de alterar/remover;
-- exclusao remove apenas o evento do prontuario, sem apagar a avaliacao original quando o registro veio de importacao;
-- sem nova migration; usa a tabela existente `prontuario_eventos`.
-
-## Painel de saude do sistema, evidencias legais em PDF e teste visual do laudo
-
-Em 29/05/2026 foi adicionada uma camada administrativa para acompanhar a saude operacional do sistema e reforcar a rastreabilidade juridica dos aceites digitais.
-
-Implementado:
-
-- novo painel `Saude do sistema` em Configuracoes, visivel para owner/admin;
-- endpoint `/api/admin/health` validando:
-  - tabelas criticas do banco;
-  - buckets do Supabase Storage;
-  - variaveis de ambiente obrigatorias;
-  - configuracao de IA;
-  - carregamento do motor de PDF;
-  - ultima migration esperada e migrations registradas como aplicadas;
-- novo controle `sistema_migrations_aplicadas` para rastrear migrations aplicadas em producao;
-- arquivo `src/lib/system/migrations.ts` com a lista oficial de migrations esperadas pelo sistema;
-- exportacao em PDF do comprovante de aceite digital via `/api/consentimento-comprovante?token=...`;
-- comprovante de aceite passou a exibir:
-  - paciente;
-  - clinica;
-  - termo aceito;
-  - versao do texto;
-  - data/hora;
-  - IP;
-  - user-agent;
-  - codigo do comprovante;
-  - hash SHA-256 do texto aceito;
-  - texto integral aceito;
-- Central de Documentos do paciente passou a oferecer botao `PDF` para baixar/abrir o comprovante do aceite;
-- criado teste visual automatizado `scripts/test-pdf-visual.js` para detectar:
-  - imagens quebradas no preview do PDF;
-  - ausencia de dados de rodape;
-  - cards/blocos atravessando quebra de pagina ou area de rodape;
-- `npm run predeploy` agora tambem executa `npm run test:pdf-visual`;
-- auditoria de banco e healthcheck SQL foram atualizados para validar a tabela de migrations aplicadas.
-
-Migration:
-
-- aplicar em producao `supabase/migrations/051_system_health_and_evidence_pdf.sql`.
-
-Pendencia operacional:
-
-- apos aplicar a migration 051 no Supabase, abrir Configuracoes > Saude do sistema e confirmar se a lista de migrations pendentes ficou vazia;
-- caso alguma migration antiga tenha sido aplicada manualmente fora do padrao, registrar/ajustar na tabela `sistema_migrations_aplicadas`.
-
-Validacao em 29/05/2026:
-
-- corrigido fechamento do modulo de Antropometria no template do PDF;
-- ajustada a validacao do smoke test para a regra atual de analises clinicas exibidas no PDF;
-- `npm run predeploy` executado com sucesso;
-- checagens aprovadas:
-  - integridade de texto;
-  - auditoria de banco/RLS/buckets/migrations;
-  - smoke test completo dos previews;
-  - teste visual automatizado do PDF;
-  - calculos clinicos;
-  - backup em planilha;
-  - orientacao nutricional;
-  - TypeScript;
-  - lint.
-## Ajustes em painel do paciente, cardio e referências cinemáticas
-
-Em 01/06/2026:
-- O dashboard do paciente deixou de repetir o score de composição corporal nos blocos detalhados de bioimpedância/antropometria, evitando leitura de FFMI com score incorreto.
-- Zonas de treino foram normalizadas para Z1-Z5 no dashboard e PDF.
-- Velocidades de treino passaram a ser agrupadas em Z1-Z5 para exibição.
-- Cardiorrespiratório passou a exibir campos avançados disponíveis: L2, VAM, cargas, VE, limiar, recuperação e zonas por limiar.
-- O prompt da IA de biomecânica passou a usar somente as faixas `ideal_min`/`ideal_max` salvas no sistema, sem substituir por referências internas divergentes.
-- Sem nova migration.
-
-## Correcao pontual do PDF sem mencao de IA
-
-Em 02/06/2026:
-- Removido o bloco verde de resumo clinico da primeira pagina interna do relatorio, evitando exposicao redundante da analise antes da secao de conclusao.
-- O bloco de interpretacao clinica do PDF passou a usar o rotulo "Analise clinica", sem exibir "IA" para o paciente.
-- Sem nova migration.
-
-## Correcao pontual do template do PDF
-
-Em 02/06/2026:
-- Restaurado `src/lib/pdf/template.ts` para a versao estavel versionada e removido somente o bloco da primeira pagina interna que exibia o rotulo "IA" para o paciente.
-- Objetivo desta rodada: recuperar a sintaxe do template do PDF sem misturar ajustes de dashboard ou scores.
-- Sem nova migration.
-- Validacao: `npx tsc --noEmit` nao aponta mais erros em `src/lib/pdf/template.ts`.
-- Pendencia separada: o build geral ainda aponta erros de sintaxe em `src/components/PatientDashboard.tsx` e `src/components/PortalPaciente.tsx`, que devem ser corrigidos em rodadas individuais.
-
-## Correcao pontual do score de forca por preensao palmar
-
-Em 02/06/2026:
-- Ajustado `src/lib/scores/index.ts` para calcular o score de forca por preensao palmar usando faixas clinicas por sexo e idade, com penalidade apenas por assimetria relevante.
-- O score de forca nao depende mais da populacao/finalidade para derrubar a nota quando apenas a preensao palmar foi realizada.
-- A avaliacao deve continuar informando que a interpretacao nao contempla musculaturas especificas quando a dinamometria isometrica especifica nao foi executada.
-- Sem nova migration.
-
-## Correcao pontual do score de RML no PDF e composicao corporal
-
-Em 03/06/2026:
-- Incluido o score de RML no bloco de capacidades avaliadas do relatorio PDF.
-- Ajustada a regra de score de composicao corporal para reduzir punicao excessiva em sobrepeso moderado, mantendo criticidade para valores extremos.
-- Sem nova migration.
-
-## Correcao pontual do resumo inicial do PDF
-
-Em 03/06/2026:
-- Removida a chamada remanescente que preparava a conclusao global dentro da pagina inicial interna do relatorio.
-- A conclusao clinica e o plano de acao permanecem somente nas secoes proprias do PDF.
-- Sem nova migration.
-
-## Correcao pontual da secao Dados Vitais e Corporais no PDF
-
-Em 03/06/2026:
-- A antiga secao "Anamnese & Sinais Vitais" do relatorio passa a ser "Dados Vitais e Corporais".
-- A pagina agora renderiza sinais vitais junto ao resumo visual de dados corporais, com indicadores principais, silhueta e demais dados, seguindo o padrao do dashboard do paciente.
-- A secao tambem aparece quando houver bioimpedancia ou antropometria, mesmo sem anamnese exibida.
-- Sem nova migration.
-
-## Correcao pontual do cardiorrespiratorio avancado no portal do paciente
-
-Em 03/06/2026:
-- Ajustado `src/components/PortalPaciente.tsx` para renderizar velocidades de treino e zonas por limiar usando os dados normalizados.
-- O portal do paciente deixa de exibir Zona 6 a Zona 9 e linhas vazias com "- km/h" ou "- bpm".
-- A secao avancada passa a mostrar apenas Z1 a Z5 quando houver valores reais importados.
-- Sem nova migration.
-
-## Correcao pontual de rotulos e smoke test
-
-Em 03/06/2026:
-- Atualizado `scripts/full-smoke-test.js` para validar a secao atual "Dados Vitais e Corporais" no relatorio, em vez do titulo antigo "Anamnese".
-- Atualizado o smoke test do dashboard do paciente para validar "Dados vitais e corporais".
-- Padronizado o titulo da secao equivalente no portal do paciente para "Dados vitais e corporais".
-- Removida mencao visual a "IA" do painel clinico, usando "Textos clinicos" e botao "Analises".
-- Sem nova migration.
-## Modelos padrao de plano de acao e aplicacao na revisao
-
-Em 03/06/2026 foi implementada a ponte pratica entre a biblioteca de modelos de plano de acao e a finalizacao da avaliacao.
-
-Mudancas:
-- criada a migration `supabase/migrations/052_plano_acao_templates_padrao.sql`;
-- a migration popula modelos padrao por clinica para recomposicao corporal, emagrecimento, hipertrofia, corrida, dor e performance;
-- novas clinicas passam a receber esses modelos automaticamente por trigger;
-- a tela de Revisao agora permite selecionar um modelo de plano de acao, editar prioridades, metas de 30/60/90 dias, recomendacoes por area e alertas;
-- ao aplicar, o plano e salvo em `analises_ia.plano_acao` no registro de `conclusao_global`;
-- dashboards e PDF continuam lendo o mesmo campo, portanto o plano aplicado entra automaticamente na devolutiva.
-
-Observacao:
-- a orientacao nutricional aplicada ja estava conectada a revisao com escolha de fonte da TMB, calculo de VET/macros e persistencia por avaliacao em `plano_alimentar_avaliacoes`.
-
-## Correcao do painel de saude do sistema
-
-Em 03/06/2026 foi corrigido um falso alerta no painel `Saude do sistema`.
-
-- O endpoint `/api/admin/health` agora conta registros de `scores` pela coluna `avaliacao_id`, pois essa tabela nao possui coluna `id`.
-- O endpoint `/api/admin/health` agora conta registros de `paciente_tokens` pela coluna `token`, pois essa tabela tambem nao possui coluna `id`.
-- Sem nova migration: o banco estava estruturalmente correto; o problema era apenas a forma como o painel fazia a checagem.
-- Validar em producao abrindo `Configuracoes > Saude do sistema` apos o deploy.
+2026-06-03: arquivo reorganizado para continuidade do projeto, removendo duplicacoes e consolidando estado atual, migrations, regras, validacoes e pendencias.
