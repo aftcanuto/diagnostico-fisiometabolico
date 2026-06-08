@@ -1128,32 +1128,56 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       )}
 
       {/* 3c. ANTROPOMETRIA DETALHADA */}
-      {(atual.antropometria?.dobras||atual.antropometria?.somatotipo)&&(
-        <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares" score={sc.composicao_corporal}>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
-            {atual.antropometria?.dobras&&(
-              <Card>
-                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Dobras cutâneas</h3>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))',gap:8}}>
-                  {Object.entries(atual.antropometria.dobras).filter(([,v])=>v!=null).map(([k,v])=>(
-                    <Metrica key={k} label={humanLabel(k)} valor={v} un="mm"/>
-                  ))}
-                </div>
-              </Card>
-            )}
-            {atual.antropometria?.somatotipo&&(
-              <Card>
-                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Somatotipo</h3>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                  <Metrica label="Endomorfia" valor={(atual.antropometria.somatotipo as any).endomorfia}/>
-                  <Metrica label="Mesomorfia" valor={(atual.antropometria.somatotipo as any).mesomorfia}/>
-                  <Metrica label="Ectomorfia" valor={(atual.antropometria.somatotipo as any).ectomorfia}/>
-                </div>
-              </Card>
-            )}
-          </div>
-        </Secao>
-      )}
+      {(() => {
+        const antropometria = atual.antropometria as any;
+        const valorDobra = (v:any): number | null => {
+          const raw = v && typeof v === 'object'
+            ? v.media ?? v.média ?? v['média'] ?? v.validada ?? v.validado ?? v.valor ?? v.resultado ?? v.m3 ?? v.m2 ?? v.m1
+            : v;
+          if (raw == null || raw === '' || typeof raw === 'object') return null;
+          const numero = Number(String(raw).replace(',', '.'));
+          return Number.isFinite(numero) && numero > 0 ? numero : null;
+        };
+        const dobrasValidas = Object.entries(antropometria?.dobras ?? {})
+          .map(([chave, valor]) => ({ chave, valor: valorDobra(valor) }))
+          .filter((item): item is { chave: string; valor: number } => item.valor != null);
+        const somatotipo = antropometria?.somatotipo;
+        const temSomatotipo = !!somatotipo && [
+          somatotipo.endomorfia,
+          somatotipo.mesomorfia,
+          somatotipo.ectomorfia,
+          somatotipo.classificacao,
+        ].some(v => v != null && v !== '' && typeof v !== 'object');
+
+        if (!dobrasValidas.length && !temSomatotipo) return null;
+
+        return (
+          <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares" score={sc.composicao_corporal}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
+              {dobrasValidas.length > 0&&(
+                <Card>
+                  <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Dobras cutâneas</h3>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))',gap:8}}>
+                    {dobrasValidas.map(({chave, valor})=>(
+                      <Metrica key={chave} label={humanLabel(chave)} valor={valor} un="mm"/>
+                    ))}
+                  </div>
+                </Card>
+              )}
+              {temSomatotipo&&(
+                <Card>
+                  <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Somatotipo</h3>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+                    <Metrica label="Endomorfia" valor={somatotipo.endomorfia}/>
+                    <Metrica label="Mesomorfia" valor={somatotipo.mesomorfia}/>
+                    <Metrica label="Ectomorfia" valor={somatotipo.ectomorfia}/>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </Secao>
+        );
+      })()}
 
       {/* 4. CARDIOVASCULAR */}
       {(vo2!=null||sv||zonasItems.length>0)&&(

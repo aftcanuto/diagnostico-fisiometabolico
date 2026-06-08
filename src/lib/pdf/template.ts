@@ -1086,15 +1086,26 @@ function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any)
   const pctPot=a.massa_magra&&limMax?+((a.massa_magra/limMax)*100).toFixed(1):null;
   const pctGorduraRelatorio = (!gorduraRelatorio?.fonteDefinida || gorduraRelatorio.fonte === 'antropometria') ? a.percentual_gordura : null;
   const dobraValidada = (v:any) => v?.media ?? v?.média ?? v?.['média'] ?? v?.validada ?? v?.validado ?? v?.valor ?? v?.resultado ?? v?.m3 ?? v?.m2 ?? v?.m1 ?? v;
+  const numeroDobra = (v:any): number | null => {
+    const raw = dobraValidada(v);
+    if (raw == null || raw === '' || typeof raw === 'object') return null;
+    const numero = Number(String(raw).replace(',', '.'));
+    return Number.isFinite(numero) && numero > 0 ? numero : null;
+  };
+  const dobrasValidas = ord
+    .map(chave => ({ chave, valor: numeroDobra(dobras[chave]) }))
+    .filter((item): item is { chave: string; valor: number } => item.valor != null);
+  const temValor = (v:any) => v != null && v !== '' && typeof v !== 'object';
+  const cardsPrincipais = [
+    temValor(a.peso) ? `<div class="data-card"><div class="dc-label">Peso</div><div class="dc-val">${a.peso}<span class="dc-unit">kg</span></div></div>` : '',
+    temValor(pctGorduraRelatorio) ? `<div class="data-card"><div class="dc-label">% Gordura</div><div class="dc-val">${pctGorduraRelatorio}<span class="dc-unit">%</span></div></div>` : '',
+    temValor(a.massa_magra) ? `<div class="data-card"><div class="dc-label">Massa magra</div><div class="dc-val">${a.massa_magra}<span class="dc-unit">kg</span></div></div>` : '',
+    temValor(a.estatura) ? `<div class="data-card"><div class="dc-label">Estatura</div><div class="dc-val">${a.estatura}<span class="dc-unit">cm</span></div></div>` : '',
+    temValor(a.imc) ? `<div class="data-card"><div class="dc-label">IMC</div><div class="dc-val">${a.imc}</div></div>` : '',
+    temValor(a.massa_ossea) ? `<div class="data-card"><div class="dc-label">Massa óssea</div><div class="dc-val">${a.massa_ossea}<span class="dc-unit">kg</span></div></div>` : '',
+  ].join('');
   return pgModulo('Antropometria', score, `
-  <div class="data-grid">
-    <div class="data-card"><div class="dc-label">Peso</div><div class="dc-val">${a.peso??'—'}<span class="dc-unit">kg</span></div></div>
-    <div class="data-card"><div class="dc-label">% Gordura</div><div class="dc-val">${pctGorduraRelatorio??'—'}<span class="dc-unit">%</span></div></div>
-    <div class="data-card"><div class="dc-label">Massa magra</div><div class="dc-val">${a.massa_magra??'—'}<span class="dc-unit">kg</span></div></div>
-    <div class="data-card"><div class="dc-label">Estatura</div><div class="dc-val">${a.estatura??'—'}<span class="dc-unit">cm</span></div></div>
-    <div class="data-card"><div class="dc-label">IMC</div><div class="dc-val">${a.imc??'—'}</div></div>
-    <div class="data-card"><div class="dc-label">Massa óssea</div><div class="dc-val">${a.massa_ossea??'—'}<span class="dc-unit">kg</span></div></div>
-  </div>
+  ${cardsPrincipais ? `<div class="data-grid">${cardsPrincipais}</div>` : ''}
   ${ffmi!=null?`<div class="dark-block">
     <div class="dark-label">Potencial genético muscular</div>
     <div style="display:flex;align-items:center;gap:20px">
@@ -1103,9 +1114,9 @@ function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any)
       <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100,pctPot??0)}%"></div></div></div>
     </div>
   </div>`:''}
-  ${Object.keys(dobras).length?`<div class="sec-sub">Dobras cutâneas (mm)</div>
+  ${dobrasValidas.length?`<div class="sec-sub">Dobras cutâneas (mm)</div>
   <table><thead><tr><th>Dobra</th><th>Medida validada</th></tr></thead><tbody>
-    ${ord.filter(k=>dobras[k]).map(k=>{const v=dobraValidada(dobras[k]);return `<tr><td>${rot[k]??k}</td><td style="font-weight:600">${v??'—'} mm</td></tr>`;}).join('')}
+    ${dobrasValidas.map(({chave,valor})=>`<tr><td>${rot[chave]??chave}</td><td style="font-weight:600">${valor} mm</td></tr>`).join('')}
   </tbody></table>`:''}
   ${soma?`<div class="kpi-grid" style="margin-top:18px">${kpi('Endomorfia',soma.endomorfia)}${kpi('Mesomorfia',soma.mesomorfia)}${kpi('Ectomorfia',soma.ectomorfia)}${kpi('Classificação',soma.classificacao)}</div>`:''}
   ${(() => {

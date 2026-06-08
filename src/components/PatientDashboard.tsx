@@ -394,6 +394,140 @@ function CompRow({ label, atual, anterior, unidade, direcao, casas = 1 }: {
   );
 }
 
+function numOrNull(v: any): number | null {
+  if (v == null || v === '') return null;
+  const n = typeof v === 'string' ? Number(v.replace(',', '.')) : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function fmtComp(v: any, casas = 1, unidade = '') {
+  const n = numOrNull(v);
+  if (n == null) return '—';
+  return `${n.toFixed(casas)}${unidade ? ` ${unidade.trim()}` : ''}`;
+}
+
+function pesoAval(a: any) {
+  return numOrNull(a?.antropometria?.peso ?? a?.bioimpedancia?.peso_kg ?? a?.bioimpedancia?.peso);
+}
+
+function alturaAval(a: any) {
+  return numOrNull(a?.antropometria?.estatura ?? a?.antropometria?.altura ?? a?.bioimpedancia?.altura_cm);
+}
+
+function massaMagraAval(a: any) {
+  return numOrNull(a?.antropometria?.massa_magra ?? a?.bioimpedancia?.massa_magra_kg ?? a?.bioimpedancia?.massa_livre_gordura_kg);
+}
+
+function imcAval(a: any) {
+  const imc = numOrNull(a?.antropometria?.imc ?? a?.bioimpedancia?.imc);
+  if (imc != null) return imc;
+  const p = pesoAval(a);
+  const h = alturaAval(a);
+  return p != null && h != null && h > 0 ? p / Math.pow(h / 100, 2) : null;
+}
+
+function ffmiAval(a: any) {
+  const raw = numOrNull(a?.antropometria?.ffmi ?? a?.bioimpedancia?.ffmi);
+  if (raw != null) return raw;
+  const m = massaMagraAval(a);
+  const h = alturaAval(a);
+  return m != null && h != null && h > 0 ? m / Math.pow(h / 100, 2) : null;
+}
+
+function fotoPosturalPrincipal(a: any) {
+  const p = a?.posturografia ?? {};
+  return p.foto_anterior || p.foto_posterior || p.foto_lateral_dir || p.foto_lateral_esq || null;
+}
+
+function ComparativoPremium({ atual, anterior, gorduraAtual, gorduraAnterior }: {
+  atual: any;
+  anterior: any;
+  gorduraAtual: any;
+  gorduraAnterior: any;
+}) {
+  if (!atual) return null;
+  const temAnterior = !!anterior;
+  const metricas = [
+    { grupo: 'Resultado', label: 'Score global', atual: atual.scores?.global, anterior: anterior?.scores?.global, unidade: '', casas: 0, direcao: 'subir_bom' },
+    { grupo: 'Composição', label: 'Gordura corporal', atual: gorduraAtual?.valor, anterior: gorduraAnterior?.valor, unidade: '%', casas: 1, direcao: 'descer_bom' },
+    { grupo: 'Composição', label: 'Massa magra', atual: massaMagraAval(atual), anterior: massaMagraAval(anterior), unidade: 'kg', casas: 1, direcao: 'subir_bom' },
+    { grupo: 'Composição', label: 'FFMI', atual: ffmiAval(atual), anterior: ffmiAval(anterior), unidade: '', casas: 1, direcao: 'subir_bom' },
+    { grupo: 'Força', label: 'Score força', atual: atual.scores?.forca, anterior: anterior?.scores?.forca, unidade: '', casas: 0, direcao: 'subir_bom' },
+    { grupo: 'Flexibilidade', label: 'Score flexibilidade', atual: atual.scores?.flexibilidade, anterior: anterior?.scores?.flexibilidade, unidade: '', casas: 0, direcao: 'subir_bom' },
+    { grupo: 'Cardio', label: 'VO₂máx', atual: atual.cardiorrespiratorio?.vo2max, anterior: anterior?.cardiorrespiratorio?.vo2max, unidade: 'ml/kg/min', casas: 1, direcao: 'subir_bom' },
+    { grupo: 'RML', label: 'Score RML', atual: atual.scores?.rml, anterior: anterior?.scores?.rml, unidade: '', casas: 0, direcao: 'subir_bom' },
+  ];
+
+  const fotoAtual = fotoPosturalPrincipal(atual);
+  const fotoAnterior = fotoPosturalPrincipal(anterior);
+
+  return (
+    <div style={{background:'linear-gradient(180deg,#ffffff,#f8fafc)',border:'1px solid #dbe7e2',borderRadius:22,padding:'24px 26px',boxShadow:'0 24px 55px rgba(15,23,42,.08)'}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:18,marginBottom:18}}>
+        <div>
+          <div style={{fontSize:10,fontWeight:800,letterSpacing:1.4,textTransform:'uppercase',color:'#0f9f7a',marginBottom:6}}>Comparativo antes/depois</div>
+          <div style={{fontSize:20,fontWeight:800,color:'#0f172a'}}>Evolução da avaliação atual</div>
+          <div style={{fontSize:12,color:'#64748b',marginTop:5}}>
+            Atual: {dataCurtaBR(atual.data)}
+            {temAnterior ? ` · Anterior: ${dataCurtaBR(anterior.data)}` : ' · Ainda não há avaliação anterior finalizada.'}
+          </div>
+        </div>
+        <div style={{fontSize:11,fontWeight:700,color:temAnterior?'#059669':'#f59e0b',background:temAnterior?'#ecfdf5':'#fff7ed',border:`1px solid ${temAnterior?'#bbf7d0':'#fed7aa'}`,borderRadius:999,padding:'7px 12px',whiteSpace:'nowrap'}}>
+          {temAnterior ? 'comparável' : 'primeira referência'}
+        </div>
+      </div>
+
+      {temAnterior ? (
+        <>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
+            {metricas.map(m => {
+              const a = numOrNull(m.atual);
+              const p = numOrNull(m.anterior);
+              const diff = a != null && p != null ? +(a - p).toFixed(m.casas) : null;
+              const bom = diff == null ? false : m.direcao === 'subir_bom' ? diff > 0 : diff < 0;
+              const cor = diff == null ? '#94a3b8' : bom ? '#10b981' : diff === 0 ? '#64748b' : '#ef4444';
+              return (
+                <div key={`${m.grupo}-${m.label}`} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'14px 15px',minWidth:0}}>
+                  <div style={{fontSize:9,fontWeight:800,letterSpacing:1,textTransform:'uppercase',color:'#94a3b8'}}>{m.grupo}</div>
+                  <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'baseline',marginTop:6}}>
+                    <div style={{fontSize:13,fontWeight:800,color:'#0f172a'}}>{m.label}</div>
+                    <div style={{fontSize:20,fontWeight:800,color:'#0f172a'}}>{fmtComp(a, m.casas, m.unidade)}</div>
+                  </div>
+                  <div style={{height:7,borderRadius:999,background:'#e8eef3',overflow:'hidden',marginTop:10}}>
+                    <div style={{height:'100%',width:`${Math.max(0,Math.min(100,a ?? 0))}%`,background:`linear-gradient(90deg,${zoneColor(a)},${zoneColor(a)}cc)`,borderRadius:999}}/>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center',marginTop:10,fontSize:11}}>
+                    <span style={{color:'#64748b'}}>Antes: <b>{fmtComp(p, m.casas, m.unidade)}</b></span>
+                    {diff != null && <span style={{color:cor,background:`${cor}12`,border:`1px solid ${cor}30`,borderRadius:999,padding:'3px 8px',fontWeight:800}}>{diff > 0 ? '+' : ''}{diff.toFixed(m.casas)}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {(fotoAtual || fotoAnterior) && (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginTop:16}}>
+              {[
+                ['Foto postural anterior', fotoAnterior, anterior?.data],
+                ['Foto postural atual', fotoAtual, atual.data],
+              ].map(([label, foto, data]: any) => (
+                <div key={label} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:12}}>
+                  <div style={{fontSize:10,fontWeight:800,letterSpacing:1,textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>{label} · {dataCurtaBR(data)}</div>
+                  {foto ? <img src={foto} alt={label} style={{width:'100%',height:220,objectFit:'contain',borderRadius:12,background:'#f8fafc',border:'1px solid #edf2f7'}}/> : <div style={{height:220,borderRadius:12,background:'#f8fafc',border:'1px dashed #cbd5e1',display:'flex',alignItems:'center',justifyContent:'center',color:'#94a3b8',fontSize:12}}>Sem fotografia</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{border:'1px dashed #cbd5e1',background:'#f8fafc',borderRadius:16,padding:18,color:'#64748b',fontSize:13}}>
+          Quando houver uma reavaliação finalizada, este painel mostrará a evolução lado a lado, com score global, composição corporal, FFMI, força, flexibilidade, cardio, RML e fotos posturais.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function rotuloCirc(k: string): string {
   const m: Record<string, string> = {
     braco_relaxado: 'Braço relax.', braco_contraido: 'Braço contr.', antebraco: 'Antebraço',
@@ -1365,20 +1499,26 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           </div>
 
           {/* Comparativo */}
-          <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'22px 24px'}}>
+          <ComparativoPremium
+            atual={atual}
+            anterior={anterior}
+            gorduraAtual={gorduraAtual}
+            gorduraAnterior={gorduraAnterior}
+          />
+          {false && <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'22px 24px'}}>
             <div style={{fontSize:15,fontWeight:700,color:'#0f172a',marginBottom:4}}>Comparativo: atual vs. anterior</div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Principais marcadores da avaliação selecionada</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10}}>
-              <CompRow label="Peso"        atual={atual.antropometria?.peso}                  anterior={anterior?.antropometria?.peso}                  unidade=" kg"        direcao="descer_bom" />
+              <CompRow label="Peso"        atual={atual?.antropometria?.peso}                 anterior={anterior?.antropometria?.peso}                  unidade=" kg"        direcao="descer_bom" />
               <CompRow label="% Gordura"   atual={gorduraAtual.valor}                           anterior={gorduraAnterior?.valor}                         unidade="%"          direcao="descer_bom" />
-              <CompRow label="Massa magra" atual={atual.antropometria?.massa_magra}            anterior={anterior?.antropometria?.massa_magra}            unidade=" kg"        direcao="subir_bom" />
-              <CompRow label="IMC"         atual={atual.antropometria?.imc}                   anterior={anterior?.antropometria?.imc}                   unidade=""           direcao="descer_bom" />
-              <CompRow label="VO₂máx"      atual={atual.cardiorrespiratorio?.vo2max}           anterior={anterior?.cardiorrespiratorio?.vo2max}           unidade=" ml/kg/min" direcao="subir_bom" />
-              <CompRow label="Preensão D"  atual={atual.forca?.preensao_dir_kgf}              anterior={anterior?.forca?.preensao_dir_kgf}              unidade=" kgf"       direcao="subir_bom" />
-              <CompRow label="Preensão E"  atual={atual.forca?.preensao_esq_kgf}              anterior={anterior?.forca?.preensao_esq_kgf}              unidade=" kgf"       direcao="subir_bom" />
-              <CompRow label="Score"       atual={atual.scores?.global}                       anterior={anterior?.scores?.global}                       unidade=""           direcao="subir_bom" casas={0} />
+              <CompRow label="Massa magra" atual={atual?.antropometria?.massa_magra}           anterior={anterior?.antropometria?.massa_magra}            unidade=" kg"        direcao="subir_bom" />
+              <CompRow label="IMC"         atual={atual?.antropometria?.imc}                  anterior={anterior?.antropometria?.imc}                   unidade=""           direcao="descer_bom" />
+              <CompRow label="VO₂máx"      atual={atual?.cardiorrespiratorio?.vo2max}          anterior={anterior?.cardiorrespiratorio?.vo2max}           unidade=" ml/kg/min" direcao="subir_bom" />
+              <CompRow label="Preensão D"  atual={atual?.forca?.preensao_dir_kgf}             anterior={anterior?.forca?.preensao_dir_kgf}              unidade=" kgf"       direcao="subir_bom" />
+              <CompRow label="Preensão E"  atual={atual?.forca?.preensao_esq_kgf}             anterior={anterior?.forca?.preensao_esq_kgf}              unidade=" kgf"       direcao="subir_bom" />
+              <CompRow label="Score"       atual={atual?.scores?.global}                      anterior={anterior?.scores?.global}                       unidade=""           direcao="subir_bom" casas={0} />
             </div>
-          </div>
+          </div>}
         </div>
       )}
 
@@ -1656,7 +1796,16 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       {atual.antropometria && (() => {
         const a = atual.antropometria as any;
         const dobras = a.dobras ?? {};
-        const somaDobras = Object.values(dobras).reduce((acc: number, v: any) => acc + (Number(valorValidado(v)) || 0), 0);
+        const dobraNumerica = (v: any): number | null => {
+          const raw = valorValidado(v);
+          if (raw == null || raw === '' || typeof raw === 'object') return null;
+          const numero = Number(String(raw).replace(',', '.'));
+          return Number.isFinite(numero) && numero > 0 ? numero : null;
+        };
+        const dobrasValidas = Object.entries(dobras)
+          .map(([chave, valor]) => ({ chave, valor: dobraNumerica(valor) }))
+          .filter((item): item is { chave: string; valor: number } => item.valor != null);
+        const somaDobras = dobrasValidas.reduce((acc, item) => acc + item.valor, 0);
         const itens = [
           ['Peso', a.peso, 'kg', '#0f172a'],
           ['Estatura', a.estatura, 'cm', '#0f172a'],
@@ -1667,7 +1816,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['RCQ', a.rcq, '', '#0f172a'],
           ['Soma de dobras', somaDobras || null, 'mm', '#0f172a'],
         ].filter(([,v]) => v != null && v !== '');
-        if (!itens.length && !Object.keys(dobras).length) return null;
+        if (!itens.length && !dobrasValidas.length) return null;
         return (
           <div style={{order:55, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
             <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
@@ -1677,11 +1826,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
-            {Object.keys(dobras).length > 0 && (
+            {dobrasValidas.length > 0 && (
               <div style={{marginTop:14}}>
                 <div style={{fontSize:11, fontWeight:600, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Dobras cutâneas</div>
                 <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
-                  {Object.entries(dobras).filter(([,v]) => valorValidado(v) != null && valorValidado(v) !== '').map(([k,v]) => <MetricLine key={k} label={humanField(k)} value={valorValidado(v)} unit="mm"/>)}
+                  {dobrasValidas.map(({chave, valor}) => <MetricLine key={chave} label={humanField(chave)} value={valor} unit="mm"/>)}
                 </div>
               </div>
             )}

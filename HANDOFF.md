@@ -2,6 +2,15 @@
 
 Documento de continuidade do projeto. Leia este arquivo antes de continuar em outro computador, outra conversa ou outro agente.
 
+## Atualizacoes recentes
+
+### 2026-06-08 - Antropometria sem dobras cutaneas
+
+- PDF, portal do paciente e dashboard clinico exibem dobras somente quando existe ao menos uma medida numerica valida.
+- Estruturas vazias de medicao deixam de aparecer como `[object Object]`.
+- Campos derivados ausentes, como percentual de gordura, massa magra e massa ossea, deixam de gerar cards vazios no PDF.
+- Nao exige migration.
+
 ## Regras de continuidade
 
 - Toda mudanca deve ser registrada neste arquivo no mesmo ciclo de trabalho.
@@ -319,4 +328,4 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 
 ## Ultima atualizacao deste handoff
 
-2026-06-03: arquivo reorganizado para continuidade do projeto, removendo duplicacoes e consolidando estado atual, migrations, regras, validacoes e pendencias. Adicionado registro do `BACKUP.md`.
+2026-06-08: corrigida a exibicao de antropometria quando as dobras cutaneas nao foram realizadas.
