@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Copy, FileCheck2, FileText, Mail, RefreshCcw, Send, X } from 'lucide-react';
+import { Copy, ExternalLink, FileCheck2, Link2, Mail, RefreshCcw, Send, X } from 'lucide-react';
 
 function dataBR(valor?: string | null) {
   if (!valor) return '';
@@ -195,7 +195,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setMsg('Aceite revogado e mantido como historico auditavel.');
   }
 
-  async function registrarEnvioProtocolos() {
+  async function gerarLinkProtocolos() {
     const recomendacoesIds = Object.entries(selecionados).filter(([, v]) => v).map(([id]) => id);
     setMsg(null);
     const res = await fetch('/api/protocolo-envios', {
@@ -205,11 +205,28 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setMsg(body.error ?? 'Nao foi possivel registrar o envio.');
+      setMsg(body.error ?? 'Nao foi possivel gerar o link.');
       return;
     }
     setEnvios(e => [body.data, ...e]);
-    setMsg('Recomendações registradas para envio. O provedor de e-mail/WhatsApp ainda será conectado.');
+    setSelecionados({});
+    setMsg('Link de recomendações pré-teste gerado e pronto para compartilhar.');
+  }
+
+  async function revogarLinkProtocolos(id: string) {
+    if (!confirm('Revogar este link de recomendações pré-teste?')) return;
+    const res = await fetch('/api/protocolo-envios', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(body.error ?? 'Nao foi possivel revogar o link.');
+      return;
+    }
+    setEnvios(lista => lista.map(envio => envio.id === id ? body.data : envio));
+    setMsg('Link de recomendações revogado.');
   }
 
   async function copiar(url: string, token: string) {
@@ -217,6 +234,12 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
     setCopiado(token);
     setTimeout(() => setCopiado(null), 1600);
   }
+
+  const enviosComLink = envios.filter(envio => !!envio.token);
+  const enviosAtivos = enviosComLink.filter(envio => (
+    !envio.revogado
+    && (!envio.expira_em || new Date(envio.expira_em).getTime() > Date.now())
+  ));
 
   return (
     <Card>
@@ -230,8 +253,14 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
         <div className="grid gap-3 md:grid-cols-4">
           <CentralStat label="Anamneses respondidas" value={respostasAnamnese.length} />
           <CentralStat label="Termos aceitos" value={aceites.filter(a => !a.revogado).length} />
-          <CentralStat label="Recomendacoes enviadas" value={envios.length} />
-          <CentralStat label="Links ativos" value={[...links, ...linksTermo].filter(l => !l.revogado && !l.aceito_em && !l.respondido_em).length} />
+          <CentralStat label="Recomendacoes enviadas" value={enviosComLink.length} />
+          <CentralStat
+            label="Links ativos"
+            value={
+              [...links, ...linksTermo].filter(l => !l.revogado && !l.aceito_em && !l.respondido_em).length
+              + enviosAtivos.length
+            }
+          />
         </div>
         {msg && (
           <div className="rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-800">
@@ -430,8 +459,8 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
               <div className="font-semibold text-slate-800">Enviar recomendações pré-teste</div>
               <p className="text-sm text-slate-500">Selecione as orientações cadastradas para este paciente.</p>
             </div>
-            <Button onClick={registrarEnvioProtocolos}>
-              <FileText className="h-4 w-4" /> Registrar envio
+            <Button onClick={gerarLinkProtocolos}>
+              <Link2 className="h-4 w-4" /> Gerar link
             </Button>
           </div>
           <div className="grid gap-2 md:grid-cols-2">
@@ -455,15 +484,52 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
               Nenhuma recomendação ativa cadastrada.
             </div>
           )}
-          {envios.length > 0 && (
+          {enviosComLink.length > 0 && (
             <div className="mt-4 border-t border-slate-100 pt-3">
               <div className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                <RefreshCcw className="h-3 w-3" /> Histórico de envios
+                <RefreshCcw className="h-3 w-3" /> Links gerados
               </div>
-              <div className="space-y-1 text-sm text-slate-600">
-                {envios.slice(0, 4).map(e => (
-                  <div key={e.id}>Registrado em {dataBR(e.enviado_em)} · {e.recomendacoes_ids?.length ?? 0} recomendação(ões)</div>
-                ))}
+              <div className="space-y-2">
+                {enviosComLink.slice(0, 8).map(envio => {
+                  const url = `${origin}/pre-atendimento/recomendacoes/${envio.token}`;
+                  const expirado = !!envio.expira_em && new Date(envio.expira_em).getTime() <= Date.now();
+                  const inativo = envio.revogado || expirado;
+                  return (
+                    <div
+                      key={envio.id}
+                      className={`flex flex-col gap-2 rounded-lg p-3 md:flex-row md:items-center ${
+                        inativo ? 'bg-slate-100 opacity-70' : 'bg-emerald-50'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-500">
+                          {envio.recomendacoes_ids?.length ?? 0} recomendação(ões) · criado em {dataBR(envio.enviado_em)}
+                          {envio.expira_em ? ` · expira em ${dataBR(envio.expira_em)}` : ''}
+                          {envio.revogado ? ' · revogado' : expirado ? ' · expirado' : ''}
+                        </div>
+                        <div className="truncate font-mono text-xs text-slate-600">{url}</div>
+                      </div>
+                      {!inativo && (
+                        <>
+                          <Button size="sm" variant="secondary" onClick={() => copiar(url, envio.token)}>
+                            <Copy className="h-3 w-3" /> {copiado === envio.token ? 'Copiado' : 'Copiar'}
+                          </Button>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <ExternalLink className="h-3 w-3" /> Abrir
+                          </a>
+                          <Button size="sm" variant="ghost" onClick={() => revogarLinkProtocolos(envio.id)} title="Revogar">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

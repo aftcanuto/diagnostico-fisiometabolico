@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getClinicaId, getUserId, recomendacoesAtivasDaClinica, usuarioPodeAcessarPaciente } from '@/lib/api/permissions';
 
@@ -65,8 +66,44 @@ export async function POST(req: NextRequest) {
       destino: paciente?.email ?? null,
       status: 'registrado',
       enviado_por: userId,
-      observacao: 'Registro criado. O envio automatico por e-mail/WhatsApp ainda nao esta configurado.',
+      token: randomUUID(),
+      expira_em: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      revogado: false,
+      observacao: 'Link publico gerado para compartilhamento das recomendacoes pre-teste.',
     })
+    .select('*')
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ data });
+}
+
+export async function PATCH(req: NextRequest) {
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
+
+  const { id } = await req.json();
+  if (!id) return NextResponse.json({ error: 'Link invalido' }, { status: 400 });
+
+  const admin = createAdminClient();
+  const { data: envio, error: buscaError } = await admin
+    .from('protocolo_envios')
+    .select('id, paciente_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (buscaError || !envio) {
+    return NextResponse.json({ error: buscaError?.message ?? 'Link nao encontrado' }, { status: 404 });
+  }
+
+  if (!(await usuarioPodeAcessarPaciente(userId, envio.paciente_id))) {
+    return NextResponse.json({ error: 'Sem permissao para este paciente' }, { status: 403 });
+  }
+
+  const { data, error } = await admin
+    .from('protocolo_envios')
+    .update({ revogado: true, status: 'revogado' })
+    .eq('id', id)
     .select('*')
     .single();
 
