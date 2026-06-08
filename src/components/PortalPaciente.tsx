@@ -13,6 +13,7 @@ import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura } from '@/lib/bodyComposition';
 import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
+import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 
 interface Props {
   paciente: { nome:string; sexo:'M'|'F'; data_nascimento:string; cpf?:string|null };
@@ -1485,7 +1486,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 8. BIOMECÂNICA */}
       {(atual as any)?.biomecanica_corrida && (() => {
         const bio = (atual as any).biomecanica_corrida as any;
-        const ang = bio.angulos ?? {};
+        const ang = normalizarReferenciasBiomecanica(bio.angulos);
         const grafs = bio.graficos ?? {};
         const comentGrafs = bio.comentarios_graficos ?? {};
         const comentAngs = bio.comentarios_angulos ?? {};

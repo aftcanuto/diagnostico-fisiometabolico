@@ -4,6 +4,7 @@
  */
 import { referenciasModulo } from '@/lib/clinical/references';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
+import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 
 export interface PacienteContexto {
   nome: string;
@@ -221,7 +222,7 @@ Retorne APENAS JSON:
 }
 
 export function promptBiomecanica(ctx: PacienteContexto, dados: any) {
-  const ang = dados.angulos ?? {};
+  const ang = normalizarReferenciasBiomecanica(dados.angulos);
   const met = dados.metricas ?? {};
   const achados = dados.achados ?? {};
 

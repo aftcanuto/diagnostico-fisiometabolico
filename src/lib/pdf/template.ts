@@ -7,6 +7,7 @@
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { classificarComposicaoCorporal, resolverPercentualGordura } from '@/lib/bodyComposition';
+import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -1543,7 +1544,7 @@ function pgPlanoAlimentar(d: LaudoData, pri: string): string {
 function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   if (!b) return '';
   const met: any = b.metricas ?? {};
-  const ang: any = b.angulos ?? {};
+  const ang: any = normalizarReferenciasBiomecanica(b.angulos);
   const achados: any = b.achados ?? {};
   const rec: any = b.recomendacoes ?? {};
   const graf: any = b.graficos ?? {};

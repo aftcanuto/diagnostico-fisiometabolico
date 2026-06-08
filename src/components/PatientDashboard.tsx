@@ -17,6 +17,7 @@ import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/l
 import { scoreGlobal } from '@/lib/scores';
 import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura } from '@/lib/bodyComposition';
+import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 
 interface Props {
   paciente: { nome: string; sexo: 'M' | 'F'; data_nascimento: string; email?: string | null; cpf?: string | null };
@@ -2334,7 +2335,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       {/* ══ BIOMECÂNICA DA CORRIDA ══ */}
       {atual?.biomecanica_corrida && (() => {
         const bio = atual.biomecanica_corrida as any;
-        const ang = bio.angulos ?? {};
+        const ang = normalizarReferenciasBiomecanica(bio.angulos);
         const met = bio.metricas ?? {};
         const grafs = bio.graficos ?? {};
         const videoSagital = bio.link_video ?? bio.linkVideo ?? '';
