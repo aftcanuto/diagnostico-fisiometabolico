@@ -331,3 +331,4 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 2026-06-08: corrigida a exibicao de antropometria quando as dobras cutaneas nao foram realizadas.
 2026-06-08: recomendacoes pre-teste agora geram link publico com validade de 30 dias, visualizacao sem login e controles para copiar, abrir e revogar. Adicionada migration 053_protocolo_recomendacoes_links.sql.
 2026-06-08: atualizada a referencia de queda pelvica na biomecanica para 0 a 2 graus. Avaliacoes antigas sao normalizadas nos dashboards, portal do paciente, PDF e prompts clinicos. Sem migration.
+2026-06-10: removida a duplicidade do titulo Flexibilidade no PDF quando o modulo e exibido em pagina propria, preservando o badge do score. Sem migration.

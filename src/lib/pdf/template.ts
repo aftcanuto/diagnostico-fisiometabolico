@@ -1029,9 +1029,9 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
 
   ${f ? `<!-- Flexibilidade -->
   <div style="padding:${p ? '20px' : '0'} 0 0">
-    <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-      <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
-      Flexibilidade ${scoreF!=null?`<span style="margin-left:auto;padding:4px 12px;background:linear-gradient(135deg,${pri},${pri}cc);border-radius:100px;color:#0f172a;font-weight:700;font-size:12px">Score: ${scoreF}</span>`:''}
+    <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;justify-content:${p ? 'flex-start' : 'flex-end'};gap:8px">
+      ${p ? `<span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>Flexibilidade` : ''}
+      ${scoreF!=null?`<span style="${p ? 'margin-left:auto;' : ''}padding:4px 12px;background:linear-gradient(135deg,${pri},${pri}cc);border-radius:100px;color:#0f172a;font-weight:700;font-size:12px">Score: ${scoreF}</span>`:''}
     </div>
     <div class="kpi-grid">
       ${kpi('Tentativa 1',f.tentativa_1,'cm')}${kpi('Tentativa 2',f.tentativa_2,'cm')}${kpi('Tentativa 3',f.tentativa_3,'cm')}
