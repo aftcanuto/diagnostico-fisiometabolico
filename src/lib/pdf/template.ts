@@ -813,6 +813,20 @@ function pgModulo(titulo: string, score: number | null, content: string, ia?: An
 </section>`;
 }
 
+function pgModuloContinuacao(titulo: string, score: number | null, content: string, ia?: AnaliseIA & {texto_editado?:string|null}): string {
+  return `<section class="page module">
+  <div class="mod-head">
+    <div>
+      <h2 class="mod-title">${x(titulo)}</h2>
+      <div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:4px">continuação</div>
+    </div>
+    ${score!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${score}</div>`:''}
+  </div>
+  ${content}
+  ${aiBlock(ia)}
+</section>`;
+}
+
 function kpi(label: string, val: any, unit = '') {
   if (val === null || val === undefined || val === '') return '';
   return `<div class="kpi"><div class="kpi-label">${x(label)}</div><div class="kpi-val">${val??'—'}<span class="kpi-unit">${unit?' '+unit:''}</span></div></div>`;
@@ -1106,7 +1120,28 @@ function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any)
     temValor(a.imc) ? `<div class="data-card"><div class="dc-label">IMC</div><div class="dc-val">${a.imc}</div></div>` : '',
     temValor(a.massa_ossea) ? `<div class="data-card"><div class="dc-label">Massa óssea</div><div class="dc-val">${a.massa_ossea}<span class="dc-unit">kg</span></div></div>` : '',
   ].join('');
-  return pgModulo('Antropometria', score, `
+  const c=a.circunferencias??{};
+  const pares=[
+    {l:'Braço relaxado', d:c.braco_dir_relaxado??c.braco_relaxado, e:c.braco_esq_relaxado},
+    {l:'Braço contraído', d:c.braco_dir_contraido??c.braco_contraido, e:c.braco_esq_contraido},
+    {l:'Antebraço', d:c.antebraco_dir??c.antebraco, e:c.antebraco_esq},
+    {l:'Coxa proximal', d:c.coxa_dir_proximal??c.coxa_proximal, e:c.coxa_esq_proximal},
+    {l:'Coxa medial', d:c.coxa_dir_medial??c.coxa_medial, e:c.coxa_esq_medial},
+    {l:'Panturrilha', d:c.panturrilha_dir??c.panturrilha, e:c.panturrilha_esq},
+  ];
+  const unilateras=[
+    {l:'Pescoço', v:c.pescoco},{l:'Ombro', v:c.ombro},{l:'Tórax', v:c.torax},
+    {l:'Cintura', v:c.cintura},{l:'Abdome', v:c.abdome},{l:'Quadril', v:c.quadril},
+  ];
+  const temPares = pares.some(p=>p.d||p.e);
+  const temUni = unilateras.some(u=>u.v);
+  const circunferenciasHtml = !temPares && !temUni ? '' : `
+    <div class="sec-sub">Circunferências (cm)</div>
+    ${temPares?`<table><thead><tr><th>Segmento</th><th style="text-align:center;color:#3b82f6">Dir</th><th style="text-align:center;color:#8b5cf6">Esq</th></tr></thead><tbody>
+      ${pares.filter(p=>p.d||p.e).map(p=>`<tr><td>${p.l}</td><td style="text-align:center;font-weight:600;color:#3b82f6">${p.d??'—'}</td><td style="text-align:center;font-weight:600;color:#8b5cf6">${p.e??'—'}</td></tr>`).join('')}
+    </tbody></table>`:''}
+    ${temUni?`<table style="margin-top:10px"><thead><tr>${unilateras.filter(u=>u.v).map(u=>`<th>${u.l}</th>`).join('')}</tr></thead><tbody><tr>${unilateras.filter(u=>u.v).map(u=>`<td style="font-weight:600">${u.v}</td>`).join('')}</tr></tbody></table>`:''}`;
+  const conteudoPrincipal = `
   ${cardsPrincipais ? `<div class="data-grid">${cardsPrincipais}</div>` : ''}
   ${ffmi!=null?`<div class="dark-block">
     <div class="dark-label">Potencial genético muscular</div>
@@ -1121,30 +1156,10 @@ function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any)
     ${dobrasValidas.map(({chave,valor})=>`<tr><td>${rot[chave]??chave}</td><td style="font-weight:600">${valor} mm</td></tr>`).join('')}
   </tbody></table>`:''}
   ${soma?`<div class="kpi-grid" style="margin-top:18px">${kpi('Endomorfia',soma.endomorfia)}${kpi('Mesomorfia',soma.mesomorfia)}${kpi('Ectomorfia',soma.ectomorfia)}${kpi('Classificação',soma.classificacao)}</div>`:''}
-  ${(() => {
-    const c=a.circunferencias??{};
-    const pares=[
-      {l:'Braço relaxado', d:c.braco_dir_relaxado??c.braco_relaxado, e:c.braco_esq_relaxado},
-      {l:'Braço contraído', d:c.braco_dir_contraido??c.braco_contraido, e:c.braco_esq_contraido},
-      {l:'Antebraço', d:c.antebraco_dir??c.antebraco, e:c.antebraco_esq},
-      {l:'Coxa proximal', d:c.coxa_dir_proximal??c.coxa_proximal, e:c.coxa_esq_proximal},
-      {l:'Coxa medial', d:c.coxa_dir_medial??c.coxa_medial, e:c.coxa_esq_medial},
-      {l:'Panturrilha', d:c.panturrilha_dir??c.panturrilha, e:c.panturrilha_esq},
-    ];
-    const unilateras=[
-      {l:'Pescoço', v:c.pescoco},{l:'Ombro', v:c.ombro},{l:'Tórax', v:c.torax},
-      {l:'Cintura', v:c.cintura},{l:'Abdome', v:c.abdome},{l:'Quadril', v:c.quadril},
-    ];
-    const temPares = pares.some(p=>p.d||p.e);
-    const temUni = unilateras.some(u=>u.v);
-    if(!temPares && !temUni) return '';
-    return `<div class="sec-sub" style="margin-top:18px">Circunferências (cm)</div>
-    ${temPares?`<table><thead><tr><th>Segmento</th><th style="text-align:center;color:#3b82f6">Dir</th><th style="text-align:center;color:#8b5cf6">Esq</th></tr></thead><tbody>
-      ${pares.filter(p=>p.d||p.e).map(p=>`<tr><td>${p.l}</td><td style="text-align:center;font-weight:600;color:#3b82f6">${p.d??'—'}</td><td style="text-align:center;font-weight:600;color:#8b5cf6">${p.e??'—'}</td></tr>`).join('')}
-    </tbody></table>`:''}
-    ${temUni?`<table style="margin-top:10px"><thead><tr>${unilateras.filter(u=>u.v).map(u=>`<th>${u.l}</th>`).join('')}</tr></thead><tbody><tr>${unilateras.filter(u=>u.v).map(u=>`<td style="font-weight:600">${u.v}</td>`).join('')}</tr></tbody></table>`:''}`;
-  })()}
-  `, ia);
+  `;
+  const paginaPrincipal = pgModulo('Antropometria', score, conteudoPrincipal, circunferenciasHtml ? undefined : ia);
+  if (!circunferenciasHtml) return paginaPrincipal;
+  return `${paginaPrincipal}${pgModuloContinuacao('Antropometria', score, circunferenciasHtml, ia)}`;
 }
 
 // pgFlex incorporada em pgPosturaFlex

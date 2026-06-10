@@ -337,3 +337,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O score da pagina exclusiva de Flexibilidade agora usa o mesmo badge de cabecalho dos demais modulos.
 - Removido o selo pequeno e deslocado que deixava o score visualmente diferente.
 - Mantida a exibicao interna somente no caso legado em que Posturografia e Flexibilidade compartilham a mesma pagina.
+
+## 2026-06-10 - Score da continuacao de Antropometria no PDF
+
+- A pagina de circunferencias passou a ser gerada explicitamente como continuacao de Antropometria.
+- O cabecalho da continuacao repete corretamente o score do modulo.
+- A analise clinica aparece apenas uma vez, ao final da ultima pagina do modulo.
+- Sem migration.
