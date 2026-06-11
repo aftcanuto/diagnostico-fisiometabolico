@@ -351,3 +351,9 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Os botoes agora ficam em um bloco proprio, flexivel e protegido contra quebra entre paginas.
 - Evitada a repeticao e a sobreposicao dos botoes nas paginas de continuacao, especialmente em leitores de PDF no celular.
 - Sem migration.
+
+## 2026-06-11 - Acentuacao do titulo Plano de acao no PDF
+
+- O titulo da pagina passou de `Plano de acao` para `Plano de ação`.
+- Sem alteracao no conteudo clinico ou na estrutura do relatorio.
+- Sem migration.
