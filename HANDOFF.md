@@ -357,3 +357,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O titulo da pagina passou de `Plano de acao` para `Plano de ação`.
 - Sem alteracao no conteudo clinico ou na estrutura do relatorio.
 - Sem migration.
+
+## 2026-06-11 - Acentuacao de Recomendacoes no PDF
+
+- Os rotulos visiveis passaram a exibir `RECOMENDAÇÕES` e `RECOMENDAÇÕES PRÁTICAS`.
+- A introducao do plano de acao agora exibe `recomendações para a próxima etapa`.
+- Os nomes tecnicos dos campos de dados foram preservados.
+- Sem migration.

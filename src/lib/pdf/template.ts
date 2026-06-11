@@ -432,8 +432,8 @@ function renderTextoEstruturado(c: any): string {
     ['RML', c.rml],
     ['POSTURA', c.postura],
     ['BIOMECANICA', c.biomecanica ?? c.biomecanica_corrida],
-    ['RECOMENDACOES', c.recomendacoes],
-    ['RECOMENDACOES PRATICAS', c.recomendacoes_praticas],
+    ['RECOMENDAÇÕES', c.recomendacoes],
+    ['RECOMENDAÇÕES PRÁTICAS', c.recomendacoes_praticas],
     ['ENCAMINHAMENTOS', c.encaminhamentos ?? c.alertas_encaminhamento],
     ['ALERTAS', c.alertas],
   ];
@@ -1520,7 +1520,7 @@ function pgPlanoAcao(d: LaudoData, pri: string): string {
   if (!plano) return '';
   return quebrarTextoPdf(plano, 2100).map((parte, idx) => pgModulo('Plano de ação', null, `
     ${idx > 0 ? `<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:-10px;margin-bottom:18px">continuação</div>` : ''}
-    <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">Prioridades, metas e recomendacoes para a proxima etapa.</p>
+    <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">Prioridades, metas e recomendações para a próxima etapa.</p>
     <div style="background:#ecfdf5;border-left:4px solid ${pri};border-radius:0 12px 12px 0;padding:16px 18px;font-size:12px;line-height:1.75;color:#334155;white-space:pre-line">${x(parte)}</div>
   `)).join('');
 }
