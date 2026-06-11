@@ -1568,6 +1568,12 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   const comentAng: any = b.comentarios_angulos ?? {};
   const videoUrl = b.link_video ?? b.linkVideo ?? b.video_url ?? b.videoUrl ?? b.link_cinematica ?? b.link_video_cinematica ?? '';
   const videoPosteriorUrl = b.link_video_posterior ?? b.linkVideoPosterior ?? b.video_posterior_url ?? b.videoPosteriorUrl ?? '';
+  const videoLinks = videoUrl || videoPosteriorUrl ? `
+    <div data-biomecanica-videos="true" style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;margin:-4px 0 18px;break-inside:avoid;page-break-inside:avoid">
+      ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px;box-shadow:0 6px 14px ${pri}33">Ver vídeo da análise cinemática - plano sagital</a>` : ''}
+      ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:#0f766e;text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px;box-shadow:0 6px 14px #0f766e33">Ver vídeo da análise cinemática - plano posterior</a>` : ''}
+    </div>
+  ` : '';
   const frameUrl = imagemPdfSrc(b.foto_frame_url ?? b.frame_url ?? b.frameUrl ?? graf.foto_frame_url ?? graf.frame_url ?? graf.frameUrl ?? graf.frame);
   const sagitalImgs = [
     ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
@@ -1691,11 +1697,8 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
         Cinemática 2D — ${x(b.movimento ?? 'Corrida')} · ${b.velocidade_kmh ?? '—'} km/h
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-      ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px ${pri}33">Ver video analise cinematica plano sagital</a>` : ''}
-      ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;background:#0f766e;text-decoration:none;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 6px 14px #0f766e33">Ver video analise cinematica plano posterior</a>` : ''}
-    </div>
   </div>
+  ${videoLinks}
   <div style="display:grid;grid-template-columns:${frameUrl ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:18px">
     ${frameUrl ? `<div>
       <img src="${x(frameUrl)}" alt="Frame" style="width:100%;max-height:330px;object-fit:contain;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0"/>

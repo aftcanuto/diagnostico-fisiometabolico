@@ -344,3 +344,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O cabecalho da continuacao repete corretamente o score do modulo.
 - A analise clinica aparece apenas uma vez, ao final da ultima pagina do modulo.
 - Sem migration.
+
+## 2026-06-11 - Botoes de video da Biomecanica no PDF
+
+- Os links dos videos sagital e posterior foram retirados do cabecalho repetido pela paginacao.
+- Os botoes agora ficam em um bloco proprio, flexivel e protegido contra quebra entre paginas.
+- Evitada a repeticao e a sobreposicao dos botoes nas paginas de continuacao, especialmente em leitores de PDF no celular.
+- Sem migration.
