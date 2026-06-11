@@ -364,3 +364,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - A introducao do plano de acao agora exibe `recomendações para a próxima etapa`.
 - Os nomes tecnicos dos campos de dados foram preservados.
 - Sem migration.
+
+## 2026-06-11 - Compatibilidade visual do PDF em celulares
+
+- Removidas as sombras coloridas dos badges de score e dos botoes de video da Biomecanica.
+- Alguns leitores de PDF em celulares rasterizavam essas sombras como retangulos translucidos ao redor dos elementos.
+- Bordas solidas foram mantidas para preservar a definicao visual sem alterar cores, dimensoes ou links.
+- Sem migration.

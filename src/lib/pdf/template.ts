@@ -268,7 +268,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .module::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, ${pri}, ${pri}aa); }
 .mod-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; margin-bottom: 22px; break-after: avoid; page-break-after: avoid; }
 .mod-title { font-size: 26px; font-weight: 700; color: #111827; }
-.score-pill { padding: 9px 18px; background: linear-gradient(135deg, ${pri}, ${pri}cc); border-radius: 100px; color: #fff; font-weight: 700; font-size: 17px; box-shadow: 0 4px 12px ${pri}44; display: flex; align-items: center; gap: 8px; }
+.score-pill { padding: 9px 18px; background: linear-gradient(135deg, ${pri}, ${pri}cc); border:1px solid ${pri}; border-radius: 100px; color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
 .score-pill-lbl { font-size: 10px; font-weight: 500; opacity: .85; text-transform: uppercase; letter-spacing: .5px; }
 .data-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 26px; }
 .data-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; color: #0f172a; break-inside: avoid; page-break-inside: avoid; }
@@ -1570,8 +1570,8 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   const videoPosteriorUrl = b.link_video_posterior ?? b.linkVideoPosterior ?? b.video_posterior_url ?? b.videoPosteriorUrl ?? '';
   const videoLinks = videoUrl || videoPosteriorUrl ? `
     <div data-biomecanica-videos="true" style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;margin:-4px 0 18px;break-inside:avoid;page-break-inside:avoid">
-      ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:${pri};text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px;box-shadow:0 6px 14px ${pri}33">Ver vídeo da análise cinemática - plano sagital</a>` : ''}
-      ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:#0f766e;text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px;box-shadow:0 6px 14px #0f766e33">Ver vídeo da análise cinemática - plano posterior</a>` : ''}
+      ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:${pri};border:1px solid ${pri};text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px">Ver vídeo da análise cinemática - plano sagital</a>` : ''}
+      ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:#0f766e;border:1px solid #0f766e;text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px">Ver vídeo da análise cinemática - plano posterior</a>` : ''}
     </div>
   ` : '';
   const frameUrl = imagemPdfSrc(b.foto_frame_url ?? b.frame_url ?? b.frameUrl ?? graf.foto_frame_url ?? graf.frame_url ?? graf.frameUrl ?? graf.frame);
