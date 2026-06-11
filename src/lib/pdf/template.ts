@@ -1030,6 +1030,7 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
     <h2 class="mod-title">${titulo}</h2>
+    ${p && !f && scoreP!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreP}</div>`:''}
     ${!p && scoreF!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreF}</div>`:''}
   </div>
 
@@ -1039,7 +1040,7 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Posturografia
     </div>
-    ${pgPostura(p, scoreP, iaP)}
+    ${pgPostura(p, f ? scoreP : null, iaP)}
   </div>` : ''}
 
   ${f ? `<!-- Flexibilidade -->

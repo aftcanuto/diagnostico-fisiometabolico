@@ -371,3 +371,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Alguns leitores de PDF em celulares rasterizavam essas sombras como retangulos translucidos ao redor dos elementos.
 - Bordas solidas foram mantidas para preservar a definicao visual sem alterar cores, dimensoes ou links.
 - Sem migration.
+
+## 2026-06-11 - Posicao do score de Posturografia no PDF
+
+- Quando a Posturografia aparece em pagina propria, o score agora fica no canto superior direito do cabecalho.
+- Removido o score duplicado/deslocado do final do conteudo nesse caso.
+- Quando Posturografia e Flexibilidade compartilham a pagina, os scores internos continuam identificando cada modulo.
+- Sem migration.
