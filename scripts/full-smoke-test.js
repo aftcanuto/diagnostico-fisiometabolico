@@ -192,7 +192,7 @@ function main() {
   const laudo = checkTextFile('preview-laudo-full-smoke.html', [
     ...Object.values(nomesRelatorio),
     'Análise clínica',
-    'Ver video',
+    'Ver vídeo',
     'Evolução longitudinal',
   ]);
   const dashboardCliente = checkTextFile('preview-dashboard-cliente.html', [

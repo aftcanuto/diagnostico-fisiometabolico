@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-export default async function PortalPacientePage({ params }: { params: { token: string } }) {
+export default async function PortalPacientePage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   noStore();
   const supabase = createAdminClient();
   const { data: tok, error: tokenError } = await supabase

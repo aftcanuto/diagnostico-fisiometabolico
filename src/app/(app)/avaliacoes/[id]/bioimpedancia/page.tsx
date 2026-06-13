@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select, Textarea } from '@/components/ui/Input';
@@ -26,7 +26,8 @@ const SEGMENTOS = [
 
 type SegData = { kg?: string; pct?: string };
 
-export default function BioimpedanciaPage({ params }: { params: { id: string } }) {
+export default function BioimpedanciaPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

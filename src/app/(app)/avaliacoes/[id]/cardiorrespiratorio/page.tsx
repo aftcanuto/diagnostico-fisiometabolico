@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select, Textarea } from '@/components/ui/Input';
@@ -24,7 +24,8 @@ const ZONAS_LIMIAR_DEFAULT = [
   { nome: 'Esforço máximo',       pct_min: 110, pct_max: 120, bpm_min: '', bpm_max: '' },
 ];
 
-export default function CardioPage({ params }: { params: { id: string } }) {
+export default function CardioPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

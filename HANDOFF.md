@@ -378,3 +378,26 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Removido o score duplicado/deslocado do final do conteudo nesse caso.
 - Quando Posturografia e Flexibilidade compartilham a pagina, os scores internos continuam identificando cada modulo.
 - Sem migration.
+
+## 2026-06-13 - Modernizacao tecnica controlada
+
+- Trabalho realizado na branch `modernizacao-dependencias`, criada a partir do commit estavel `1b23a89`.
+- A branch `main` permaneceu intacta como ponto de retorno.
+- Next.js atualizado de `14.2.15` para `15.5.19`.
+- React e React DOM atualizados de `18.3.1` para `19.2.7`.
+- Puppeteer e Puppeteer Core atualizados de `23.11.1` para `24.2.1`.
+- Chromium serverless atualizado de `131.0.1` para `133.0.0`, mantendo alinhamento com o gerador de PDF.
+- Atualizados tambem Supabase JS, React Hook Form, PostCSS, TSX e tipos do React.
+- Rotas e paginas dinamicas adaptadas para `params` assincronos do Next 15.
+- Configuracao de pacotes externos e rastreamento do Chromium migrada para as chaves estaveis do Next 15.
+- Smoke test atualizado para validar o texto atual `Ver vídeo`.
+- Auditoria npm reduziu de 11 alertas, incluindo 1 critico, para 2 alertas moderados internos do PostCSS empacotado pelo Next 15.
+- Nao executar `npm audit fix --force`: o npm sugere downgrade incorreto para Next 9.
+- Validacoes concluidas:
+  - `npm run predeploy` aprovado;
+  - build de producao aprovado;
+  - 53 migrations e 35 tabelas auditadas;
+  - teste visual do PDF aprovado com 25 paginas, 0 imagens quebradas e 0 cards cortados;
+  - TypeScript e lint aprovados.
+- Retorno imediato, se necessario: trocar novamente para a branch `main`, que permanece no estado estavel anterior.
+- Sem migration e sem SQL do Supabase.

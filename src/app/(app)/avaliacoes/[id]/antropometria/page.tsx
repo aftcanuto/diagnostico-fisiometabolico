@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Label, Textarea } from '@/components/ui/Input';
@@ -43,7 +43,8 @@ const DIAM = [
 
 function emptyDobra() { return { m1: null, m2: null, m3: null, media: null }; }
 
-export default function AntropometriaPage({ params }: { params: { id: string } }) {
+export default function AntropometriaPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

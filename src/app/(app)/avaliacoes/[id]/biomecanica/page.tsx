@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select, Textarea } from '@/components/ui/Input';
@@ -60,7 +60,8 @@ const IMAGENS_POSTERIOR = [
   ['posterior_6_url', 'Análise pé direito'],
 ] as const;
 
-export default function BiomecanicaPage({ params }: { params: { id: string } }) {
+export default function BiomecanicaPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [aval, setAval] = useState<any>(null);

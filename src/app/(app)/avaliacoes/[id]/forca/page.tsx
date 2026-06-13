@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select } from '@/components/ui/Input';
@@ -510,7 +510,8 @@ function PainelLado({ lado, dados, cor, titulo, onChange, onCarga }: {
 }
 
 /* ══ PÁGINA PRINCIPAL ════════════════════════════════════ */
-export default function ForcaPage({ params }: { params: { id: string } }) {
+export default function ForcaPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

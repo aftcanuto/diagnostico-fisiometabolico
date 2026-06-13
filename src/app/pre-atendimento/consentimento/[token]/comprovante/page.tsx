@@ -22,7 +22,8 @@ function hashEvidencia(texto: string, token: string, aceitoEm: string, pacienteI
     .digest('hex');
 }
 
-export default async function ConsentimentoComprovantePage({ params }: { params: { token: string } }) {
+export default async function ConsentimentoComprovantePage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   noStore();
   const admin = createAdminClient();
 

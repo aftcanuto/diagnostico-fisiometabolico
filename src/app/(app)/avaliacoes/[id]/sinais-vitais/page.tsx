@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input } from '@/components/ui/Input';
@@ -10,7 +10,8 @@ import { upsertModulo, buscarModulo } from '@/lib/modulos';
 import { createClient } from '@/lib/supabase/client';
 import { buildSteps } from '@/lib/steps';
 
-export default function SinaisVitaisPage({ params }: { params: { id: string } }) {
+export default function SinaisVitaisPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

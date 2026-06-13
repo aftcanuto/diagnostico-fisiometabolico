@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,8 @@ import { numeroClinico, scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura, type FonteGorduraRelatorio } from '@/lib/bodyComposition';
 import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
 
-export default function RevisaoPage({ params }: { params: { id: string } }) {
+export default function RevisaoPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [state, setState] = useState<'loading' | 'ready' | 'finalizing'>('loading');

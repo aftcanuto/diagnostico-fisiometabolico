@@ -20,7 +20,8 @@ function dataLongaBR(valor?: string | null) {
   }).format(data);
 }
 
-export default async function PacienteDashboardPage({ params }: { params: { id: string } }) {
+export default async function PacienteDashboardPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = createClient();
 
   const { data: p, error: pErr } = await supabase

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Select } from '@/components/ui/Input';
@@ -57,7 +57,8 @@ function ProtocoloCard({ proto }: { proto: { nome: string; descricao: string; fo
 }
 
 /* ── Componente principal ───────────────────────────────────────────────────── */
-export default function RMLPage({ params }: { params: { id: string } }) {
+export default function RMLPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const avalId = params.id;
 

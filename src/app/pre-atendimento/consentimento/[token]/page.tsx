@@ -6,7 +6,8 @@ import { PublicConsentimentoAccept } from '@/components/PublicConsentimentoAccep
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function ConsentimentoPreAtendimentoPage({ params }: { params: { token: string } }) {
+export default async function ConsentimentoPreAtendimentoPage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   noStore();
   const admin = createAdminClient();
   const { data: link } = await admin

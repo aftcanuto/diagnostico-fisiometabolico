@@ -5,7 +5,8 @@ import { createAdminClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function RecomendacoesPreTestePage({ params }: { params: { token: string } }) {
+export default async function RecomendacoesPreTestePage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   noStore();
   const admin = createAdminClient();
   const agora = new Date().toISOString();

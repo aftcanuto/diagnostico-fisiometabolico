@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Field, Input, Textarea, Select } from '@/components/ui/Input';
@@ -12,7 +12,8 @@ import { classificarWells } from '@/lib/calculations/flexibilidade';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { buildSteps } from '@/lib/steps';
 
-export default function FlexibilidadePage({ params }: { params: { id: string } }) {
+export default function FlexibilidadePage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

@@ -17,9 +17,13 @@ function primeiroItem(valor: any) {
   return Array.isArray(valor) ? valor[0] : valor;
 }
 
-export default async function AvaliacaoLayout({
-  params, children,
-}: { params: { id: string }; children: React.ReactNode }) {
+export default async function AvaliacaoLayout(props: { params: Promise<{ id: string }>; children: React.ReactNode }) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const supabase = createClient();
   const { data: aval } = await supabase
     .from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();

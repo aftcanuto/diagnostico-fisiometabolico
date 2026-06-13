@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -36,7 +36,8 @@ const ALINHAMENTOS = [
   ['pe_cavo', 'Pé cavo'],
 ] as const;
 
-export default function PosturografiaPage({ params }: { params: { id: string } }) {
+export default function PosturografiaPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);

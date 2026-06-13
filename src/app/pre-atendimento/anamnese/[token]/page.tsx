@@ -6,7 +6,8 @@ import { PublicAnamneseForm } from '@/components/PublicAnamneseForm';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function AnamnesePreAtendimentoPage({ params }: { params: { token: string } }) {
+export default async function AnamnesePreAtendimentoPage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   noStore();
   const admin = createAdminClient();
   const { data: link } = await admin

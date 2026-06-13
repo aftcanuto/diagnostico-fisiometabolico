@@ -89,7 +89,8 @@ function hrefProduto(produto: Produto, clinica: Clinica) {
     ?? (clinica.email ? `mailto:${clinica.email}` : null);
 }
 
-export default async function CatalogoPage({ params }: { params: { clinicaId: string } }) {
+export default async function CatalogoPage(props: { params: Promise<{ clinicaId: string }> }) {
+  const params = await props.params;
   const admin = createAdminClient();
   const { data: clinica } = await admin
     .from('clinicas')
