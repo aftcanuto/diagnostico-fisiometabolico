@@ -114,6 +114,8 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
 
   const totalFin = avalsLista?.filter((a: any) => a.status === 'finalizada').length ?? 0;
   const emAndamento = avalsLista?.filter((a: any) => a.status !== 'finalizada') ?? [];
+  const avaliacaoMaisRecente = avaliacoes[0];
+  const evolucaoRevisada = Boolean(avaliacaoMaisRecente?.analises_ia?.evolucao?.texto_editado?.trim());
 
   return (
     <div className="space-y-5 max-w-5xl">
@@ -123,10 +125,15 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
           <ArrowLeft className="w-4 h-4" /> Pacientes
         </Link>
         <div className="flex gap-2">
-          {totalFin >= 2 && (
+          {totalFin >= 2 && evolucaoRevisada && (
             <a href={`/api/pdf/evolucao?pacienteId=${p.id}`} target="_blank" rel="noreferrer">
               <Button variant="secondary"><FileChartColumn className="w-4 h-4" /> Relatório de evolução</Button>
             </a>
+          )}
+          {totalFin >= 2 && !evolucaoRevisada && avaliacaoMaisRecente && (
+            <Link href={`/avaliacoes/${avaliacaoMaisRecente.id}/revisao#analises-ia`}>
+              <Button variant="secondary"><FileChartColumn className="w-4 h-4" /> Revisar evolução</Button>
+            </Link>
           )}
           <Link href={`/avaliacoes/nova?pacienteId=${p.id}`}>
             <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>

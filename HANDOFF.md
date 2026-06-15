@@ -421,3 +421,41 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Criado teste automatizado `npm run test:evolution-report`, incluido no `predeploy`.
 - `npm run predeploy` e build de producao aprovados.
 - Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Revisao ortografica e acentuacao
+
+- Corrigidos textos visiveis sem acentuacao na revisao da avaliacao, incluindo os alertas de forca por preensao palmar, analises clinicas e orientacao nutricional.
+- Revisados tambem prontuario, painel do paciente, formulario de forca, catalogo publico, consentimento, compartilhamento, mensagens de backup e relatorio PDF.
+- Nomes tecnicos, chaves internas, rotas e campos do banco foram preservados.
+- A verificacao de integridade textual agora bloqueia a reintroducao das principais frases incorretas.
+- `node scripts/check-text-integrity.js` aprovado.
+- O build compilou e validou os tipos, mas a geracao final local parou na pagina de login porque as variaveis publicas do Supabase nao estao disponiveis nesta copia do ambiente.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Correcao ao aplicar plano de acao
+
+- Corrigida a rota `/api/ia/editar` para salvar o plano de acao mesmo quando a coluna `analises_ia.plano_acao` ainda nao estiver sincronizada no cache do Supabase.
+- Adicionado fallback compativel com bancos antigos, armazenando e lendo temporariamente o plano dentro de `conteudo.plano_acao`.
+- A tela de revisao agora reconhece tanto o formato atual quanto o formato legado.
+- Criada a migration `054_ensure_plano_acao_analises_ia.sql`, que garante a coluna, o indice unico usado pelo upsert e recarrega o schema do PostgREST.
+- TypeScript e verificacao de integridade textual aprovados.
+- Esta correcao possui SQL do Supabase.
+
+## 2026-06-15 - Evolucao longitudinal vazia no PDF
+
+- Corrigida a pagina de evolucao longitudinal do laudo, que era criada apenas com o texto introdutorio.
+- O PDF agora renderiza a analise estruturada com tendencias, progressos, regressoes e proximos passos.
+- Quando nao existe conteudo util de evolucao, a pagina deixa de ser gerada para evitar folha em branco.
+- TypeScript, integridade textual e teste visual do PDF aprovados.
+- Teste visual: 25 paginas, nenhuma imagem quebrada e nenhum card cortado.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Revisao obrigatoria e paginacao do relatorio de evolucao
+
+- O relatorio comparativo de evolucao agora exige que a analise de evolucao tenha sido revisada e salva pelo profissional.
+- Enquanto nao houver texto revisado, a ficha do paciente exibe `Revisar evolucao` e direciona para a area de Analises com IA da avaliacao mais recente.
+- Depois da revisao, o botao `Relatorio de evolucao` e liberado.
+- A API do PDF tambem bloqueia geracao direta sem validacao, retornando orientacao para revisar e salvar.
+- O texto revisado saiu da pagina de metricas e passou a ocupar paginas proprias, com divisao por paragrafos e frases para evitar cortes.
+- TypeScript, teste do relatorio de evolucao, integridade textual e teste visual do PDF aprovados.
+- Sem migration e sem SQL do Supabase.

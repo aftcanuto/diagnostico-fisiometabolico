@@ -103,6 +103,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
   }
 
   return (
+    <div id="analises-ia">
     <Card>
       <CardHeader>
         <CardTitle>
@@ -176,6 +177,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
         })}
       </CardBody>
     </Card>
+    </div>
   );
 }
 

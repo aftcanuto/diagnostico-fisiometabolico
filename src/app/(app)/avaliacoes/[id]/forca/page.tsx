@@ -957,7 +957,7 @@ export default function ForcaPage(props: { params: Promise<{ id: string }> }) {
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
                 <p className="text-sm text-slate-500">Adicione os testes de tração que serão avaliados.</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  Formula usada: 1RM estimado = FIM (kgf) x fator. RFD = (FIM - forca inicial) / tempo ate pico.
+                  Fórmula usada: 1RM estimado = FIM (kgf) x fator. RFD = (FIM - força inicial) / tempo até o pico.
                 </p>
               </div>
             )}
@@ -1028,7 +1028,7 @@ export default function ForcaPage(props: { params: Promise<{ id: string }> }) {
                               <Input type="number" step="0.1" value={dados.fim_kgf}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','fim_kgf',e.target.value)} />
                             </Field>
-                            <Field label="Forca inicial (kgf)">
+                            <Field label="Força inicial (kgf)">
                               <Input type="number" step="0.1" value={dados.forca_inicial_kgf ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_inicial_kgf',e.target.value)} />
                             </Field>
@@ -1039,15 +1039,15 @@ export default function ForcaPage(props: { params: Promise<{ id: string }> }) {
                                 Menor que 20 = segundos. 20 ou mais = milissegundos.
                               </p>
                             </Field>
-                            <Field label="Forca aos 50 ms (kgf)">
+                            <Field label="Força aos 50 ms (kgf)">
                               <Input type="number" step="0.1" value={dados.forca_50ms_kgf ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_50ms_kgf',e.target.value)} />
                             </Field>
-                            <Field label="Forca aos 100 ms (kgf)">
+                            <Field label="Força aos 100 ms (kgf)">
                               <Input type="number" step="0.1" value={dados.forca_100ms_kgf ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_100ms_kgf',e.target.value)} />
                             </Field>
-                            <Field label="Forca aos 200 ms (kgf)">
+                            <Field label="Força aos 200 ms (kgf)">
                               <Input type="number" step="0.1" value={dados.forca_200ms_kgf ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','forca_200ms_kgf',e.target.value)} />
                             </Field>
@@ -1059,7 +1059,7 @@ export default function ForcaPage(props: { params: Promise<{ id: string }> }) {
                               <Input type="number" step="0.01" value={dados.sustentacao_80_s ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','sustentacao_80_s',e.target.value)} />
                             </Field>
-                            <Field label="Duracao da contracao (s)">
+                            <Field label="Duração da contração (s)">
                               <Input type="number" step="0.01" value={dados.duracao_s ?? ''}
                                 onChange={e=>updTracaoLado(i,lado as 'lado_d'|'lado_e','duracao_s',e.target.value)} />
                             </Field>
@@ -1072,7 +1072,7 @@ export default function ForcaPage(props: { params: Promise<{ id: string }> }) {
                               <div className="text-lg font-bold text-slate-800">{dados.rm1_kg || '-'} <span className="text-xs text-slate-400">kg</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">
-                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Forca relativa</div>
+                              <div className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold">Força relativa</div>
                               <div className="text-lg font-bold text-slate-800">{dados.forca_relativa_kgf_kg || '-'} <span className="text-xs text-slate-400">kgf/kg</span></div>
                             </div>
                             <div className="rounded-lg bg-white border border-slate-200 p-3">

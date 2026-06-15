@@ -79,6 +79,13 @@ export async function GET(request: NextRequest) {
       : Promise.resolve({ data: null }),
   ]);
 
+  if (!analiseEvolucao?.texto_editado?.trim()) {
+    return NextResponse.json(
+      { error: 'Revise e salve a análise de evolução antes de gerar o relatório.' },
+      { status: 409 },
+    );
+  }
+
   const mapByEvaluation = (rows: any[] | null) => Object.fromEntries((rows ?? []).map(row => [row.avaliacao_id, row]));
   const bioMap = mapByEvaluation(bioimpedancias);
   const flexMap = mapByEvaluation(flexibilidades);

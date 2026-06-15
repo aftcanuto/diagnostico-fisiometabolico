@@ -418,22 +418,26 @@ function renderTextoEstruturado(c: any): string {
   if (c.resumo) partes.push(`RESUMO:\n${c.resumo}`);
   if (c.resumo_executivo) partes.push(`RESUMO:\n${c.resumo_executivo}`);
   if (c.resumo_clinico) partes.push(`RESUMO CLINICO:\n${c.resumo_clinico}`);
-  if (c.prioridades_clinicas) partes.push(`PRIORIDADES CLINICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((x: any) => `- ${x}`).join('\n') : c.prioridades_clinicas}`);
+  if (c.prioridades_clinicas) partes.push(`PRIORIDADES CLÍNICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((x: any) => `- ${x}`).join('\n') : c.prioridades_clinicas}`);
   if (c.metas_30_dias || c.meta_30_dias) partes.push(`META 30 DIAS:\n${c.metas_30_dias ?? c.meta_30_dias}`);
   if (c.metas_60_dias || c.meta_60_dias) partes.push(`META 60 DIAS:\n${c.metas_60_dias ?? c.meta_60_dias}`);
   if (c.metas_90_dias || c.meta_90_dias) partes.push(`META 90 DIAS:\n${c.metas_90_dias ?? c.meta_90_dias}`);
 
   const listas: [string, any][] = [
     ['PRIORIDADES', c.prioridades],
-    ['COMPOSICAO CORPORAL', c.composicao_corporal],
-    ['FORCA', c.forca],
+    ['COMPOSIÇÃO CORPORAL', c.composicao_corporal],
+    ['FORÇA', c.forca],
     ['FLEXIBILIDADE', c.flexibilidade],
     ['CARDIORRESPIRATORIO', c.cardiorrespiratorio],
     ['RML', c.rml],
     ['POSTURA', c.postura],
-    ['BIOMECANICA', c.biomecanica ?? c.biomecanica_corrida],
+    ['BIOMECÂNICA', c.biomecanica ?? c.biomecanica_corrida],
     ['RECOMENDAÇÕES', c.recomendacoes],
     ['RECOMENDAÇÕES PRÁTICAS', c.recomendacoes_praticas],
+    ['TENDÊNCIAS', c.tendencias],
+    ['PROGRESSOS', c.progressos],
+    ['REGRESSÕES', c.regressoes],
+    ['PRÓXIMOS PASSOS', c.proximos_passos],
     ['ENCAMINHAMENTOS', c.encaminhamentos ?? c.alertas_encaminhamento],
     ['ALERTAS', c.alertas],
   ];
@@ -473,6 +477,20 @@ function textoPlanoAcaoPdf(c: any): string {
     if (texto) return texto;
   }
   return '';
+}
+
+function pgEvolucao(analise: any): string {
+  const texto = textoAnalisePdf(analise) || renderTextoEstruturado(analise);
+  if (!texto) return '';
+
+  return pgModulo('Evolução longitudinal', null, `
+    <p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">
+      Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.
+    </p>
+    <div class="ai-block">
+      <p class="ai-text" style="white-space:pre-line">${x(texto)}</p>
+    </div>
+  `);
 }
 
 function imagemPdfSrc(valor: any): string {
@@ -1269,7 +1287,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
           ${kpiMaybe('RFD 200ms',lado?.rfd_200_kgf_s,'kgf/s')}
           ${kpi('Impulso',lado?.impulso_kgf_s,'kgf.s')}
           ${kpi('Sust. 80%',lado?.sustentacao_80_s,'s')}
-          ${kpi('Duracao',lado?.duracao_s,'s')}
+          ${kpi('Duração',lado?.duracao_s,'s')}
         </div>
       </div>`;
     return pgModulo('Força', score, `
@@ -1538,7 +1556,7 @@ function pgPlanoAlimentar(d: LaudoData, pri: string): string {
   const obs = typeof plano.observacoes === 'string' ? plano.observacoes.trim() : '';
   return pgModulo('Orientação nutricional', null, `
     <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px">
-      TMB, VET e distribuicao de macronutrientes calculados a partir dos dados da avaliacao.
+      TMB, VET e distribuição de macronutrientes calculados a partir dos dados da avaliação.
     </p>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px">
       <div style="font-size:13px;font-weight:800;color:#0f172a">${x(objetivo)}</div>
@@ -1602,7 +1620,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
   };
 
   const corCls = (cls: string) => cls === 'ideal' ? '#10b981' : cls === 'atencao' ? '#f59e0b' : '#ef4444';
-  const lbCls  = (cls: string) => cls === 'ideal' ? 'Ideal' : cls === 'atencao' ? 'Atencao' : 'Fora do ideal';
+  const lbCls  = (cls: string) => cls === 'ideal' ? 'Ideal' : cls === 'atencao' ? 'Atenção' : 'Fora do ideal';
 
   const metricaCard = (titulo: string, valor: any, unidade: string) =>
     valor != null ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center">
@@ -1942,9 +1960,7 @@ export function renderLaudoHTML(d: LaudoData): string {
     ia.conclusao_global ? pgConclusao(d, pri) : '',
     ia.conclusao_global ? pgPlanoAcao(d, pri) : '',
     d.dados.plano_alimentar ? pgPlanoAlimentar(d, pri) : '',
-    ia.evolucao           ? pgModulo('Evolução longitudinal', null,
-      '<p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.</p>',
-      ia.evolucao) : '',
+    ia.evolucao           ? pgEvolucao(ia.evolucao) : '',
     pgRodape(d, pri),
   ].filter(Boolean).join('\n');
 

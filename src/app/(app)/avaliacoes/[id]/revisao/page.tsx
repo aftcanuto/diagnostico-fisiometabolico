@@ -170,7 +170,8 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       analisesLista = json.data ?? [];
     }
 
-    const aplicado = (analisesLista ?? []).find((a: any) => a.tipo === 'conclusao_global')?.plano_acao ?? null;
+    const conclusaoGlobal = (analisesLista ?? []).find((a: any) => a.tipo === 'conclusao_global');
+    const aplicado = conclusaoGlobal?.plano_acao ?? conclusaoGlobal?.conteudo?.plano_acao ?? null;
     const modeloBase = lista.find((m: any) => m.id === aplicado?.modelo_id) ?? lista[0] ?? null;
     const edit = normalizarPlanoAcao(aplicado ?? (modeloBase ? planoAcaoDeModelo(modeloBase) : planoAcaoVazio()));
 
@@ -196,12 +197,12 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
         body: JSON.stringify({ avaliacaoId: params.id, tipo: 'conclusao_global', planoAcao: payload }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar o plano de acao.');
+      if (!res.ok) throw new Error(json.error ?? 'Não foi possível aplicar o plano de ação.');
       setPlanoAcao((p: any) => ({ ...p, aplicado: payload }));
       setPlanoAcaoEdit(payload);
-      setMessage({ type: 'success', text: 'Plano de acao aplicado nesta avaliacao.' });
+      setMessage({ type: 'success', text: 'Plano de ação aplicado nesta avaliação.' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar o plano de acao.' });
+      setMessage({ type: 'error', text: error?.message ?? 'Não foi possível aplicar o plano de ação.' });
     } finally {
       setSalvandoPlanoAcao(false);
     }
@@ -254,7 +255,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar a orientacao nutricional.');
       setPlanoNutricional((p: any) => ({ ...p, aplicado: json.data, preview: { ...(p.preview ?? {}), calculo: json.calculo } }));
-      setMessage({ type: 'success', text: 'Orientacao nutricional aplicada nesta avaliacao.' });
+      setMessage({ type: 'success', text: 'Orientação nutricional aplicada nesta avaliação.' });
     } catch (error: any) {
       setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar a orientacao nutricional.' });
     } finally {
@@ -507,7 +508,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
 
       <Card>
         <CardHeader>
-          <CardTitle><Utensils className="inline w-4 h-4 mr-1 text-brand-600" /> Orientacao nutricional</CardTitle>
+          <CardTitle><Utensils className="inline w-4 h-4 mr-1 text-brand-600" /> Orientação nutricional</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
           {planoNutricional.loading ? (
@@ -836,8 +837,8 @@ function montarChecklist(
     itens.push({
       nivel: 'alerta',
       modulo: 'forca_preensao',
-      titulo: 'Forca calculada pela preensao palmar',
-      descricao: 'O score de forca foi calculado pela preensao palmar. Como a dinamometria isometrica especifica nao foi preenchida, a analise muscular segmentar ficara limitada.',
+      titulo: 'Força calculada pela preensão palmar',
+      descricao: 'O score de força foi calculado pela preensão palmar. Como a dinamometria isométrica específica não foi preenchida, a análise muscular segmentar ficará limitada.',
     });
   }
 
@@ -862,8 +863,8 @@ function montarChecklist(
     itens.push({
       nivel: 'alerta',
       modulo: 'ia',
-      titulo: 'Analises de IA ainda nao revisadas',
-      descricao: `Revise ou edite as analises antes da entrega: ${analisesNaoRevisadas.join(', ')}.`,
+      titulo: 'Análises de IA ainda não revisadas',
+      descricao: `Revise ou edite as análises antes da entrega: ${analisesNaoRevisadas.join(', ')}.`,
     });
   }
 

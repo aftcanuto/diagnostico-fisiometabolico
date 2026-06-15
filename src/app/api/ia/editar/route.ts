@@ -3,6 +3,13 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { usuarioPodeAcessarAvaliacao } from '@/lib/api/permissions';
 
 export const runtime = 'nodejs';
+const CAMPOS_IA = 'tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, modelo_ia, gerado_em';
+const CAMPOS_IA_LEGADO = 'tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, modelo_ia, gerado_em';
+
+function colunaPlanoAcaoAusente(error: any) {
+  const mensagem = String(error?.message ?? '');
+  return /plano_acao/i.test(mensagem) && /(column|schema cache|could not find)/i.test(mensagem);
+}
 
 const TIPOS_IA = new Set([
   'anamnese',
@@ -35,10 +42,22 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin
+  let { data, error } = await admin
     .from('analises_ia')
-    .select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, modelo_ia, gerado_em')
+    .select(CAMPOS_IA)
     .eq('avaliacao_id', avaliacaoId);
+
+  if (error && colunaPlanoAcaoAusente(error)) {
+    const legado = await admin
+      .from('analises_ia')
+      .select(CAMPOS_IA_LEGADO)
+      .eq('avaliacao_id', avaliacaoId);
+    data = legado.data?.map((item: any) => ({
+      ...item,
+      plano_acao: item.conteudo?.plano_acao ?? null,
+    })) ?? null;
+    error = legado.error;
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ data: data ?? [] });
@@ -69,9 +88,32 @@ export async function POST(req: NextRequest) {
   payload.revisado_em = new Date().toISOString();
 
   const admin = createAdminClient();
-  const { error } = await admin
+  let { error } = await admin
     .from('analises_ia')
     .upsert(payload, { onConflict: 'avaliacao_id,tipo' });
+
+  if (error && planoAcao !== undefined && colunaPlanoAcaoAusente(error)) {
+    const { data: existente } = await admin
+      .from('analises_ia')
+      .select('conteudo')
+      .eq('avaliacao_id', avaliacaoId)
+      .eq('tipo', tipo)
+      .maybeSingle();
+
+    const payloadLegado = {
+      ...payload,
+      conteudo: {
+        ...((existente?.conteudo && typeof existente.conteudo === 'object') ? existente.conteudo : {}),
+        plano_acao: payload.plano_acao,
+      },
+    };
+    delete payloadLegado.plano_acao;
+
+    const tentativaLegada = await admin
+      .from('analises_ia')
+      .upsert(payloadLegado, { onConflict: 'avaliacao_id,tipo' });
+    error = tentativaLegada.error;
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });

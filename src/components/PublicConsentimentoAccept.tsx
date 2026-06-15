@@ -48,7 +48,7 @@ export function PublicConsentimentoAccept({ token, aceiteInicial }: { token: str
         setConcluido(true);
         return;
       }
-      setErro(body.error ?? 'Nao foi possivel registrar o aceite.');
+      setErro(body.error ?? 'Não foi possível registrar o aceite.');
       return;
     }
     setComprovante(body.aceite ?? null);
@@ -83,13 +83,13 @@ export function PublicConsentimentoAccept({ token, aceiteInicial }: { token: str
         <div className="mt-5 grid gap-3 rounded-xl border border-emerald-100 bg-white/70 p-4 text-sm text-emerald-900 md:grid-cols-2">
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Data e hora</span>{dataHora(comprovante?.aceito_em)}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Versao do termo</span>{comprovante?.texto_versao ?? '-'}</div>
-          <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">IP registrado</span>{comprovante?.ip ?? 'Nao registrado'}</div>
+          <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">IP registrado</span>{comprovante?.ip ?? 'Não registrado'}</div>
           <div><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Token</span><span className="font-mono text-xs">{token}</span></div>
           <div className="md:col-span-2">
             <span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Hash de integridade</span>
-            <span className="break-all font-mono text-xs">{comprovante?.texto_hash ?? 'Nao registrado'}</span>
+            <span className="break-all font-mono text-xs">{comprovante?.texto_hash ?? 'Não registrado'}</span>
           </div>
-          <div className="md:col-span-2"><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Dispositivo/navegador</span>{comprovante?.user_agent ?? 'Nao registrado'}</div>
+          <div className="md:col-span-2"><span className="block text-xs font-semibold uppercase tracking-wide text-emerald-600">Dispositivo/navegador</span>{comprovante?.user_agent ?? 'Não registrado'}</div>
           {comprovante?.revogado && (
             <div className="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
               <span className="block text-xs font-semibold uppercase tracking-wide text-amber-700">Revogacao</span>

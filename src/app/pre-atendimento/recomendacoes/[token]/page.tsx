@@ -54,7 +54,7 @@ export default async function RecomendacoesPreTestePage(props: { params: Promise
             )}
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-100">
-                {clinica?.nome ?? 'Diagnostico Fisiometabolico'}
+                {clinica?.nome ?? 'Diagnóstico Fisiometabólico'}
               </div>
               <h1 className="mt-1 text-2xl font-bold">Recomendações pré-teste</h1>
               <p className="mt-1 text-sm text-emerald-50">{paciente?.nome ?? 'Paciente'}</p>

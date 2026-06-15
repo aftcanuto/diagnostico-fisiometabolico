@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Diagnostico Fisiometabolico',
-  description: 'Avaliacao fisiometabolica completa',
+  description: 'Avaliação fisiometabólica completa',
   applicationName: 'Diagnostico Fisiometabolico',
   manifest: '/site.webmanifest',
   icons: {

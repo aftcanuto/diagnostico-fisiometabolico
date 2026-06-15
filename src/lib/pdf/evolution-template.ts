@@ -99,6 +99,37 @@ function textoAnalise(analise: any) {
     || '';
 }
 
+function dividirTexto(texto: string, limite = 2200) {
+  const blocos = String(texto || '').split(/\n{2,}/).map(item => item.trim()).filter(Boolean);
+  const paragrafos = blocos.flatMap(bloco => {
+    if (bloco.length <= limite) return [bloco];
+    const partes: string[] = [];
+    let atual = '';
+    for (const frase of bloco.match(/[^.!?]+[.!?]+|\S.+$/g) || [bloco]) {
+      const proximo = atual ? `${atual} ${frase.trim()}` : frase.trim();
+      if (proximo.length <= limite) atual = proximo;
+      else {
+        if (atual) partes.push(atual);
+        atual = frase.trim();
+      }
+    }
+    if (atual) partes.push(atual);
+    return partes;
+  });
+  const paginas: string[] = [];
+  let atual = '';
+  for (const paragrafo of paragrafos) {
+    if (!atual || `${atual}\n\n${paragrafo}`.length <= limite) {
+      atual = atual ? `${atual}\n\n${paragrafo}` : paragrafo;
+    } else {
+      paginas.push(atual);
+      atual = paragrafo;
+    }
+  }
+  if (atual) paginas.push(atual);
+  return paginas;
+}
+
 export function renderEvolutionReportHTML(data: EvolutionReportData) {
   const historico = consolidarHistorico(data.avaliacoes);
   const atual = historico.ultima;
@@ -128,6 +159,7 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     ['Cardio', 'cardiorrespiratorio'],
   ];
   const analysis = textoAnalise(data.analiseEvolucao);
+  const analysisPages = dividirTexto(analysis);
   const photoBefore = fotoPostural(anterior);
   const photoAfter = fotoPostural(atual);
 
@@ -214,7 +246,7 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     .score-before { height:100%; background:#94a3b8; }
     .score-after { height:100%; background:${primary}; }
     .score-value,.score-delta { font-size:10px; font-weight:800; text-align:right; }
-    .analysis { margin-top:18px; border-left:4px solid ${primary}; background:#ecfdf5; border-radius:0 12px 12px 0; padding:15px 17px; font-size:12px; line-height:1.65; white-space:pre-line; }
+    .analysis { border-left:4px solid ${primary}; background:#ecfdf5; border-radius:0 12px 12px 0; padding:15px 17px; font-size:12px; line-height:1.65; white-space:pre-line; overflow-wrap:anywhere; }
     .photos { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .photo { border:1px solid #dbe4ea; border-radius:14px; padding:10px; }
     .photo h3 { font-size:11px; margin:0 0 8px; }
@@ -252,9 +284,14 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
   <section class="page">
     <div class="header"><div><h2>Comparativo principal</h2><p>Variação entre as duas avaliações mais recentes.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
     <div class="metrics">${metricCards}</div>
-    ${analysis ? `<div class="analysis"><div class="eyebrow">Leitura da evolução</div><div style="margin-top:8px">${esc(analysis)}</div></div>` : ''}
     <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Relatório de evolução</span></div>
   </section>
+
+  ${analysisPages.map((parte, index) => `<section class="page">
+    <div class="header"><div><h2>Leitura da evolução${index ? ' (continuação)' : ''}</h2><p>Texto revisado e aprovado pelo profissional responsável.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
+    <div class="analysis">${esc(parte)}</div>
+    <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Relatório de evolução</span></div>
+  </section>`).join('')}
 
   <section class="page">
     <div class="header"><div><h2>Evolução dos scores</h2><p>Escala de 0 a 100 por domínio avaliado.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>

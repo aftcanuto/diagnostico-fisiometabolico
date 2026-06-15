@@ -114,7 +114,7 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
   const site = normalizarUrl(clinica.site);
   const whatsapp = whatsappUrl(clinica.telefone);
   const instagram = normalizarInstagram(clinica.instagram, clinica.nome);
-  const tituloCatalogo = clinica.catalogo_titulo?.trim() || 'Escolha o produto ideal para sua avaliacao';
+  const tituloCatalogo = clinica.catalogo_titulo?.trim() || 'Escolha o produto ideal para sua avaliação';
   const subtituloCatalogo = clinica.catalogo_subtitulo?.trim()
     || 'Conheca os servicos disponiveis, veja beneficios, valores e fale com a equipe para agendar ou tirar duvidas.';
   const rodapeTitulo = clinica.catalogo_rodape_titulo?.trim() || clinica.nome;
@@ -147,7 +147,7 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
       <section className="mx-auto max-w-6xl px-5 py-10">
         <div className="overflow-hidden rounded-3xl p-8 text-white shadow-xl" style={{ background: `linear-gradient(135deg, ${pri}, ${sec})` }}>
           <div className="max-w-3xl">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/75">Catalogo da clinica</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/75">Catálogo da clínica</p>
             <h1 className="text-3xl font-black leading-tight md:text-5xl">{tituloCatalogo}</h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-white/85 md:text-base">
               {subtituloCatalogo}

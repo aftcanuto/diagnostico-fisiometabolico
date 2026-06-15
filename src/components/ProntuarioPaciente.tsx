@@ -79,10 +79,10 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
         body: JSON.stringify({ pacienteId, ...payload }),
       });
       const json = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(json.error ?? 'Nao foi possivel atualizar o prontuario.');
+      if (!resp.ok) throw new Error(json.error ?? 'Não foi possível atualizar o prontuário.');
       return json;
     } catch (err: any) {
-      setErro(err?.message ?? 'Nao foi possivel atualizar o prontuario.');
+      setErro(err?.message ?? 'Não foi possível atualizar o prontuário.');
       return null;
     } finally {
       setSalvando(false);
@@ -92,7 +92,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
   async function importarAvaliacoes() {
     const json = await chamarApi({ acao: 'importar_avaliacoes' });
     if (!json) return;
-    setMensagem(`${json.importadas ?? 0} avaliacao(oes) importada(s) para o prontuario.`);
+    setMensagem(`${json.importadas ?? 0} avaliação(ões) importada(s) para o prontuário.`);
     router.refresh();
   }
 
@@ -154,9 +154,9 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
             <ClipboardList className="w-4 h-4" />
             Prontuario
           </div>
-          <h2 className="mt-2 text-lg font-bold text-slate-900">Historico clinico longitudinal</h2>
+          <h2 className="mt-2 text-lg font-bold text-slate-900">Histórico clínico longitudinal</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Achados, scores e conclusoes importados automaticamente das avaliacoes finalizadas.
+            Achados, scores e conclusões importados automaticamente das avaliações finalizadas.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -170,7 +170,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Importar avaliacoes
+            Importar avaliações
           </button>
           <button
             type="button"
@@ -233,17 +233,17 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
                 value={form.resumo}
                 onChange={(e) => setForm((v) => ({ ...v, resumo: e.target.value }))}
                 rows={4}
-                placeholder="Registre informacoes vindas de fora do sistema ou observacoes clinicas importantes."
+                placeholder="Registre informações vindas de fora do sistema ou observações clínicas importantes."
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
               />
             </label>
             <label className="text-sm font-semibold text-slate-700">
-              Conduta / conclusao
+              Conduta / conclusão
               <textarea
                 value={form.conclusao}
                 onChange={(e) => setForm((v) => ({ ...v, conclusao: e.target.value }))}
                 rows={4}
-                placeholder="Opcional: conclusao, encaminhamento, conduta ou plano de acompanhamento."
+                placeholder="Opcional: conclusão, encaminhamento, conduta ou plano de acompanhamento."
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-800 outline-none focus:border-brand-300"
               />
             </label>
@@ -263,7 +263,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
 
       {!ordenados.length ? (
         <div className="p-6 text-sm text-slate-400">
-          Nenhum evento de prontuario registrado ainda. Use o botao de importar avaliacoes para trazer avaliacoes
+          Nenhum evento de prontuário registrado ainda. Use o botão de importar avaliações para trazer avaliações
           finalizadas antigas ou lance um registro para inserir informacoes externas.
         </div>
       ) : (
@@ -295,7 +295,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
                         className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
                       >
                         <FileText className="h-3.5 w-3.5" />
-                        Abrir avaliacao
+                        Abrir avaliação
                       </Link>
                     )}
                     <button
@@ -363,7 +363,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
                         />
                       </label>
                       <label className="text-sm font-semibold text-slate-700">
-                        Conduta / conclusao
+                        Conduta / conclusão
                         <textarea
                           value={editForm.conclusao}
                           onChange={(e) => setEditForm((v) => ({ ...v, conclusao: e.target.value }))}
@@ -411,7 +411,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
                           {achado.nome ?? 'Modulo'}
                         </div>
                         <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-slate-600">
-                          {achado.analise ?? 'Analise ainda nao registrada.'}
+                          {achado.analise ?? 'Análise ainda não registrada.'}
                         </p>
                       </div>
                     ))}
@@ -420,7 +420,7 @@ export function ProntuarioPaciente({ pacienteId, eventos }: { pacienteId: string
 
                 {evento.conclusao && (
                   <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
-                    <div className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Conclusao final</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Conclusão final</div>
                     <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-emerald-950">{evento.conclusao}</p>
                   </div>
                 )}

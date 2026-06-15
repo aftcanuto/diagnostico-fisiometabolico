@@ -73,6 +73,17 @@ function stripKnownAllowedBlocks(file, text) {
 }
 
 const findings = [];
+const forbiddenVisiblePhrases = [
+  'Forca calculada pela preensao palmar',
+  'Analises de IA ainda nao revisadas',
+  'Orientacao nutricional',
+  'Historico clinico longitudinal',
+  'Conclusao final',
+  'Nao foi possivel gerar o backup',
+  'Catalogo da clinica',
+  'Escolha o produto ideal para sua avaliacao',
+  'Avaliacao fisiometabolica completa',
+];
 
 for (const target of targets) {
   for (const file of listFiles(target)) {
@@ -90,6 +101,18 @@ for (const target of targets) {
           token,
           text: line.trim().slice(0, 160),
         });
+      }
+
+      if (rel.startsWith('src/')) {
+        const phrase = forbiddenVisiblePhrases.find((item) => line.includes(item));
+        if (phrase) {
+          findings.push({
+            file: rel,
+            line: index + 1,
+            token: phrase,
+            text: line.trim().slice(0, 160),
+          });
+        }
       }
     });
   }

@@ -4,13 +4,13 @@ const LABELS_MODULOS: Record<string, string> = {
   anamnese: 'Anamnese',
   sinais_vitais: 'Sinais vitais',
   posturografia: 'Posturografia',
-  bioimpedancia: 'Bioimpedancia',
+  bioimpedancia: 'Bioimpedância',
   antropometria: 'Antropometria',
   flexibilidade: 'Flexibilidade',
-  forca: 'Forca',
+  forca: 'Força',
   rml: 'RML',
   cardiorrespiratorio: 'Cardiorrespiratorio',
-  biomecanica_corrida: 'Biomecanica da corrida',
+  biomecanica_corrida: 'Biomecânica da corrida',
 };
 
 function textoAnalise(analise: any) {
@@ -55,7 +55,7 @@ export async function registrarEventoProntuarioAvaliacao(admin: SupabaseAdmin, a
     .maybeSingle();
 
   if (avaliacaoError || !avaliacao?.paciente_id || !avaliacao?.clinica_id) {
-    return { ok: false, error: avaliacaoError?.message ?? 'Avaliacao sem paciente ou clinica.' };
+    return { ok: false, error: avaliacaoError?.message ?? 'Avaliação sem paciente ou clínica.' };
   }
 
   const { data: prontuario, error: prontuarioError } = await admin
@@ -69,7 +69,7 @@ export async function registrarEventoProntuarioAvaliacao(admin: SupabaseAdmin, a
     .single();
 
   if (prontuarioError || !prontuario?.id) {
-    return { ok: false, error: prontuarioError?.message ?? 'Nao foi possivel criar prontuario.' };
+    return { ok: false, error: prontuarioError?.message ?? 'Não foi possível criar prontuário.' };
   }
 
   const [{ data: scores }, { data: analises }] = await Promise.all([
@@ -86,9 +86,9 @@ export async function registrarEventoProntuarioAvaliacao(admin: SupabaseAdmin, a
   const achados = achadosPorModulo(avaliacao.modulos_selecionados, analisesLista);
 
   const resumo = [
-    `Avaliacao ${avaliacao.tipo ?? 'personalizada'} finalizada em ${avaliacao.data}.`,
+    `Avaliação ${avaliacao.tipo ?? 'personalizada'} finalizada em ${avaliacao.data}.`,
     scores?.global != null ? `Score global: ${scores.global}.` : null,
-    conclusao ? 'Conclusao global registrada.' : 'Conclusao global ainda nao registrada.',
+    conclusao ? 'Conclusão global registrada.' : 'Conclusão global ainda não registrada.',
   ].filter(Boolean).join(' ');
 
   const { error } = await admin
@@ -99,7 +99,7 @@ export async function registrarEventoProntuarioAvaliacao(admin: SupabaseAdmin, a
       paciente_id: avaliacao.paciente_id,
       avaliacao_id: avaliacao.id,
       tipo: 'avaliacao',
-      titulo: `Avaliacao de ${avaliacao.data}`,
+      titulo: `Avaliação de ${avaliacao.data}`,
       data_evento: avaliacao.data,
       status: avaliacao.status === 'finalizada' ? 'finalizado' : 'registrado',
       resumo,

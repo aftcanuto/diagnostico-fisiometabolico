@@ -13,7 +13,7 @@ export function BackupAvaliacoesButton({ podeExportar }: { podeExportar: boolean
       const res = await fetch('/api/backup/avaliacoes', { method: 'GET' });
       if (!res.ok) {
         const erro = await res.json().catch(() => null);
-        throw new Error(erro?.error ?? 'Nao foi possivel gerar o backup.');
+        throw new Error(erro?.error ?? 'Não foi possível gerar o backup.');
       }
 
       const blob = await res.blob();

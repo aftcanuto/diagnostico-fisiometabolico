@@ -47,7 +47,7 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
   }
 
   async function revogar(token: string) {
-    if (!confirm('Revogar este link? O paciente nao conseguira mais acessar.')) return;
+    if (!confirm('Revogar este link? O paciente não conseguirá mais acessar.')) return;
     setErro(null);
     const res = await fetch('/api/paciente-tokens', {
       method: 'PATCH',
@@ -98,7 +98,7 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
           </p>
           {erro && (
             <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              Nao foi possivel gerar o link: {erro}
+              Não foi possível gerar o link: {erro}
             </div>
           )}
           <Button onClick={gerar} disabled={loading}>

@@ -281,7 +281,7 @@ function PreviewMetricLine({ label, value }: { label: string; value: any }) {
 
 function formatDashboardValue(v: any): string {
   if (v == null || v === '') return '-';
-  if (typeof v === 'boolean') return v ? 'Sim' : 'Nao';
+  if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
   if (typeof v !== 'object') return String(v);
   if (Array.isArray(v)) {
     const itens = v.map(formatDashboardValue).filter(x => x && x !== '-');
@@ -778,7 +778,7 @@ function renderPlanoAcaoText(c: any): string {
   if (c.resumo_executivo) partes.push(`RESUMO:\n${c.resumo_executivo}`);
   if (c.resumo_clinico) partes.push(`RESUMO CLINICO:\n${c.resumo_clinico}`);
   if (c.prioridades_clinicas) {
-    partes.push(`PRIORIDADES CLINICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((item: any) => `- ${item}`).join('\n') : c.prioridades_clinicas}`);
+    partes.push(`PRIORIDADES CLÍNICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((item: any) => `- ${item}`).join('\n') : c.prioridades_clinicas}`);
   }
   if (c.metas_30_dias || c.meta_30_dias) partes.push(`META 30 DIAS:\n${c.metas_30_dias ?? c.meta_30_dias}`);
   if (c.metas_60_dias || c.meta_60_dias) partes.push(`META 60 DIAS:\n${c.metas_60_dias ?? c.meta_60_dias}`);
@@ -786,13 +786,13 @@ function renderPlanoAcaoText(c: any): string {
 
   const listas: [string, any][] = [
     ['PRIORIDADES', c.prioridades],
-    ['COMPOSICAO CORPORAL', c.composicao_corporal],
-    ['FORCA', c.forca],
+    ['COMPOSIÇÃO CORPORAL', c.composicao_corporal],
+    ['FORÇA', c.forca],
     ['FLEXIBILIDADE', c.flexibilidade],
     ['CARDIORRESPIRATORIO', c.cardiorrespiratorio],
     ['RML', c.rml],
     ['POSTURA', c.postura],
-    ['BIOMECANICA', c.biomecanica ?? c.biomecanica_corrida],
+    ['BIOMECÂNICA', c.biomecanica ?? c.biomecanica_corrida],
     ['RECOMENDACOES', c.recomendacoes],
     ['RECOMENDACOES PRATICAS', c.recomendacoes_praticas],
     ['ENCAMINHAMENTOS', c.encaminhamentos ?? c.alertas_encaminhamento],
@@ -1705,9 +1705,9 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700 }}>Linha do tempo do paciente</div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>Historico cronologico com scores e evolucao entre avaliacoes</div>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>Histórico cronológico com scores e evolução entre avaliações</div>
           </div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>{hist.ordenadas.length} avaliacao(oes)</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>{hist.ordenadas.length} avaliação(ões)</div>
         </div>
         <div style={{ display: 'grid', gap: 12 }}>
           {hist.ordenadas.slice().reverse().map(a => {
@@ -1730,7 +1730,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, minWidth: 0 }}>
                   <TimelineChip label="Global" value={a.scores?.global} />
                   <TimelineChip label="Postura" value={a.scores?.postura} />
-                  <TimelineChip label="Composicao" value={a.scores?.composicao_corporal} />
+                  <TimelineChip label="Composição" value={a.scores?.composicao_corporal} />
                   <TimelineChip label="Força" value={a.scores?.forca} />
                   <TimelineChip label="Flex." value={a.scores?.flexibilidade} />
                   <TimelineChip label="Cardio" value={a.scores?.cardiorrespiratorio} />
@@ -1845,8 +1845,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           ['Contexto', labelEsporteForca(f.esporte_contexto), '', '#0f172a'],
           ['Finalidade', labelFinalidadeForca(f.finalidade_teste), '', '#0f172a'],
           ['Lado dominante', labelLadoDominante(f.lado_dominante), '', '#0f172a'],
-          ['Preensao direita', f.preensao_dir_kgf, 'kgf', '#0f172a'],
-          ['Preensao esquerda', f.preensao_esq_kgf, 'kgf', '#0f172a'],
+          ['Preensão direita', f.preensao_dir_kgf, 'kgf', '#0f172a'],
+          ['Preensão esquerda', f.preensao_esq_kgf, 'kgf', '#0f172a'],
           ['Força relativa direita', f.forca_relativa_dir, 'kgf/kg', '#0f172a'],
           ['Força relativa esquerda', f.forca_relativa_esq, 'kgf/kg', '#0f172a'],
           ['Assimetria', f.assimetria_percent, '%', '#f59e0b'],
@@ -2054,7 +2054,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                           ['RFD 200ms', lado.rfd_200_kgf_s, 'kgf/s'],
                           ['Impulso', lado.impulso_kgf_s, 'kgf.s'],
                           ['Sust. 80%', lado.sustentacao_80_s, 's'],
-                          ['Duracao', lado.duracao_s, 's'],
+                          ['Duração', lado.duracao_s, 's'],
                         ].map(([label, valor, un]) => (
                           <div key={label} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 10px' }}>
                             <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px', fontWeight: 700 }}>{label}</div>
@@ -2527,7 +2527,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               <span>Plano de acao</span>
               <AnaliseInfoTooltip texto={plano} />
             </div>
-            <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>Prioridades, metas e recomendacoes para a proxima etapa</div>
+            <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>Prioridades, metas e recomendações para a próxima etapa</div>
             <div style={{ borderLeft:'4px solid #10b981', background:'#ecfdf5', borderRadius:12, padding:'14px 16px',
               fontSize:13, lineHeight:1.65, color:'#334155', whiteSpace:'pre-line' }}>
               {plano.length > 900 ? `${formatAnaliseLeitura(plano).join('\n\n').slice(0, 900)}...` : formatAnaliseLeitura(plano).join('\n\n')}
@@ -2564,14 +2564,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             border: '1px solid #dbeafe', boxShadow: '0 18px 44px rgba(59,130,246,.06)' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom: 6 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 18, fontWeight: 700 }}>
-                <span>Orientacao nutricional</span>
+                <span>Orientação nutricional</span>
                 <AnaliseInfoTooltip texto={tooltip} />
               </div>
               <span style={{ fontSize:10, fontWeight:800, color:'#1d4ed8', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:999, padding:'4px 10px', textTransform:'uppercase' }}>
                 {plano.objetivo ?? 'Aplicado'}
               </span>
             </div>
-            <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>TMB, VET e distribuicao de macronutrientes calculados a partir da avaliacao.</div>
+            <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>TMB, VET e distribuição de macronutrientes calculados a partir da avaliação.</div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
               {metricas.map(([label, value, unit]) => (
                 <div key={label} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:'12px 14px' }}>

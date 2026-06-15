@@ -63,14 +63,14 @@ export default async function ConsentimentoComprovantePage(props: { params: Prom
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <Info label="Paciente" valor={paciente?.nome ?? 'Nao informado'} />
-          <Info label="CPF do paciente" valor={paciente?.cpf ?? 'Nao informado'} />
-          <Info label="Clinica" valor={clinica?.nome ?? 'Nao informada'} />
+          <Info label="Paciente" valor={paciente?.nome ?? 'Não informado'} />
+          <Info label="CPF do paciente" valor={paciente?.cpf ?? 'Não informado'} />
+          <Info label="Clínica" valor={clinica?.nome ?? 'Não informada'} />
           <Info label="Aceito em" valor={dataHora(aceite.aceito_em)} />
           <Info label="Versao do texto" valor={`v${aceite.texto_versao ?? 1}`} />
-          <Info label="IP registrado" valor={aceite.ip ?? 'Nao registrado'} />
+          <Info label="IP registrado" valor={aceite.ip ?? 'Não registrado'} />
           <Info label="Token do link" valor={params.token} mono />
-          <Info label="Dispositivo/navegador" valor={aceite.user_agent ?? 'Nao registrado'} />
+          <Info label="Dispositivo/navegador" valor={aceite.user_agent ?? 'Não registrado'} />
         </div>
 
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">

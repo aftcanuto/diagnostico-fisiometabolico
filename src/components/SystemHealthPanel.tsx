@@ -24,7 +24,7 @@ type HealthResponse = {
 };
 
 function statusLabel(ok?: boolean) {
-  return ok ? 'OK' : 'Atencao';
+  return ok ? 'OK' : 'Atenção';
 }
 
 function statusClass(ok?: boolean) {
