@@ -7,7 +7,7 @@ import { ShareTokenPanel } from '@/components/ShareTokenPanel';
 import { PatientEngagementPanel } from '@/components/PatientEngagementPanel';
 import { PacienteDocumentosCentral } from '@/components/PacienteDocumentosCentral';
 import { ProntuarioPaciente } from '@/components/ProntuarioPaciente';
-import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw } from 'lucide-react';
+import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw, FileChartColumn } from 'lucide-react';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
 function dataLongaBR(valor?: string | null) {
@@ -123,6 +123,11 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
           <ArrowLeft className="w-4 h-4" /> Pacientes
         </Link>
         <div className="flex gap-2">
+          {totalFin >= 2 && (
+            <a href={`/api/pdf/evolucao?pacienteId=${p.id}`} target="_blank" rel="noreferrer">
+              <Button variant="secondary"><FileChartColumn className="w-4 h-4" /> Relatório de evolução</Button>
+            </a>
+          )}
           <Link href={`/avaliacoes/nova?pacienteId=${p.id}`}>
             <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>
           </Link>

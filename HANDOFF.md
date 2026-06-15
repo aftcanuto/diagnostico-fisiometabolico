@@ -401,3 +401,23 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
   - TypeScript e lint aprovados.
 - Retorno imediato, se necessario: trocar novamente para a branch `main`, que permanece no estado estavel anterior.
 - Sem migration e sem SQL do Supabase.
+
+## 2026-06-13 - Relatorio comparativo de evolucao
+
+- Criado PDF independente em `/api/pdf/evolucao?pacienteId=...`.
+- O botao `Relatório de evolução` aparece no cabecalho da ficha do paciente quando existem ao menos duas avaliacoes finalizadas.
+- A comparacao principal usa automaticamente a avaliacao finalizada mais recente e a imediatamente anterior.
+- O relatorio inclui:
+  - score global;
+  - peso, gordura corporal, massa magra e FFMI;
+  - forca, flexibilidade, RML e capacidade cardiorrespiratoria;
+  - VO2max;
+  - deltas entre antes e depois;
+  - evolucao dos scores por dominio;
+  - linha do tempo com todas as avaliacoes finalizadas;
+  - comparativo de fotografias posturais quando disponiveis;
+  - analise de evolucao revisada, quando ja existir na avaliacao mais recente.
+- O acesso respeita a permissao do profissional sobre o paciente.
+- Criado teste automatizado `npm run test:evolution-report`, incluido no `predeploy`.
+- `npm run predeploy` e build de producao aprovados.
+- Sem migration e sem SQL do Supabase.
