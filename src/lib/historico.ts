@@ -22,6 +22,7 @@ export interface AvaliacaoHidratada {
   flexibilidade?: any;
   cardiorrespiratorio?: any;
   posturografia?: any;
+  termografia?: any;
   sinais_vitais?: any;
   anamnese?: any;
   rml?: any;

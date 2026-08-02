@@ -51,7 +51,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     const analisesPromise = fetch(`/api/ia/editar?avaliacaoId=${encodeURIComponent(params.id)}`, { cache: 'no-store' })
       .then(async res => {
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error ?? 'Erro ao carregar analises');
+        if (!res.ok) throw new Error(json.error ?? 'Erro ao carregar análises');
         return { data: json.data ?? [] };
       })
       .catch((error) => {
@@ -59,7 +59,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
         return { data: [] };
       });
 
-    const [anData, svData, antData, bioData, foData, crData, pgData, flData, rmlData, biomecData, analisesData, outras] = await Promise.all([
+    const [anData, svData, antData, bioData, foData, crData, pgData, termoData, flData, rmlData, biomecData, analisesData, outras] = await Promise.all([
       buscarModulo('anamnese', params.id).catch(() => null),
       buscarModulo('sinais_vitais', params.id).catch(() => null),
       buscarModulo('antropometria', params.id).catch(() => null),
@@ -67,6 +67,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       buscarModulo('forca', params.id).catch(() => null),
       buscarModulo('cardiorrespiratorio', params.id).catch(() => null),
       buscarModulo('posturografia', params.id).catch(() => null),
+      buscarModulo('termografia', params.id).catch(() => null),
       buscarModulo('flexibilidade', params.id).catch(() => null),
       buscarModulo('rml', params.id).catch(() => null),
       buscarModulo('biomecanica_corrida', params.id).catch(() => null),
@@ -101,6 +102,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       anamnese: anData,
       sinais_vitais: svData,
       posturografia: pgData,
+      termografia: termoData,
       bioimpedancia: bioData,
       antropometria: antData,
       flexibilidade: flData,
@@ -140,11 +142,11 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     setState('ready');
     carregarPlanoAcao(av!.clinica_id, analisesData.data ?? []).catch((error) => {
       console.error('[Revisao] Nao foi possivel carregar plano de acao', error);
-      setPlanoAcao((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar plano de acao' }));
+      setPlanoAcao((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar plano de ação' }));
     });
     carregarPlanoNutricional().catch((error) => {
       console.error('[Revisao] Nao foi possivel carregar orientacao nutricional', error);
-      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar orientacao nutricional' }));
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao carregar orientação nutricional' }));
     });
   // carregarPlanoNutricional usa params.id e atualiza apenas a area nutricional; manter fora das dependencias evita recarregar a revisao inteira a cada simulacao de modelo.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,7 +168,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     if (!analisesLista) {
       const res = await fetch(`/api/ia/editar?avaliacaoId=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel carregar analises');
+      if (!res.ok) throw new Error(json.error ?? 'Não foi possível carregar análises');
       analisesLista = json.data ?? [];
     }
 
@@ -215,7 +217,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     url.searchParams.set('tmbFonte', fonteTmb);
     const res = await fetch(url.toString(), { cache: 'no-store' });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel carregar orientacao nutricional');
+    if (!res.ok) throw new Error(json.error ?? 'Não foi possível carregar orientação nutricional');
     setPlanoNutricional({ ...json, loading: false });
     const selecionado = modeloId ?? json.aplicado?.modelo_id ?? json.preview?.modelo?.id ?? json.modelos?.[0]?.id ?? '';
     setModeloPlanoId(selecionado);
@@ -228,7 +230,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     try {
       await carregarPlanoNutricional(modeloId, fonteTmbPlano);
     } catch (error: any) {
-      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular orientacao nutricional' }));
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular orientação nutricional' }));
     }
   }
 
@@ -238,7 +240,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     try {
       await carregarPlanoNutricional(modeloPlanoId, fonte);
     } catch (error: any) {
-      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular orientacao nutricional' }));
+      setPlanoNutricional((p: any) => ({ ...p, loading: false, error: error?.message ?? 'Erro ao simular orientação nutricional' }));
     }
   }
 
@@ -253,11 +255,11 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
         body: JSON.stringify({ avaliacaoId: params.id, modeloId: modeloPlanoId, observacoes: observacoesPlano, tmbFonte: fonteTmbPlano }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel aplicar a orientacao nutricional.');
+      if (!res.ok) throw new Error(json.error ?? 'Não foi possível aplicar a orientação nutricional.');
       setPlanoNutricional((p: any) => ({ ...p, aplicado: json.data, preview: { ...(p.preview ?? {}), calculo: json.calculo } }));
       setMessage({ type: 'success', text: 'Orientação nutricional aplicada nesta avaliação.' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel aplicar a orientacao nutricional.' });
+      setMessage({ type: 'error', text: error?.message ?? 'Não foi possível aplicar a orientação nutricional.' });
     } finally {
       setSalvandoPlano(false);
     }
@@ -308,7 +310,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       setChecklist((itens) => itens.filter((item) => item.modulo !== 'gordura_relatorio'));
       setMessage({ type: 'success', text: 'Fonte de gordura corporal definida para o relatorio.' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel salvar a fonte de gordura.' });
+      setMessage({ type: 'error', text: error?.message ?? 'Não foi possível salvar a fonte de gordura.' });
     } finally {
       setSalvandoFonteGordura(false);
     }
@@ -337,12 +339,12 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
         }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error ?? 'Nao foi possivel finalizar a avaliacao.');
+      if (!res.ok) throw new Error(json.error ?? 'Não foi possível finalizar a avaliação.');
       setAval((a: any) => ({ ...a, status: 'finalizada' }));
       setMessage({ type: 'success', text: 'Avaliação finalizada com sucesso.' });
       router.refresh();
     } catch (error: any) {
-      setMessage({ type: 'error', text: error?.message ?? 'Nao foi possivel finalizar a avaliacao.' });
+      setMessage({ type: 'error', text: error?.message ?? 'Não foi possível finalizar a avaliação.' });
     } finally {
       setState('ready');
     }
@@ -512,7 +514,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
         </CardHeader>
         <CardBody className="space-y-4">
           {planoNutricional.loading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando orientacao nutricional...</div>
+            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando orientação nutricional...</div>
           ) : planoNutricional.modelos?.length ? (
             <>
               <div className="grid gap-3 md:grid-cols-[1fr,240px,220px]">
@@ -552,34 +554,34 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
 
               <div className="grid gap-3 md:grid-cols-5">
                 <PlanoMetric label="VET" value={planoNutricional.preview?.calculo?.vetKcal ?? planoNutricional.aplicado?.vet_kcal} unit="kcal" />
-                <PlanoMetric label="Proteina" value={planoNutricional.preview?.calculo?.proteinaG ?? planoNutricional.aplicado?.proteina_g} unit="g" />
+                <PlanoMetric label="Proteína" value={planoNutricional.preview?.calculo?.proteinaG ?? planoNutricional.aplicado?.proteina_g} unit="g" />
                 <PlanoMetric label="Carboidrato" value={planoNutricional.preview?.calculo?.carboidratoG ?? planoNutricional.aplicado?.carboidrato_g} unit="g" />
                 <PlanoMetric label="Gordura" value={planoNutricional.preview?.calculo?.gorduraG ?? planoNutricional.aplicado?.gordura_g} unit="g" />
-                <PlanoMetric label="Agua" value={planoNutricional.preview?.calculo?.aguaMl ?? planoNutricional.aplicado?.agua_ml} unit="ml" />
+                <PlanoMetric label="Água" value={planoNutricional.preview?.calculo?.aguaMl ?? planoNutricional.aplicado?.agua_ml} unit="ml" />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Observacoes do plano</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Observações do plano</label>
                 <textarea
                   value={observacoesPlano}
                   onChange={(e) => setObservacoesPlano(e.target.value)}
                   className="min-h-[90px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm outline-none focus:border-brand-400"
-                  placeholder="Ajustes, distribuicao de refeicoes, observacoes clinicas ou nutricionais."
+                  placeholder="Ajustes, distribuição de refeições, observações clínicas ou nutricionais."
                 />
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-sm text-slate-500">
-                  {planoNutricional.aplicado ? 'Orientacao ja aplicada nesta avaliacao. Voce pode recalcular e sobrescrever.' : 'Escolha o objetivo e a fonte da TMB para sugerir macros e salvar no laudo.'}
+                  {planoNutricional.aplicado ? 'Orientação já aplicada nesta avaliação. Você pode recalcular e sobrescrever.' : 'Escolha o objetivo e a fonte da TMB para sugerir macros e salvar no laudo.'}
                 </div>
                 <Button onClick={aplicarPlanoAlimentar} disabled={salvandoPlano || !modeloPlanoId}>
-                  {salvandoPlano ? 'Aplicando...' : 'Aplicar orientacao nutricional'}
+                  {salvandoPlano ? 'Aplicando...' : 'Aplicar orientação nutricional'}
                 </Button>
               </div>
             </>
           ) : (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              Nenhum template de orientacao nutricional ativo foi cadastrado. Cadastre em Configuracoes para usar esta etapa.
+              Nenhum modelo de orientação nutricional ativo foi cadastrado. Cadastre em Configurações para usar esta etapa.
             </div>
           )}
           {planoNutricional.error && <div className="text-sm text-red-600">{planoNutricional.error}</div>}
@@ -588,16 +590,16 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
 
       <Card>
         <CardHeader>
-          <CardTitle><ClipboardCheck className="inline w-4 h-4 mr-1 text-brand-600" /> Plano de acao pos-laudo</CardTitle>
+          <CardTitle><ClipboardCheck className="inline w-4 h-4 mr-1 text-brand-600" /> Plano de ação pós-laudo</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
           {planoAcao.loading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando modelos de plano de acao...</div>
+            <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Carregando modelos de plano de ação...</div>
           ) : planoAcao.modelos?.length ? (
             <>
               <div className="grid gap-3 md:grid-cols-[1fr,220px]">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo de plano de acao</label>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Modelo de plano de ação</label>
                   <select
                     value={modeloAcaoId}
                     onChange={(e) => trocarModeloAcao(e.target.value)}
@@ -610,13 +612,13 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
                 </div>
                 <div className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
                   <div className="text-xs font-semibold uppercase tracking-wide">Status</div>
-                  <div className="text-lg font-black">{planoAcao.aplicado ? 'Aplicado' : 'Nao aplicado'}</div>
-                  <div className="text-xs">Editavel antes de finalizar</div>
+                  <div className="text-lg font-black">{planoAcao.aplicado ? 'Aplicado' : 'Não aplicado'}</div>
+                  <div className="text-xs">Editável antes de finalizar</div>
                 </div>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
-                <CampoPlanoAcao label="Prioridades clinicas" value={planoAcaoEdit.prioridades} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, prioridades: v }))} />
+                <CampoPlanoAcao label="Prioridades clínicas" value={planoAcaoEdit.prioridades} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, prioridades: v }))} />
                 <CampoPlanoAcao label="Alertas de encaminhamento" value={planoAcaoEdit.alertas_encaminhamento} onChange={(v) => setPlanoAcaoEdit((p: any) => ({ ...p, alertas_encaminhamento: v }))} />
               </div>
               <div className="grid gap-3 md:grid-cols-3">
@@ -626,13 +628,13 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {[
-                  ['composicao_corporal', 'Composicao corporal'],
-                  ['forca', 'Forca'],
+                  ['composicao_corporal', 'Composição corporal'],
+                  ['forca', 'Força'],
                   ['flexibilidade', 'Flexibilidade'],
-                  ['cardiorrespiratorio', 'Cardiorrespiratorio'],
+                  ['cardiorrespiratorio', 'Cardiorrespiratório'],
                   ['rml', 'RML'],
                   ['postura', 'Postura'],
-                  ['biomecanica', 'Biomecanica'],
+                  ['biomecanica', 'Biomecânica'],
                 ].map(([key, label]) => (
                   <CampoPlanoAcao
                     key={key}
@@ -643,19 +645,19 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
                 ))}
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Previa do que ira para dashboards e PDF</div>
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Prévia do que irá para dashboards e PDF</div>
                 <div className="max-h-48 overflow-auto whitespace-pre-line text-sm leading-relaxed text-slate-700">{textoPlanoAcaoPreview(planoAcaoEdit)}</div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-sm text-slate-500">Ao aplicar, o plano fica salvo na conclusao global e aparece no dashboard clinico, portal do paciente e PDF.</div>
+                <div className="text-sm text-slate-500">Ao aplicar, o plano fica salvo na conclusão global e aparece no dashboard clínico, portal do paciente e PDF.</div>
                 <Button onClick={aplicarPlanoAcao} disabled={salvandoPlanoAcao || !modeloAcaoId}>
-                  {salvandoPlanoAcao ? 'Aplicando...' : 'Aplicar plano de acao'}
+                  {salvandoPlanoAcao ? 'Aplicando...' : 'Aplicar plano de ação'}
                 </Button>
               </div>
             </>
           ) : (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              Nenhum modelo de plano de acao ativo foi cadastrado. Cadastre em Configuracoes para usar esta etapa.
+              Nenhum modelo de plano de ação ativo foi cadastrado. Cadastre em Configurações para usar esta etapa.
             </div>
           )}
           {planoAcao.error && <div className="text-sm text-red-600">{planoAcao.error}</div>}
@@ -758,6 +760,7 @@ function montarChecklist(
     anamnese: 'Anamnese',
     sinais_vitais: 'Sinais vitais',
     posturografia: 'Posturografia',
+    termografia: 'Termografia funcional',
     bioimpedancia: 'Bioimpedância',
     antropometria: 'Antropometria',
     flexibilidade: 'Flexibilidade',
@@ -805,6 +808,24 @@ function montarChecklist(
         descricao: `${faltando.length} foto(s) não foram anexadas. O laudo pode sair com espaço reservado.`,
       });
     }
+  }
+
+  if (mods.termografia && modulosDados.termografia) {
+    const fotos = ['foto_anterior','foto_posterior','foto_lateral_dir','foto_lateral_esq'];
+    const faltando = fotos.filter(k => !modulosDados.termografia?.[k]);
+    if (faltando.length) itens.push({
+      nivel: 'alerta',
+      modulo: 'termografia',
+      titulo: 'Termogramas basais incompletos',
+      descricao: `${faltando.length} das quatro vistas obrigatórias ainda não foram anexadas.`,
+    });
+    if (modulosDados.termografia.recomendacoes_seguidas === false &&
+        !modulosDados.termografia.recomendacoes_observacao) itens.push({
+      nivel: 'alerta',
+      modulo: 'termografia',
+      titulo: 'Ressalva pré-teste sem observação',
+      descricao: 'Informe quais recomendações pré-teste não foram seguidas.',
+    });
   }
 
   const incoerencias = checarValoresIncoerentes(modulosDados, aval);
@@ -997,13 +1018,13 @@ function normalizarPlanoAcao(valor: any) {
 function textoPlanoAcaoPreview(plano: any) {
   const recomendacoes = plano?.recomendacoes ?? {};
   const areas = [
-    ['composicao_corporal', 'Composicao corporal'],
-    ['forca', 'Forca'],
+    ['composicao_corporal', 'Composição corporal'],
+    ['forca', 'Força'],
     ['flexibilidade', 'Flexibilidade'],
-    ['cardiorrespiratorio', 'Cardiorrespiratorio'],
+    ['cardiorrespiratorio', 'Cardiorrespiratório'],
     ['rml', 'RML'],
     ['postura', 'Postura'],
-    ['biomecanica', 'Biomecanica'],
+    ['biomecanica', 'Biomecânica'],
   ];
   return [
     plano?.prioridades ? `PRIORIDADES\n${plano.prioridades}` : '',

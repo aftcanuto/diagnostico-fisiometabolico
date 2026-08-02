@@ -67,9 +67,16 @@ function gordura(avaliacao: any) {
   return resolverPercentualGordura(avaliacao, avaliacao?.antropometria, avaliacao?.bioimpedancia).valor;
 }
 
-function fotoPostural(avaliacao: any) {
+const VISTAS_POSTURAIS = [
+  ['foto_anterior', 'Anterior'],
+  ['foto_posterior', 'Posterior'],
+  ['foto_lateral_dir', 'Lateral direita'],
+  ['foto_lateral_esq', 'Lateral esquerda'],
+] as const;
+
+function fotosPosturais(avaliacao: any) {
   const postura = avaliacao?.posturografia ?? {};
-  return postura.foto_anterior || postura.foto_posterior || postura.foto_lateral_dir || postura.foto_lateral_esq || null;
+  return VISTAS_POSTURAIS.map(([key, label]) => ({ label, src: postura[key] || null }));
 }
 
 function delta(atual: any, anterior: any, digits = 1, lowerIsBetter = false) {
@@ -160,8 +167,12 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
   ];
   const analysis = textoAnalise(data.analiseEvolucao);
   const analysisPages = dividirTexto(analysis);
-  const photoBefore = fotoPostural(anterior);
-  const photoAfter = fotoPostural(atual);
+  const photosBefore = fotosPosturais(anterior);
+  const photosAfter = fotosPosturais(atual);
+  const hasPosturalPhotos = [...photosBefore, ...photosAfter].some(photo => photo.src);
+  const thermalBefore = VISTAS_POSTURAIS.map(([key,label]) => ({ label, src: anterior.termografia?.[key] || null }));
+  const thermalAfter = VISTAS_POSTURAIS.map(([key,label]) => ({ label, src: atual.termografia?.[key] || null }));
+  const hasThermalPhotos = [...thermalBefore, ...thermalAfter].some(photo => photo.src);
 
   const metricCards = metrics.map(metric => {
     const change = delta(metric.after, metric.before, metric.digits, metric.lowerIsBetter);
@@ -247,10 +258,13 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     .score-after { height:100%; background:${primary}; }
     .score-value,.score-delta { font-size:10px; font-weight:800; text-align:right; }
     .analysis { border-left:4px solid ${primary}; background:#ecfdf5; border-radius:0 12px 12px 0; padding:15px 17px; font-size:12px; line-height:1.65; white-space:pre-line; overflow-wrap:anywhere; }
-    .photos { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .photo { border:1px solid #dbe4ea; border-radius:14px; padding:10px; }
-    .photo h3 { font-size:11px; margin:0 0 8px; }
-    .photo img { width:100%; height:150mm; object-fit:contain; background:#f8fafc; border-radius:10px; }
+    .postural-group { margin-bottom:12px; }
+    .postural-group-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; font-size:11px; font-weight:800; color:#334155; }
+    .photos { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .photo { border:1px solid #dbe4ea; border-radius:10px; padding:6px; break-inside:avoid; }
+    .photo h3 { font-size:8px; margin:0 0 5px; color:#64748b; text-align:center; text-transform:uppercase; letter-spacing:.4px; }
+    .photo img { width:100%; height:86mm; object-fit:contain; background:#f8fafc; border-radius:7px; display:block; }
+    .photo-empty { height:86mm; display:grid; place-items:center; background:#f8fafc; border-radius:7px; color:#94a3b8; font-size:9px; text-align:center; }
     table { width:100%; border-collapse:collapse; font-size:10px; }
     th { padding:9px 7px; background:#f1f5f9; color:#64748b; text-align:left; text-transform:uppercase; font-size:8px; }
     td { padding:9px 7px; border-bottom:1px solid #e2e8f0; }
@@ -303,13 +317,33 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Histórico longitudinal</span></div>
   </section>
 
-  ${(photoBefore || photoAfter) ? `<section class="page">
-    <div class="header"><div><h2>Comparativo postural</h2><p>Registro visual das avaliações mais recentes.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
-    <div class="photos">
-      <div class="photo"><h3>Anterior · ${dateBR(anterior.data)}</h3>${photoBefore ? `<img src="${esc(photoBefore)}"/>` : '<div>Sem fotografia</div>'}</div>
-      <div class="photo"><h3>Atual · ${dateBR(atual.data)}</h3>${photoAfter ? `<img src="${esc(photoAfter)}"/>` : '<div>Sem fotografia</div>'}</div>
-    </div>
+  ${hasPosturalPhotos ? `<section class="page">
+    <div class="header"><div><h2>Comparativo postural</h2><p>Quatro vistas posturais das duas avaliações mais recentes.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
+    ${[
+      ['Avaliação anterior', anterior.data, photosBefore],
+      ['Avaliação atual', atual.data, photosAfter],
+    ].map(([titulo, dataAvaliacao, fotos]: any) => `<div class="postural-group">
+      <div class="postural-group-title"><span>${titulo}</span><span>${dateBR(dataAvaliacao)}</span></div>
+      <div class="photos">${fotos.map((photo: any) => `<div class="photo">
+        <h3>${esc(photo.label)}</h3>
+        ${photo.src ? `<img src="${esc(photo.src)}" alt="${esc(`${titulo} - ${photo.label}`)}"/>` : '<div class="photo-empty">Sem fotografia</div>'}
+      </div>`).join('')}</div>
+    </div>`).join('')}
     <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Comparativo postural</span></div>
+  </section>` : ''}
+  ${hasThermalPhotos ? `<section class="page">
+    <div class="header"><div><h2>Comparativo termográfico</h2><p>Quatro vistas basais das duas avaliações mais recentes.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
+    ${[
+      ['Avaliação anterior', anterior.data, thermalBefore],
+      ['Avaliação atual', atual.data, thermalAfter],
+    ].map(([titulo, dataAvaliacao, fotos]: any) => `<div class="postural-group">
+      <div class="postural-group-title"><span>${titulo}</span><span>${dateBR(dataAvaliacao)}</span></div>
+      <div class="photos">${fotos.map((photo: any) => `<div class="photo">
+        <h3>${esc(photo.label)}</h3>
+        ${photo.src ? `<img src="${esc(photo.src)}" alt="${esc(`${titulo} - ${photo.label}`)}"/>` : '<div class="photo-empty">Sem termograma</div>'}
+      </div>`).join('')}</div>
+    </div>`).join('')}
+    <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Comparativo termográfico</span></div>
   </section>` : ''}
 </body>
 </html>`;

@@ -168,11 +168,12 @@ export default function AntropometriaPage(props: { params: Promise<{ id: string 
   const setDiam = (k: string, val: string) =>
     setForm((f: any) => ({ ...f, diametros: { ...f.diametros, [k]: val === '' ? undefined : Number(val) } }));
   const steps = aval ? buildSteps(params.id, aval.modulos_selecionados) : [];
-  const prevStep = steps.find(s => s.key === 'bioimpedancia')
+  const prevStep = steps.find(s => s.key === 'termografia')
     ?? steps.find(s => s.key === 'posturografia')
     ?? steps.find(s => s.key === 'sinais_vitais')
     ?? steps.find(s => s.key === 'anamnese');
-  const nextStep = steps.find(s => s.key === 'flexibilidade')
+  const nextStep = steps.find(s => s.key === 'bioimpedancia')
+    ?? steps.find(s => s.key === 'flexibilidade')
     ?? steps.find(s => s.key === 'forca')
     ?? steps.find(s => s.key === 'rml')
     ?? steps.find(s => s.key === 'cardiorrespiratorio')

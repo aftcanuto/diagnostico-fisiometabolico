@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Diagnostico Fisiometabolico',
+  title: 'Diagnóstico Fisiometabólico',
   description: 'Avaliação fisiometabólica completa',
-  applicationName: 'Diagnostico Fisiometabolico',
+  applicationName: 'Diagnóstico Fisiometabólico',
   manifest: '/site.webmanifest',
   icons: {
     icon: [{ url: '/favicon.png', type: 'image/png' }],

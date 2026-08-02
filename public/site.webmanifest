@@ -1,7 +1,7 @@
 {
-  "name": "Diagnostico Fisiometabolico",
-  "short_name": "Diagnostico",
-  "description": "Avaliacao fisiometabolica completa",
+  "name": "Diagnóstico Fisiometabólico",
+  "short_name": "Diagnóstico",
+  "description": "Avaliação fisiometabólica completa",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

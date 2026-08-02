@@ -10,6 +10,7 @@ const TIPOS_IA = new Set([
   'anamnese',
   'sinais_vitais',
   'posturografia',
+  'termografia',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',

@@ -44,6 +44,7 @@ const tipos = [
   'anamnese',
   'sinais_vitais',
   'posturografia',
+  'termografia',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',
@@ -139,6 +140,7 @@ function testarPrompts() {
     ['anamnese', P.promptAnamnese(ctx, dados.anamnese)],
     ['sinais_vitais', P.promptSinaisVitais(ctx, dados.sinais_vitais)],
     ['posturografia', P.promptPosturografia(ctx, dados.posturografia)],
+    ['termografia', P.promptTermografia(ctx, dados.termografia ?? { rois: [] })],
     ['bioimpedancia', P.promptBioimpedancia(ctx, dados.bioimpedancia)],
     ['antropometria', P.promptAntropometria(ctx, dados.antropometria)],
     ['flexibilidade', P.promptFlexibilidade(ctx, dados.flexibilidade)],
@@ -188,6 +190,40 @@ function main() {
   const fullHtml = renderLaudoHTML(fullData);
   const out = path.resolve('preview-laudo-full-smoke.html');
   fs.writeFileSync(out, fullHtml, 'utf8');
+
+  const termografiaIsolada = renderLaudoHTML({
+    ...dadosLaudo,
+    avaliacao: { ...dadosLaudo.avaliacao, tipo: 'personalizado' },
+    modulos: {
+      ...Object.fromEntries(Object.keys(dadosLaudo.modulos).map(chave => [chave, false])),
+      termografia: true,
+    },
+    dados: {
+      ...dadosLaudo.dados,
+      termografia: {
+        temperatura_ambiente: 22,
+        umidade_relativa: 50,
+        tempo_aclimatacao_min: 15,
+        distancia_cm: 100,
+        emissividade: 0.98,
+        equipamento_fabricante: 'HIKMICRO',
+        equipamento_modelo: 'Pocket2',
+        equipamento_software: 'HIKMICRO Analyzer',
+        rois: [],
+      },
+    },
+    scores: {
+      global: null, postura: null, composicao_corporal: null, forca: null,
+      flexibilidade: null, rml: null, cardiorrespiratorio: null,
+    },
+    analisesIA: { termografia: iaMock('termografia') },
+  });
+  fs.writeFileSync(path.resolve('preview-laudo-termografia-isolada.html'), termografiaIsolada, 'utf8');
+  assert(termografiaIsolada.includes('Tipo</div><div class="chip-val"') && termografiaIsolada.includes('Termografia funcional'), 'Capa isolada deveria identificar Termografia funcional');
+  assert(!termografiaIsolada.includes('Score Global</div>'), 'Laudo isolado nao deve mostrar score global vazio');
+  assert(!termografiaIsolada.includes('Score 0-100 da posturografia'), 'Laudo isolado nao deve mostrar scores de modulos ausentes');
+  assert(!termografiaIsolada.includes('Resumo da Avaliação'), 'Laudo isolado sem score nao deve gerar pagina de resumo');
+  assert(termografiaIsolada.includes('10.1016/j.jtherbio.2017.07.006'), 'Laudo termografico sem referencia TISEM');
 
   const laudo = checkTextFile('preview-laudo-full-smoke.html', [
     ...Object.values(nomesRelatorio),
@@ -339,15 +375,21 @@ function main() {
   ]);
   assertCodigoContem('src/app/(app)/produtos/page.tsx', [
     'ProductCatalogShareButton',
-    '/catalogo/',
+    '/catalogo',
     'Abrir vitrine',
+  ]);
+  assertCodigoContem('src/app/catalogo/page.tsx', [
+    'resolverClinicaDoCatalogo',
+    'CatalogoPageComClinica',
+    'CATALOGO_CLINICA_ID',
   ]);
   assertCodigoContem('src/app/catalogo/[clinicaId]/page.tsx', [
     'createAdminClient',
-    'destaque_comercial',
+    'catalogo_produtos',
+    'destaque',
     'beneficios',
-    'cta_url',
-    'produtos',
+    'sinal_percentual',
+    'whatsapp_texto',
   ]);
   assertCodigoContem('src/app/api/admin/health/route.ts', [
     'sistema_migrations_aplicadas',

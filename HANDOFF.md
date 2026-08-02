@@ -459,3 +459,568 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O texto revisado saiu da pagina de metricas e passou a ocupar paginas proprias, com divisao por paragrafos e frases para evitar cortes.
 - TypeScript, teste do relatorio de evolucao, integridade textual e teste visual do PDF aprovados.
 - Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Manifesto publico e ortografia da revisao
+
+- Corrigido o erro `Manifest: Line 1, column 1, Syntax error`.
+- A causa era o middleware redirecionando `site.webmanifest` para o login, fazendo o navegador receber texto em vez de JSON.
+- Manifesto, favicon e icone Apple agora sao recursos publicos mesmo sem sessao.
+- Nome, descricao e titulo do aplicativo foram corrigidos para `Diagnostico Fisiometabolico` com acentuacao.
+- Revisados botoes, titulos, estados, mensagens, campos e placeholders da aba de revisao.
+- Incluidos no teste de integridade textual os principais textos corrigidos da revisao.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Evolucao longitudinal compacta no laudo
+
+- Removida a pagina exclusiva de evolucao longitudinal que deixava uma folha praticamente vazia no final do laudo.
+- A informacao de evolucao agora aparece em fonte pequena no cabecalho da pagina final de Protocolos e referencias.
+- O texto e resumido com limite seguro para nao deslocar o conteudo nem criar uma pagina adicional.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Fluxo de geracao e revisao da evolucao
+
+- Restaurados os tres estados do botao de evolucao na ficha do paciente.
+- Sem analise gerada: `Gerar evolucao`, com geracao direta pela IA.
+- Analise gerada e ainda nao validada: `Revisar evolucao`.
+- Analise revisada e salva: `Relatorio de evolucao`.
+- Apos gerar, o sistema direciona automaticamente para a area de revisao da analise.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Comparativo postural completo no relatorio de evolucao
+
+- O comparativo postural deixou de exibir apenas uma fotografia por avaliacao.
+- A pagina agora apresenta anterior, posterior, lateral direita e lateral esquerda da avaliacao anterior e da avaliacao atual.
+- As oito posicoes ficam organizadas na mesma pagina, em duas linhas de quatro imagens.
+- Vistas ausentes permanecem identificadas como `Sem fotografia`, sem quebrar o alinhamento.
+- O teste automatizado do relatorio agora exige as oito posicoes posturais.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-15 - Documentos pre-teste avulsos no Dashboard
+
+- Criada no Dashboard a secao `Documentos pre-teste avulsos`.
+- Permite usar modelos do sistema sem cadastrar previamente um paciente ou criar uma avaliacao.
+- Tipos disponiveis:
+  - anamnese;
+  - consentimento ou TCLE;
+  - recomendacoes pre-teste.
+- Nome e contato do destinatario sao opcionais.
+- O sistema gera um link publico com validade de 30 dias e o copia automaticamente.
+- Links recentes podem ser copiados novamente ou revogados pelo Dashboard.
+- A anamnese avulsa registra respostas; o consentimento registra o aceite; recomendacoes sao exibidas em modo leitura.
+- Criada a migration `055_documentos_pre_teste_avulsos.sql`.
+- Esta implementacao possui SQL do Supabase.
+
+## 2026-06-15 - Revogacao e personalizacao dos documentos avulsos
+
+- Corrigida a revogacao que mantinha o link na lista com status `Aguardando`.
+- Links revogados deixam de aparecer imediatamente e o botao mostra progresso e erros.
+- Adicionada personalizacao por envio:
+  - titulo;
+  - mensagem de abertura;
+  - cor principal;
+  - fonte Inter, Arial ou Georgia;
+  - texto pequeno, medio ou grande.
+- A mensagem e os textos aceitam emojis, titulos com `#`, listas com `-` e negrito com `**texto**`.
+- A formatacao e renderizada sem HTML livre, preservando a seguranca da pagina publica.
+- Criada a migration `056_personalizacao_documentos_pre_teste.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-15 - Editor global dos documentos pre-teste
+
+- Removido o texto `Documento avulso pre-teste` do cabecalho publico.
+- A personalizacao deixou o Dashboard, que agora serve apenas para escolher destinatario, documento e gerar o link.
+- Criada em Configuracoes a secao `Aparencia dos documentos pre-teste`.
+- Adicionada barra de ferramentas visual estilo Word com:
+  - negrito;
+  - italico;
+  - sublinhado;
+  - titulos;
+  - listas simples e numeradas;
+  - linha divisoria;
+  - tres tamanhos de fonte.
+- A configuracao global tambem permite escolher titulo padrao, cor, familia de fonte e tamanho geral.
+- Novos envios recebem automaticamente uma copia da configuracao vigente.
+- O HTML do editor e filtrado no servidor antes de ser salvo.
+- Criada a migration `057_config_documentos_pre_teste.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-15 - Formatacao individual por modelo
+
+- Removido da interface o editor global de documentos pre-teste.
+- A edicao visual passou a ficar dentro de cada card de TCLE, consentimento e recomendacao.
+- Cada modelo possui seu proprio:
+  - texto formatado;
+  - negrito, italico e sublinhado;
+  - titulos, listas e linha divisoria;
+  - tamanho de trechos selecionados;
+  - cor de destaque;
+  - familia e tamanho geral da fonte.
+- A formatacao individual e aplicada aos documentos avulsos e aos links associados a pacientes.
+- O Dashboard permanece somente com a selecao do documento, destinatario e geracao do link.
+- O conteudo HTML e filtrado antes de ser exibido publicamente.
+- A tabela criada pela migration `057` permanece sem uso para manter compatibilidade com ambientes onde ela ja foi aplicada.
+- Criada a migration `058_formatacao_individual_documentos.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-16 - Correcao das listas no editor individual
+
+- Corrigido o comportamento dos botoes de lista simples e lista numerada no editor visual dos modelos.
+- O editor agora preserva o cursor/selecionado ao clicar na barra de ferramentas.
+- Listas simples e numeradas tambem receberam estilo visual dentro do campo de edicao.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-16 - Titulos e modulos livres nos documentos
+
+- Recomendacoes agora possuem `Titulo do documento`, permitindo trocar o cabecalho publico antes fixo como `Recomendacoes pre-teste`.
+- O campo de modulo/categoria deixou de ser uma lista travada e passou a ser texto livre opcional.
+- Documentos sem modulo nao exibem categoria no card publico.
+- Os cards de recomendacoes e termos ganharam uma previa visual em tempo real dentro das configuracoes.
+- Os links publicos usam o titulo editado no modelo selecionado.
+- Criada a migration `059_documentos_titulos_modulos_livres.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-16 - Rodape institucional nos documentos publicos
+
+- Criado rodape institucional reutilizavel para documentos enviados ao paciente.
+- O rodape mostra nome da clinica, endereco, telefone, e-mail, site e Instagram quando esses campos estiverem cadastrados.
+- Aplicado em documentos avulsos, consentimento/TCLE e recomendacoes vinculadas a paciente.
+- O rodape tambem mantem a informacao de validade do link.
+- Sem migration e sem SQL do Supabase, pois os campos ja existiam em `clinicas`.
+
+## 2026-06-16 - Listas visiveis na previa dos documentos
+
+- Corrigida a previa visual dos cards de recomendacoes e termos para exibir listas simples e numeradas.
+- Adicionados estilos locais para `ul`, `ol` e `li` dentro da previa.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-16 - Remocao do Instagram no rodape dos documentos
+
+- Removido o campo de Instagram do rodape institucional dos documentos publicos.
+- Permanecem no rodape: nome da clinica, endereco, telefone, e-mail, site e validade do link.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-16 - Alinhamento no editor de documentos
+
+- Adicionados botoes de alinhamento no editor visual:
+  - esquerda;
+  - centralizado;
+  - direita;
+  - justificado.
+- O filtro de HTML seguro passou a preservar apenas `text-align` valido nos blocos do documento.
+- A previa e as paginas publicas mantem o alinhamento salvo.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-17 - Produtos comerciais independentes da vitrine
+
+- Criada uma nova area em Produtos: `Produtos da vitrine`.
+- Os produtos comerciais da vitrine agora ficam separados dos produtos usados para criar avaliacoes.
+- Criada a tabela `catalogo_produtos` com campos comerciais:
+  - nome;
+  - subtitulo;
+  - descricao;
+  - selo;
+  - imagem;
+  - itens inclusos;
+  - beneficios;
+  - duracao;
+  - preco;
+  - percentual do sinal;
+  - texto padrao para WhatsApp;
+  - destaque;
+  - ordem;
+  - ativo/inativo.
+- A vitrine publica `/catalogo/[clinicaId]` passou a ler `catalogo_produtos`.
+- O card mostra o valor do sinal calculado a partir do preco e percentual configurado.
+- O botao comercial abre WhatsApp com texto do produto.
+- Criada a migration `060_catalogo_produtos_independentes.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Correcao da policy da migration 060
+
+- Corrigida a migration `060_catalogo_produtos_independentes.sql`.
+- A policy deixou de usar `public.is_admin_clinica`, que nao existe no banco atual.
+- Agora usa `public.is_membro_clinica(clinica_id)` com `public.current_papel() in ('owner','admin')`, seguindo o padrao das migrations anteriores.
+- Esta correcao possui SQL do Supabase.
+
+## 2026-06-17 - Upload de imagem nos produtos da vitrine
+
+- O cadastro de produtos comerciais da vitrine deixou de depender apenas de URL manual.
+- Adicionado upload de imagem usando o bucket existente `produto-imagens`.
+- O campo ainda permite editar/remover a URL gerada, caso seja necessario.
+- Sem migration e sem SQL do Supabase, pois o bucket e policies ja existiam.
+
+## 2026-06-17 - Agendamento pago pela vitrine
+
+- Adicionado formulario de agendamento nos cards da vitrine publica.
+- O agendamento online exige produto com preco e percentual de sinal configurados.
+- Ao enviar, cria registro em `catalogo_agendamentos` com status `aguardando_pagamento`.
+- Preparada integracao com Mercado Pago usando `MERCADO_PAGO_ACCESS_TOKEN`.
+- Quando configurado, o sistema cria uma preferencia de pagamento do sinal e redireciona o cliente ao checkout.
+- Criado webhook `/api/catalogo/mercado-pago/webhook` para marcar pagamento aprovado como `pagamento_recebido`.
+- Criada pagina de retorno `/catalogo/agendamento/[id]`.
+- Criada a migration `061_catalogo_agendamentos_pagamento.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Disponibilidade por produto no agendamento online
+
+- Adicionados campos de disponibilidade em `catalogo_produtos`:
+  - dias da semana disponiveis;
+  - periodos disponiveis: manha, tarde e noite.
+- O cadastro de produtos da vitrine permite marcar os dias e periodos aceitos para cada produto.
+- A vitrine publica passa essas regras para o modal de agendamento.
+- O formulario de agendamento exige data e periodo, mostra apenas periodos liberados e alerta quando a data escolhida nao esta disponivel.
+- A API `/api/catalogo/agendamentos` tambem valida data e periodo antes de criar o agendamento, impedindo envio manual invalido.
+- Criada a migration `062_catalogo_produtos_disponibilidade.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Pagamento de produto sem data de agendamento
+
+- Adicionada opcao por produto para exigir ou nao data no pagamento.
+- Quando `Exigir data no pagamento` estiver ligado, o fluxo continua como agendamento online com data e periodo.
+- Quando estiver desligado, o cliente informa apenas nome, telefone, e-mail e observacoes, paga online e combina o horario pelo WhatsApp depois.
+- A API respeita a configuracao do produto e so valida data/periodo quando essa opcao estiver ligada.
+- A pagina de retorno do pagamento mostra o proximo passo e botao para chamar a clinica no WhatsApp quando nao houver data escolhida.
+- Criada a migration `063_catalogo_pagamento_sem_agendamento.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Horarios especificos por dia no catalogo
+
+- A disponibilidade do produto deixou de ser apenas por dia/periodo e passou a aceitar horarios especificos por dia da semana.
+- No cadastro do produto, cada dia possui um campo para horarios separados por virgula.
+- Exemplo: quarta com `14:00, 16:00` e quinta com `18:30, 20:00`.
+- Na vitrine, ao escolher uma data, o cliente ve somente os horarios cadastrados para aquele dia da semana.
+- A API valida o horario escolhido contra a agenda do produto antes de criar o pagamento.
+- A pagina de retorno passou a exibir o horario selecionado.
+- Criada a migration `064_catalogo_horarios_por_dia.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Correcao da digitacao de horarios no produto
+
+- Corrigido o campo de horarios no cadastro de produtos da vitrine.
+- Antes, o texto era normalizado enquanto o usuario digitava, impedindo inserir valores parciais como `14` ou `14:`.
+- Agora o campo aceita digitacao livre e normaliza apenas ao salvar.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-17 - Gestao de agendamentos e bloqueio de horarios
+
+- Criada a pagina administrativa `/produtos/agendamentos`.
+- A pagina lista pedidos da vitrine com produto, cliente, telefone, e-mail, valor, data, horario, observacoes e status.
+- Adicionados filtros por status e botao de atualizacao.
+- Adicionados atalhos para WhatsApp, link de pagamento, confirmar e cancelar.
+- Criada API publica de disponibilidade `/api/catalogo/disponibilidade`.
+- O modal da vitrine consulta a disponibilidade em tempo real e oculta horarios ja reservados.
+- A API de criacao tambem bloqueia horarios ocupados antes de criar o pagamento.
+- Criado indice unico parcial para impedir duplicidade de produto/data/horario enquanto o status estiver aguardando pagamento, pago ou confirmado.
+- Webhook do Mercado Pago passou a reconhecer mais formatos de notificacao e status cancelado/expirado.
+- Criada a migration `065_catalogo_bloqueio_horario_unico.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Limpeza de pedidos cancelados da vitrine
+
+- A tela `/produtos/agendamentos` agora abre na visao `Todos ativos`, ocultando pedidos cancelados e expirados.
+- O filtro `Cancelados` passou a reunir pedidos cancelados e expirados.
+- Adicionado botao `Limpar cancelados` para excluir todos os cancelados/expirados da clinica.
+- Adicionado botao `Excluir` em cada pedido cancelado ou expirado.
+- Pedidos cancelados/expirados nao exibem mais o link de pagamento.
+- Sem migration e sem SQL do Supabase, pois a policy de delete ja existe na migration `061_catalogo_agendamentos_pagamento.sql`.
+
+## 2026-06-17 - Correcao da digitacao de horarios de pagamento
+
+- Corrigido o campo de horarios disponiveis no cadastro de produtos da vitrine.
+- O campo agora exibe o texto que esta sendo digitado, permitindo informar horarios como `14:00, 16:00` antes de salvar.
+- A normalizacao continua acontecendo apenas no salvamento do produto.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-17 - Agenda da vitrine por data especifica
+
+- A agenda de pagamento/agendamento da vitrine deixou de ser recorrente por dia da semana.
+- O cadastro de produto agora aceita horarios por data especifica no formato `24/06/2026: 14:00, 16:00`.
+- A vitrine so mostra horarios cadastrados exatamente para a data escolhida.
+- A API de disponibilidade e a API de criacao do pagamento tambem validam pela data exata.
+- Horarios ja reservados continuam sendo ocultados automaticamente.
+- Sem migration e sem SQL do Supabase, pois foi reaproveitado o campo `catalogo_produtos.agenda_horarios` ja existente.
+
+## 2026-06-17 - Editor guiado de datas da agenda
+
+- O cadastro de produtos da vitrine ganhou um editor guiado para agenda:
+  - campo de data;
+  - campo de horarios separados por virgula;
+  - botao `Adicionar`;
+  - lista das datas cadastradas;
+  - botao para remover uma data.
+- O campo de texto livre permanece disponivel para ajustes rapidos, mas nao e mais a unica forma de cadastrar a agenda.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-17 - Datas abertas no modal publico da vitrine
+
+- O modal publico de agendamento agora mostra botoes com as datas abertas cadastradas no produto.
+- O cliente pode clicar diretamente em uma data disponivel, sem precisar procurar no calendario.
+- O campo de data recebeu limite minimo para evitar escolha de datas passadas.
+- Quando nao houver datas futuras abertas, o modal informa que o produto ainda nao possui datas para agendamento.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-17 - Operacao de pagamento da vitrine
+
+- Adicionada expiracao de pedidos aguardando pagamento em 15 minutos.
+- Pedidos expirados deixam de bloquear horarios na vitrine.
+- A expiracao roda ao consultar disponibilidade, criar novo pedido, abrir a tela administrativa e atualizar a lista.
+- Adicionados detalhes operacionais do Mercado Pago em `catalogo_agendamentos`:
+  - status bruto;
+  - detalhe do status;
+  - payload bruto;
+  - data de atualizacao;
+  - indices para expiracao e ID de pagamento.
+- O webhook passou a gravar esses detalhes para auditoria.
+- A tela `/produtos/agendamentos` ganhou resumo financeiro com:
+  - total recebido;
+  - valor aguardando pagamento;
+  - quantidade de pedidos pagos;
+  - ticket medio;
+  - cancelados/expirados.
+- Cada pedido passou a exibir expiracao, pagamento, IDs do Mercado Pago e status do gateway.
+- O WhatsApp do pedido usa mensagem mais completa com produto, data, horario e status.
+- Produtos da vitrine ganharam textos editaveis:
+  - resumo antes do pagamento;
+  - politica de pagamento/cancelamento;
+  - mensagem apos pagamento.
+- O modal publico mostra o resumo antes do pagamento e a politica definida por produto.
+- A pagina de retorno do pagamento usa a mensagem apos pagamento e mostra a politica do produto.
+- Criada a migration `066_catalogo_pagamento_operacional.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-17 - Vitrine publica sem login
+
+- Corrigido o middleware que redirecionava links da vitrine para `/login`.
+- As rotas `/catalogo/...` agora sao publicas para qualquer pessoa acessar o catalogo compartilhado.
+- As APIs publicas usadas pela vitrine em `/api/catalogo/...` tambem foram liberadas do login.
+- Sem migration e sem SQL do Supabase.
+
+## 2026-06-17 - Obrigado, PDF, cupons e pacotes da vitrine
+
+- Produtos da vitrine passaram a aceitar `Avaliacoes do pacote`, exibidas no card publico e no comprovante.
+- Adicionado cupom por produto:
+  - codigo;
+  - percentual ou valor fixo;
+  - validade;
+  - limite de usos;
+  - ativo/inativo.
+- O modal publico aceita cupom de desconto e envia o codigo para a API.
+- A API aplica o desconto no valor do sinal antes de criar a preferencia do Mercado Pago.
+- O pedido grava valor original do sinal, desconto aplicado e codigo do cupom.
+- O uso do cupom e incrementado apos criar a preferencia de pagamento.
+- A pagina de obrigado passou a mostrar desconto/cupom, pacote incluso e botoes para WhatsApp, Google Calendar e PDF.
+- Criada rota publica `/api/catalogo/agendamentos/[id]/pdf` para gerar comprovante PDF do pedido.
+- Criada a migration `067_catalogo_cupons_pacotes_pdf.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-18 - Modelos de interpretacao por modulo
+
+- Adicionado cadastro de modelos de interpretacao por modulo em Configuracoes.
+- Cada modelo permite definir:
+  - modulo;
+  - titulo;
+  - condicao de uso;
+  - interpretacao padrao;
+  - riscos e pontos de atencao;
+  - recomendacoes;
+  - ordem;
+  - ativo/inativo.
+- A geracao de IA por modulo agora consulta os modelos ativos da clinica e usa esses textos como guia clinico quando forem compativeis com os dados.
+- Os modelos nao substituem a revisao humana: continuam passando pela tela de revisao/edicao antes de entrar no relatorio.
+- Criada a migration `068_modelos_interpretacao_modulos.sql`.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-06-18 - Modelos-base de interpretacao clinica
+
+- O painel de modelos de interpretacao ganhou o botao `Carregar modelos-base`.
+- O botao adiciona modelos iniciais editaveis para:
+  - anamnese;
+  - sinais vitais;
+  - antropometria;
+  - bioimpedancia;
+  - posturografia;
+  - forca;
+  - flexibilidade;
+  - RML;
+  - cardiorrespiratorio;
+  - biomecanica da corrida.
+- A carga evita duplicar modelos que ja existem com o mesmo modulo e titulo.
+- Os textos entram como base inicial da clinica e podem ser editados livremente.
+- Sem migration nova e sem SQL do Supabase, pois usa a tabela `modelos_interpretacao_modulos` criada na migration `068`.
+
+## 2026-06-25 - URL limpa da vitrine publica
+
+- Criada a rota publica `/catalogo`, permitindo compartilhar a vitrine como `https://avaliacao.medfit.med.br/catalogo`.
+- A rota antiga `/catalogo/[clinicaId]` continua funcionando para compatibilidade com links ja enviados.
+- O middleware passou a liberar `/catalogo` sem login.
+- Os botoes internos de abrir/compartilhar vitrine passaram a usar `/catalogo`.
+- Os links de compartilhamento de produto agora usam ancora em `/catalogo#produto-{id}`.
+- A rota limpa usa `CATALOGO_CLINICA_ID`/`NEXT_PUBLIC_CATALOGO_CLINICA_ID` quando configurado; se nao houver variavel, usa a primeira clinica ativa.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-06 - Modulo de termografia funcional
+
+- Criado o modulo `Termografia funcional` no fluxo da avaliacao.
+- A ordem clinica passou a ser Posturografia, Termografia, Antropometria e Bioimpedancia.
+- A coleta registra manualmente:
+  - temperatura ambiente;
+  - umidade relativa;
+  - tempo de aclimatacao;
+  - distancia da camera;
+  - data e horario;
+  - adesao as recomendacoes pre-teste;
+  - condicoes da sala;
+  - observacoes tecnicas.
+- A emissividade fica fixa em `0,98`.
+- Criada configuracao editavel por clinica para fabricante, modelo e software, com defaults:
+  - HIKMICRO;
+  - Pocket2;
+  - HIKMICRO Analyzer.
+- Cada coleta preserva uma copia do equipamento utilizado.
+- Implementado upload privado das quatro vistas basais obrigatorias:
+  - anterior;
+  - posterior;
+  - lateral direita;
+  - lateral esquerda.
+- Implementadas imagens complementares opcionais.
+- Implementado cadastro de ROIs predefinidas e personalizadas, com temperaturas
+  minima, media e maxima, lateralidade, dor e observacao.
+- A comparacao bilateral calcula automaticamente a diferenca absoluta das
+  temperaturas medias e sinaliza diferencas acima de 0,5 C apenas para revisao,
+  sem diagnostico automatico.
+- Adicionados campos de interpretacao profissional.
+- Integrado o modulo ao checklist de revisao e finalizacao.
+- Integrada a geracao, edicao e validacao da analise com IA, com linguagem
+  obrigatoriamente complementar e nao diagnostica.
+- Integrado ao PDF clinico, PDF publico e relatorio longitudinal.
+- O PDF apresenta protocolo, equipamento, quatro termogramas no mesmo arranjo da
+  posturografia, ROIs, assimetrias, imagens opcionais e texto validado.
+- O relatorio longitudinal ganhou comparativo das quatro vistas termograficas.
+- Criada a migration completa `069_termografia_funcional.sql`, incluindo tabelas,
+  RLS, bucket privado, policies e suporte ao tipo de analise de IA.
+- Esta melhoria possui SQL do Supabase.
+
+## 2026-07-06 - Correcao da selecao de modelo Anthropic
+
+- Corrigido erro ao gerar analise de IA da termografia causado por IDs antigos
+  de modelos Claude.
+- O backend agora consulta a API de modelos da Anthropic e usa um modelo
+  realmente disponivel para a chave configurada.
+- Atualizados os fallbacks para Claude Sonnet 5, Sonnet 4.6 e Haiku 4.5,
+  preservando compatibilidade com modelos anteriores quando ainda liberados.
+- `ANTHROPIC_MODEL` continua sendo respeitado quando configurado.
+- Mantido fallback para OpenAI quando `OPENAI_API_KEY` estiver configurada.
+- Atualizados README e verificador de ambiente para `claude-sonnet-5`.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-06 - Compatibilidade com parametros do Claude Sonnet 5
+
+- Corrigido erro `temperature is deprecated for this model` ao gerar analises.
+- O cliente de IA agora omite `temperature` no Claude Sonnet 5 e nos modelos
+  Opus 4.7 ou posteriores, conforme a API atual da Anthropic.
+- Modelos que ainda aceitam o parametro mantem o comportamento anterior.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-06 - Laudo adaptativo para exame isolado
+
+- O resumo do laudo agora exibe somente scores efetivamente calculados.
+- Avaliacoes sem dominios pontuaveis, como Termografia funcional isolada, nao
+  mostram score global nem velocimetros vazios.
+- Quando nenhum score for aplicavel, a pagina de resumo e
+  omitida integralmente; a capa segue diretamente para o exame realizado.
+- Quando apenas um modulo estiver ativo, a capa usa o nome do modulo como tipo
+  da avaliacao. Com mais de um modulo, preserva `personalizado` ou o tipo salvo.
+- A capa tambem usa o modulo unico no selo principal.
+- Laudos com Termografia ativa passam a incluir automaticamente:
+  - protocolo TISEM;
+  - referencia do consenso TISEM;
+  - revisao sistematica de lesoes musculoesqueleticas;
+  - revisao sobre controle de variaveis em reabilitacao.
+- Os mesmos itens foram adicionados aos valores padrao editaveis da configuracao
+  do PDF.
+- Adicionado teste automatizado especifico para laudo isolado de termografia.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-06 - Multiplas imagens termograficas complementares
+
+- O upload complementar passou a aceitar varias imagens na mesma selecao.
+- O seletor e limpo depois do envio, permitindo novos anexos sucessivos,
+  inclusive do mesmo arquivo.
+- Nao ha limite fixo de imagens complementares no modulo.
+- A interface informa a quantidade anexada.
+- Adicionada exclusao individual da imagem e do arquivo no Storage.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-07 - Refinamento visual da vitrine publica MedFit
+
+- Ajustada apenas a apresentacao visual do catalogo publico, mantendo estrutura,
+  conteudo, agendamento, pagamento e compartilhamento sem mudancas funcionais.
+- A vitrine passou a usar fundo bege quente, cards claros, acentos em verde
+  MedFit, badges suaves, cantos mais arredondados e sombras discretas.
+- O banner deixou de usar bloco verde escuro dominante e passou a ter linguagem
+  mais clinica, premium e acolhedora.
+- Titulos principais e nomes dos produtos passaram a usar fonte serifada de
+  sistema, preservando texto de corpo em sans-serif limpa.
+- A logomarca cadastrada da clinica continua sendo usada no topo da vitrine; o
+  fallback com inicial so aparece se nao houver logo cadastrada.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-08 - Refinamento visual dos documentos pre-teste publicos
+
+- Aplicado o mesmo padrao visual premium da vitrine aos documentos pre-teste
+  publicos.
+- Foram ajustados:
+  - documento avulso unificado;
+  - recomendacoes pre-teste vinculadas ao paciente;
+  - consentimento/TCLE publico;
+  - anamnese publica vinculada ao paciente.
+- O layout agora usa fundo bege quente, cards claros, acentos em verde MedFit,
+  titulos serifados, cantos arredondados e sombras discretas.
+- O bloco lateral usado no preview nao foi implementado no documento final.
+- A logomarca cadastrada da clinica continua sendo exibida no cabecalho quando
+  disponivel.
+- Formularios, checkboxes, mensagens de sucesso, aceite digital e rodape
+  institucional foram refinados visualmente sem alterar comportamento de envio,
+  aceite, validacao, gravacao ou expiracao de links.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-08 - Layout hibrido do PDF do relatorio final
+
+- Implementado o visual hibrido aprovado para o PDF do laudo final.
+- A capa passou a ter moldura bege externa com cantos arredondados, mantendo o
+  miolo verde/azulado configurado pela clinica.
+- As paginas internas passaram a usar moldura bege, area de leitura clara no
+  padrao tecnico anterior e cards em tom bege suave.
+- Cards, metricas, KPIs, blocos de IA, referencias e laterais receberam cantos
+  mais arredondados, sombras discretas e contraste visual mais premium.
+- Os titulos das paginas internas usam fonte serifada de sistema para aproximar
+  o relatorio da identidade visual aprovada.
+- A mudanca foi apenas visual; estrutura, dados, modulos, scores, termografia,
+  referencias e fluxo de geracao do PDF foram preservados.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-08 - Ajuste fino do rodape e cards do PDF
+
+- Revisado visualmente o PDF gerado apos o novo layout.
+- Corrigido o rodape que estava entrando no fluxo do conteudo e ficando no meio
+  das paginas internas.
+- O rodape voltou a ficar fixo no fim da moldura das paginas do laudo.
+- Adicionadas regras especificas para cards com estilos inline antigos, evitando
+  que blocos brancos/azulados escapem do novo padrao bege.
+- Validado em PDF real gerado com a mesma sequencia da API: renderizacao HTML,
+  paginacao, injecao do rodape e geracao A4.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-07-11 - Compatibilidade visual do PDF em mobile
+
+- Revisadas as capturas do PDF aberto no telefone apos a atualizacao visual.
+- Identificado que visualizadores mobile rasterizavam sombras e transparencias
+  como faixas, bordas fantasmas e blocos translucidos sobre os cards.
+- As paginas internas do laudo agora usam modo mais robusto para PDF/mobile:
+  preenchimentos solidos, bordas leves e sem sombras internas.
+- Mantida a identidade visual premium do layout, mas com menos efeitos
+  translucidos nas paginas internas para evitar artefatos em WhatsApp/iOS.
+- Rodape, cards de score, cards de metricas, tabelas e blocos inline passam a
+  renderizar sem `box-shadow` nas paginas internas.
+- Validado com TypeScript, checagem de textos e teste visual do PDF.
+- Sem migration nova e sem SQL do Supabase.

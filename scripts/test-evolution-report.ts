@@ -11,7 +11,12 @@ const base = {
   forca: {},
   flexibilidade: {},
   cardiorrespiratorio: {},
-  posturografia: { foto_anterior: image },
+  posturografia: {
+    foto_anterior: image,
+    foto_posterior: image,
+    foto_lateral_dir: image,
+    foto_lateral_esq: image,
+  },
   bioimpedancia: {},
   rml: {},
 };
@@ -49,6 +54,8 @@ const checks = [
   'Evolução dos scores',
   'Linha do tempo',
   'Comparativo postural',
+  'Lateral direita',
+  'Lateral esquerda',
   'Paciente Teste',
   '+15',
   'Evolução positiva',
@@ -60,6 +67,10 @@ for (const check of checks) {
 
 if ((html.match(/<section class="page/g) ?? []).length < 4) {
   throw new Error('Relatório de evolução deveria gerar ao menos quatro páginas no cenário completo');
+}
+
+if ((html.match(/class="photo"/g) ?? []).length !== 8) {
+  throw new Error('Comparativo postural deve apresentar oito posições de fotografia');
 }
 
 console.log(JSON.stringify({ ok: true, bytes: Buffer.byteLength(html), checks: checks.length }, null, 2));

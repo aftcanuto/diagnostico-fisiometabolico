@@ -83,6 +83,12 @@ const forbiddenVisiblePhrases = [
   'Catalogo da clinica',
   'Escolha o produto ideal para sua avaliacao',
   'Avaliacao fisiometabolica completa',
+  'Aplicar orientacao nutricional',
+  'Plano de acao pos-laudo',
+  'Aplicar plano de acao',
+  'Previa do que ira',
+  'Nao aplicado',
+  'Editavel antes de finalizar',
 ];
 
 for (const target of targets) {

@@ -9,6 +9,7 @@ import { PacienteDocumentosCentral } from '@/components/PacienteDocumentosCentra
 import { ProntuarioPaciente } from '@/components/ProntuarioPaciente';
 import { Plus, ArrowLeft, BarChart2, Clock, CheckCircle, ChevronRight, Eye, RotateCcw, FileChartColumn } from 'lucide-react';
 import { calcIdade } from '@/lib/calculations/antropometria';
+import { GerarEvolucaoButton } from '@/components/GerarEvolucaoButton';
 
 function dataLongaBR(valor?: string | null) {
   if (!valor) return 'Sem data';
@@ -115,7 +116,9 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
   const totalFin = avalsLista?.filter((a: any) => a.status === 'finalizada').length ?? 0;
   const emAndamento = avalsLista?.filter((a: any) => a.status !== 'finalizada') ?? [];
   const avaliacaoMaisRecente = avaliacoes[0];
-  const evolucaoRevisada = Boolean(avaliacaoMaisRecente?.analises_ia?.evolucao?.texto_editado?.trim());
+  const analiseEvolucao = avaliacaoMaisRecente?.analises_ia?.evolucao;
+  const evolucaoGerada = Boolean(analiseEvolucao?.conteudo || analiseEvolucao?.texto_editado);
+  const evolucaoRevisada = Boolean(analiseEvolucao?.texto_editado?.trim());
 
   return (
     <div className="space-y-5 max-w-5xl">
@@ -130,10 +133,13 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
               <Button variant="secondary"><FileChartColumn className="w-4 h-4" /> Relatório de evolução</Button>
             </a>
           )}
-          {totalFin >= 2 && !evolucaoRevisada && avaliacaoMaisRecente && (
+          {totalFin >= 2 && evolucaoGerada && !evolucaoRevisada && avaliacaoMaisRecente && (
             <Link href={`/avaliacoes/${avaliacaoMaisRecente.id}/revisao#analises-ia`}>
               <Button variant="secondary"><FileChartColumn className="w-4 h-4" /> Revisar evolução</Button>
             </Link>
+          )}
+          {totalFin >= 2 && !evolucaoGerada && avaliacaoMaisRecente && (
+            <GerarEvolucaoButton avaliacaoId={avaliacaoMaisRecente.id} />
           )}
           <Link href={`/avaliacoes/nova?pacienteId=${p.id}`}>
             <Button><Plus className="w-4 h-4" /> Nova avaliação</Button>

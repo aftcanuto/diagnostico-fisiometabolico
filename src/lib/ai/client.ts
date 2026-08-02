@@ -21,6 +21,10 @@ export interface LLMResponse {
 }
 
 const PRICING = {
+  'claude-sonnet-5': { in: 3 / 1e6, out: 15 / 1e6 },
+  'claude-sonnet-4-6': { in: 3 / 1e6, out: 15 / 1e6 },
+  'claude-haiku-4-5-20251001': { in: 1 / 1e6, out: 5 / 1e6 },
+  'claude-haiku-4-5': { in: 1 / 1e6, out: 5 / 1e6 },
   'claude-sonnet-4-20250514': { in: 3 / 1e6, out: 15 / 1e6 },
   'claude-3-7-sonnet-20250219': { in: 3 / 1e6, out: 15 / 1e6 },
   'claude-3-5-sonnet-20241022': { in: 3 / 1e6, out: 15 / 1e6 },
@@ -29,9 +33,12 @@ const PRICING = {
   'gpt-4o-mini': { in: 0.15 / 1e6, out: 0.6 / 1e6 },
 };
 
-const CLAUDE_DEFAULT = 'claude-sonnet-4-20250514';
+const CLAUDE_DEFAULT = 'claude-sonnet-5';
 const CLAUDE_FALLBACKS = [
   CLAUDE_DEFAULT,
+  'claude-sonnet-4-6',
+  'claude-haiku-4-5',
+  'claude-haiku-4-5-20251001',
   'claude-3-7-sonnet-20250219',
   'claude-3-5-sonnet-20241022',
   'claude-3-5-haiku-20241022',
@@ -82,8 +89,32 @@ const ANALISE_JSON_TOOL = {
 };
 
 function normalizarModeloClaude(modelo?: string) {
-  if (!modelo || modelo === 'claude-sonnet-4-5') return CLAUDE_DEFAULT;
+  if (!modelo) return CLAUDE_DEFAULT;
   return modelo;
+}
+
+let modelosClaudeCache: string[] | null = null;
+
+async function listarModelosClaudeDisponiveis(): Promise<string[]> {
+  if (modelosClaudeCache) return modelosClaudeCache;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/models?limit=100', {
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const body = await res.json();
+    const modelos = (body.data ?? [])
+      .map((item: any) => item?.id)
+      .filter((id: any): id is string => typeof id === 'string' && id.startsWith('claude-'));
+    modelosClaudeCache = modelos;
+    return modelos;
+  } catch {
+    return [];
+  }
 }
 
 export async function llmCall(opts: LLMOptions): Promise<LLMResponse> {
@@ -107,7 +138,15 @@ export async function llmCall(opts: LLMOptions): Promise<LLMResponse> {
 
 async function callClaude(opts: LLMOptions): Promise<LLMResponse> {
   const preferido = normalizarModeloClaude(process.env.ANTHROPIC_MODEL);
-  const modelos = [preferido, ...CLAUDE_FALLBACKS].filter((m, i, arr) => arr.indexOf(m) === i);
+  const disponiveis = await listarModelosClaudeDisponiveis();
+  const candidatos = [preferido, ...CLAUDE_FALLBACKS, ...disponiveis]
+    .filter((m, i, arr) => arr.indexOf(m) === i);
+  const modelos = disponiveis.length
+    ? candidatos.filter(modelo =>
+        disponiveis.includes(modelo) ||
+        modelo === process.env.ANTHROPIC_MODEL
+      )
+    : candidatos;
   const erros: string[] = [];
 
   for (const modelo of modelos) {
@@ -120,8 +159,8 @@ async function callClaude(opts: LLMOptions): Promise<LLMResponse> {
   }
 
   const error: any = new Error(
-    'Nenhum modelo Claude configurado esta disponivel para esta chave Anthropic. ' +
-    'Na Vercel, remova ANTHROPIC_MODEL ou defina um modelo liberado para sua conta. ' +
+    'Nenhum modelo Claude disponivel para esta chave Anthropic aceitou a solicitacao. ' +
+    'Verifique a chave, os creditos e as permissoes da conta Anthropic. ' +
     'Tambem e possivel configurar OPENAI_API_KEY para usar OpenAI como fallback.'
   );
   error.code = 'CLAUDE_MODEL_UNAVAILABLE';
@@ -134,10 +173,14 @@ async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LL
     ? '\n\nResponda APENAS com um objeto JSON valido. Nao use markdown, nao use ``` e nao escreva texto antes ou depois do JSON.'
     : '');
 
+  const aceitaTemperature = !(
+    modelo === 'claude-sonnet-5' ||
+    /^claude-opus-(4-[7-9]|[5-9])(?:-|$)/.test(modelo)
+  );
   const body: any = {
     model: modelo,
     max_tokens: opts.maxTokens ?? 1500,
-    temperature: opts.temperature ?? 0.4,
+    ...(aceitaTemperature ? { temperature: opts.temperature ?? 0.4 } : {}),
     system,
     messages: [{ role: 'user', content: opts.user }],
     ...(opts.json

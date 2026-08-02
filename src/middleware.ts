@@ -21,9 +21,15 @@ export async function middleware(request: NextRequest) {
   const isPublic =
     isAuthPage ||
     url.pathname.startsWith('/_next') ||
+    url.pathname === '/site.webmanifest' ||
+    url.pathname === '/favicon.png' ||
+    url.pathname === '/apple-touch-icon.png' ||
     url.pathname === '/' ||
     url.pathname.startsWith('/p/') ||
+    url.pathname === '/catalogo' ||
+    url.pathname.startsWith('/catalogo/') ||
     url.pathname.startsWith('/pre-atendimento/') ||
+    url.pathname.startsWith('/api/catalogo/') ||
     url.pathname.startsWith('/api/consentimento-publico') ||
     url.pathname.startsWith('/api/anamnese-publica') ||
     url.pathname.startsWith('/api/pdf/publico');

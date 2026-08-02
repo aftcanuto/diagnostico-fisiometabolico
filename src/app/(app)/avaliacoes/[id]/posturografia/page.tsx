@@ -88,8 +88,9 @@ export default function PosturografiaPage(props: { params: Promise<{ id: string 
   const score = scorePostura(form.alinhamentos);
   const steps = aval ? buildSteps(params.id, aval.modulos_selecionados) : [];
   const prevStep = steps.find(s => s.key === 'sinais_vitais') ?? steps.find(s => s.key === 'anamnese');
-  const nextStep = steps.find(s => s.key === 'bioimpedancia')
+  const nextStep = steps.find(s => s.key === 'termografia')
     ?? steps.find(s => s.key === 'antropometria')
+    ?? steps.find(s => s.key === 'bioimpedancia')
     ?? steps.find(s => s.key === 'flexibilidade')
     ?? steps.find(s => s.key === 'forca')
     ?? steps.find(s => s.key === 'revisao');

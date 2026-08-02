@@ -7,7 +7,7 @@ import * as P from './prompts';
 import type { PacienteContexto } from './prompts';
 
 export type TipoAnalise =
-  | 'anamnese' | 'sinais_vitais' | 'posturografia'
+  | 'anamnese' | 'sinais_vitais' | 'posturografia' | 'termografia'
   | 'antropometria' | 'bioimpedancia' | 'forca' | 'flexibilidade'
   | 'rml' | 'cardiorrespiratorio' | 'biomecanica_corrida'
   | 'conclusao_global' | 'evolucao';
@@ -64,9 +64,42 @@ async function persistir(avaliacaoId: string, tipo: TipoAnalise, conteudo: any, 
   }, { onConflict: 'avaliacao_id,tipo' });
 }
 
+async function carregarModelosInterpretacao(clinicaId: string, modulo: string) {
+  const sb = createAdminClient();
+  const { data } = await sb
+    .from('modelos_interpretacao_modulos')
+    .select('titulo, condicao_uso, interpretacao, riscos, recomendacoes')
+    .eq('clinica_id', clinicaId)
+    .eq('modulo', modulo)
+    .eq('ativo', true)
+    .order('ordem')
+    .order('titulo');
+
+  return data ?? [];
+}
+
+function blocoModelosInterpretacao(modelos: any[]) {
+  if (!modelos.length) return '';
+  return [
+    'Modelos de interpretação cadastrados pela clínica:',
+    ...modelos.map((modelo, index) => {
+      const partes = [
+        `${index + 1}. ${modelo.titulo}`,
+        modelo.condicao_uso ? `Quando usar: ${modelo.condicao_uso}` : '',
+        modelo.interpretacao ? `Interpretação padrão: ${modelo.interpretacao}` : '',
+        modelo.riscos ? `Riscos/pontos de atenção: ${modelo.riscos}` : '',
+        modelo.recomendacoes ? `Recomendações padrão: ${modelo.recomendacoes}` : '',
+      ].filter(Boolean);
+      return partes.join('\n');
+    }),
+    'Use estes modelos como guia de estilo e raciocínio clínico quando forem compatíveis com os dados. Não copie mecanicamente se os achados não sustentarem o texto.',
+  ].join('\n\n');
+}
+
 const TABELA: Record<string, string> = {
   anamnese: 'anamnese', sinais_vitais: 'sinais_vitais',
   posturografia: 'posturografia', antropometria: 'antropometria',
+  termografia: 'termografia',
   bioimpedancia: 'bioimpedancia',
   forca: 'forca', flexibilidade: 'flexibilidade',
   rml: 'rml',
@@ -88,6 +121,7 @@ export async function gerarAnaliseModulo(avaliacaoId: string, modulo: TipoAnalis
     anamnese: P.promptAnamnese,
     sinais_vitais: P.promptSinaisVitais,
     posturografia: P.promptPosturografia,
+    termografia: P.promptTermografia,
     antropometria: P.promptAntropometria,
     bioimpedancia: P.promptBioimpedancia,
     forca: P.promptForca,
@@ -98,8 +132,11 @@ export async function gerarAnaliseModulo(avaliacaoId: string, modulo: TipoAnalis
   };
   const builder = builders[modulo];
 
+  const modelos = await carregarModelosInterpretacao(clinicaId, modulo);
+  const modelosTexto = blocoModelosInterpretacao(modelos);
   const { system, user } = builder(ctx, dados);
-  const resp = await llmCall({ system, user, json: true, temperature: 0.4 });
+  const promptUser = modelosTexto ? `${user}\n\n${modelosTexto}` : user;
+  const resp = await llmCall({ system, user: promptUser, json: true, temperature: 0.4 });
   const conteudo = parseJSON(resp.text);
   await persistir(avaliacaoId, modulo, conteudo, resp.modelo);
   await registrarUso(clinicaId, avaliacaoId, modulo, resp);
@@ -135,6 +172,7 @@ export async function gerarAnaliseEvolucao(avaliacaoAtualId: string) {
     .select(`id, data,
       scores(*),
       antropometria(peso, estatura, imc, percentual_gordura, massa_magra),
+      termografia(temperatura_ambiente, umidade_relativa, tempo_aclimatacao_min, rois, conclusao_funcional),
       forca(preensao_dir_kgf, preensao_esq_kgf, assimetria_percent),
       cardiorrespiratorio(vo2max, l2, vam, fc_repouso)
     `)
@@ -148,6 +186,7 @@ export async function gerarAnaliseEvolucao(avaliacaoAtualId: string) {
     data: a.data,
     scores: Array.isArray(a.scores) ? a.scores[0] : a.scores,
     antropometria: Array.isArray(a.antropometria) ? a.antropometria[0] : a.antropometria,
+    termografia: Array.isArray(a.termografia) ? a.termografia[0] : a.termografia,
     forca: Array.isArray(a.forca) ? a.forca[0] : a.forca,
     cardio: Array.isArray(a.cardiorrespiratorio) ? a.cardiorrespiratorio[0] : a.cardiorrespiratorio,
   }));

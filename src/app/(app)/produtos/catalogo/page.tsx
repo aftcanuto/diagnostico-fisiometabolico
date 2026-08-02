@@ -18,5 +18,5 @@ export default async function ConfigurarCatalogoPage() {
     );
   }
 
-  return <CatalogoConfigForm clinica={clinica} catalogoHref={`/catalogo/${clinica.id}`} />;
+  return <CatalogoConfigForm clinica={clinica} catalogoHref="/catalogo" />;
 }

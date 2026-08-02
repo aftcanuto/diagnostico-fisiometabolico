@@ -7,6 +7,8 @@ import { ConsentimentosConfigPanel } from '@/components/forms/ConsentimentosConf
 import { ProtocolosConfigPanel } from '@/components/forms/ProtocolosConfigPanel';
 import { PlanosTemplatesPanel } from '@/components/forms/PlanosTemplatesPanel';
 import { SystemHealthPanel } from '@/components/SystemHealthPanel';
+import { ModelosInterpretacaoPanel } from '@/components/forms/ModelosInterpretacaoPanel';
+import { TermografiaConfigForm } from '@/components/forms/TermografiaConfigForm';
 
 export default async function ConfiguracoesPage() {
   const supabase = createClient();
@@ -30,6 +32,11 @@ export default async function ConfiguracoesPage() {
 
   const { data: papel } = await supabase.rpc('current_papel');
   const isAdmin = papel === 'admin' || papel === 'owner';
+  const { data: termografiaConfig } = await supabase
+    .from('termografia_config')
+    .select('*')
+    .eq('clinica_id', clinicaId)
+    .maybeSingle();
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -78,6 +85,8 @@ export default async function ConfiguracoesPage() {
           <SystemHealthPanel />
           <ConsentimentosConfigPanel clinicaId={clinicaId} />
           <ProtocolosConfigPanel clinicaId={clinicaId} />
+          <ModelosInterpretacaoPanel clinicaId={clinicaId} />
+          <TermografiaConfigForm clinicaId={clinicaId} config={termografiaConfig} />
           <PlanosTemplatesPanel clinicaId={clinicaId} />
           <PdfConfigForm
             clinicaId={clinicaId}

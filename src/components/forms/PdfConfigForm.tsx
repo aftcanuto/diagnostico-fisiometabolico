@@ -31,6 +31,7 @@ const DEFAULTS: Omit<PdfConfig, 'clinica_id'> = {
     { id: 'flexibilidade', label: 'Flexibilidade', texto: 'Banco de Wells (ACSM)' },
     { id: 'aerobico', label: 'Aeróbico', texto: 'Zonas % FCmáx (Tanaka, 2001)' },
     { id: 'ffmi', label: 'FFMI', texto: 'Schutz 2002; limite: Berkhan/McDonald' },
+    { id: 'termografia', label: 'Termografia funcional', texto: 'Protocolo TISEM; emissividade cutânea 0,98; análise comparativa por ROIs' },
   ],
   referencias: [
     { id: 'jackson', texto: 'Jackson & Pollock. Br J Nutr. 1978;40(3):497–504.' },
@@ -41,6 +42,9 @@ const DEFAULTS: Omit<PdfConfig, 'clinica_id'> = {
     { id: 'leong', texto: 'Leong et al. Lancet. 2015;386:266–273.' },
     { id: 'medeor', texto: 'Medeor Ltda. Manual técnico do dinamômetro isométrico Medeor. São Paulo; 2019.' },
     { id: 'massy', texto: 'Massy-Westropp NM et al. Hand Grip Strength normative data. BMC Res Notes. 2011;4:127.' },
+    { id: 'termografia-tisem', texto: 'Moreira DG et al. J Therm Biol. 2017;69:155-162. doi:10.1016/j.jtherbio.2017.07.006.' },
+    { id: 'termografia-lesoes', texto: 'Bunn PS et al. Infrared Phys Technol. 2020;109:103435. doi:10.1016/j.infrared.2020.103435.' },
+    { id: 'termografia-reabilitacao', texto: 'Lubkowska A, Pluta W. Appl Sci. 2022;12(9):4302. doi:10.3390/app12094302.' },
   ],
   texto_legal: 'Este documento é um relatório técnico e não substitui diagnóstico ou prescrição médica.',
   nota_equipamentos: '',

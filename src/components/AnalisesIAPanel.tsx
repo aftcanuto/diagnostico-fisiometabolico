@@ -9,6 +9,7 @@ const MODULOS: { tipo: string; label: string }[] = [
   { tipo: 'anamnese', label: 'Anamnese' },
   { tipo: 'sinais_vitais', label: 'Sinais vitais' },
   { tipo: 'posturografia', label: 'Posturografia' },
+  { tipo: 'termografia', label: 'Termografia funcional' },
   { tipo: 'bioimpedancia', label: 'Bioimpedância' },
   { tipo: 'antropometria', label: 'Antropometria' },
   { tipo: 'forca', label: 'Força' },

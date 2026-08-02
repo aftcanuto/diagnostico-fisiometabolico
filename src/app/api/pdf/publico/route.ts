@@ -58,10 +58,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'avaliacao ainda nao liberada' }, { status: 403 });
   }
 
-  const [anamnese, sinais_vitais, posturografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, planoAlimentar, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
+  const [anamnese, sinais_vitais, posturografia, termografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, planoAlimentar, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
     supabase.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+    supabase.from('termografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('bioimpedancia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('forca').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
     modulos: aval.modulos_selecionados,
     dados: {
       anamnese: anamnese.data ? { ...anamnese.data, _campos: (anamnese.data as any)?.anamnese_templates?.campos ?? [] } : null, sinais_vitais: sinais_vitais.data,
-      posturografia: posturografia.data, bioimpedancia: bioimpedancia.data,
+      posturografia: posturografia.data, termografia: termografia.data, bioimpedancia: bioimpedancia.data,
       antropometria: antropometria.data,
       forca: forca.data, flexibilidade: flexibilidade.data, rml: rml.data, cardiorrespiratorio: cardio.data, biomecanica_corrida: biomecanicaPdf,
       plano_alimentar: planoAlimentar.data,

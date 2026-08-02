@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Users, ClipboardList, TrendingUp, Plus } from 'lucide-react';
+import { DocumentosPreTesteAvulsos } from '@/components/DocumentosPreTesteAvulsos';
 
 function textoSeguro(valor: any, fallback = '-'): string {
   if (valor == null || valor === '') return fallback;
@@ -70,6 +71,8 @@ export default async function DashboardPage() {
           );
         })}
       </div>
+
+      <DocumentosPreTesteAvulsos />
 
       <Card>
         <CardBody>

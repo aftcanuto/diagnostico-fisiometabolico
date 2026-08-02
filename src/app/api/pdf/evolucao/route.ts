@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       id, data, tipo, status, clinica_id, avaliador_id,
       fonte_gordura_relatorio, percentual_gordura_relatorio,
       scores(*), antropometria(*), forca(*), cardiorrespiratorio(*),
-      posturografia(*), sinais_vitais(*), anamnese(*)
+      posturografia(*), termografia(*), sinais_vitais(*), anamnese(*)
     `)
     .eq('paciente_id', pacienteId)
     .eq('status', 'finalizada')
@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
     forca: flat(avaliacao.forca),
     cardiorrespiratorio: flat(avaliacao.cardiorrespiratorio),
     posturografia: flat(avaliacao.posturografia),
+    termografia: flat(avaliacao.termografia),
     sinais_vitais: flat(avaliacao.sinais_vitais),
     anamnese: flat(avaliacao.anamnese),
     bioimpedancia: bioMap[avaliacao.id] ?? null,

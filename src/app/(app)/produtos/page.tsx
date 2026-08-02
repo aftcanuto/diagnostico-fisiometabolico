@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ProductCatalogShareButton } from '@/components/ProductCatalogShareButton';
-import { Plus, Package, Check, ExternalLink, Settings } from 'lucide-react';
+import { CalendarClock, Plus, Package, Check, ExternalLink, Settings } from 'lucide-react';
 
 const MODULOS_META: Record<string, string> = {
   anamnese: 'Anamnese',
@@ -26,7 +26,7 @@ export default async function ProdutosPage() {
     .order('destaque_comercial', { ascending: false })
     .order('padrao', { ascending: false })
     .order('nome');
-  const catalogoHref = clinicaId ? `/catalogo/${clinicaId}` : '/produtos';
+  const catalogoHref = clinicaId ? '/catalogo' : '/produtos';
 
   return (
     <div className="space-y-6">
@@ -41,6 +41,12 @@ export default async function ProdutosPage() {
               <ProductCatalogShareButton href={catalogoHref} />
               <Link href="/produtos/catalogo">
                 <Button variant="secondary"><Settings className="w-4 h-4" /> Configurar vitrine</Button>
+              </Link>
+              <Link href="/produtos/vitrine">
+                <Button variant="secondary"><Package className="w-4 h-4" /> Produtos da vitrine</Button>
+              </Link>
+              <Link href="/produtos/agendamentos">
+                <Button variant="secondary"><CalendarClock className="w-4 h-4" /> Agendamentos</Button>
               </Link>
               <Link href={catalogoHref} target="_blank">
                 <Button variant="secondary"><ExternalLink className="w-4 h-4" /> Abrir vitrine</Button>

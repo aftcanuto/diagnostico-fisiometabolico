@@ -17,6 +17,7 @@ export interface ModulosSelecionados {
   anamnese: boolean;
   sinais_vitais: boolean;
   posturografia: boolean;
+  termografia?: boolean;
   bioimpedancia: boolean;
   antropometria: boolean;
   flexibilidade: boolean;

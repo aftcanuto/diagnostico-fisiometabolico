@@ -67,6 +67,54 @@ export function promptPosturografia(ctx: PacienteContexto, dados: any) {
   };
 }
 
+export function promptTermografia(ctx: PacienteContexto, dados: any) {
+  const rois = Array.isArray(dados?.rois) ? dados.rois : [];
+  const grupos: Record<string, any> = {};
+  rois.forEach((roi: any) => {
+    const nome = roi.regiao === 'Personalizada' ? roi.nome_personalizado : roi.regiao;
+    if (!nome) return;
+    grupos[nome] = { ...(grupos[nome] ?? {}), [roi.lado]: roi };
+  });
+  const assimetrias = Object.entries(grupos).flatMap(([regiao, lados]: any) => {
+    if (lados.D?.temp_media === '' || lados.E?.temp_media === '' ||
+        lados.D?.temp_media == null || lados.E?.temp_media == null) return [];
+    return [{ regiao, delta_c: Math.abs(Number(lados.D.temp_media) - Number(lados.E.temp_media)) }];
+  }).sort((a, b) => b.delta_c - a.delta_c);
+  return {
+    system: SISTEMA_BASE(ctx),
+    user: `Módulo: TERMOGRAFIA FUNCIONAL
+
+A termografia é complementar, comparativa e de triagem. Não diagnostique lesão,
+inflamação ou doença a partir da temperatura superficial. Use termos como padrão
+térmico, diferença térmica, assimetria e achado a correlacionar.
+Referências clínicas: interpretar somente em conjunto com protocolo padronizado,
+exame clínico, sintomas e demais avaliações funcionais.
+
+Condições da coleta:
+- Temperatura ambiente: ${dados?.temperatura_ambiente ?? '-'} °C
+- Umidade relativa: ${dados?.umidade_relativa ?? '-'}%
+- Aclimatação: ${dados?.tempo_aclimatacao_min ?? '-'} min
+- Distância: ${dados?.distancia_cm ?? '-'} cm
+- Emissividade: 0,98
+- Recomendações pré-teste seguidas: ${dados?.recomendacoes_seguidas === true ? 'sim' : dados?.recomendacoes_seguidas === false ? 'não' : 'não informado'}
+- Observação pré-teste: ${dados?.recomendacoes_observacao || '-'}
+- Equipamento: ${dados?.equipamento_fabricante || '-'} ${dados?.equipamento_modelo || '-'}
+- Software: ${dados?.equipamento_software || '-'}
+
+ROIs: ${JSON.stringify(rois)}
+Assimetrias calculadas: ${JSON.stringify(assimetrias)}
+Interpretação profissional já registrada: ${JSON.stringify({
+  achados: dados?.achados_termicos,
+  assimetrias: dados?.assimetrias_relevantes,
+  correlacao: dados?.correlacao_clinica,
+  limitacoes: dados?.limitacoes,
+  conclusao: dados?.conclusao_funcional,
+})}
+
+Analise os padrões térmicos, diferenças bilaterais, dor associada, qualidade do
+protocolo e limitações. Recomende correlação com exame clínico e outros módulos.` };
+}
+
 export function promptAntropometria(ctx: PacienteContexto, dados: any) {
   const estM = dados?.estatura ? dados.estatura / 100 : 1.75;
   const ffmi = dados?.massa_magra ? +(dados.massa_magra / (estM * estM)).toFixed(1) : null;

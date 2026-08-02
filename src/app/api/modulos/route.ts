@@ -7,6 +7,7 @@ const TABELAS_PERMITIDAS = new Set([
   'anamnese',
   'sinais_vitais',
   'posturografia',
+  'termografia',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',

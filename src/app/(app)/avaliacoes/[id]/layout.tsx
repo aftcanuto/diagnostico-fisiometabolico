@@ -30,10 +30,11 @@ export default async function AvaliacaoLayout(props: { params: Promise<{ id: str
   if (!aval) notFound();
 
   const admin = createAdminClient();
-  const [anam, sv, pg, bio, ant, flex, fo, rml, cr, biomec] = await Promise.all([
+  const [anam, sv, pg, termo, bio, ant, flex, fo, rml, cr, biomec] = await Promise.all([
     admin.from('anamnese').select('respostas,template_id').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('sinais_vitais').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('posturografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('termografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('bioimpedancia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('flexibilidade').select('*').eq('avaliacao_id', params.id).maybeSingle(),
@@ -118,6 +119,7 @@ export default async function AvaliacaoLayout(props: { params: Promise<{ id: str
     anamnese: temDados(anam.data?.respostas ?? null),
     'sinais-vitais': temDados(sv.data),
     posturografia: temDados(pg.data),
+    termografia: temDados(termo.data),
     bioimpedancia: temBioimpedancia(bio.data),
     antropometria: temAntropometria(ant.data),
     flexibilidade: temFlexibilidade(flex.data),

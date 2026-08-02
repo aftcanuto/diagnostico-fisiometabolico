@@ -474,7 +474,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
                 />
                 <span>
                   <span className="font-medium text-slate-800">{p.titulo}</span>
-                  <span className="block text-xs text-slate-500">{p.modulo}</span>
+                  {p.modulo && <span className="block text-xs text-slate-500">{p.modulo}</span>}
                 </span>
               </label>
             ))}

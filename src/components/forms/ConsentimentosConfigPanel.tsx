@@ -4,14 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Field, Input, Select, Textarea } from '@/components/ui/Input';
+import { Field, Input, Select } from '@/components/ui/Input';
 import { FileCheck, Plus, Save, Trash2 } from 'lucide-react';
+import { RichTextEditor } from '@/components/RichTextEditor';
+import { getRichTextHtml } from '@/lib/safe-rich-text';
 
 const MODELO_VAZIO = {
   tipo: 'consentimento_informado',
   nome: '',
   descricao: '',
   texto: '',
+  texto_html: '',
+  cor_destaque: '#047857',
+  fonte: 'inter',
+  tamanho_texto: 'medio',
   ativo: true,
   padrao: false,
 };
@@ -49,6 +55,7 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
       clinica_id: clinicaId,
       tipo: normalizarTipo(selecionado.tipo),
       texto: selecionado.texto || textoPadrao(selecionado.tipo),
+      texto_html: selecionado.texto_html || null,
     };
     const query = selecionado.id
       ? supabase.from('consentimento_modelos').update(payload).eq('id', selecionado.id)
@@ -127,13 +134,14 @@ export function ConsentimentosConfigPanel({ clinicaId }: { clinicaId: string }) 
             <Input value={selecionado.descricao ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, descricao: e.target.value }))} />
           </Field>
           <Field label="Texto do termo">
-            <Textarea
-              className="min-h-[220px]"
-              value={selecionado.texto ?? ''}
-              placeholder={textoPadrao(selecionado.tipo)}
-              onChange={e => setSelecionado((s: any) => ({ ...s, texto: e.target.value }))}
-            />
+            <RichTextEditor value={selecionado.texto_html || textoParaHtml(selecionado.texto || textoPadrao(selecionado.tipo))} onChange={html => setSelecionado((s: any) => ({ ...s, texto_html: html, texto: htmlParaTexto(html) }))} />
           </Field>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Cor de destaque"><Input type="color" value={selecionado.cor_destaque || '#047857'} onChange={e => setSelecionado((s: any) => ({ ...s, cor_destaque: e.target.value }))} /></Field>
+            <Field label="Fonte"><Select value={selecionado.fonte || 'inter'} onChange={e => setSelecionado((s: any) => ({ ...s, fonte: e.target.value }))}><option value="inter">Inter</option><option value="arial">Arial</option><option value="georgia">Georgia</option></Select></Field>
+            <Field label="Tamanho"><Select value={selecionado.tamanho_texto || 'medio'} onChange={e => setSelecionado((s: any) => ({ ...s, tamanho_texto: e.target.value }))}><option value="pequeno">Pequeno</option><option value="medio">Médio</option><option value="grande">Grande</option></Select></Field>
+          </div>
+          <PreviewDocumento selecionado={selecionado} />
           <div className="flex flex-wrap gap-5">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={!!selecionado.ativo} onChange={e => setSelecionado((s: any) => ({ ...s, ativo: e.target.checked }))} />
@@ -172,3 +180,32 @@ function normalizarTipo(tipo: string) {
   if (tipo === 'consentimento') return 'consentimento_informado';
   return 'consentimento_informado';
 }
+
+function PreviewDocumento({ selecionado }: { selecionado: any }) {
+  const cor = /^#[0-9a-f]{6}$/i.test(selecionado.cor_destaque ?? '') ? selecionado.cor_destaque : '#047857';
+  const fontFamily = selecionado.fonte === 'georgia' ? 'Georgia, serif' : selecionado.fonte === 'arial' ? 'Arial, sans-serif' : 'Inter, Arial, sans-serif';
+  const fontSize = selecionado.tamanho_texto === 'pequeno' ? '13px' : selecionado.tamanho_texto === 'grande' ? '16px' : '14px';
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Prévia do documento</div>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" style={{ fontFamily, fontSize }}>
+        <div className="p-4 text-white" style={{ background: `linear-gradient(135deg, ${cor}, ${cor}cc)` }}>
+          <div className="text-[10px] font-semibold uppercase tracking-[.2em] opacity-80">MedFit Saúde e Bem-estar</div>
+          <div className="mt-1 text-xl font-bold">{selecionado.nome || 'Nome do termo'}</div>
+          {selecionado.descricao && <div className="mt-1 text-xs opacity-85">{selecionado.descricao}</div>}
+        </div>
+        <div className={RICH_PREVIEW_CLASS} dangerouslySetInnerHTML={{ __html: getRichTextHtml(selecionado.texto_html, selecionado.texto || textoPadrao(selecionado.tipo)) }} />
+      </div>
+    </div>
+  );
+}
+
+function textoParaHtml(texto: string) {
+  return String(texto || '').split(/\r?\n/).map(linha => linha ? `<p>${linha.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>` : '<p><br></p>').join('');
+}
+
+function htmlParaTexto(html: string) {
+  return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|h1|h2|h3|li)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+}
+
+const RICH_PREVIEW_CLASS = 'rich-text p-4 leading-6 text-slate-600 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-bold [&_h3]:font-bold [&_li]:my-1 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6';

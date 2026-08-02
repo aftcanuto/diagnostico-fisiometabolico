@@ -37,8 +37,8 @@ export interface LaudoData {
     fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | 'maior' | 'menor' | 'manual' | null;
     percentual_gordura_relatorio?: number | null;
   };
-  modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };
-  dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any; plano_alimentar?: any };
+  modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; termografia?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };
+  dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; termografia?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any; plano_alimentar?: any };
   scores: { global: number | null; postura: number | null; composicao_corporal: number | null; forca: number | null; flexibilidade?: number | null; cardiorrespiratorio: number | null; rml?: number | null };
   analisesIA?: Record<string, AnaliseIA & { texto_editado?: string | null }>;
   pdfConfig?: {
@@ -193,17 +193,29 @@ html, body { width: 210mm; min-height: 297mm; }
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .page { width: 210mm; min-height: 297mm; position: relative; page-break-after: always; break-after: page; display: block; overflow: hidden; }
 .page:last-child { page-break-after: auto; }
+:root {
+  --pdf-beige: #f0eae0;
+  --pdf-panel: #faf5ef;
+  --pdf-old-bg: #f8fafc;
+  --pdf-line: #e5ddd2;
+  --pdf-highlight: #d9f2e8;
+  --pdf-title: #0c0c0c;
+  --pdf-muted: #5a5a5a;
+}
 
 /* Cover */
-.cover { min-height: 297mm; height: 297mm; color: white; padding: 34px 38px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-.cover::before { content:''; position:absolute; inset:0; background:
+.cover { min-height: 297mm; height: 297mm; color: white; padding: 28px; display: flex; flex-direction: column; position: relative; overflow: hidden; background: var(--pdf-beige); }
+.cover::before,
+.cover::after { content:none; }
+.cover-shell { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:34px 38px; border-radius:34px; border:1px solid var(--pdf-line); overflow:hidden; box-shadow:0 24px 52px rgba(21,92,71,.12); background: var(--cover-gradient); }
+.cover-shell::before { content:''; position:absolute; inset:0; background:
   radial-gradient(circle at 18% 14%, rgba(255,255,255,.22), transparent 28%),
   radial-gradient(circle at 84% 12%, rgba(255,255,255,.14), transparent 24%),
   radial-gradient(circle at 78% 82%, rgba(255,255,255,.12), transparent 30%);
   pointer-events:none;
 }
-.cover::after { content:''; position:absolute; right:-90px; top:120px; width:430px; height:430px; border-radius:50%; border:1px solid rgba(255,255,255,.18); box-shadow: inset 0 0 0 34px rgba(255,255,255,.035), inset 0 0 0 92px rgba(255,255,255,.028); pointer-events:none; }
-.cover-shell { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; }
+.cover-shell::after { content:''; position:absolute; right:-90px; top:120px; width:430px; height:430px; border-radius:50%; border:1px solid rgba(255,255,255,.18); box-shadow: inset 0 0 0 34px rgba(255,255,255,.035), inset 0 0 0 92px rgba(255,255,255,.028); pointer-events:none; }
+.cover-top, .cover-main, .cover-signature { position:relative; z-index:1; }
 .cover-top { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:26px; border-bottom:1px solid rgba(255,255,255,.16); }
 .cover-brand { display:flex; align-items:center; gap:14px; min-width:0; }
 .cover-logo { width: 58px; height: 58px; background:rgba(255,255,255,.96); border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.5); flex-shrink: 0; box-shadow:0 18px 45px rgba(15,23,42,.18); overflow:hidden; }
@@ -246,32 +258,53 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .pdf-footer-page { flex:0 0 auto; margin-left:12px; padding:4px 10px; border-radius:999px; background:${pri}10; border:1px solid ${pri}33; color:${pri}; font-weight:800; }
 
 /* Summary */
-.summary { background: #ffffff; color: #0f172a; padding: 30px 36px 28px; }
-.sum-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 26px; }
-.metric-chip { text-align: center; padding: 12px 18px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; min-width: 88px; }
+.summary { background: var(--pdf-beige); color: #0f172a; padding: 58px 64px 92px; position: relative; }
+.summary::before { content:''; position:absolute; inset:28px; border-radius:34px; border:1px solid var(--pdf-line); background:var(--pdf-old-bg); box-shadow:0 24px 52px rgba(15,23,42,.08); pointer-events:none; }
+.summary > * { position:relative; z-index:1; }
+.summary > .pdf-footer {
+  position:absolute;
+  left:78px;
+  right:78px;
+  bottom:38px;
+  z-index:2;
+  border-color:var(--pdf-line);
+  background:rgba(255,255,255,.96);
+}
+.sum-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 22px; border-bottom: 1px solid var(--pdf-line); margin-bottom: 26px; }
+.metric-chip { text-align: center; padding: 12px 18px; background: var(--pdf-panel); border-radius: 18px; border: 1px solid var(--pdf-line); min-width: 88px; box-shadow:0 10px 24px rgba(15,23,42,.04); }
 .metric-chip-val { font-size: 22px; font-weight: 700; }
 .metric-chip-unit { font-size: 11px; color: #94a3b8; }
 .metric-chip-label { font-size: 9px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
 .sum-body { display: flex; gap: 28px; align-items: flex-start; }
-.silhouette-card { flex-shrink: 0; width: 130px; display: flex; flex-direction: column; align-items: center; padding: 18px 14px; background:#f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; }
+.silhouette-card { flex-shrink: 0; width: 130px; display: flex; flex-direction: column; align-items: center; padding: 18px 14px; background:var(--pdf-panel); border-radius: 22px; border: 1px solid var(--pdf-line); box-shadow:0 10px 24px rgba(15,23,42,.04); }
 .sil-label { font-size: 9px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
 .sil-status { margin-top: 12px; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; }
 .gauges-wrap { flex: 1; }
 .gauges-grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 14px; }
-.gauge-card { background:#f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; }
+.gauge-card { background:var(--pdf-panel); border-radius: 22px; border: 1px solid var(--pdf-line); padding: 18px 14px; display: flex; flex-direction: column; align-items: center; box-shadow:0 10px 24px rgba(15,23,42,.04); }
 .gauge-card.main { grid-row: span 2; padding: 22px 18px; }
-.gauge-legend { display: flex; justify-content: center; gap: 20px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+.gauge-legend { display: flex; justify-content: center; gap: 20px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--pdf-line); }
 .leg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 
 /* Modules */
-.module { background: #ffffff; color: #111827; padding: 30px 36px 70px; position: relative; overflow: hidden; }
-.module::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(to bottom, ${pri}, ${pri}aa); }
-.mod-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; margin-bottom: 22px; break-after: avoid; page-break-after: avoid; }
-.mod-title { font-size: 26px; font-weight: 700; color: #111827; }
-.score-pill { padding: 9px 18px; background: linear-gradient(135deg, ${pri}, ${pri}cc); border:1px solid ${pri}; border-radius: 100px; color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.module { background: var(--pdf-beige); color: #111827; padding: 58px 64px 92px; position: relative; overflow: hidden; }
+.module::before { content: ''; position: absolute; inset: 28px; border-radius: 34px; border: 1px solid var(--pdf-line); background: var(--pdf-old-bg); box-shadow: 0 24px 52px rgba(15,23,42,.08); pointer-events:none; }
+.module > * { position: relative; z-index: 1; }
+.module > .pdf-footer {
+  position:absolute;
+  left:78px;
+  right:78px;
+  bottom:38px;
+  z-index:2;
+  border-color:var(--pdf-line);
+  background:rgba(255,255,255,.96);
+}
+.mod-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--pdf-line); margin-bottom: 22px; break-after: avoid; page-break-after: avoid; }
+.mod-title { font-family: Georgia, 'Times New Roman', serif; font-size: 34px; font-weight: 600; line-height:1.05; color: var(--pdf-title); letter-spacing:-.6px; }
+.score-pill { padding: 9px 18px; background: linear-gradient(135deg, ${pri}, ${pri}cc); border:1px solid ${pri}; border-radius: 100px; color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; box-shadow:0 12px 28px rgba(21,92,71,.18); }
 .score-pill-lbl { font-size: 10px; font-weight: 500; opacity: .85; text-transform: uppercase; letter-spacing: .5px; }
 .data-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 26px; }
-.data-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; color: #0f172a; break-inside: avoid; page-break-inside: avoid; }
+.data-card { background: var(--pdf-panel); border: 1px solid var(--pdf-line); border-radius: 22px; padding: 18px; color: #0f172a; break-inside: avoid; page-break-inside: avoid; box-shadow:0 10px 24px rgba(15,23,42,.04); }
 .dc-label { font-size: 10px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
 .dc-val { font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1; }
 .dc-unit { font-size: 13px; font-weight: 400; color: #94a3b8; margin-left: 3px; }
@@ -280,7 +313,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .st-warn { background: rgba(245,158,11,.2); color: #f59e0b; }
 .st-bad  { background: rgba(239,68,68,.2); color: #ef4444; }
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 22px; }
-.kpi { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; break-inside: avoid; page-break-inside: avoid; }
+.kpi { background: var(--pdf-panel); border: 1px solid var(--pdf-line); border-radius: 16px; padding: 12px 14px; break-inside: avoid; page-break-inside: avoid; }
 .kpi-label { font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
 .kpi-val { font-size: 15px; font-weight: 750; color: #111827; line-height: 1.18; letter-spacing: 0; overflow-wrap: normal; word-break: normal; hyphens: none; }
 .kpi-unit { font-size: 10px; color: #9ca3af; font-weight: 400; }
@@ -294,28 +327,28 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .traction-summary-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin: 8px 0 0; break-inside: avoid; page-break-inside: avoid; }
 .traction-summary-grid .kpi { padding: 8px 9px; min-height: 48px; }
 .anam-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 22px; }
-.anam-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px 14px; min-height:64px; break-inside: avoid; page-break-inside: avoid; }
+.anam-card { background:var(--pdf-panel); border:1px solid var(--pdf-line); border-radius:16px; padding:12px 14px; min-height:64px; break-inside: avoid; page-break-inside: avoid; }
 .anam-card.wide { grid-column:1/-1; min-height:56px; }
 .anam-value { font-size:13px; font-weight:500; color:#111827; line-height:1.45; letter-spacing:0; }
 .anam-card.wide .anam-value { font-size:13px; font-weight:500; }
 .sec-sub { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 12px; }
 .pdf-keep-group { break-inside: avoid; page-break-inside: avoid; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; break-inside: auto; page-break-inside: auto; }
-th { text-align: left; padding: 10px 14px; background: #f3f4f6; color: #6b7280; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+th { text-align: left; padding: 10px 14px; background: var(--pdf-panel); color: #6b7280; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 td { padding: 10px 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
 tr { break-inside: avoid; page-break-inside: avoid; }
 tr:last-child td { border-bottom: none; }
-.ai-box { background: #f0fdf4; border-left: 4px solid ${pri}; border-radius: 0 12px 12px 0; padding: 18px 22px; margin-top: 20px; break-inside: auto; page-break-inside: auto; }
+.ai-box { background: var(--pdf-highlight); border-left: 5px solid ${pri}; border-radius: 0 22px 22px 0; padding: 18px 22px; margin-top: 20px; break-inside: auto; page-break-inside: auto; }
 .ai-title { font-size: 11px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .ai-text { font-size: 13px; line-height: 1.7; color: #374151; }
-.dark-block { background: #f1f5f9; border-radius: 12px; padding: 18px 22px; color: white; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
+.dark-block { background: var(--pdf-panel); border:1px solid var(--pdf-line); border-radius: 22px; padding: 18px 22px; color: #111827; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
 .dark-label { font-size: 8px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
 .prog-bar { background: #1f2937; border-radius: 999px; height: 8px; overflow: hidden; }
 .prog-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#10b981,#06b6d4); }
 .tag { display: inline-block; padding: 2px 8px; background: #e5e7eb; border-radius: 4px; font-size: 10px; color: #6b7280; }
 .asym-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; }
-.side-d { border: 1.5px solid #3b82f620; border-radius: 10px; padding: 14px; background: #3b82f605; break-inside: avoid; page-break-inside: avoid; }
-.side-e { border: 1.5px solid #8b5cf620; border-radius: 10px; padding: 14px; background: #8b5cf605; break-inside: avoid; page-break-inside: avoid; }
+.side-d { border: 1.5px solid #3b82f620; border-radius: 18px; padding: 14px; background: #3b82f608; break-inside: avoid; page-break-inside: avoid; }
+.side-e { border: 1.5px solid #8b5cf620; border-radius: 18px; padding: 14px; background: #8b5cf608; break-inside: avoid; page-break-inside: avoid; }
 img, svg { break-inside: avoid; page-break-inside: avoid; }
 .data-grid, .kpi-grid, .anam-grid { break-inside: auto; page-break-inside: auto; }
 .mod-head, .score-pill, .metric-chip, .gauge-card, .silhouette-card { break-inside: avoid; page-break-inside: avoid; }
@@ -332,10 +365,89 @@ img, svg { break-inside: avoid; page-break-inside: avoid; }
   break-inside: avoid;
   page-break-inside: avoid;
 }
+.summary div[style*="background:#f8fafc"],
+.summary div[style*="background:#ffffff"],
+.summary div[style*="background:#fff"],
+.module div[style*="background:#f8fafc"],
+.module div[style*="background:#ffffff"],
+.module div[style*="background:#fff"] {
+  background: var(--pdf-panel) !important;
+}
+.summary div[style*="border:1px solid #e2e8f0"],
+.summary div[style*="border:1px solid #e5e7eb"],
+.module div[style*="border:1px solid #e2e8f0"],
+.module div[style*="border:1px solid #e5e7eb"] {
+  border-color: var(--pdf-line) !important;
+}
+.summary div[style*="border-radius:8px"],
+.summary div[style*="border-radius:10px"],
+.summary div[style*="border-radius:12px"],
+.summary div[style*="border-radius:14px"],
+.module div[style*="border-radius:8px"],
+.module div[style*="border-radius:10px"],
+.module div[style*="border-radius:12px"],
+.module div[style*="border-radius:14px"] {
+  border-radius: 18px !important;
+}
+.summary div[style*="background:#f8fafc"][style*="border:1px"],
+.module div[style*="background:#f8fafc"][style*="border:1px"],
+.summary div[style*="background:#ffffff"][style*="border:1px"],
+.module div[style*="background:#ffffff"][style*="border:1px"],
+.summary div[style*="background:#fff"][style*="border:1px"],
+.module div[style*="background:#fff"][style*="border:1px"] {
+  box-shadow: none !important;
+}
+
+/* Mobile PDF viewers can rasterize translucent shadows as ghost blocks.
+   Keep the report clean by using solid fills and borders inside pages. */
+.page:not(.cover),
+.summary,
+.module,
+.ref-section {
+  background-color: var(--pdf-beige);
+}
+.summary::before,
+.module::before {
+  box-shadow: none !important;
+}
+.summary > .pdf-footer,
+.module > .pdf-footer,
+.pdf-footer {
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+.metric-chip,
+.silhouette-card,
+.gauge-card,
+.data-card,
+.score-pill,
+.module .kpi,
+.summary .kpi,
+.module .anam-card,
+.summary .anam-card,
+.dark-block,
+.summary div,
+.module div,
+.summary table,
+.module table,
+.summary div[style*="box-shadow"],
+.module div[style*="box-shadow"],
+.summary img[style*="box-shadow"],
+.module img[style*="box-shadow"] {
+  box-shadow: none !important;
+}
+.summary div[style*="background:#f8fafc"],
+.summary div[style*="background:#ffffff"],
+.summary div[style*="background:#fff"],
+.module div[style*="background:#f8fafc"],
+.module div[style*="background:#ffffff"],
+.module div[style*="background:#fff"] {
+  background-color: var(--pdf-panel) !important;
+}
 p, li { orphans: 3; widows: 3; }
 .side-title-d { font-size: 10px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
 .side-title-e { font-size: 10px; font-weight: 700; color: #8b5cf6; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
-.ref-section { padding: 28px 36px; background: white; }
+.ref-section { padding: 58px 64px 92px; background: var(--pdf-beige); }
 .footer-note { margin-top: 16px; font-size: 8.5px; color: #9ca3af; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 14px; }
 `;
 
@@ -479,20 +591,6 @@ function textoPlanoAcaoPdf(c: any): string {
   return '';
 }
 
-function pgEvolucao(analise: any): string {
-  const texto = textoAnalisePdf(analise) || renderTextoEstruturado(analise);
-  if (!texto) return '';
-
-  return pgModulo('Evolução longitudinal', null, `
-    <p style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:16px">
-      Análise comparativa entre avaliações finalizadas do paciente, considerando tendências, progressos, regressões e próximos passos.
-    </p>
-    <div class="ai-block">
-      <p class="ai-text" style="white-space:pre-line">${x(texto)}</p>
-    </div>
-  `);
-}
-
 function imagemPdfSrc(valor: any): string {
   const raw = String(valor ?? '').trim();
   if (!raw) return '';
@@ -581,6 +679,31 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
   </div>`);
 }
 
+const LABELS_MODULOS_LAUDO: Record<string, string> = {
+  anamnese: 'Anamnese',
+  sinais_vitais: 'Sinais vitais',
+  posturografia: 'Posturografia',
+  termografia: 'Termografia funcional',
+  antropometria: 'Antropometria',
+  bioimpedancia: 'Bioimpedância',
+  flexibilidade: 'Flexibilidade',
+  forca: 'Força',
+  rml: 'Resistência muscular',
+  cardiorrespiratorio: 'Cardiorrespiratório',
+  biomecanica_corrida: 'Biomecânica da corrida',
+};
+
+function modulosAtivosLaudo(d: LaudoData) {
+  return Object.entries(d.modulos ?? {})
+    .filter(([chave, ativo]) => ativo && LABELS_MODULOS_LAUDO[chave])
+    .map(([chave]) => ({ chave, label: LABELS_MODULOS_LAUDO[chave] }));
+}
+
+function tipoExibidoLaudo(d: LaudoData) {
+  const ativos = modulosAtivosLaudo(d);
+  return ativos.length === 1 ? ativos[0].label : d.avaliacao.tipo;
+}
+
 function pgCapa(d: LaudoData): string {
   const c = d.clinica;
   const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
@@ -596,7 +719,9 @@ function pgCapa(d: LaudoData): string {
   const clinicaNome = c?.nome ?? 'Diagnóstico Fisiometabólico';
   const contato = [c?.telefone, c?.email, c?.site].filter(Boolean).join(' · ');
   const avaliadorLinha = [d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
-  return `<section class="page cover" style="background:linear-gradient(135deg,${g1} 0%,${g2} 52%,${g3} 100%)">
+  const tipoExibido = tipoExibidoLaudo(d);
+  const moduloUnico = modulosAtivosLaudo(d).length === 1;
+  return `<section class="page cover" style="--cover-gradient:linear-gradient(135deg,${g1} 0%,${g2} 52%,${g3} 100%)">
   <div class="cover-shell">
     <div class="cover-top">
       <div class="cover-brand">
@@ -613,7 +738,7 @@ function pgCapa(d: LaudoData): string {
     </div>
 
     <div class="cover-main">
-      <div class="cover-badge">Avaliação fisiometabólica</div>
+      <div class="cover-badge">${moduloUnico ? x(tipoExibido) : 'Avaliação fisiometabólica'}</div>
       <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.04;width:680px;max-width:100%;overflow:visible;text-overflow:clip">${x(nomePaciente)}</h1>
       <div class="cover-subtitle">Relatório técnico de composição corporal, capacidades funcionais e indicadores fisiometabólicos.</div>
       <div class="cover-chip-grid">
@@ -621,8 +746,8 @@ function pgCapa(d: LaudoData): string {
           ['Paciente', d.paciente.sexo==='M'?'Masculino':'Feminino'],
           ['Idade', `${d.paciente.idade} anos`],
           ['Avaliação', fd(d.avaliacao.data)],
-          ['Tipo', d.avaliacao.tipo],
-        ].map(([l,v])=>`<div class="chip" style="min-width:0;padding:13px 14px;text-align:left;border-radius:16px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.26)"><div class="chip-label">${x(l)}</div><div class="chip-val" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(v)}</div></div>`).join('')}
+          ['Tipo', tipoExibido],
+        ].map(([l,v])=>`<div class="chip" style="min-width:0;padding:13px 14px;text-align:left;border-radius:16px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.26)"><div class="chip-label">${x(l)}</div><div class="chip-val" style="font-size:${l === 'Tipo' ? '11.5px' : '14px'};line-height:1.15;white-space:${l === 'Tipo' ? 'normal' : 'nowrap'};overflow:hidden;text-overflow:ellipsis">${x(v)}</div></div>`).join('')}
       </div>
     </div>
 
@@ -690,13 +815,17 @@ function pgResumo(d: LaudoData): string {
   </div>`;
 
   const scoreItems = [
-    {label:'Postura',v:d.scores.postura,icon:''},
-    {label:'Composição',v:d.scores.composicao_corporal,icon:''},
-    {label:'Força',v:d.scores.forca,icon:''},
+    {label:'Postura',v:d.scores.postura,ativo:!!d.modulos.posturografia,icon:''},
+    {label:'Composição',v:d.scores.composicao_corporal,ativo:!!(d.modulos.antropometria||d.modulos.bioimpedancia),icon:''},
+    {label:'Força',v:d.scores.forca,ativo:!!d.modulos.forca,icon:''},
     ...(d.scores.flexibilidade!=null?[{label:'Flexibilidade',v:d.scores.flexibilidade,icon:''}]:[]),
     ...(d.scores.rml!=null?[{label:'RML',v:d.scores.rml,icon:''}]:[]),
-    {label:'Cardio',v:d.scores.cardiorrespiratorio,icon:''},
-  ];
+    {label:'Cardio',v:d.scores.cardiorrespiratorio,ativo:!!d.modulos.cardiorrespiratorio,icon:''},
+  ].filter((item: any) => item.v != null && item.ativo !== false);
+  const temScoreGlobal = d.scores.global != null;
+  const ativos = modulosAtivosLaudo(d);
+  const tipoExibido = tipoExibidoLaudo(d);
+  if (!temScoreGlobal && scoreItems.length === 0) return '';
   const scoreInfo: Record<string, { escopo: string; leitura: string }> = {
     Postura: {
       escopo: 'Achados posturais e alinhamento',
@@ -758,7 +887,7 @@ function pgResumo(d: LaudoData): string {
       <div style="font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Resumo da Avaliação</div>
       <div style="font-size:28px;font-weight:800;letter-spacing:-.5px;color:#0f172a">${x(d.paciente.nome)}</div>
       <div style="font-size:12px;color:#94a3b8;margin-top:4px">
-        ${d.paciente.sexo==='M'?'Masculino':'Feminino'} · ${d.paciente.idade} anos · ${fd(d.avaliacao.data)} · ${x(d.avaliacao.tipo)}
+        ${d.paciente.sexo==='M'?'Masculino':'Feminino'} · ${d.paciente.idade} anos · ${fd(d.avaliacao.data)} · ${x(tipoExibido)}
       </div>
     </div>
     <div style="text-align:right">
@@ -768,24 +897,16 @@ function pgResumo(d: LaudoData): string {
   </div>
 
   <!-- ── CORPO PRINCIPAL: score + capacidades ── -->
-  <div style="display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:start">
-
-    <!-- COLUNA ESQUERDA: score global -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
-
-      <!-- Score global grande -->
+  ${temScoreGlobal || scoreItems.length ? `
+  <div style="display:grid;grid-template-columns:${temScoreGlobal ? '180px 1fr' : '1fr'};gap:20px;align-items:start">
+    ${temScoreGlobal ? `<div style="display:flex;flex-direction:column;align-items:center;gap:12px">
       <div style="text-align:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px 20px;width:100%">
         <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Score Global</div>
         ${gauge(d.scores.global, '', 'sm')}
       </div>
-
-    </div>
-
-    <!-- COLUNA DIREITA: gauges dos módulos -->
+    </div>` : ''}
     <div style="display:flex;flex-direction:column;gap:10px">
-      <svg width="0" height="0" style="position:absolute">
-        <defs><linearGradient id="miniScoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ef4444"/><stop offset="48%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs>
-      </svg>
+      <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="miniScoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ef4444"/><stop offset="48%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs></svg>
       <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Capacidades avaliadas</div>
       ${scoreItems.map(s => {
         const sc = s.v;
@@ -795,26 +916,21 @@ function pgResumo(d: LaudoData): string {
         const info = scoreInfo[s.label] ?? { escopo: 'Domínio avaliado', leitura: 'Score 0-100.' };
         return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px">
           <div style="flex-shrink:0;width:96px;height:82px;position:relative">${miniVelocimetro(sc)}</div>
-          <!-- label + barra -->
           <div style="flex:1;min-width:0">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <div style="font-size:13px;font-weight:700;color:#0f172a">${s.label}</div>
-              <div style="font-size:10px;font-weight:600;padding:2px 10px;border-radius:100px;background:${cor}20;color:${cor}">${lbl}</div>
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px">
-              <span style="font-size:8px;font-weight:800;color:#334155;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">Score 0-100</span>
-              <span style="font-size:8px;font-weight:700;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">${x(info.escopo)}</span>
-            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:700;color:#0f172a">${s.label}</div><div style="font-size:10px;font-weight:600;padding:2px 10px;border-radius:100px;background:${cor}20;color:${cor}">${lbl}</div></div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"><span style="font-size:8px;font-weight:800;color:#334155;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">Score 0-100</span><span style="font-size:8px;font-weight:700;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">${x(info.escopo)}</span></div>
             <div style="font-size:9px;color:#64748b;line-height:1.35;margin-bottom:7px">${x(info.leitura)}</div>
-            <div style="background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden">
-              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cor}88,${cor});border-radius:999px;transition:width .3s"></div>
-            </div>
+            <div style="background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cor}88,${cor});border-radius:999px"></div></div>
           </div>
         </div>`;
       }).join('')}
     </div>
-
-  </div>
+  </div>` : `
+  <div style="border:1px solid #e2e8f0;border-radius:16px;padding:22px;background:#f8fafc">
+    <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:9px">${ativos.length === 1 ? 'Exame realizado' : 'Módulos realizados'}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">${ativos.map(modulo => `<span style="padding:8px 14px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;font-size:12px;font-weight:750">${x(modulo.label)}</span>`).join('')}</div>
+    <p style="font-size:11px;line-height:1.55;color:#64748b;margin:14px 0 0">Este exame não utiliza score global. Os resultados, condições técnicas e interpretação profissional estão apresentados nas páginas específicas do laudo.</p>
+  </div>`}
 
 </section>`;
 }
@@ -1076,6 +1192,55 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
     ${aiBlock(iaF)}
   </div>` : ''}
 </section>`;
+}
+
+function pgTermografia(t: any, ia: any, pri = '#059669'): string {
+  if (!t) return '';
+  const vistas = [
+    ['foto_anterior','Anterior'], ['foto_posterior','Posterior'],
+    ['foto_lateral_dir','Lateral D'], ['foto_lateral_esq','Lateral E'],
+  ].map(([k,l]) => t[k] ? `<div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+    <img src="${x(t[k])}" style="width:100%;height:200px;object-fit:contain;display:block;background:#f8fafc"/>
+    <div style="font-size:10px;color:#6b7280;text-align:center;padding:5px">${l}</div></div>` : '').join('');
+  const rois = Array.isArray(t.rois) ? t.rois : [];
+  const grupos: Record<string, any> = {};
+  rois.forEach((r: any) => {
+    const nome = r.regiao === 'Personalizada' ? r.nome_personalizado : r.regiao;
+    if (nome) grupos[nome] = { ...(grupos[nome] ?? {}), [r.lado]: r };
+  });
+  const deltas = Object.entries(grupos).flatMap(([regiao,g]: any) => {
+    if (g.D?.temp_media === '' || g.E?.temp_media === '' || g.D?.temp_media == null || g.E?.temp_media == null) return [];
+    return [{ regiao, d:g.D.temp_media, e:g.E.temp_media, delta:Math.abs(Number(g.D.temp_media)-Number(g.E.temp_media)) }];
+  }).sort((a,b)=>b.delta-a.delta);
+  const simNao = (v:any) => v === true ? 'Sim' : v === false ? 'Não' : 'Não informado';
+  const condicoes = [
+    ['Temperatura ambiente', t.temperatura_ambiente != null ? `${t.temperatura_ambiente} °C` : 'Não informada'],
+    ['Umidade relativa', t.umidade_relativa != null ? `${t.umidade_relativa}%` : 'Não informada'],
+    ['Aclimatação', t.tempo_aclimatacao_min != null ? `${t.tempo_aclimatacao_min} min` : 'Não informada'],
+    ['Distância', t.distancia_cm != null ? `${t.distancia_cm} cm` : 'Não informada'],
+    ['Emissividade', '0,98'], ['Recomendações pré-teste', simNao(t.recomendacoes_seguidas)],
+    ['Ambiente estável', simNao(t.ambiente_estavel)], ['Sem corrente de ar', simNao(t.sem_corrente_ar)],
+    ['Sem sol direto', simNao(t.sem_sol_direto)], ['Sem fonte de calor', simNao(t.sem_fonte_calor)],
+    ['Região exposta', simNao(t.regiao_exposta)],
+  ];
+  const complementares = (t.imagens_complementares ?? []).map((img:any)=>`<div style="border:1px solid #e5e7eb;border-radius:9px;overflow:hidden">
+    <img src="${x(img.url)}" style="width:100%;height:160px;object-fit:contain;background:#f8fafc"/>
+    <div style="font-size:9px;text-align:center;padding:5px">${x(img.titulo || 'Imagem complementar')}</div></div>`).join('');
+  return `<section class="page module">
+    <div class="mod-head"><h2 class="mod-title">Termografia funcional</h2></div>
+    <p style="font-size:10px;color:#64748b;line-height:1.5;margin-bottom:12px">Avaliação complementar e comparativa da temperatura superficial da pele. Os achados não constituem diagnóstico isolado.</p>
+    <div class="sec-sub">Condições técnicas da coleta</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">${condicoes.map(([l,v])=>`<div style="padding:7px;background:#f8fafc;border-radius:7px"><div class="kpi-label">${x(l)}</div><div style="font-size:11px;font-weight:700">${x(v)}</div></div>`).join('')}</div>
+    ${t.recomendacoes_seguidas===false&&t.recomendacoes_observacao?`<div style="font-size:10px;padding:8px;background:#fffbeb;border-left:3px solid #f59e0b;margin-bottom:10px"><b>Ressalva pré-teste:</b> ${x(t.recomendacoes_observacao)}</div>`:''}
+    <div style="font-size:10px;margin-bottom:12px"><b>Equipamento utilizado:</b> ${x(t.equipamento_fabricante)} ${x(t.equipamento_modelo)} · <b>Software:</b> ${x(t.equipamento_software)}</div>
+    <div class="sec-sub">Termogramas basais</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">${vistas}</div>
+    ${rois.length?`<div class="sec-sub">Regiões de interesse</div><table style="width:100%;border-collapse:collapse;font-size:9px"><thead><tr><th>Região</th><th>Lado</th><th>Média</th><th>Mín.</th><th>Máx.</th><th>Dor</th></tr></thead><tbody>${rois.map((r:any)=>`<tr><td>${x(r.regiao==='Personalizada'?r.nome_personalizado:r.regiao)}</td><td>${x(r.lado)}</td><td>${x(r.temp_media)} °C</td><td>${x(r.temp_min)} °C</td><td>${x(r.temp_max)} °C</td><td>${r.dor?x(r.intensidade_dor||'Sim'):'Não'}</td></tr>`).join('')}</tbody></table>`:''}
+    ${deltas.length?`<div class="sec-sub">Comparação bilateral</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${deltas.map(a=>`<div style="padding:7px;border:1px solid #e2e8f0;border-radius:7px;font-size:9px"><b>${x(a.regiao)}</b><br/>D ${a.d} °C · E ${a.e} °C · Δ <b>${a.delta.toFixed(1)} °C</b></div>`).join('')}</div>`:''}
+    ${complementares?`<div class="sec-sub">Imagens termográficas complementares</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${complementares}</div>`:''}
+    ${t.conclusao_funcional?`<div class="sec-sub">Conclusão profissional</div><p style="font-size:11px;line-height:1.6">${x(t.conclusao_funcional)}</p>`:''}
+    ${aiBlock(ia)}
+  </section>`;
 }
 
 function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
@@ -1591,8 +1756,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
     <div data-biomecanica-videos="true" style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;margin:-4px 0 18px;break-inside:avoid;page-break-inside:avoid">
       ${videoUrl ? `<a href="${x(videoUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:${pri};border:1px solid ${pri};text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px">Ver vídeo da análise cinemática - plano sagital</a>` : ''}
       ${videoPosteriorUrl ? `<a href="${x(videoPosteriorUrl)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 240px;min-width:0;font-size:10px;line-height:1.35;text-align:center;color:#fff;background:#0f766e;border:1px solid #0f766e;text-decoration:none;font-weight:800;padding:9px 12px;border-radius:12px">Ver vídeo da análise cinemática - plano posterior</a>` : ''}
-    </div>
-  ` : '';
+    </div>` : '';
   const frameUrl = imagemPdfSrc(b.foto_frame_url ?? b.frame_url ?? b.frameUrl ?? graf.foto_frame_url ?? graf.frame_url ?? graf.frameUrl ?? graf.frame);
   const sagitalImgs = [
     ['sagital_1_url', 'Imagem sagital 1'], ['sagital_2_url', 'Imagem sagital 2'], ['sagital_3_url', 'Imagem sagital 3'],
@@ -1847,15 +2011,19 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
 }
 
 
-function pgRodape(d: LaudoData, pri: string): string {
+function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
   const c = d.clinica;
   const cfg = d.pdfConfig;
   const contato = c?[c.cnpj&&`CNPJ: ${c.cnpj}`,c.telefone,c.email,c.site,c.endereco].filter(Boolean).join(' · '):'';
   const textoLegal = cfg?.texto_legal ?? 'Este documento é um relatório técnico e não substitui diagnóstico ou prescrição médica.';
   const notaEquip = cfg?.nota_equipamentos;
+  const textoEvolucao = resumoTexto(
+    textoAnalisePdf(evolucao) || renderTextoEstruturado(evolucao),
+    850,
+  );
 
   // Protocolos — usar config do banco se disponível, senão fallback
-  const protos = cfg?.protocolos ?? [
+  const protos: any[] = [...(cfg?.protocolos ?? [
     {label:'Antropometria',texto:'Padrão ISAK'},
     {label:'% Gordura',texto:'Jackson & Pollock 7 dobras + Siri'},
     {label:'Massa óssea',texto:'Von Döbeln (Rocha, 1974)'},
@@ -1871,10 +2039,13 @@ function pgRodape(d: LaudoData, pri: string): string {
     {label:'RML — Agachamento 1 min',texto:'Matsudo SMM (2001) / ACSM (2022)'},
     {label:'RML — Sentar e Levantar 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
     {label:'RML — Arm Curl Test 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
-  ];
+  ])];
+  if (d.modulos.termografia && !protos.some((p: any) => /termograf/i.test(`${p.label} ${p.texto}`))) {
+    protos.push({ label:'Termografia funcional', texto:'Protocolo TISEM; emissividade cutânea 0,98; análise comparativa por ROIs.' });
+  }
 
   // Referências — usar config do banco se disponível
-  const refs = cfg?.referencias ?? [
+  const refs: any[] = [...(cfg?.referencias ?? [
     {texto:'Jackson & Pollock. Br J Nutr. 1978;40(3):497–504.'},
     {texto:'Siri WE. Univ. of California; 1961.'},
     {texto:'Carter & Heath. Somatotyping. Cambridge; 1990.'},
@@ -1889,10 +2060,24 @@ function pgRodape(d: LaudoData, pri: string): string {
     {texto:'Rikli RE, Jones CJ. Senior Fitness Test Manual, 2ª ed. (2013).'},
     {texto:'Matsudo SMM. Envelhecimento & Atividade Física. Midiograf (2001).'},
     {texto:'Matsudo VKR et al. Tabelas de referência para aptidão física. Rev Bras Ativ Fís Saúde (1997).'},
-  ];
+  ])];
+  if (d.modulos.termografia) {
+    const refsTermografia = [
+      {texto:'Moreira DG et al. Thermographic imaging in sports and exercise medicine: a Delphi study and consensus statement. J Therm Biol. 2017;69:155-162. doi:10.1016/j.jtherbio.2017.07.006.'},
+      {texto:'Bunn PS et al. Infrared thermography and musculoskeletal injuries: a systematic review with meta-analysis. Infrared Phys Technol. 2020;109:103435. doi:10.1016/j.infrared.2020.103435.'},
+      {texto:'Lubkowska A, Pluta W. Infrared Thermography as a Non-Invasive Tool in Musculoskeletal Disease Rehabilitation: The Control Variables in Applicability. Appl Sci. 2022;12(9):4302. doi:10.3390/app12094302.'},
+    ];
+    refsTermografia.forEach(ref => {
+      if (!refs.some((atual: any) => atual.texto?.includes(ref.texto.match(/10\.\d{4,9}\/\S+/)?.[0] ?? ref.texto))) refs.push(ref);
+    });
+  }
 
   return `<section class="ref-section page module" style="page-break-after:auto">
   <div style="border-top:2px solid ${pri};padding-top:20px">
+    ${textoEvolucao ? `<div style="margin-bottom:14px;padding:9px 11px;border-left:3px solid ${pri};background:#f8fafc;border-radius:0 7px 7px 0;break-inside:avoid">
+      <div style="font-size:9px;font-weight:800;color:${pri};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Evolução longitudinal</div>
+      <div style="font-size:8.5px;line-height:1.45;color:#475569">${x(textoEvolucao)}</div>
+    </div>` : ''}
     <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:16px">Protocolos e referências</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div>
@@ -1945,8 +2130,9 @@ export function renderLaudoHTML(d: LaudoData): string {
           null, null,
           m.posturografia ? ia.posturografia : null, null, pri)
       : '',
-    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia, gorduraRelatorio) : '',
+    m.termografia         ? pgTermografia(d.dados.termografia, ia.termografia, pri) : '',
     m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria, gorduraRelatorio) : '',
+    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia, gorduraRelatorio) : '',
     m.flexibilidade
       ? pgPosturaFlex(
           null, null,
@@ -1960,8 +2146,7 @@ export function renderLaudoHTML(d: LaudoData): string {
     ia.conclusao_global ? pgConclusao(d, pri) : '',
     ia.conclusao_global ? pgPlanoAcao(d, pri) : '',
     d.dados.plano_alimentar ? pgPlanoAlimentar(d, pri) : '',
-    ia.evolucao           ? pgEvolucao(ia.evolucao) : '',
-    pgRodape(d, pri),
+    pgRodape(d, pri, ia.evolucao),
   ].filter(Boolean).join('\n');
 
   return limparTextoHTML(`<!DOCTYPE html>
