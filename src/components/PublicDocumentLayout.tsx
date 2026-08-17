@@ -19,22 +19,32 @@ export function PublicDocumentLayout({
   fontFamily?: string;
 }) {
   return (
-    <main className="min-h-screen bg-[#F0EAE0] px-4 py-8 text-[#0C0C0C]" style={{ fontFamily }}>
-      <div className="mx-auto max-w-3xl">
-        <header className="relative overflow-hidden rounded-[2rem] border border-[#E5DDD2] bg-[#FAF5EF] p-7 shadow-[0_22px_50px_rgba(21,92,71,0.09)]">
-          <div className="pointer-events-none absolute -right-20 -top-28 h-80 w-80 rounded-full bg-[#1D9E75]/15 blur-2xl" />
-          <div className="relative flex items-center gap-4">
+    <main
+      className="min-h-screen overflow-x-clip bg-[#F0EAE0] px-3 py-6 text-[#0C0C0C] sm:px-4 sm:py-8"
+      style={{ fontFamily }}
+    >
+      <div className="mx-auto w-full min-w-0 max-w-3xl">
+        <header className="relative isolate overflow-hidden rounded-[2rem] border border-[#E5DDD2] bg-[#FAF5EF] p-5 shadow-[0_14px_32px_rgba(12,12,12,0.07)] sm:p-7">
+          <div className="relative flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center">
             {clinica?.logo_url && (
-              <img src={clinica.logo_url} alt="" className="h-16 w-16 rounded-2xl border border-[#E5DDD2] bg-white object-contain p-1 shadow-sm" />
+              <img
+                src={clinica.logo_url}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-2xl border border-[#E5DDD2] bg-white object-contain p-1 shadow-sm sm:h-16 sm:w-16"
+              />
             )}
-            <div>
-              <div className="inline-flex rounded-full bg-[#E8F7F1] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#155C47]">
+            <div className="w-full min-w-0">
+              <div className="inline-flex max-w-full break-words rounded-full bg-[#E8F7F1] px-4 py-2 text-xs font-bold uppercase tracking-normal text-[#155C47] [overflow-wrap:anywhere]">
                 {clinica?.nome ?? 'Diagnóstico Fisiometabólico'}
               </div>
-              <h1 className="mt-3 font-serif text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-[#0C0C0C]">
+              <h1 className="mt-3 max-w-full break-words font-serif text-[1.625rem] font-semibold leading-[1.02] tracking-normal text-[#0C0C0C] sm:text-4xl">
                 {titulo}
               </h1>
-              {subtitulo && <p className="mt-3 text-sm leading-6 text-[#5A5A5A]">{subtitulo}</p>}
+              {subtitulo && (
+                <p className="mt-3 max-w-full break-words text-sm leading-6 text-[#5A5A5A] [overflow-wrap:anywhere]">
+                  {subtitulo}
+                </p>
+              )}
             </div>
           </div>
         </header>

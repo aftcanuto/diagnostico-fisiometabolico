@@ -1024,3 +1024,13 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
   renderizar sem `box-shadow` nas paginas internas.
 - Validado com TypeScript, checagem de textos e teste visual do PDF.
 - Sem migration nova e sem SQL do Supabase.
+
+## 2026-08-17 - Correcao responsiva do cabecalho dos documentos publicos
+
+- Corrigido o cabecalho compartilhado dos documentos pre-teste em telas de celular.
+- Logo e bloco de texto agora ficam empilhados no mobile, preservando toda a largura util para titulos longos como `VENTILOMETRIA ESPORTIVA`.
+- Titulo, nome da clinica e subtitulo passaram a respeitar a largura do card e quebrar palavras apenas quando realmente necessario.
+- Removido o efeito circular desfocado que podia vazar do recorte arredondado no Safari e aparecer como uma sombra quadrada no lado direito.
+- A sombra do cabecalho foi substituida por uma sombra neutra e mais curta.
+- O ajuste afeta todos os documentos publicos que usam `PublicDocumentLayout`, sem alterar conteudo, links ou persistencia.
+- Sem migration nova e sem SQL do Supabase.
