@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { CatalogoConfigForm } from '@/components/forms/CatalogoConfigForm';
 
 export default async function ConfigurarCatalogoPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: clinicaId } = await supabase.rpc('current_clinica_id');
   const { data: clinica } = await supabase
     .from('clinicas')

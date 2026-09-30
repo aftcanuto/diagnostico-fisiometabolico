@@ -1,4 +1,5 @@
 'use client';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -114,7 +115,7 @@ export function PatientEngagementPanel({ pacienteId }: { pacienteId: string }) {
   }, [pacienteId, supabase]);
 
   useEffect(() => {
-    setOrigin(window.location.origin);
+    setOrigin(PUBLIC_APP_ORIGIN);
     carregar();
   }, [carregar]);
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -42,10 +43,18 @@ export async function POST(req: NextRequest) {
     type: 'invite', email,
     options: {
       data: { clinica_convite_id: clinicaId, papel_convite: novoPapel },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/login`,
+      redirectTo: `${PUBLIC_APP_ORIGIN}/login`,
     },
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  return NextResponse.json({ ok: true, url: data.properties?.action_link, vinculadoDireto: false });
+  const actionLink = data.properties?.action_link;
+  if (!actionLink) return NextResponse.json({ error: 'Falha ao gerar convite' }, { status: 502 });
+  const redirect = new URL(actionLink).searchParams.get('redirect_to');
+  if (!redirect || new URL(redirect).origin !== PUBLIC_APP_ORIGIN) {
+    return NextResponse.json({
+      error: 'Configure o Site URL e autorize https://avaliacao.medfit.med.br/login nas Redirect URLs do Supabase Auth antes de gerar o convite.',
+    }, { status: 503 });
+  }
+  return NextResponse.json({ ok: true, url: actionLink, vinculadoDireto: false });
 }

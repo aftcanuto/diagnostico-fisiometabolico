@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Gauge } from '@/components/ui/Gauge';
 import { AnalisesIAPanel } from '@/components/AnalisesIAPanel';
 import { buscarModulo, upsertScores } from '@/lib/modulos';
+import { jumpSchema, jumpSummary } from '@/lib/jump-test';
+import { isAnthropometryV2 } from '@/lib/anthropometry-record';
 import { createClient } from '@/lib/supabase/client';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
@@ -59,7 +61,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
         return { data: [] };
       });
 
-    const [anData, svData, antData, bioData, foData, crData, pgData, termoData, flData, rmlData, biomecData, analisesData, outras] = await Promise.all([
+    const [anData, svData, antData, bioData, foData, crData, pgData, termoData, jumpData, flData, rmlData, biomecData, analisesData, outras] = await Promise.all([
       buscarModulo('anamnese', params.id).catch(() => null),
       buscarModulo('sinais_vitais', params.id).catch(() => null),
       buscarModulo('antropometria', params.id).catch(() => null),
@@ -68,6 +70,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       buscarModulo('cardiorrespiratorio', params.id).catch(() => null),
       buscarModulo('posturografia', params.id).catch(() => null),
       buscarModulo('termografia', params.id).catch(() => null),
+      buscarModulo('jump_test', params.id).catch(() => null),
       buscarModulo('flexibilidade', params.id).catch(() => null),
       buscarModulo('rml', params.id).catch(() => null),
       buscarModulo('biomecanica_corrida', params.id).catch(() => null),
@@ -103,6 +106,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       sinais_vitais: svData,
       posturografia: pgData,
       termografia: termoData,
+      jump_test: jumpData,
       bioimpedancia: bioData,
       antropometria: antData,
       flexibilidade: flData,
@@ -129,7 +133,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     }
 
     // Limite natural muscular
-    if (antData?.massa_magra && antData?.estatura) {
+    if (!isAnthropometryV2(antData) && antData?.massa_magra && antData?.estatura) {
       const ln = calcLimiteNatural({
         massaMagra: Number(antData.massa_magra),
         estaturaCm: Number(antData.estatura),
@@ -761,6 +765,7 @@ function montarChecklist(
     sinais_vitais: 'Sinais vitais',
     posturografia: 'Posturografia',
     termografia: 'Termografia funcional',
+    jump_test: 'Jump Test',
     bioimpedancia: 'Bioimpedância',
     antropometria: 'Antropometria',
     flexibilidade: 'Flexibilidade',
@@ -810,6 +815,11 @@ function montarChecklist(
     }
   }
 
+  if (mods.jump_test) {
+    const jump = jumpSchema.safeParse(modulosDados.jump_test);
+    const pendencias = jump.success ? jumpSummary(jump.data).pendencias : ['Jump Test sem dados validos. Confira a coleta e a migration.'];
+    pendencias.forEach(descricao => itens.push({ nivel: 'alerta', modulo: 'jump_test', titulo: 'Revisao do Jump Test', descricao }));
+  }
   if (mods.termografia && modulosDados.termografia) {
     const fotos = ['foto_anterior','foto_posterior','foto_lateral_dir','foto_lateral_esq'];
     const faltando = fotos.filter(k => !modulosDados.termografia?.[k]);

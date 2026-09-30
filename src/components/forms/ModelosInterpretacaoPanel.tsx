@@ -12,6 +12,7 @@ const MODULOS = [
   { value: 'sinais_vitais', label: 'Sinais vitais' },
   { value: 'posturografia', label: 'Posturografia' },
   { value: 'termografia', label: 'Termografia funcional' },
+  { value: 'jump_test', label: 'Jump Test' },
   { value: 'antropometria', label: 'Antropometria' },
   { value: 'bioimpedancia', label: 'Bioimpedância' },
   { value: 'forca', label: 'Força' },

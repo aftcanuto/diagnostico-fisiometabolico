@@ -12,6 +12,7 @@ const MODULOS = [
   { k: 'anamnese',            label: 'Anamnese' },
   { k: 'sinais_vitais',       label: 'Sinais vitais' },
   { k: 'posturografia',       label: 'Posturografia' },
+  { k: 'jump_test',          label: 'Jump Test' },
   { k: 'bioimpedancia',       label: 'Bioimpedância' },
   { k: 'antropometria',       label: 'Antropometria (ISAK)' },
   { k: 'flexibilidade',       label: 'Flexibilidade' },

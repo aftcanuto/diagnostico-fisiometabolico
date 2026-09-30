@@ -33,6 +33,7 @@ function primeiroModulo(avaliacao: any): string {
   if (mods.anamnese) return 'anamnese';
   if (mods.sinais_vitais) return 'sinais-vitais';
   if (mods.posturografia) return 'posturografia';
+  if (mods.jump_test) return 'jump-test';
   if (mods.bioimpedancia) return 'bioimpedancia';
   if (mods.antropometria) return 'antropometria';
   if (mods.flexibilidade) return 'flexibilidade';
@@ -44,7 +45,7 @@ function primeiroModulo(avaliacao: any): string {
 }
 
 export default async function AvaliacoesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: avals } = await supabase
     .from('avaliacoes')

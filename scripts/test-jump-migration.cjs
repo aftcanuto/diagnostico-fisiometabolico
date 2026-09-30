@@ -1,0 +1,57 @@
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const { PGlite } = require(process.env.PGLITE_MODULE || '../tmp/jump-validation/node_modules/@electric-sql/pglite');
+async function main() {
+  const db = new PGlite();
+  const user = '10000000-0000-0000-0000-000000000001';
+  const colleague = '10000000-0000-0000-0000-000000000002';
+  const other = '10000000-0000-0000-0000-000000000003';
+  const clinic = '20000000-0000-0000-0000-000000000001';
+  const clinic2 = '20000000-0000-0000-0000-000000000002';
+  const a = '30000000-0000-0000-0000-000000000001', b = '30000000-0000-0000-0000-000000000002';
+  try {
+    await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
+      create schema auth; create schema storage;
+      create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid$$;
+      create table public.avaliacoes(id uuid primary key, clinica_id uuid);
+      create table public.clinica_membros(clinica_id uuid, user_id uuid, ativo boolean);
+      create table public.analises_ia(tipo text check(tipo in ('anamnese')));
+      create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
+      create table storage.objects(id serial primary key, bucket_id text, name text);
+      create function storage.foldername(text) returns text[] language sql immutable as $$select string_to_array($1, '/')$$;
+      alter table storage.objects enable row level security;
+      grant usage on schema public, storage, auth to authenticated, anon;
+      grant select on public.avaliacoes to authenticated;
+      grant select, insert on storage.objects to authenticated;
+      grant usage on storage.objects_id_seq to authenticated;
+      insert into public.avaliacoes values('${a}','${clinic}'),('${b}','${clinic2}');
+      insert into public.clinica_membros values('${clinic}','${user}',true),('${clinic}','${colleague}',true),('${clinic2}','${other}',true);`);
+    const helpers = fs.readFileSync('supabase/migrations/027_clinica_membership_rls_fix.sql', 'utf8').split('drop policy')[0];
+    await db.exec(helpers);
+    await db.exec(`create function public.set_updated_at() returns trigger language plpgsql as $$begin new.updated_at=now(); return new; end$$;`);
+    const migration = fs.readFileSync('supabase/migrations/20260924024216_jump_test.sql', 'utf8');
+    await db.exec(migration); await db.exec(migration);
+    await db.exec(`insert into public.analises_ia values('jump_test'); set role authenticated; set request.jwt.claim.sub='${user}';`);
+    await db.query('insert into public.jump_test(avaliacao_id) values($1)', [a]);
+    assert.equal((await db.query('select * from public.jump_test')).rows.length, 1);
+    await db.query('update public.jump_test set peso_kg=75 where avaliacao_id=$1', [a]);
+    await assert.rejects(db.query('insert into public.jump_test(avaliacao_id) values($1)', [b]));
+    await assert.rejects(db.query('update public.jump_test set avaliacao_id=$1 where avaliacao_id=$2', [b, a]));
+    await assert.rejects(db.query('update public.jump_test set duracao_s=30 where avaliacao_id=$1', [a]));
+    await assert.rejects(db.query('update public.jump_test set documento_path=$1 where avaliacao_id=$2', [`${b}/wrong.pdf`, a]));
+    await db.query('insert into storage.objects(bucket_id,name) values($1,$2)', ['jump-test', `${a}/original.pdf`]);
+    await assert.rejects(db.query('insert into storage.objects(bucket_id,name) values($1,$2)', ['jump-test', `${b}/wrong.pdf`]));
+    await db.exec(`set request.jwt.claim.sub='${other}'`);
+    assert.equal((await db.query('select * from public.jump_test')).rows.length, 0);
+    assert.equal((await db.query('select * from storage.objects')).rows.length, 0);
+    await db.exec(`set request.jwt.claim.sub='${colleague}'`);
+    assert.equal((await db.query('select * from public.jump_test')).rows.length, 1);
+    await db.exec('reset role; set role anon');
+    await assert.rejects(db.query('select * from public.jump_test'));
+    await db.exec(`reset role; set role authenticated; set request.jwt.claim.sub='${user}'`);
+    await db.query('delete from public.jump_test where avaliacao_id=$1', [a]);
+    assert.equal((await db.query('select * from public.jump_test')).rows.length, 0);
+    console.log('Migration Jump Test: SQL real em PostgreSQL local, reaplicacao, CRUD, constraints, RLS por clinica e Storage aprovados. Nenhum acesso ao Supabase remoto.');
+  } finally { await db.close(); }
+}
+main().catch(e => { console.error(e); process.exitCode = 1; });

@@ -1,19 +1,19 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
 export async function getUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id ?? null;
 }
 
 export async function getClinicaId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.rpc('current_clinica_id');
   return data ?? null;
 }
 
 export async function usuarioPodeAcessarPaciente(userId: string, pacienteId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: pacienteVisivel } = await supabase
     .from('pacientes')
     .select('id')
@@ -45,7 +45,7 @@ export async function usuarioPodeAcessarPaciente(userId: string, pacienteId: str
 }
 
 export async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: avaliacaoVisivel } = await supabase
     .from('avaliacoes')
     .select('id')

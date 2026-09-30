@@ -6,6 +6,10 @@ export type FonteGorduraRelatorio = 'antropometria' | 'bioimpedancia' | 'maior' 
 export function resolverPercentualGordura(avaliacao: any, antropometria: any, bioimpedancia: any) {
   const ant = numeroClinico(antropometria?.percentual_gordura);
   const bio = numeroClinico(bioimpedancia?.percentual_gordura);
+  if (antropometria?.registro_v2?.version === 2) return {
+    valor: ant, fonte: 'antropometria' as const, fonteDefinida: true,
+    antropometria: ant, bioimpedancia: bio, maior: null, menor: null, conflito: false,
+  };
   const fonte = avaliacao?.fonte_gordura_relatorio as FonteGorduraRelatorio | null | undefined;
   const salvo = numeroClinico(avaliacao?.percentual_gordura_relatorio);
   const valores = [ant, bio].filter((v): v is number => v != null);

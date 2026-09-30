@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { jumpSchema } from '@/lib/jump-test';
+import { saveAnthropometryV2 } from '@/lib/api/save-anthropometry';
 
 export const runtime = 'nodejs';
 
@@ -8,6 +10,7 @@ const TABELAS_PERMITIDAS = new Set([
   'sinais_vitais',
   'posturografia',
   'termografia',
+  'jump_test',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',
@@ -18,13 +21,13 @@ const TABELAS_PERMITIDAS = new Set([
 ]);
 
 async function getUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id ?? null;
 }
 
 async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: avaliacaoVisivel } = await supabase
     .from('avaliacoes')
     .select('id')
@@ -195,6 +198,25 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
   let payloadSeguro = { ...payload };
+  if (tabela === 'antropometria') {
+    if (payload.registro_v2) return saveAnthropometryV2(avaliacaoId, payload);
+    const { data: current, error } = await admin.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
+    if (error) return NextResponse.json({ error: 'Falha ao consultar antropometria.' }, { status: 500 });
+    if (current?.registro_v2) return NextResponse.json({ error: 'Use o formulario atualizado de antropometria.' }, { status: 409 });
+    delete payloadSeguro.registro_v2;
+    delete payloadSeguro.resultados_v2;
+    delete payloadSeguro.revision_v2;
+    delete payloadSeguro.avaliacao_id;
+  }
+  if (tabela === 'jump_test') {
+    const parsed = jumpSchema.safeParse(payload);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
+    if (parsed.data.documento_path && !parsed.data.documento_path.startsWith(`${avaliacaoId}/`))
+      return NextResponse.json({ error: 'Documento fora desta avaliacao' }, { status: 400 });
+    const { error: saveError } = await admin.from('jump_test').upsert({ ...parsed.data, avaliacao_id: avaliacaoId }, { onConflict: 'avaliacao_id' });
+    if (saveError) return NextResponse.json({ error: `Falha ao salvar Jump Test. Confira a migration (${saveError.code}).` }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
   let error: any = null;
 
   for (let tentativa = 0; tentativa < 8; tentativa += 1) {

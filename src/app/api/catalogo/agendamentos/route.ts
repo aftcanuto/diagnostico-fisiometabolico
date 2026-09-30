@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -114,7 +115,7 @@ async function criarPreferenciaMercadoPago(req: NextRequest, agendamento: any, e
   const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   if (!token) return null;
 
-  const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || '';
+  const origin = PUBLIC_APP_ORIGIN;
   const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
     headers: {

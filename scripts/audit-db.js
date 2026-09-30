@@ -15,6 +15,7 @@ const expectedTables = [
   'anamnese_templates',
   'sinais_vitais',
   'posturografia',
+  'jump_test',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',
@@ -43,6 +44,7 @@ const expectedTables = [
 ];
 
 const expectedAiTypes = [
+  'jump_test',
   'anamnese',
   'sinais_vitais',
   'posturografia',

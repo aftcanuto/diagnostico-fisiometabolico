@@ -18,6 +18,7 @@ export interface ModulosSelecionados {
   sinais_vitais: boolean;
   posturografia: boolean;
   termografia?: boolean;
+  jump_test?: boolean;
   bioimpedancia: boolean;
   antropometria: boolean;
   flexibilidade: boolean;

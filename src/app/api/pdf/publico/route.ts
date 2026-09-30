@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jumpAnalysisUsable } from '@/lib/jump-test';
+import { anthropometryAnalysisUsable } from '@/lib/anthropometry-record';
 import { createAdminClient } from '@/lib/supabase/server';
 import { renderLaudoHTML } from '@/lib/pdf/template';
 import { calcIdade } from '@/lib/calculations/antropometria';
@@ -58,11 +60,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'avaliacao ainda nao liberada' }, { status: 403 });
   }
 
-  const [anamnese, sinais_vitais, posturografia, termografia, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, planoAlimentar, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
+  const [anamnese, sinais_vitais, posturografia, termografia, jump_test, bioimpedancia, antropometria, forca, flexibilidade, rml, cardio, biomecanica, planoAlimentar, scoresRow, avaliadorToken, avaliadorAvaliacao, clinica, analises] = await Promise.all([
     supabase.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('termografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+    supabase.from('jump_test').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('bioimpedancia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
     supabase.from('forca').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -77,12 +80,13 @@ export async function GET(req: NextRequest) {
     aval.clinica_id ? supabase.from('clinicas').select('*').eq('id', aval.clinica_id).single() : Promise.resolve({ data: null }),
     supabase
       .from('analises_ia')
-      .select('tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao')
+      .select('tipo, conteudo, gerado_em, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao')
       .eq('avaliacao_id', avaliacaoId),
   ]);
 
   const analisesMap: Record<string, any> = {};
   (analises.data ?? []).forEach((a: any) => {
+    if (!jumpAnalysisUsable(a, jump_test.data) || !anthropometryAnalysisUsable(a, antropometria.data)) return;
     analisesMap[a.tipo] = {
       ...a.conteudo,
       texto_editado: a.texto_editado,
@@ -99,7 +103,7 @@ export async function GET(req: NextRequest) {
     paciente: {
       nome: aval.pacientes.nome, sexo: aval.pacientes.sexo,
       data_nascimento: aval.pacientes.data_nascimento,
-      idade: calcIdade(aval.pacientes.data_nascimento),
+      idade: calcIdade(aval.pacientes.data_nascimento, new Date(`${aval.data}T12:00:00`)),
       cpf: aval.pacientes.cpf ?? null,
     },
     avaliador: escolherAvaliador(avaliadorAvaliacao.data, avaliadorToken.data),
@@ -108,6 +112,7 @@ export async function GET(req: NextRequest) {
     dados: {
       anamnese: anamnese.data ? { ...anamnese.data, _campos: (anamnese.data as any)?.anamnese_templates?.campos ?? [] } : null, sinais_vitais: sinais_vitais.data,
       posturografia: posturografia.data, termografia: termografia.data, bioimpedancia: bioimpedancia.data,
+      jump_test: jump_test.data,
       antropometria: antropometria.data,
       forca: forca.data, flexibilidade: flexibilidade.data, rml: rml.data, cardiorrespiratorio: cardio.data, biomecanica_corrida: biomecanicaPdf,
       plano_alimentar: planoAlimentar.data,

@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation';
+import { formatCalendarDate } from '@/lib/date';
 import Link from 'next/link';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { StepNav } from '@/components/ui/StepNav';
+import { AdicionarModulos } from '@/components/AdicionarModulos';
 import { buildSteps } from '@/lib/steps';
+import { jumpSchema, jumpSummary } from '@/lib/jump-test';
 import { calcIdade } from '@/lib/calculations/antropometria';
 
 function textoSeguro(valor: any, fallback = '-'): string {
@@ -24,17 +27,18 @@ export default async function AvaliacaoLayout(props: { params: Promise<{ id: str
     children
   } = props;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: aval } = await supabase
     .from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();
   if (!aval) notFound();
 
   const admin = createAdminClient();
-  const [anam, sv, pg, termo, bio, ant, flex, fo, rml, cr, biomec] = await Promise.all([
+  const [anam, sv, pg, termo, jump, bio, ant, flex, fo, rml, cr, biomec] = await Promise.all([
     admin.from('anamnese').select('respostas,template_id').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('sinais_vitais').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('posturografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('termografia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    admin.from('jump_test').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('bioimpedancia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
     admin.from('flexibilidade').select('*').eq('avaliacao_id', params.id).maybeSingle(),
@@ -120,6 +124,7 @@ export default async function AvaliacaoLayout(props: { params: Promise<{ id: str
     'sinais-vitais': temDados(sv.data),
     posturografia: temDados(pg.data),
     termografia: temDados(termo.data),
+    'jump-test': jumpSchema.safeParse(jump.data).success && jumpSummary(jumpSchema.parse(jump.data)).pronto,
     bioimpedancia: temBioimpedancia(bio.data),
     antropometria: temAntropometria(ant.data),
     flexibilidade: temFlexibilidade(flex.data),
@@ -145,7 +150,7 @@ export default async function AvaliacaoLayout(props: { params: Promise<{ id: str
             ← {pacienteNome}
           </Link>
           <h1 className="text-xl font-bold text-slate-800 mt-1">
-            Avaliação de {new Date(aval.data).toLocaleDateString('pt-BR')}
+            Avaliação de {formatCalendarDate(aval.data)}
           </h1>
           <p className="text-xs text-slate-500">
             {pacienteSexo === 'M' ? 'Masc' : 'Fem'} · {pacienteNascimento ? calcIdade(pacienteNascimento) : '-'} anos · {avaliacaoTipo}
@@ -153,6 +158,7 @@ export default async function AvaliacaoLayout(props: { params: Promise<{ id: str
         </div>
       </div>
       <StepNav steps={steps} />
+      <AdicionarModulos avaliacaoId={params.id} modulos={aval.modulos_selecionados} status={aval.status} />
       <div>{children}</div>
     </div>
   );

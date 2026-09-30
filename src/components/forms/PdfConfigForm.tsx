@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { MODULOS_REFERENCIAS, referenciasAvaliacao } from '@/lib/clinical/references';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -33,19 +34,7 @@ const DEFAULTS: Omit<PdfConfig, 'clinica_id'> = {
     { id: 'ffmi', label: 'FFMI', texto: 'Schutz 2002; limite: Berkhan/McDonald' },
     { id: 'termografia', label: 'Termografia funcional', texto: 'Protocolo TISEM; emissividade cutânea 0,98; análise comparativa por ROIs' },
   ],
-  referencias: [
-    { id: 'jackson', texto: 'Jackson & Pollock. Br J Nutr. 1978;40(3):497–504.' },
-    { id: 'siri', texto: 'Siri WE. Univ. of California; 1961.' },
-    { id: 'carter', texto: 'Carter & Heath. Somatotyping. Cambridge; 1990.' },
-    { id: 'tanaka', texto: 'Tanaka et al. J Am Coll Cardiol. 2001;37(1):153–6.' },
-    { id: 'stewart', texto: 'Stewart et al. ISAK Standards; 2011.' },
-    { id: 'leong', texto: 'Leong et al. Lancet. 2015;386:266–273.' },
-    { id: 'medeor', texto: 'Medeor Ltda. Manual técnico do dinamômetro isométrico Medeor. São Paulo; 2019.' },
-    { id: 'massy', texto: 'Massy-Westropp NM et al. Hand Grip Strength normative data. BMC Res Notes. 2011;4:127.' },
-    { id: 'termografia-tisem', texto: 'Moreira DG et al. J Therm Biol. 2017;69:155-162. doi:10.1016/j.jtherbio.2017.07.006.' },
-    { id: 'termografia-lesoes', texto: 'Bunn PS et al. Infrared Phys Technol. 2020;109:103435. doi:10.1016/j.infrared.2020.103435.' },
-    { id: 'termografia-reabilitacao', texto: 'Lubkowska A, Pluta W. Appl Sci. 2022;12(9):4302. doi:10.3390/app12094302.' },
-  ],
+  referencias: [],
   texto_legal: 'Este documento é um relatório técnico e não substitui diagnóstico ou prescrição médica.',
   nota_equipamentos: '',
 };
@@ -57,7 +46,7 @@ export function PdfConfigForm({ clinicaId, config }: { clinicaId: string; config
   const base = config ?? { ...DEFAULTS, clinica_id: clinicaId };
 
   const [protocolos, setProtocolos] = useState<Protocolo[]>(base.protocolos ?? DEFAULTS.protocolos);
-  const [referencias, setReferencias] = useState<Referencia[]>(base.referencias ?? DEFAULTS.referencias);
+  const referencias = base.referencias ?? DEFAULTS.referencias;
   const [textoLegal, setTextoLegal] = useState(base.texto_legal ?? DEFAULTS.texto_legal);
   const [notaEquip, setNotaEquip] = useState(base.nota_equipamentos ?? '');
   const [saving, setSaving] = useState(false);
@@ -73,17 +62,6 @@ export function PdfConfigForm({ clinicaId, config }: { clinicaId: string; config
   }
   function rmProto(idx: number) {
     setProtocolos(p => p.filter((_, i) => i !== idx));
-  }
-
-  // ── Referências ──
-  function updRef(idx: number, val: string) {
-    setReferencias(r => r.map((x, i) => i === idx ? { ...x, texto: val } : x));
-  }
-  function addRef() {
-    setReferencias(r => [...r, { id: uid(), texto: '' }]);
-  }
-  function rmRef(idx: number) {
-    setReferencias(r => r.filter((_, i) => i !== idx));
   }
 
   // ── Salvar ──
@@ -108,9 +86,8 @@ export function PdfConfigForm({ clinicaId, config }: { clinicaId: string; config
 
   // ── Restaurar padrões ──
   function restaurar() {
-    if (!confirm('Restaurar todos os protocolos e referências para os valores padrão?')) return;
+    if (!confirm('Restaurar protocolos e textos para os valores padrão?')) return;
     setProtocolos(DEFAULTS.protocolos);
-    setReferencias(DEFAULTS.referencias);
     setTextoLegal(DEFAULTS.texto_legal);
     setNotaEquip('');
   }
@@ -165,43 +142,21 @@ export function PdfConfigForm({ clinicaId, config }: { clinicaId: string; config
         </CardBody>
       </Card>
 
-      {/* ── Referências ── */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-brand-600" />
-              Referências bibliográficas
-            </CardTitle>
-            <Button size="sm" variant="secondary" onClick={addRef}>
-              <Plus className="w-4 h-4" /> Adicionar
-            </Button>
-          </div>
-        </CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-brand-600" />Referências por módulo</CardTitle></CardHeader>
         <CardBody>
-          <p className="text-xs text-slate-500 mb-4">
-            Lista numerada de referências que aparece na última página do laudo.
-          </p>
-          <div className="space-y-2">
-            {referencias.map((r, i) => (
-              <div key={r.id} className="flex items-center gap-2 group">
-                <span className="text-xs text-slate-400 w-5 text-right flex-shrink-0 font-mono">{i + 1}.</span>
-                <Input
-                  value={r.texto}
-                  onChange={e => updRef(i, e.target.value)}
-                  placeholder="Autor. Título. Periódico. Ano;vol:pág."
-                  className="flex-1 text-sm"
-                />
-                <button
-                  onClick={() => rmRef(i)}
-                  className="p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
-                  title="Remover"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+          {Object.entries(MODULOS_REFERENCIAS).map(([modulo, label]) => <details key={modulo} className="border-b border-slate-200 py-3">
+            <summary className="cursor-pointer font-semibold text-sm">{label}</summary>
+            <ul className="mt-3 space-y-3 text-xs text-slate-600">
+              {referenciasAvaliacao({ [modulo]: true }).map(ref => <li key={ref.id}>
+                <a href={ref.url} target="_blank" rel="noopener noreferrer" className="underline break-words">{ref.texto}</a>
+              </li>)}
+            </ul>
+          </details>)}
+          {referencias.length > 0 && <details className="mt-4 text-xs text-slate-500">
+            <summary className="cursor-pointer">Arquivo da configuração anterior (não publicado)</summary>
+            <ul className="mt-2 space-y-2">{referencias.map((ref, i) => <li key={i}>{ref.texto}</li>)}</ul>
+          </details>}
         </CardBody>
       </Card>
 

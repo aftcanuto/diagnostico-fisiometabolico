@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ArrowLeft } from 'lucide-react';
 
 export default async function ProdutosAgendamentosPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: clinicaId } = await supabase.rpc('current_clinica_id');
   if (!clinicaId) return <p className="text-red-600">Clínica não encontrada.</p>;
 

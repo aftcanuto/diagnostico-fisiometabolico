@@ -21,7 +21,7 @@ function pacienteDaAvaliacao(avaliacao: any) {
 }
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.getUser();
 
   const [{ count: totalPacientes }, { count: totalAval }, { data: ultimas }] = await Promise.all([

@@ -1,4 +1,5 @@
 'use client';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 
 import { useState } from 'react';
 import { Share2 } from 'lucide-react';
@@ -12,9 +13,8 @@ type Props = {
 };
 
 function absoluteUrl(href: string) {
-  if (href.startsWith('http')) return href;
-  if (typeof window === 'undefined') return href;
-  return `${window.location.origin}${href}`;
+  const url = new URL(href, PUBLIC_APP_ORIGIN);
+  return `${PUBLIC_APP_ORIGIN}${url.pathname}${url.search}${url.hash}`;
 }
 
 export function ProductCatalogShareButton({

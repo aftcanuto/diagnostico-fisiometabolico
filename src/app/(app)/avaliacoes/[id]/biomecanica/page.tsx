@@ -10,21 +10,9 @@ import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
 import { ExternalLink, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { buildSteps } from '@/lib/steps';
+import { REFERENCIAS_BIOMECANICA } from '@/lib/biomecanica/referencias';
 
-const ANGULOS_REF = {
-  cabeca:                   { plano: 'Plano sagital', label: 'Alinhamento da cabeça', min: -13, max: -3 },
-  tronco:                   { plano: 'Plano sagital', label: 'Posicionamento do tronco', min: 8, max: 14 },
-  aterrissagem_passada:     { plano: 'Plano sagital', label: 'Aterrissagem (passada)', min: 0, max: 10 },
-  joelho_frente_contato:    { plano: 'Plano sagital', label: 'Ângulo do joelho da frente ao bater o pé', min: 155, max: 175 },
-  joelho_posterior_contato: { plano: 'Plano sagital', label: 'Ângulo posterior do joelho ao bater o pé', min: 80, max: 100 },
-  bracos:                   { plano: 'Plano sagital', label: 'Posição dos braços', min: 77, max: 87 },
-  queda_pelve_esq:          { plano: 'Plano posterior', label: 'Queda da pelve no pouso do pé esquerdo', min: 0, max: 2 },
-  queda_pelve_dir:          { plano: 'Plano posterior', label: 'Queda da pelve no pouso do pé direito', min: 0, max: 2 },
-  alinhamento_joelho_esq:   { plano: 'Plano posterior', label: 'Alinhamento do joelho da perna esquerda', min: -5, max: 5 },
-  alinhamento_joelho_dir:   { plano: 'Plano posterior', label: 'Alinhamento do joelho da perna direita', min: -5, max: 5 },
-  pronacao_supinacao_esq:   { plano: 'Plano posterior', label: 'Pronação/Supinação pé esquerdo', min: -5, max: 8 },
-  pronacao_supinacao_dir:   { plano: 'Plano posterior', label: 'Pronação/Supinação pé direito', min: -5, max: 8 },
-} as const;
+const ANGULOS_REF = REFERENCIAS_BIOMECANICA;
 
 function classAngle(val: number, min: number, max: number): 'ideal' | 'atencao' | 'fora' {
   if (val >= min && val <= max) return 'ideal';

@@ -1,4 +1,5 @@
 'use client';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 import { useEffect, useState } from 'react';
 import { Card, CardBody, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
@@ -20,7 +21,7 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
   const [origin, setOrigin] = useState('');
 
   useEffect(() => {
-    setOrigin(window.location.origin);
+    setOrigin(PUBLIC_APP_ORIGIN);
     fetch(`/api/paciente-tokens?pacienteId=${encodeURIComponent(pacienteId)}`, { cache: 'no-store' })
       .then(async (res) => {
         const body = await res.json().catch(() => ({}));
@@ -63,7 +64,7 @@ export function ShareTokenPanel({ pacienteId }: { pacienteId: string }) {
   }
 
   async function copiar(token: string) {
-    const url = `${window.location.origin}/p/${token}`;
+    const url = `${PUBLIC_APP_ORIGIN}/p/${token}`;
     await navigator.clipboard.writeText(url);
     setCopiado(token);
     setTimeout(() => setCopiado(null), 2000);

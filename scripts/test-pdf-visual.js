@@ -1,6 +1,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const puppeteer = require('puppeteer');
+const Module = require('node:module');
+const ts = require('typescript');
 
 const root = process.cwd();
 const previewPath = path.join(root, 'preview-laudo-full-smoke.html');
@@ -46,6 +48,12 @@ async function main() {
       timeout: 45000,
     });
 
+    const pagination = new Module('pagination');
+    pagination._compile(ts.transpileModule(fs.readFileSync(path.join(root, 'src/lib/pdf/pagination.ts'), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    }).outputText, 'pagination.js');
+    await pagination.exports.prepararPaginacaoLaudo(page);
+
     const result = await page.evaluate(() => {
       const PAGE_HEIGHT = 1123;
       const FOOTER_SAFE_TOP = PAGE_HEIGHT - 72;
@@ -79,8 +87,11 @@ async function main() {
       const cutCards = Array.from(document.querySelectorAll(selectors.join(',')))
         .map((el) => {
           const rect = el.getBoundingClientRect();
-          const top = rect.top + window.scrollY;
-          const bottom = rect.bottom + window.scrollY;
+          const section = el.closest('.page');
+          const bounds = section?.getBoundingClientRect();
+          const footer = section?.querySelector('.pdf-footer')?.getBoundingClientRect();
+          const top = rect.top - (bounds?.top || 0);
+          const bottom = rect.bottom - (bounds?.top || 0);
           const topPage = Math.floor(top / PAGE_HEIGHT);
           const bottomPage = Math.floor((bottom - 1) / PAGE_HEIGHT);
           const localBottom = bottom - topPage * PAGE_HEIGHT;
@@ -93,11 +104,12 @@ async function main() {
             topPage,
             bottomPage,
             localBottom: Math.round(localBottom),
+            overlapsFooter: rect.bottom > (footer?.top ?? bounds?.bottom ?? Infinity) + 1,
             text: String(el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80),
           };
         })
         .filter((item) => item.height > 24 && item.height < PAGE_HEIGHT * 0.85)
-        .filter((item) => item.topPage !== item.bottomPage || item.localBottom > FOOTER_SAFE_TOP)
+        .filter((item) => item.overlapsFooter)
         .slice(0, 12);
 
       const pages = document.querySelectorAll('.page').length;

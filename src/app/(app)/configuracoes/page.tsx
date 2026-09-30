@@ -11,14 +11,14 @@ import { ModelosInterpretacaoPanel } from '@/components/forms/ModelosInterpretac
 import { TermografiaConfigForm } from '@/components/forms/TermografiaConfigForm';
 
 export default async function ConfiguracoesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: clinicaId } = await supabase.rpc('current_clinica_id');
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: perfil } = await supabase
+  const { data: perfil } = user ? await supabase
     .from('avaliadores')
-    .select('nome, crefito_crm, especialidade')
-    .eq('id', user!.id)
-    .single();
+    .select('id, nome, crefito_crm, especialidade, qualificacao_isak')
+    .eq('id', user.id)
+    .single() : { data: null };
 
   let config = null;
   try {

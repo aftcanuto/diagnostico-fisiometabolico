@@ -86,6 +86,7 @@ Preencha:
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
+CRON_SECRET=gere-uma-chave-aleatoria-segura
 
 # IA — escolha UM provedor
 ANTHROPIC_API_KEY=sk-ant-...
@@ -102,6 +103,10 @@ npm run dev
 ```
 
 Abra http://localhost:3000
+
+Em producao, `vercel.json` agenda uma verificacao diaria e somente leitura do
+Supabase. Configure `CRON_SECRET` nas variaveis de producao da Vercel; esse valor
+nao deve ser enviado ao GitHub.
 
 ---
 

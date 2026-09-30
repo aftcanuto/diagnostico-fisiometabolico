@@ -97,7 +97,7 @@ export default function TermografiaPage(props:{params:Promise<{id:string}>}) {
   },[form.rois]);
   const steps=aval?buildSteps(id,aval.modulos_selecionados):[];
   const prev=steps.find(s=>s.key==='posturografia');
-  const next=steps.find(s=>s.key==='antropometria')??steps.find(s=>s.key==='bioimpedancia')??steps.find(s=>s.key==='revisao');
+  const next=steps.slice(steps.findIndex(s=>s.key==='termografia')+1).find(s=>s.enabled);
   const check=(key:string,label:string)=><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form[key]} onChange={e=>setForm((f:any)=>({...f,[key]:e.target.checked}))}/>{label}</label>;
 
   return <div className="max-w-6xl space-y-5">
@@ -148,7 +148,7 @@ export default function TermografiaPage(props:{params:Promise<{id:string}>}) {
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm"><Upload className="h-4 w-4"/>{uploading==='complementar'?'Enviando...':'Adicionar imagens'}<input className="hidden" type="file" accept="image/*" multiple onChange={async e=>{await uploadComplementares(e.target.files);e.target.value='';}}/></label>
         <span className="text-xs text-slate-500">Sem limite fixo · {form.imagens_complementares.length} anexada(s)</span>
       </div>
-      <div className="grid gap-3 md:grid-cols-3">{form.imagens_complementares.map((img:any,i:number)=><div key={`${img.path??img.url}-${i}`} className="rounded-lg border p-2"><img src={img.url} className="h-40 w-full object-contain"/><div className="mt-2 flex gap-2"><Input value={img.titulo} onChange={e=>setForm((f:any)=>({...f,imagens_complementares:f.imagens_complementares.map((x:any,n:number)=>n===i?{...x,titulo:e.target.value}:x)}))}/><Button variant="ghost" onClick={()=>removerComplementar(i)} title="Excluir imagem"><Trash2 className="h-4 w-4"/></Button></div></div>)}</div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{form.imagens_complementares.map((img:any,i:number)=><div key={`${img.path??img.url}-${i}`} className="rounded-lg border p-2"><img src={img.url} alt={img.titulo || `Imagem complementar ${i + 1}`} className="h-40 w-full object-contain"/><div className="mt-2 flex gap-2"><Input value={img.titulo} onChange={e=>setForm((f:any)=>({...f,imagens_complementares:f.imagens_complementares.map((x:any,n:number)=>n===i?{...x,titulo:e.target.value}:x)}))}/><Button variant="ghost" onClick={()=>removerComplementar(i)} title="Excluir imagem"><Trash2 className="h-4 w-4"/></Button></div></div>)}</div>
     </CardBody></Card>
 
     <Card><CardHeader><CardTitle>Interpretação profissional</CardTitle></CardHeader><CardBody className="grid gap-4 md:grid-cols-2">

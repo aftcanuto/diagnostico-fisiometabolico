@@ -68,6 +68,9 @@ export const MIGRATIONS_ESPERADAS = [
   '067_catalogo_cupons_pacotes_pdf.sql',
   '068_modelos_interpretacao_modulos.sql',
   '069_termografia_funcional.sql',
+  '20260924024216_jump_test.sql',
+  '20260924133821_restore_core_rls.sql',
+  '20260928170549_anthropometry_v2.sql',
 ] as const;
 
 export const ULTIMA_MIGRATION_ESPERADA =

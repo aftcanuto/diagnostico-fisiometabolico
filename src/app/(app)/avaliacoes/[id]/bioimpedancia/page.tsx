@@ -112,9 +112,7 @@ export default function BioimpedanciaPage(props: { params: Promise<{ id: string 
 
   if (!aval) return <p className="text-slate-500">Carregando…</p>;
   const steps = buildSteps(params.id, aval.modulos_selecionados);
-  const nextStep = steps.find(s => s.key === 'flexibilidade')
-    ?? steps.find(s => s.key === 'forca')
-    ?? steps.find(s => s.key === 'revisao');
+  const nextStep = steps.slice(steps.findIndex(s => s.key === 'bioimpedancia') + 1).find(s => s.enabled);
 
   return (
     <div>

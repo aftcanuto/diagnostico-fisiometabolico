@@ -7,7 +7,7 @@ import { EditarPacienteModal } from '@/components/EditarPacienteModal';
 import { DeletePacienteButton } from '@/components/DeletePacienteButton';
 
 export default async function PacientesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: pacientes } = await supabase
     .from('pacientes')

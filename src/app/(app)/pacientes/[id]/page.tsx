@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { jumpAnalysisUsable } from '@/lib/jump-test';
+import { anthropometryAnalysisUsable } from '@/lib/anthropometry-record';
 import { notFound } from 'next/navigation';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/Button';
@@ -23,11 +25,15 @@ function dataLongaBR(valor?: string | null) {
 
 export default async function PacienteDashboardPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: p, error: pErr } = await supabase
     .from('pacientes').select('*').eq('id', params.id).single();
-  if (pErr || !p) notFound();
+  if (pErr && pErr.code !== 'PGRST116') {
+    console.error('Falha ao carregar paciente', { code: pErr.code });
+    throw new Error('Nao foi possivel carregar o paciente. Tente novamente.');
+  }
+  if (!p) notFound();
   const admin = createAdminClient();
 
   // Buscar todas as avaliações com scores para o header
@@ -44,7 +50,7 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
       id, data, tipo, status, modulos_selecionados,
       scores(*), antropometria(*), forca(*),
       cardiorrespiratorio(*), posturografia(*),
-      sinais_vitais(*), anamnese(*)
+      termografia(*), jump_test(*), sinais_vitais(*), anamnese(*)
     `)
     .eq('paciente_id', params.id)
     .eq('status', 'finalizada')
@@ -66,7 +72,7 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
         admin.from('flexibilidade').select('*').in('avaliacao_id', ids),
         admin.from('rml').select('*').in('avaliacao_id', ids),
         admin.from('biomecanica_corrida').select('*').in('avaliacao_id', ids),
-        admin.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado,conteudo_paciente,texto_paciente_editado,plano_acao').in('avaliacao_id', ids),
+        admin.from('analises_ia').select('avaliacao_id,tipo,conteudo,texto_editado,conteudo_paciente,texto_paciente_editado,plano_acao,gerado_em').in('avaliacao_id', ids),
         admin.from('plano_alimentar_avaliacoes').select('*').in('avaliacao_id', ids),
       ]);
       bios?.forEach((b: any) => { bioMap[b.avaliacao_id] = b; });
@@ -107,8 +113,10 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
     cardiorrespiratorio: flat(a.cardiorrespiratorio),
     biomecanica_corrida: biomecMap[a.id] ?? null,
     plano_alimentar:     planoAlimentarMap[a.id] ?? null,
-    analises_ia:         analisesMap[a.id] ?? null,
+    analises_ia:         Object.fromEntries(Object.entries(analisesMap[a.id] ?? {}).filter(([, analysis]) => jumpAnalysisUsable(analysis, flat(a.jump_test)) && anthropometryAnalysisUsable(analysis, flat(a.antropometria)))),
     posturografia:       flat(a.posturografia),
+    termografia:         flat(a.termografia),
+    jump_test:           flat(a.jump_test),
     sinais_vitais:       flat(a.sinais_vitais),
     anamnese:            flat(a.anamnese),
   }));

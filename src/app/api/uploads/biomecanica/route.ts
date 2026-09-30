@@ -4,13 +4,13 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 
 async function getUserId() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id ?? null;
 }
 
 async function usuarioPodeAcessarAvaliacao(userId: string, avaliacaoId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: visivel } = await supabase
     .from('avaliacoes')
     .select('id')

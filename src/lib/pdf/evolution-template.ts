@@ -1,4 +1,7 @@
 import { resolverPercentualGordura } from '@/lib/bodyComposition';
+import { referenciasAvaliacao, modulosDoHistorico } from '@/lib/clinical/references';
+import { jumpEvolutionHtml } from './jump-test';
+import { anthropometryEvolutionHtml, isAnthropometryV2 } from './anthropometry';
 import { type AvaliacaoHidratada, consolidarHistorico } from '@/lib/historico';
 
 type EvolutionReportData = {
@@ -46,16 +49,19 @@ const format = (value: any, digits = 1, unit = '') => {
 };
 
 function massaMagra(avaliacao: any) {
+  if (isAnthropometryV2(avaliacao?.antropometria)) return null;
   return num(avaliacao?.antropometria?.massa_magra)
     ?? num(avaliacao?.bioimpedancia?.massa_livre_gordura_kg)
     ?? num(avaliacao?.bioimpedancia?.massa_magra_kg);
 }
 
 function peso(avaliacao: any) {
+  if (isAnthropometryV2(avaliacao?.antropometria)) return num(avaliacao.antropometria.resultados_v2?.measurements?.mass?.value);
   return num(avaliacao?.antropometria?.peso) ?? num(avaliacao?.bioimpedancia?.peso_kg);
 }
 
 function ffmi(avaliacao: any) {
+  if (isAnthropometryV2(avaliacao?.antropometria)) return null;
   const direto = num(avaliacao?.antropometria?.ffmi) ?? num(avaliacao?.bioimpedancia?.ffmi);
   if (direto != null) return direto;
   const massa = massaMagra(avaliacao);
@@ -138,6 +144,16 @@ function dividirTexto(texto: string, limite = 2200) {
 }
 
 export function renderEvolutionReportHTML(data: EvolutionReportData) {
+  const refs = referenciasAvaliacao(modulosDoHistorico(data.avaliacoes), data.avaliacoes.map(a => a.antropometria));
+  const paginasReferencias: string[] = [];
+  for (let i = 0; i < refs.length; i += 9) {
+    paginasReferencias.push(`<section class="page"><div class="header"><h2>Referências bibliográficas</h2></div>
+      <ol start="${i + 1}" style="padding-left:18px;font-size:11px;line-height:1.5;overflow-wrap:anywhere">
+        ${refs.slice(i, i + 9).map(ref => `<li data-reference-id="${esc(ref.id)}" style="margin-bottom:16px;break-inside:avoid">
+          <div>${esc(ref.texto)}</div>${ref.nota ? `<div>${esc(ref.nota)}</div>` : ''}
+          <a href="${esc(ref.url)}">${esc(ref.url)}</a></li>`).join('')}
+      </ol></section>`);
+  }
   const historico = consolidarHistorico(data.avaliacoes);
   const atual = historico.ultima;
   const anterior = historico.penultima;
@@ -175,6 +191,8 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
   const hasThermalPhotos = [...thermalBefore, ...thermalAfter].some(photo => photo.src);
 
   const metricCards = metrics.map(metric => {
+    if (metric.group === 'Composição' && metric.label !== 'Peso corporal' &&
+      (isAnthropometryV2(anterior.antropometria) || isAnthropometryV2(atual.antropometria))) return '';
     const change = delta(metric.after, metric.before, metric.digits, metric.lowerIsBetter);
     return `<div class="metric">
       <div class="eyebrow">${esc(metric.group)}</div>
@@ -223,6 +241,10 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     body { margin:0; width:210mm; font-family:Arial,Helvetica,sans-serif; color:#0f172a; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .page { width:210mm; min-height:297mm; padding:18mm 16mm 20mm; page-break-after:always; position:relative; overflow:hidden; }
     .page:last-child { page-break-after:auto; }
+    .anthropometry-v2 { overflow:visible; height:auto; }
+    .anthropometry-v2 > div { break-inside:avoid; }
+    .anthropometry-v2 .mod-head { border-bottom:2px solid ${primary}; margin-bottom:18px; padding-bottom:12px; }
+    .anthropometry-v2 .mod-title { font-size:24px; font-weight:700; }
     .cover { color:#fff; background:linear-gradient(145deg,#0f172a,${primary}); display:flex; flex-direction:column; justify-content:space-between; }
     .brand { display:flex; align-items:center; gap:14px; }
     .logo { width:58px; height:58px; object-fit:contain; border-radius:14px; background:#fff; padding:7px; }
@@ -301,6 +323,8 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Relatório de evolução</span></div>
   </section>
 
+  ${anthropometryEvolutionHtml(historico.ordenadas)}
+
   ${analysisPages.map((parte, index) => `<section class="page">
     <div class="header"><div><h2>Leitura da evolução${index ? ' (continuação)' : ''}</h2><p>Texto revisado e aprovado pelo profissional responsável.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
     <div class="analysis">${esc(parte)}</div>
@@ -317,6 +341,7 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Histórico longitudinal</span></div>
   </section>
 
+  ${atual.jump_test ? `<section class="page"><div class="header"><h2>Jump Test - evolucao</h2><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>${jumpEvolutionHtml(atual.jump_test, anterior.jump_test)}<div class="footer"><span>${esc(data.paciente.nome)}</span><span>Jump Test</span></div></section>` : ''}
   ${hasPosturalPhotos ? `<section class="page">
     <div class="header"><div><h2>Comparativo postural</h2><p>Quatro vistas posturais das duas avaliações mais recentes.</p></div><div class="period">${dateBR(anterior.data)} → ${dateBR(atual.data)}</div></div>
     ${[
@@ -345,6 +370,7 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
     </div>`).join('')}
     <div class="footer"><span>${esc(data.clinica?.nome || '')} · ${esc(data.paciente.nome)}</span><span>Comparativo termográfico</span></div>
   </section>` : ''}
+${paginasReferencias.join('')}
 </body>
 </html>`;
 }

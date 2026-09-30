@@ -11,6 +11,7 @@ const LABELS_MODULOS: Record<string, string> = {
   rml: 'RML',
   cardiorrespiratorio: 'Cardiorrespiratorio',
   biomecanica_corrida: 'Biomecânica da corrida',
+  jump_test: 'Jump Test',
 };
 
 function textoAnalise(analise: any) {

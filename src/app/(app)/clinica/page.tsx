@@ -5,7 +5,7 @@ import { BackupAvaliacoesButton } from '@/components/BackupAvaliacoesButton';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default async function ClinicaPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: clinicaId } = await supabase.rpc('current_clinica_id');
   const { data: clinica } = await supabase.from('clinicas').select('*').eq('id', clinicaId).single();
   const { data: papel } = await supabase.rpc('current_papel');

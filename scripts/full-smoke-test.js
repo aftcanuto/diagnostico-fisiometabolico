@@ -39,6 +39,7 @@ require('./preview-dashboard-clinico.tsx');
 const { renderLaudoHTML } = require('../src/lib/pdf/template.ts');
 const P = require('../src/lib/ai/prompts.ts');
 const { parseJSON } = require('../src/lib/ai/client.ts');
+const { REFERENCIAS_BIOMECANICA, normalizarReferenciasBiomecanica } = require('../src/lib/biomecanica/referencias.ts');
 
 const tipos = [
   'anamnese',
@@ -157,6 +158,62 @@ function testarPrompts() {
     assert(prompt.user.length > 100, `${tipo}: user prompt muito curto`);
     assert(/Referências|Referencias|referências|referencias/.test(prompt.user + prompt.system), `${tipo}: sem referências clínicas`);
   }
+
+  const anamneseTemporal = {
+    respostas: {
+      diagnostico: true,
+      familia: true,
+      familia_detalhes: 'Hipertensão em parente de primeiro grau',
+      hormonios: true,
+      hormonios_detalhes: 'Uso encerrado em 2019',
+    },
+    anamnese_templates: {
+      campos: [
+        { id: 'historico', tipo: 'secao', label: 'Histórico clínico' },
+        { id: 'diagnostico', tipo: 'boolean', label: 'Possui alguma doença diagnosticada?' },
+        { id: 'familia', tipo: 'boolean', label: 'Histórico familiar de doenças?' },
+        { id: 'familia_detalhes', tipo: 'texto', label: 'Se sim, quais?' },
+        { id: 'recursos', tipo: 'secao', label: 'Recursos ergogênicos' },
+        { id: 'hormonios', tipo: 'boolean', label: 'Faz uso atual ou passado de terapias hormonais ou esteroides?' },
+        { id: 'hormonios_detalhes', tipo: 'texto_longo', label: 'Se sim, descreva: data, tipo, dosagem, tempo de uso' },
+      ],
+    },
+  };
+  const rotuladas = P.prepararAnamneseParaIA(anamneseTemporal).respostas_rotuladas;
+  assert(rotuladas.find(item => item.pergunta.includes('Possui alguma doença'))?.semantica_temporal === 'INFORMACAO_ATUAL_EXPLICITA',
+    'Anamnese deveria preservar uma condicao explicitamente atual');
+  assert(rotuladas.filter(item => item.pergunta.includes('familiar') || item.pergunta === 'Se sim, quais?')
+    .every(item => item.semantica_temporal === 'ANTECEDENTE_FAMILIAR_NAO_E_CONDICAO_ATUAL_DO_PACIENTE'),
+  'Anamnese deveria preservar a semantica do antecedente familiar nos detalhes');
+  assert(rotuladas.filter(item => item.pergunta.includes('terapias hormonais') || item.pergunta.includes('data, tipo'))
+    .every(item => item.semantica_temporal === 'TEMPORALIDADE_MISTA_NAO_ASSUMIR_USO_ATUAL'),
+  'Anamnese deveria preservar temporalidade mista no uso hormonal e nos detalhes');
+  const promptTemporal = P.promptAnamnese(ctx, anamneseTemporal);
+  assert(promptTemporal.user.includes('Histórico familiar de doenças?'), 'Prompt de anamnese perdeu o rotulo da pergunta');
+  assert(promptTemporal.system.includes('Uso passado ou de temporalidade mista não pode ser descrito como uso atual'),
+    'Prompt de anamnese sem trava de temporalidade');
+}
+
+function testarReferenciasBiomecanica() {
+  const esperadas = {
+    cabeca: [-8, 2], tronco: [4, 10], aterrissagem_passada: [-10, 10],
+    joelho_frente_contato: [135, 180], joelho_posterior_contato: [0, 101], bracos: [75, 85],
+    queda_pelve_esq: [0, 2], queda_pelve_dir: [0, 2],
+    alinhamento_joelho_esq: [-3, 3], alinhamento_joelho_dir: [-3, 3],
+    pronacao_supinacao_esq: [-5, 5], pronacao_supinacao_dir: [-5, 5],
+  };
+  for (const [chave, [min, max]] of Object.entries(esperadas)) {
+    assert(REFERENCIAS_BIOMECANICA[chave]?.min === min && REFERENCIAS_BIOMECANICA[chave]?.max === max,
+      `${chave}: intervalo biomecanico divergente dos relatorios de referencia`);
+  }
+  const normalizado = normalizarReferenciasBiomecanica({
+    cabeca: { valor: 1, ideal_min: -13, ideal_max: -3, classificacao: 'fora' },
+    alinhamento_joelho_esq: { valor: -4, ideal_min: -5, ideal_max: 5, classificacao: 'ideal' },
+  });
+  assert(normalizado.cabeca.ideal_min === -8 && normalizado.cabeca.classificacao === 'ideal',
+    'Normalizacao nao atualizou referencia/classificacao sagital antiga');
+  assert(normalizado.alinhamento_joelho_esq.ideal_min === -3 && normalizado.alinhamento_joelho_esq.classificacao === 'atencao',
+    'Normalizacao nao atualizou referencia/classificacao posterior antiga');
 }
 
 function testarParserIA() {
@@ -184,6 +241,7 @@ function main() {
   assert((dadosLaudo.dados.forca?.tracao_testes ?? []).length >= 7, 'Tração deveria cobrir todos os testes de referência simulados');
 
   testarPrompts();
+  testarReferenciasBiomecanica();
   testarParserIA();
 
   const fullData = { ...dadosLaudo, analisesIA };
@@ -210,6 +268,10 @@ function main() {
         equipamento_modelo: 'Pocket2',
         equipamento_software: 'HIKMICRO Analyzer',
         rois: [],
+        imagens_complementares: Array.from({ length: 4 }, (_, index) => ({
+          url: 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=',
+          titulo: `Imagem complementar ${index + 1}`,
+        })),
       },
     },
     scores: {
@@ -224,6 +286,7 @@ function main() {
   assert(!termografiaIsolada.includes('Score 0-100 da posturografia'), 'Laudo isolado nao deve mostrar scores de modulos ausentes');
   assert(!termografiaIsolada.includes('Resumo da Avaliação'), 'Laudo isolado sem score nao deve gerar pagina de resumo');
   assert(termografiaIsolada.includes('10.1016/j.jtherbio.2017.07.006'), 'Laudo termografico sem referencia TISEM');
+  assert(termografiaIsolada.includes('class="termografia-complementares-grid" style="display:grid;grid-template-columns:repeat(4,1fr)'), 'Imagens complementares da termografia devem usar quatro colunas no laudo');
 
   const laudo = checkTextFile('preview-laudo-full-smoke.html', [
     ...Object.values(nomesRelatorio),
@@ -327,6 +390,16 @@ function main() {
   ]);
   assertCodigoContem('src/components/AnalisesIAPanel.tsx', [
     '/api/ia/editar?avaliacaoId=',
+  ]);
+  assertCodigoContem('src/lib/ai/service.ts', [
+    'carregarAnamnese',
+    'Falha ao salvar análise de IA',
+  ]);
+  assertCodigoContem('src/components/PatientDashboard.tsx', [
+    'atual.analises_ia?.termografia',
+  ]);
+  assertCodigoContem('src/components/PortalPaciente.tsx', [
+    "['termografia','Termografia funcional']",
   ]);
   assertCodigoContem('src/app/(app)/avaliacoes/[id]/revisao/page.tsx', [
     "method: 'PATCH'",

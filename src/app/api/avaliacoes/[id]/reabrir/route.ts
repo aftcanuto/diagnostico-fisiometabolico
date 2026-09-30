@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Verificar autenticação
   const { data: { user } } = await supabase.auth.getUser();

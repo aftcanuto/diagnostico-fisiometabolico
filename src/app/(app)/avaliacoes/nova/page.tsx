@@ -10,10 +10,11 @@ import { cn } from '@/lib/cn';
 const modulosMeta = [
   { k: 'anamnese',           label: 'Anamnese',             obrig: true, desc: 'Histórico clínico e objetivos' },
   { k: 'sinais_vitais',      label: 'Sinais vitais',        desc: 'PA, FC, SpO₂, temperatura' },
+  { k: 'bioimpedancia',      label: 'Bioimpedância',        desc: 'InBody / Tanita — composição, água, célula' },
   { k: 'posturografia',      label: 'Posturografia',        desc: '4 fotos + análise de alinhamentos' },
   { k: 'termografia',        label: 'Termografia funcional', desc: '4 termogramas, protocolo, ROIs e assimetrias' },
   { k: 'antropometria',      label: 'Antropometria (ISAK)', desc: 'Dobras, circunferências, somatotipo' },
-  { k: 'bioimpedancia',      label: 'Bioimpedância',        desc: 'InBody / Tanita — composição, água, célula' },
+  { k: 'jump_test', label: 'Jump Test', desc: 'SJ, CMJ, DJ, unilateral e repetidos de 15 s' },
   { k: 'flexibilidade',      label: 'Flexibilidade',        desc: 'Banco de Wells (sit and reach)' },
   { k: 'forca',              label: 'Força',                desc: 'Preensão palmar + dinamometria isométrica' },
   { k: 'rml',                label: 'Resistência Muscular (RML)', desc: 'Flexão braço, abdominal, prancha, agachamento — ou Senior Fitness Test' },
@@ -23,6 +24,7 @@ const modulosMeta = [
 
 const MODULOS_INICIAIS: Record<string, boolean> = {
   anamnese: true, sinais_vitais: true, posturografia: true, termografia: true,
+  jump_test: false,
   bioimpedancia: false, antropometria: true, flexibilidade: true,
   forca: true, cardiorrespiratorio: true, rml: false,
   biomecanica_corrida: false,
@@ -35,6 +37,7 @@ const ROTAS_MODULOS: Record<string, string> = {
   sinais_vitais: 'sinais-vitais',
   posturografia: 'posturografia',
   termografia: 'termografia',
+  jump_test: 'jump-test',
   bioimpedancia: 'bioimpedancia',
   antropometria: 'antropometria',
   flexibilidade: 'flexibilidade',

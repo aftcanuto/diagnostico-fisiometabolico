@@ -4,10 +4,14 @@
  * Layout: capa · resumo dark · módulos white
  */
 
+import { formatCalendarDate } from '@/lib/date';
+import { referenciasAvaliacao, MODULOS_REFERENCIAS } from '@/lib/clinical/references';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { classificarComposicaoCorporal, resolverPercentualGordura } from '@/lib/bodyComposition';
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
+import { jumpReportHtml } from './jump-test';
+import { anthropometryReportHtml, anthropometrySummaryHtml, isAnthropometryV2 } from './anthropometry';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -37,8 +41,8 @@ export interface LaudoData {
     fonte_gordura_relatorio?: 'antropometria' | 'bioimpedancia' | 'maior' | 'menor' | 'manual' | null;
     percentual_gordura_relatorio?: number | null;
   };
-  modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; termografia?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };
-  dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; termografia?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any; plano_alimentar?: any };
+  modulos: { anamnese?: boolean; sinais_vitais?: boolean; posturografia?: boolean; termografia?: boolean; jump_test?: boolean; bioimpedancia?: boolean; antropometria?: boolean; forca?: boolean; flexibilidade?: boolean; cardiorrespiratorio?: boolean; rml?: boolean; biomecanica_corrida?: boolean };
+  dados: { anamnese?: any; sinais_vitais?: any; posturografia?: any; termografia?: any; jump_test?: any; bioimpedancia?: any; antropometria?: any; forca?: any; flexibilidade?: any; cardiorrespiratorio?: any; biomecanica_corrida?: any; rml?: any; plano_alimentar?: any };
   scores: { global: number | null; postura: number | null; composicao_corporal: number | null; forca: number | null; flexibilidade?: number | null; cardiorrespiratorio: number | null; rml?: number | null };
   analisesIA?: Record<string, AnaliseIA & { texto_editado?: string | null }>;
   pdfConfig?: {
@@ -52,7 +56,7 @@ export interface LaudoData {
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const x = (s: any) => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const xa = (s: any) => x(s).replace(/"/g,'&quot;');
-const fd = (iso: string) => { try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; } };
+const fd = formatCalendarDate;
 function limparTextoHTML(html: string): string {
   const pares: [string, string][] = [
     ['ÃƒÂ¡','á'], ['ÃƒÂ ','à'], ['ÃƒÂ¢','â'], ['ÃƒÂ£','ã'], ['ÃƒÂ©','é'], ['Ãƒª','ê'], ['ÃƒÂ­','í'], ['Ãƒ³','ó'], ['ÃƒÂ´','ô'], ['ÃƒÂµ','õ'], ['Ãƒº','ú'], ['ÃƒÂ§','ç'],
@@ -684,6 +688,7 @@ const LABELS_MODULOS_LAUDO: Record<string, string> = {
   sinais_vitais: 'Sinais vitais',
   posturografia: 'Posturografia',
   termografia: 'Termografia funcional',
+  jump_test: 'Jump Test',
   antropometria: 'Antropometria',
   bioimpedancia: 'Bioimpedância',
   flexibilidade: 'Flexibilidade',
@@ -1058,6 +1063,7 @@ function pgSinais(s: any, ia?: any): string {
 
 function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
   const ant = d.dados.antropometria;
+  if (isAnthropometryV2(ant)) return anthropometrySummaryHtml(ant);
   const bio = d.dados.bioimpedancia;
   if (!ant && !bio) return '';
 
@@ -1237,7 +1243,7 @@ function pgTermografia(t: any, ia: any, pri = '#059669'): string {
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">${vistas}</div>
     ${rois.length?`<div class="sec-sub">Regiões de interesse</div><table style="width:100%;border-collapse:collapse;font-size:9px"><thead><tr><th>Região</th><th>Lado</th><th>Média</th><th>Mín.</th><th>Máx.</th><th>Dor</th></tr></thead><tbody>${rois.map((r:any)=>`<tr><td>${x(r.regiao==='Personalizada'?r.nome_personalizado:r.regiao)}</td><td>${x(r.lado)}</td><td>${x(r.temp_media)} °C</td><td>${x(r.temp_min)} °C</td><td>${x(r.temp_max)} °C</td><td>${r.dor?x(r.intensidade_dor||'Sim'):'Não'}</td></tr>`).join('')}</tbody></table>`:''}
     ${deltas.length?`<div class="sec-sub">Comparação bilateral</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${deltas.map(a=>`<div style="padding:7px;border:1px solid #e2e8f0;border-radius:7px;font-size:9px"><b>${x(a.regiao)}</b><br/>D ${a.d} °C · E ${a.e} °C · Δ <b>${a.delta.toFixed(1)} °C</b></div>`).join('')}</div>`:''}
-    ${complementares?`<div class="sec-sub">Imagens termográficas complementares</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${complementares}</div>`:''}
+    ${complementares?`<div class="sec-sub">Imagens termográficas complementares</div><div class="termografia-complementares-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${complementares}</div>`:''}
     ${t.conclusao_funcional?`<div class="sec-sub">Conclusão profissional</div><p style="font-size:11px;line-height:1.6">${x(t.conclusao_funcional)}</p>`:''}
     ${aiBlock(ia)}
   </section>`;
@@ -1276,6 +1282,7 @@ function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
 
 function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any): string {
   if (!a) return '';
+  if (isAnthropometryV2(a)) return anthropometryReportHtml(a);
   const dobras=a.dobras??{}, soma=a.somatotipo;
   const ord=['triceps','subescapular','peitoral','axilar_media','supra_iliaca','abdominal','coxa'];
   const rot:Record<string,string>={triceps:'Tríceps',subescapular:'Subescapular',peitoral:'Peitoral',axilar_media:'Axilar média',supra_iliaca:'Supra-ilíaca',abdominal:'Abdominal',coxa:'Coxa'};
@@ -2033,10 +2040,10 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
     {label:'Flexibilidade',texto:'Banco de Wells (ACSM)'},
     {label:'Aeróbico',texto:'Zonas % FCmáx (Tanaka, 2001)'},
     {label:'FFMI',texto:'Schutz 2002; limite: Berkhan/McDonald'},
-    {label:'RML — Flexão de braço',texto:'ACSM Guidelines, 11ª ed. (2022)'},
-    {label:'RML — Abdominal 1 min',texto:'Pollock & Wilmore (1990) / ACSM (2022)'},
-    {label:'RML — Prancha ventral',texto:'McGill SM. Low Back Disorders, 2ª ed. (2007)'},
-    {label:'RML — Agachamento 1 min',texto:'Matsudo SMM (2001) / ACSM (2022)'},
+    {label:'RML — Flexão de braço',texto:'Contagem de repetições conforme protocolo registrado'},
+    {label:'RML — Abdominal 1 min',texto:'Contagem em um minuto conforme protocolo registrado'},
+    {label:'RML — Prancha ventral',texto:'Endurance de tronco; McGill, 3ª ed. (2016)'},
+    {label:'RML — Agachamento 1 min',texto:'Contagem em um minuto conforme protocolo registrado'},
     {label:'RML — Sentar e Levantar 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
     {label:'RML — Arm Curl Test 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
   ])];
@@ -2044,60 +2051,41 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
     protos.push({ label:'Termografia funcional', texto:'Protocolo TISEM; emissividade cutânea 0,98; análise comparativa por ROIs.' });
   }
 
-  // Referências — usar config do banco se disponível
-  const refs: any[] = [...(cfg?.referencias ?? [
-    {texto:'Jackson & Pollock. Br J Nutr. 1978;40(3):497–504.'},
-    {texto:'Siri WE. Univ. of California; 1961.'},
-    {texto:'Carter & Heath. Somatotyping. Cambridge; 1990.'},
-    {texto:'Tanaka et al. J Am Coll Cardiol. 2001;37(1):153–6.'},
-    {texto:'Stewart et al. ISAK Standards; 2011.'},
-    {texto:'Leong et al. Lancet. 2015;386:266–273.'},
-    {texto:'Medeor Ltda. Manual técnico do dinamômetro isométrico Medeor. São Paulo; 2019.'},
-    {texto:'Massy-Westropp NM et al. Hand Grip Strength normative data. BMC Res Notes. 2011;4:127.'},
-    {texto:'ACSM\'s Guidelines for Exercise Testing and Prescription, 11ª ed. (2022).'},
-    {texto:'Pollock ML, Wilmore JH. Exercise in Health and Disease, 2ª ed. (1990).'},
-    {texto:'McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation, 2ª ed. (2007).'},
-    {texto:'Rikli RE, Jones CJ. Senior Fitness Test Manual, 2ª ed. (2013).'},
-    {texto:'Matsudo SMM. Envelhecimento & Atividade Física. Midiograf (2001).'},
-    {texto:'Matsudo VKR et al. Tabelas de referência para aptidão física. Rev Bras Ativ Fís Saúde (1997).'},
-  ])];
-  if (d.modulos.termografia) {
-    const refsTermografia = [
-      {texto:'Moreira DG et al. Thermographic imaging in sports and exercise medicine: a Delphi study and consensus statement. J Therm Biol. 2017;69:155-162. doi:10.1016/j.jtherbio.2017.07.006.'},
-      {texto:'Bunn PS et al. Infrared thermography and musculoskeletal injuries: a systematic review with meta-analysis. Infrared Phys Technol. 2020;109:103435. doi:10.1016/j.infrared.2020.103435.'},
-      {texto:'Lubkowska A, Pluta W. Infrared Thermography as a Non-Invasive Tool in Musculoskeletal Disease Rehabilitation: The Control Variables in Applicability. Appl Sci. 2022;12(9):4302. doi:10.3390/app12094302.'},
-    ];
-    refsTermografia.forEach(ref => {
-      if (!refs.some((atual: any) => atual.texto?.includes(ref.texto.match(/10\.\d{4,9}\/\S+/)?.[0] ?? ref.texto))) refs.push(ref);
-    });
+  if (isAnthropometryV2(d.dados.antropometria)) {
+    for (let i = protos.length - 1; i >= 0; i--) {
+      if (/antropometr|% gordura|massa [oó]ssea|somatotipo|ffmi/i.test(protos[i].label)) protos.splice(i, 1);
+    }
+    protos.push({ label: 'Antropometria V2', texto: 'Metodos e versoes conforme os resultados selecionados no snapshot, nas paginas de Antropometria.' });
   }
-
+  const refs = referenciasAvaliacao(d.modulos, d.dados.antropometria);
+  if (d.modulos.jump_test && !protos.some((p: any) => /jump\s*test/i.test(`${p.label} ${p.texto}`))) {
+    protos.push({ label: 'Jump Test', texto: 'SJ, CMJ e DJ: tres tentativas validas por protocolo; CMJ unilateral: tres por perna; saltos repetidos: serie de 15 s. Altura de queda e protocolos realizados conforme registro da coleta.' });
+  }
+  const paginasRefs = [];
+  for (let i = 0; i < refs.length; i += 9) {
+    paginasRefs.push(`<section class="ref-section page module" style="page-break-after:auto">
+      <div class="mod-head"><div class="mod-title">Referências bibliográficas</div></div>
+      <ol start="${i + 1}" style="padding-left:18px;font-size:11px;line-height:1.5;overflow-wrap:anywhere">
+        ${refs.slice(i, i + 9).map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:16px;break-inside:avoid">
+          <div style="font-weight:700;color:${pri}">${x(ref.modulos.filter(m => d.modulos[m] === true).map(m => MODULOS_REFERENCIAS[m]).join(' · '))}</div>
+          <div>${x(ref.texto)}</div>
+          ${ref.nota ? `<div style="color:#64748b">${x(ref.nota)}</div>` : ''}
+          <a href="${xa(ref.url)}" style="color:${pri};overflow-wrap:anywhere">${x(ref.url)}</a>
+        </li>`).join('')}
+      </ol>
+    </section>`);
+  }
   return `<section class="ref-section page module" style="page-break-after:auto">
-  <div style="border-top:2px solid ${pri};padding-top:20px">
-    ${textoEvolucao ? `<div style="margin-bottom:14px;padding:9px 11px;border-left:3px solid ${pri};background:#f8fafc;border-radius:0 7px 7px 0;break-inside:avoid">
-      <div style="font-size:9px;font-weight:800;color:${pri};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Evolução longitudinal</div>
-      <div style="font-size:8.5px;line-height:1.45;color:#475569">${x(textoEvolucao)}</div>
-    </div>` : ''}
-    <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:16px">Protocolos e referências</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-      <div>
-        <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:8px">Protocolos utilizados</div>
-        <ul style="padding-left:16px;font-size:11px;color:#4b5563;line-height:1.8">
-          ${protos.filter((p: any)=>p.label&&p.texto).map((p: any)=>`<li>${x(p.label)} — ${x(p.texto)}</li>`).join('')}
-        </ul>
-        ${notaEquip ? `<div style="margin-top:10px;font-size:10px;color:#6b7280;font-style:italic;padding:8px 10px;background:#f9fafb;border-radius:6px;border-left:2px solid ${pri}">${x(notaEquip)}</div>` : ''}
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:8px">Referências bibliográficas</div>
-        <ol style="padding-left:16px;font-size:10px;color:#6b7280;line-height:1.8">
-          ${refs.filter((r: any)=>r.texto).map((r: any)=>`<li>${x(r.texto)}</li>`).join('')}
-        </ol>
-      </div>
-    </div>
+    <div class="mod-head"><div class="mod-title">Protocolos utilizados</div></div>
+    ${textoEvolucao ? `<div style="margin-bottom:14px;font-size:10px;line-height:1.5"><b>Evolução longitudinal</b><p>${x(textoEvolucao)}</p></div>` : ''}
+    <ul style="padding-left:16px;font-size:11px;color:#4b5563;line-height:1.8">
+      ${protos.filter((p: any)=>p.label&&p.texto).map((p: any)=>`<li>${x(p.label)} — ${x(p.texto)}</li>`).join('')}
+    </ul>
+    ${notaEquip ? `<p style="margin-top:12px;font-size:10px">${x(notaEquip)}</p>` : ''}
     <div class="footer-note">${x(textoLegal)}
-    ${contato?`<br/><b style="color:#6b7280">${x(c?.nome??'')}</b> · ${x(contato)}`:''}</div>
-  </div>
-</section>`;
+      ${contato ? `<br/>${x(c?.nome ?? '')} · ${x(contato)}` : ''}
+    </div>
+  </section>${paginasRefs.join('')}`;
 }
 
 // ─── Render principal ─────────────────────────────────────────────────────────
@@ -2124,6 +2112,7 @@ export function renderLaudoHTML(d: LaudoData): string {
           m.sinais_vitais ? d.dados.sinais_vitais : null,
           ia.sinais_vitais, pri)
       : '',
+    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia, gorduraRelatorio) : '',
     m.posturografia
       ? pgPosturaFlex(
           m.posturografia  ? d.dados.posturografia : null, m.posturografia ? d.scores.postura : null,
@@ -2132,7 +2121,7 @@ export function renderLaudoHTML(d: LaudoData): string {
       : '',
     m.termografia         ? pgTermografia(d.dados.termografia, ia.termografia, pri) : '',
     m.antropometria       ? pgAntro({...d.dados.antropometria,_sexo:d.paciente.sexo}, d.scores.composicao_corporal, ia.antropometria, gorduraRelatorio) : '',
-    m.bioimpedancia       ? pgBio(d.dados.bioimpedancia, ia.bioimpedancia, gorduraRelatorio) : '',
+    m.jump_test           ? jumpReportHtml(d.dados.jump_test, aiBlock(ia.jump_test)) : '',
     m.flexibilidade
       ? pgPosturaFlex(
           null, null,

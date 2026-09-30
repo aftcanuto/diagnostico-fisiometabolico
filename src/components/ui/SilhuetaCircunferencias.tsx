@@ -190,7 +190,7 @@ export function SilhuetaCircunferencias({ sexo, dados: dadosProp, circunferencia
   return (
     <div>
       {/* Título do card — fora do componente, mas subtítulo aqui */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 20, alignItems: 'start' }}>
 
         {/* ── COLUNA ESQUERDA: Composição corporal ── */}
         <div>

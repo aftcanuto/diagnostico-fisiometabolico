@@ -4,6 +4,142 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-09-29 - Publicacao da Antropometria V2
+
+- Migration `20260928170549_anthropometry_v2.sql` aplicada no projeto Supabase `kjfhhrdfsgvdqygbvmwb` por SQL direto, devido ao historico antigo de migrations manuais. Colunas, tipos, constraints validadas e RLS ativo em `antropometria` e `avaliadores` foram confirmados; versao registrada como aplicada sem reparar ou remover entradas historicas anteriores.
+- Deploy de producao concluido: `dpl_ENB1pPRUzb4YkuzajqDzaGCiW2dz`, status READY. Alias principal atualizado para https://avaliacao.medfit.med.br; login respondeu HTTP 200.
+- Publicados Antropometria V2, qualificacao ISAK Nivel 1, integracao de referencias com IA/portal/PDF, compatibilidade legada e correcoes da auditoria visual responsiva. Build remoto, tipos e lint aprovados.
+- Testes nao gravaram avaliacao real nem enviaram dados de paciente para IA. Diretorio `tmp/` excluido do Git e do upload da Vercel.
+
+### 2026-09-29 - Auditoria visual completa da Antropometria V2
+
+- Simulacao integral executada com as 26 medidas preenchidas, metodos antropometricos selecionados, instrumentos, contexto, metas, conclusao e qualificacao ISAK Nivel 1.
+- PDF antropometrico corrigido: medidas agrupadas em basicas, dobras, perimetros e diametros; Phantom sem repeticao de codigos em cada linha; contexto compactado; titulo Phantom mantido junto da tabela; espacamento das tabelas ajustado para eliminar corte de 6 px identificado pelo teste reforcado.
+- Fixture completo resulta em oito paginas sem overflow, corte, titulo orfao ou texto fora da area util. Todas as oito paginas foram renderizadas e inspecionadas visualmente.
+- Painel corrigido em 320 px: metricas numericas arredondadas, tabelas contidas no card e resultados convertidos para linhas responsivas no mobile. Referencias por resultado exibem identificadores curtos; citacoes completas permanecem na secao de referencias.
+- Validacao do painel aprovada em 320, 390, 768 e 1440 px, sem overflow horizontal, tela vazia, overlay ou erro de navegador. Aviso de acessibilidade do titulo da somatocarta tambem corrigido.
+- Teste visual ampliado em `scripts/test-anthropometry-browser.ts`, com dados plausiveis completos, captura de todas as paginas do PDF e capturas do painel por viewport. Alteracoes ainda nao publicadas; nenhuma migration adicional e nenhum dado real alterado.
+
+### 2026-09-29 - Antropometria V2 ISAK e Phantom
+
+- Implementada uma nova coleta antropometrica versionada, com 26 medidas do protocolo definido para a clinica, todas no lado direito por padrao e com registro explicito de excecoes. Os perimetros incluem peito/torax e antebraco; o diametro bimaleolar foi incluido para os calculos de massa ossea.
+- Cada medida aceita duas leituras e solicita uma terceira quando a diferenca ultrapassa 5% nas dobras ou 1% nas demais medidas. O resultado usa media para duas leituras e mediana para tres, preservando rascunhos parciais e rastreabilidade.
+- Avaliacoes antropometricas antigas continuam no formulario e no formato legado. Novas avaliacoes usam `registro_v2`, `resultados_v2` e controle otimista por `revision_v2`, sem recalcular silenciosamente registros historicos.
+- O avaliador escolhe os metodos e secoes durante a avaliacao. Resultados, portal, PDF e IA consomem o mesmo snapshot calculado e as mesmas referencias selecionadas; analises de IA anteriores a uma edicao V2 ficam obsoletas e nao sao exibidas como atuais.
+- Incluidos somatorios, perimetros corrigidos, indices, composicao corporal compativel, somatotipo Heath-Carter, proporcionalidade Phantom, maturacao de Mirwald, comparacao longitudinal e cenarios profissionais. Resultados cuja fonte ou adaptacao ainda exige validacao ficam marcados para revisao e nao alimentam a IA como confirmados.
+- Petroski, Jackson-Pollock e Siri nao foram habilitados no conjunto estrito de 26 medidas, pois dependem de pontos suprailiacos distintos dos pontos ISAK adotados. Nao ha substituicao silenciosa nem uso da bioimpedancia como percentual de gordura antropometrico.
+- Perfil profissional ganhou qualificacao ISAK estruturada. A formacao informada aparece simplesmente como "ISAK Nivel 1"; o titulo de antropometrista certificado exige declaracao explicita, nivel e validade vigente.
+- Migration completa criada em `supabase/migrations/20260928170549_anthropometry_v2.sql`, com preservacao das linhas legadas, restricoes de consistencia, RLS e grants existentes. Ela ainda nao foi aplicada no Supabase e esta entrega ainda nao foi publicada.
+- Validacoes aprovadas: suite antropometrica (calculos, IA, API, migration local e qualificacao), navegador em 320/390/768 px, PDF integrado de 8 paginas sem cortes, Jump Test, PDF visual geral, referencias, TypeScript, lint e build de producao. Nenhum dado real de paciente foi enviado a IA ou alterado durante os testes.
+
+### 2026-09-25 - Publicacao do PDF compacto e ordem dos modulos
+
+- Deploy autorizado concluido: `dpl_CsnihVGZbfNiL3PPF1BCt5nCDCKM`, READY, alias https://avaliacao.medfit.med.br.
+- Build remoto, tipos e lint aprovados; login do dominio confirmado com HTTP 200 apos deploy.
+- Publicados Jump Test compacto, inclusao em Protocolos utilizados e nova ordem dos modulos. Esta entrada substitui o status de nao publicado da entrega abaixo.
+- Sem migration nem alteracao de registros clinicos. Comando executado: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` seguido de `npx.cmd vercel --prod --yes`.
+
+### 2026-09-25 - Jump Test compacto e ordem dos modulos
+
+- PDF sem pagina obrigatoria por protocolo de salto: resumo e tabelas seguem em fluxo, com continuacao automatica quando necessario. Fixture SJ/CMJ/DJ com tres tentativas cada confirmada em uma pagina; seis protocolos tambem testados sem ultrapassar rodape.
+- Jump Test incluido automaticamente em Protocolos utilizados quando selecionado, inclusive com configuracao personalizada antiga, evitando duplicacao.
+- Bioimpedancia apos sinais vitais; antropometria antes do Jump Test na selecao inicial, navegacao, PDF, painel e portal. Botoes Continuar dos modulos afetados respeitam os passos habilitados.
+- Testes Jump e navegador isolado em 320/390/768/1280 aprovados. Sem migration, sem mudanca de dados clinicos e sem deploy desta alteracao.
+- Build, tipos, lint, paridade de referencias e teste de inclusao de modulos aprovados. Preview compacto inspecionado visualmente em tmp/jump-test/compact.png.
+
+### 2026-09-25 - Publicacao da entrada automatica de saltos validos
+
+- Deploy autorizado concluido: `dpl_HdGG8YQdSW9FPLTBCVZFVdwBMYDM`, READY, alias https://avaliacao.medfit.med.br.
+- Build remoto, tipos e lint aprovados. Login de producao confirmado com HTTP 200. Sem migration e sem alteracao de dados de pacientes.
+- Publicados validacao automatica dos saltos completos sem alertas e controle Confirmar saltos preenchidos para pendencias antigas. Esta entrada substitui o status anterior de nao publicado.
+- Comando executado: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` seguido de `npx.cmd vercel --prod --yes`.
+
+### 2026-09-24 - Entrada de saltos validos no Jump Test
+
+- Conforme fluxo solicitado pelo usuario, editar valores passa a marcar saltos completos e sem alertas como validos automaticamente; resumo recalcula sem selecao manual de status.
+- Campos vazios, numeros invalidos, inconsistencias e DJ sem contato permanecem pendentes. Tentativas excluidas nao sao reativadas.
+- Botao Confirmar saltos preenchidos permite confirmar pendencias antigas sem alertas; exige salvar depois e nao modifica registros remotos automaticamente.
+- Sem migration e sem deploy nesta etapa. Anexo PDF continua documental, sem extracao automatica.
+- Testes Jump e TypeScript aprovados, incluindo entrada automatica, campos vazios, DJ sem contato, inconsistencias e preservacao de exclusoes.
+
+### 2026-09-24 - Publicacao da inclusao de modulos
+
+- Deploy autorizado e concluido: `dpl_E5cE5xpS9t7bqTWHQSza47QptMQh`, READY, alias https://avaliacao.medfit.med.br.
+- Build remoto aprovado e login do dominio confirmado com HTTP 200. Teste `npm run test:add-modules` repetido e aprovado antes do envio.
+- Nenhuma migration necessaria: recurso usa o campo existente `avaliacoes.modulos_selecionados`. Nenhum SQL aplicado nem paciente alterado nesta publicacao.
+- Esta entrada substitui o status de nao publicado da implementacao abaixo. Fluxo autenticado com gravacao em avaliacao real nao executado; testes usam fixtures.
+- Comando executado: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` e `npx.cmd vercel --prod --yes`.
+
+### 2026-09-24 - Acrescentar modulos a avaliacoes existentes
+
+- Adicionado controle Adicionar modulos no layout da avaliacao. Exibe somente modulos nao selecionados; permite adicionar varios e abrir o primeiro, com confirmacao sobre campos ainda nao salvos.
+- API autenticada usa cliente da sessao e RLS, sem service role. Aceita apenas chaves conhecidas e adicoes; preserva selecao existente e todos os dados clinicos. Comparacao atomica da selecao anterior com retry evita perder adicoes simultaneas.
+- Avaliacoes finalizadas precisam ser reabertas explicitamente; arquivadas nao permitem adicao. Inclusao pode ocorrer em outro dia, sem trocar a data original da avaliacao.
+- Etapas compartilhadas entre navegacao, seletor e validacao da API. Referencias de portal/PDF/IA acompanham a selecao atual automaticamente. Analises salvas nao sao regeneradas automaticamente: revisar a conclusao apos complementar.
+- Sem migration, sem alteracao remota de pacientes e sem deploy nesta etapa. Teste dedicado: `npm run test:add-modules`.
+- TypeScript, lint, build, testes de API com banco simulado e paridade de referencias aprovados. Teste interativo isolado em 320/390/768/1280 px aprovado (selecao, envio, navegacao, erro e estado finalizado); nao houve gravacao em avaliacao real.
+- Comando de publicacao: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` seguido de `npx.cmd vercel --prod --yes`.
+
+### 2026-09-24 - Publicacao da bibliografia unificada
+
+- Publicacao autorizada pelo usuario e concluida: `dpl_BnpZe6cYJkbSRW7q3ZVVw6Sapav7`, status READY, producao.
+- Alias atualizado: https://avaliacao.medfit.med.br. Login confirmado com HTTP 200 apos a publicacao.
+- Build remoto, tipos e lint aprovados. Referencias compartilhadas entre portal, PDF e prompts da IA publicadas; esta entrada substitui o status de nao publicado desta correcao.
+- Comando PowerShell: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` seguido de `npx.cmd vercel --prod --yes`.
+- Sem migration, sem commit e sem regeneracao das analises de IA ja salvas. Arquivos .env e temporarios excluidos do envio. A pendencia anterior de acesso autenticado ao paciente de teste permanece independente deste deploy.
+
+### 2026-09-24 - Publicacao autorizada das correcoes da auditoria
+
+- Usuario autorizou publicar apos ser informado da divergencia de clinicas. Nenhum vinculo de paciente/avaliacao foi alterado nesta publicacao; pendencia de acesso permanece.
+- Deploy de producao concluido e inspecionado com status READY: dpl_9PSvFA4QZdXDRGRPupw1s2XGfV31. Alias confirmado: https://avaliacao.medfit.med.br.
+- Build remoto, tipos e lint aprovados. Login do dominio de producao verificado apos deploy. Validacao autenticada integral do portal/PDF continua pendente conforme auditoria abaixo.
+- Comando executado em PowerShell: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` seguido de `npx.cmd vercel --prod --yes`.
+- Sem commit, sem envio de segredos, sem nova migration nesta publicacao. Esta entrada substitui o status anterior de codigo ainda nao publicado.
+
+### 2026-09-24 - Auditoria do app, portal e PDF (em andamento)
+
+- Corrigidas grades mobile em PatientDashboard, PortalPaciente e SilhuetaCircunferencias: composicao corporal, historico, forca e tentativas de flexibilidade. Tentativas com valor zero agora permanecem visiveis e preservam sua numeracao.
+- Datas de calendario nao retrocedem um dia por fuso na avaliacao/PDF; idade do PDF calculada na data da coleta.
+- Consultas de analises no PDF privado/publico e dashboard agora incluem gerado_em, necessario para validar analises apos alteracoes no Jump.
+- Sintese global/evolutiva omite medicoes Jump declaradas simuladas; conclusao anterior nao e reutilizada como insumo da nova conclusao. Conclusao da avaliacao de teste autorizada regenerada e salva; verificado no navegador que exclui os saltos simulados da analise clinica.
+- Cliente Supabase de servidor usa await cookies(); consumidores atualizados e TypeScript/build aprovados.
+- Migration completa 20260924133821_restore_core_rls.sql APLICADA no Supabase: RLS de pacientes, avaliacoes e avaliadores restaurado, bloqueio anonimo e acesso por clinica/perfil. Testes locais PostgreSQL/PGlite de isolamento passaram.
+- IMPORTANTE: teste autenticado revelou cadastro de paciente vinculado a clinica/avaliador diferentes da avaliacao de teste de 15/06/2026. RLS bloqueia corretamente a pagina do paciente para a sessao atual. Solicitada autorizacao para alinhar os vinculos; nao ampliar politicas nem mover registros sem confirmacao. Comparacao remota confirmou divergencia; usuario atual e membro da clinica da avaliacao, nao da clinica do paciente.
+- npm run predeploy, npm run build, node scripts/test-core-rls.cjs e git diff --check passaram. npm run test:layout testa 320/390/768/1280 px: zero transbordamento horizontal e imagens quebradas nos dois previews. PDF com paginacao real: 27 paginas, zero blocos sobre o rodape; tres paginas tem excesso de scroll geometrico de 6px sem conteudo cortado.
+- Teste PDF legado passou a usar prepararPaginacaoLaudo e geometria relativa ao rodape. Novo audit-layout falha com regressao de largura, imagens ou conteudo sobre rodape. Screenshots locais em tmp/jump-test (ignorados).
+- Limites: testes responsivos usam fixtures; fluxo completo do portal real pendente de resolver vinculo da clinica. Visualizador PDF do navegador interno retornou ERR_BLOCKED_BY_CLIENT; nao concluir validacao visual integral do PDF real. Analises antigas de outros modulos ainda requerem revisao profissional; nao certificadas por estes testes.
+- Alertas restantes do Supabase: funcoes com search_path mutavel, funcoes SECURITY DEFINER e protecao contra senhas vazadas precisam revisao especifica, sem revogacoes indiscriminadas de RPCs publicas.
+- Estas correcoes de codigo AINDA NAO foram publicadas. Migration RLS e conclusao de teste ja persistidas remotamente. Sem commit. Nao publicar ate resolver/validar o bloqueio de acesso identificado.
+- Comando de deploy, somente depois da validacao pendente: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` e `npx.cmd vercel --prod --yes`.
+
+### 2026-09-24 - Instalacao e validacao remota Jump Test
+
+- Migration Jump Test aplicada no Supabase via conector autorizado. Confirmados RLS ativo, SELECT anonimo revogado e bucket privado.
+- Inseridos saltos explicitamente simulados na avaliacao de teste autorizada pelo titular, sem substituir medicoes existentes.
+- Analise Jump Test e conclusao global geradas e persistidas com claude-sonnet-4-5. PDF autenticado retornou HTTP 200.
+- Validacao identificou perda de observacoes na sintese global: agora conclusao e evolucao recebem observacoes, conclusao profissional e contexto de simulacao. Prompt impede usar simulacoes como achados clinicos reais.
+- Predeploy passou; fixture PDF legado registra uma pagina com overflow, sem imagens quebradas nem cards cortados. Teste especifico Jump em quatro larguras aprovado anteriormente.
+- ALERTA anterior a migration: Supabase advisors aponta RLS desativado em pacientes, avaliacoes e avaliadores; requer revisao de seguranca especifica. Nao alterado nesta entrega.
+- Deploy de producao concluido: dpl_GFMrNfE9vVBptsXxWu24nSBE6mQw, READY, alias https://avaliacao.medfit.med.br. Comando: `cd "C:\Users\Admin\Documents\Codex\diagnostico-fisiometabolico"` seguido de `npx.cmd vercel --prod --yes`. Nao houve commit.
+- Conclusao regenerada apos correcao reconhece dados simulados; ainda usa qualificacao de capacidade preservada, portanto requer revisao profissional antes de entrega. Nao considerar a geracao como validacao clinica.
+- PDF regenerado apos a nova conclusao com HTTP 200. TypeScript, lint e teste Jump passaram apos a correcao.
+- Adicionado .vercelignore para excluir ambientes, temporarios, previews e arquivos locais do upload.
+
+### 2026-09-24 - Modulo Jump Test
+
+- Adicionado Jump Test selecionavel na nova avaliacao, navegacao, revisao e modelos de interpretacao.
+- Incluido nos produtos/pacotes, lista de avaliacoes e rotulos do prontuario; botoes dos modulos vizinhos respeitam os passos habilitados.
+- SJ, CMJ, DJ: tres tentativas validas; unilateral: tres por perna. DJ30 editavel; repetidos: serie unica15 s, com transcricao por salto e confirmacao de serie completa.
+- Calculos compartilhados entre tela/PDF/IA: altura cm/mm, voo/contato ms, pico W e W/kg, RSI do DJ, EUR altura/potencia e assimetria unilateral. Potencia original preservada.
+- Revisao obrigatoria de dados suspeitos; exclusoes justificadas preservam o original. Sem diagnostico de lesao, percentis inventados ou correcao feminina fixa.
+- Duas referencias contextuais verificadas de futebol juvenil masculino. Sem extrapolacao automatica para outros esportes/idades/sexos.
+- Analise individual e integrada com modulos atuais, anamnese temporal e ate dez coletas anteriores da mesma clinica. Idade na data da avaliacao. Analises anteriores a alteracoes no Jump sao ocultadas sem apagar o registro.
+- PDF, portal, dashboard, evolucao e backup recebem Jump Test. Upload manual de PDF original em bucket privado; nao ha integracao direta com o equipamento nem importacao automatica.
+- Migration completa: `supabase/migrations/20260924024216_jump_test.sql`. Nome gerado pelo CLI oficial, posterior a069. APLICAR MANUALMENTE ANTES DE PUBLICAR: as consultas passam a incluir a nova relacao.
+- SQL testado em PostgreSQL local PGlite com autorizacao da migration027: reaplicacao, CRUD, constraints, bloqueio entre clinicas/anonimos e Storage privado. Nenhuma migration aplicada no Supabase remoto.
+- Testes: `npm run test:jump`, `npm run test:jump-browser`, `node scripts/test-jump-migration.cjs`, `npm run predeploy` e `npm run build` passaram. Navegador com dados ficticios em320/390/768/1280 px e PDF com paginacao real. Gravacao remota e geracao paga de IA nao executadas.
+- Guia tecnico e passos de instalacao: `docs/JUMP_TEST.md`. Sem deploy ou commit nesta etapa. Preservadas alteracoes anteriores do worktree.
+
 ### 2026-06-08 - Antropometria sem dobras cutaneas
 
 - PDF, portal do paciente e dashboard clinico exibem dobras somente quando existe ao menos uma medida numerica valida.
@@ -1034,3 +1170,67 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - A sombra do cabecalho foi substituida por uma sombra neutra e mais curta.
 - O ajuste afeta todos os documentos publicos que usam `PublicDocumentLayout`, sem alterar conteudo, links ou persistencia.
 - Sem migration nova e sem SQL do Supabase.
+
+## 2026-08-17 - Refinamento visual do cabecalho mobile
+
+- Reorganizado apenas o cabecalho mobile dos documentos publicos para melhorar alinhamento e proporcao.
+- Logo e identificacao da clinica agora compartilham a primeira linha.
+- Titulo e nome do paciente usam a largura total em um bloco alinhado logo abaixo.
+- Reduzidos logo, padding e espacos verticais no celular para um conjunto mais compacto e harmonico.
+- O layout desktop permanece inalterado.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-09-04 - Keepalive diario do Supabase
+
+- Adicionada a rota protegida `/api/cron/supabase-keepalive` para gerar atividade real e somente leitura no banco.
+- A rota valida `Authorization: Bearer CRON_SECRET` antes de acessar o Supabase e nunca devolve dados das tabelas.
+- A verificacao executa consultas minimas nas tabelas `clinicas`, `pacientes` e `avaliacoes`.
+- Adicionado `vercel.json` com execucao diaria as 12:00 UTC, aproximadamente 09:00 no horario de Brasilia.
+- O middleware libera somente essa rota da sessao comum; a protecao permanece sob responsabilidade do `CRON_SECRET`.
+- `CRON_SECRET` foi documentado em `.env.example`, adicionado ao monitoramento administrativo e configurado como segredo no ambiente de producao da Vercel, sem valor real no GitHub.
+- A automacao reduz o risco de pausa por baixa atividade no plano gratuito, mas somente um plano pago garante que o projeto nao seja pausado.
+- Sem migration nova e sem SQL do Supabase.
+
+## 2026-09-13 - Referencias biomecanicas e contexto temporal da IA
+
+- Os intervalos de referencia da biomecanica foram comparados com os relatorios externos dos planos sagital e posterior e centralizados em `src/lib/biomecanica/referencias.ts`.
+- Novos intervalos: cabeca -8 a 2 graus; tronco 4 a 10; aterrissagem -10 a 10; joelho anterior 135 a 180; joelho posterior 0 a 101; bracos 75 a 85; pelve 0 a 2; alinhamento dos joelhos -3 a 3; pronacao/supinacao -5 a 5.
+- A mesma fonte de referencia agora alimenta formulario, classificacao de registros antigos, PDF, portal, dashboard e prompt de IA, evitando divergencia futura.
+- Os dados demonstrativos dos geradores de preview do laudo e do dashboard tambem foram alinhados aos novos intervalos e tiveram suas classificacoes recalculadas.
+- A anamnese enviada para a IA passou a carregar os campos do template e converter IDs dinamicos em perguntas rotuladas.
+- Antecedentes familiares, historico pregresso, informacao atual e uso de temporalidade mista recebem marcadores distintos. A IA foi instruida a nunca converter risco familiar ou uso passado em condicao/uso atual.
+- O contexto clinico compartilhado pelos demais modulos tambem preserva esses marcadores temporais.
+- A persistencia em `analises_ia` agora verifica e informa erros do Supabase; o sistema nao confirma mais uma analise que nao tenha sido salva.
+- A termografia foi incluida no resumo clinico do dashboard, na edicao rapida e na lista de analises do portal do paciente. A consulta de producao confirmou 2 registros de termografia e 2 analises correspondentes.
+- O modelo efetivamente registrado nas geracoes mais recentes, incluindo termografia, e `claude-sonnet-5`. O ambiente local continua configurado com `claude-sonnet-4-5`, que faz fallback para um modelo disponivel quando necessario.
+- Validacoes executadas com sucesso: `npm run text:check`, `npm run db:audit`, `npm run test:full`, `npm run test:pdf-visual`, `npm run test:calculations`, `npm run test:backup`, `npm run test:nutrition`, `npm run test:evolution-report`, `npx tsc --noEmit`, `npm run lint` e `npm run build`.
+- O lint manteve apenas um aviso preexistente de `alt` em imagem na pagina de termografia.
+- Sem migration nova, sem SQL do Supabase e sem deploy nesta etapa.
+
+## 2026-09-21 - Origem dos links publicos
+
+- Centralizada a origem publica em src/lib/public-origin.ts para convites, documentos, portal, catalogo e retorno/webhook de pagamento.
+- Removidos fallback localhost, dependencia da origem do navegador e do cabecalho Origin nos links externos.
+- Convite verifica o redirect_to retornado pelo Supabase e informa erro de configuracao em vez de entregar link com destino incorreto.
+- Supabase Auth corrigido e confirmado apos recarregar o painel: Site URL https://avaliacao.medfit.med.br e Redirect URL https://avaliacao.medfit.med.br/login. O Site URL anterior era localhost.
+- A origem local restante na revisao serve apenas a uma chamada interna da API.
+- Sem migration. Build validado e publicado em producao: dpl_68t4Q7GayFWJvuseD6GfEvZaz9QK, status READY, alias https://avaliacao.medfit.med.br.
+
+## 2026-09-13 - Grade das imagens complementares da termografia
+
+- O modulo de termografia passou a exibir as imagens complementares em quatro colunas no desktop, seguindo o mesmo alinhamento dos quatro termogramas basais.
+- Em telas menores, a grade usa duas colunas para manter as miniaturas legiveis e os controles de edicao acessiveis.
+- O relatorio e o PDF tambem passaram de tres para quatro imagens complementares por linha.
+- Adicionado texto alternativo nas miniaturas do modulo e teste de regressao para a grade do laudo.
+- Validacoes executadas com sucesso: `npm run test:full`, `npm run test:pdf-visual`, `npx tsc --noEmit`, `npm run lint` e `npm run build`.
+- O PDF A4 de verificacao foi renderizado e inspecionado visualmente, sem imagens quebradas, cortes ou sobreposicoes na grade de quatro colunas.
+- Sem migration nova e sem SQL do Supabase.
+## 2026-09-24 - Bibliografia unica por modulo selecionado
+
+- Centralizadas 25 fontes de 11 modulos em `src/lib/clinical/references.ts`; anamnese excluida da bibliografia.
+- Portal, PDF e prompts individuais/integrados da IA compartilham fontes, notas e links. Selecao explicita de modulos prevalece sobre dados antigos; evolucao usa a uniao das selecoes do historico.
+- Bibliografia personalizada antiga preservada como arquivo na configuracao, sem substituir a lista publicada. Conclusoes de IA ja salvas nao foram regeneradas.
+- Atualizadas edicoes verificadas de ACSM, Kendall, ISAK e McGill; adicionadas fontes especificas de EUR, RFD e antropometria feminina. Detalhes e limites em `docs/REFERENCIAS.md`.
+- Sem alteracao de formulas, valores de referencia ou registros clinicos. Sem migration e sem deploy desta correcao.
+- Build de producao aprovado. Teste visual repetido em Chrome isolado apos timeout no ambiente restrito: aprovado em todas as quatro larguras e nas tres paginas de referencias.
+- Testes de paridade de referencias e navegacao responsiva aprovados; predeploy aprovado com TypeScript e lint. PDF de referencias com 3 paginas, sem extrapolacao detectada. O teste visual geral ainda sinaliza 3 paginas de forca com excedente preexistente de aproximadamente 6 px.

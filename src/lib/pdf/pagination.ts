@@ -5,12 +5,13 @@ export async function prepararPaginacaoLaudo(page: any) {
     const LIMITE_CONTEUDO = ALTURA_PAGINA - 58;
 
     function alturaConteudo(el: HTMLElement) {
+      const top = el.getBoundingClientRect().top;
       return Array.from(el.children).reduce((max, child) => {
         const item = child as HTMLElement;
         if (item.classList.contains('pdf-footer')) return max;
         const st = window.getComputedStyle(item);
         const mb = Number.parseFloat(st.marginBottom || '0') || 0;
-        return Math.max(max, item.offsetTop + item.offsetHeight + mb);
+        return Math.max(max, item.getBoundingClientRect().bottom - top + mb);
       }, 0);
     }
 
@@ -98,7 +99,7 @@ export async function prepararPaginacaoLaudo(page: any) {
 
           while (i < filhos.length) {
             const prox = filhos[i] as HTMLElement;
-            if (prox.classList.contains('sec-sub') || prox.classList.contains('ai-box')) break;
+            if (prox.classList.contains('sec-sub') || prox.classList.contains('ai-box') || prox.classList.contains('jump-trials')) break;
             grupo.appendChild(prox);
             i += 1;
           }

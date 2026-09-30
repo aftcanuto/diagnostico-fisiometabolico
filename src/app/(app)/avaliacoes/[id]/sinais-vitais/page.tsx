@@ -52,10 +52,7 @@ export default function SinaisVitaisPage(props: { params: Promise<{ id: string }
   })();
   const steps = aval ? buildSteps(params.id, aval.modulos_selecionados) : [];
   const prevStep = steps.find(s => s.key === 'anamnese');
-  const nextStep = steps.find(s => s.key === 'posturografia')
-    ?? steps.find(s => s.key === 'bioimpedancia')
-    ?? steps.find(s => s.key === 'antropometria')
-    ?? steps.find(s => s.key === 'revisao');
+  const nextStep = steps.slice(steps.findIndex(s => s.key === 'sinais-vitais') + 1).find(s => s.enabled);
 
   return (
     <div className="space-y-5 max-w-3xl">

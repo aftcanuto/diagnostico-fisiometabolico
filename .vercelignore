@@ -1,0 +1,12 @@
+.git/
+node_modules/
+.next/
+.vercel/
+.env*
+tmp/
+.npm-cache/
+.tmp-*/
+preview-*.html
+*.tsbuildinfo
+*.zip
+*.log

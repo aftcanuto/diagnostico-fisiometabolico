@@ -9,6 +9,7 @@ const MODULOS = [
   'anamnese',
   'sinais_vitais',
   'posturografia',
+  'jump_test',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',
@@ -51,7 +52,7 @@ function indexarPorAvaliacao(rows: any[] | null | undefined) {
 }
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
 
@@ -168,6 +169,7 @@ export async function GET() {
       antropometria: modulos.get('antropometria')?.get(avaliacao.id) ?? '',
       flexibilidade: modulos.get('flexibilidade')?.get(avaliacao.id) ?? '',
       forca: modulos.get('forca')?.get(avaliacao.id) ?? '',
+      jump_test: modulos.get('jump_test')?.get(avaliacao.id) ?? '',
       rml: modulos.get('rml')?.get(avaliacao.id) ?? '',
       cardiorrespiratorio: modulos.get('cardiorrespiratorio')?.get(avaliacao.id) ?? '',
       biomecanica_corrida: modulos.get('biomecanica_corrida')?.get(avaliacao.id) ?? '',
@@ -208,6 +210,7 @@ export async function GET() {
     'antropometria',
     'flexibilidade',
     'forca',
+    'jump_test',
     'rml',
     'cardiorrespiratorio',
     'biomecanica_corrida',

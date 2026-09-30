@@ -11,6 +11,7 @@ const TIPOS_IA = new Set([
   'sinais_vitais',
   'posturografia',
   'termografia',
+  'jump_test',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',
@@ -23,7 +24,7 @@ const TIPOS_IA = new Set([
 ]);
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 

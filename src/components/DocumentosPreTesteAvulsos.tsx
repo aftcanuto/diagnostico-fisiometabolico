@@ -1,4 +1,5 @@
 'use client';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 
 import { useEffect, useState } from 'react';
 import { Clipboard, FileText, Link2, Loader2, Send, X } from 'lucide-react';
@@ -16,7 +17,7 @@ export function DocumentosPreTesteAvulsos() {
   const [salvando, setSalvando] = useState(false);
   const [revogando, setRevogando] = useState<string | null>(null);
   const [erro, setErro] = useState('');
-  const origin = typeof window === 'undefined' ? '' : window.location.origin;
+  const origin = PUBLIC_APP_ORIGIN;
 
   async function carregar() {
     setCarregando(true);

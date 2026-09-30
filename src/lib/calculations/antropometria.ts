@@ -2,7 +2,7 @@ import type { Dobras, Circunferencias, Diametros, Sexo, Somatotipo } from '@/typ
 
 /** Idade em anos a partir de ISO date */
 export function calcIdade(dataNascimento: string, ref = new Date()): number {
-  const d = new Date(dataNascimento);
+  const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento) ? `${dataNascimento}T12:00:00` : dataNascimento);
   let age = ref.getFullYear() - d.getFullYear();
   const m = ref.getMonth() - d.getMonth();
   if (m < 0 || (m === 0 && ref.getDate() < d.getDate())) age--;

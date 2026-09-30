@@ -248,16 +248,16 @@ export const avaliacaoAtual: any = {
   biomecanica_corrida: {
     link_video: 'https://drive.google.com/file/d/exemplo-cinematica/view',
     angulos: {
-      cabeca: { valor: -8, ideal_min: -13, ideal_max: -3, classificacao: 'ideal' },
-      tronco: { valor: 16, ideal_min: 8, ideal_max: 14, classificacao: 'atencao' },
-      aterrissagem_passada: { valor: 12, ideal_min: 0, ideal_max: 10, classificacao: 'atencao' },
-      joelho_frente_contato: { valor: 150, ideal_min: 155, ideal_max: 175, classificacao: 'fora' },
-      joelho_posterior_contato: { valor: 92, ideal_min: 80, ideal_max: 100, classificacao: 'ideal' },
-      bracos: { valor: 91, ideal_min: 77, ideal_max: 87, classificacao: 'atencao' },
+      cabeca: { valor: -8, ideal_min: -8, ideal_max: 2, classificacao: 'ideal' },
+      tronco: { valor: 16, ideal_min: 4, ideal_max: 10, classificacao: 'fora' },
+      aterrissagem_passada: { valor: 12, ideal_min: -10, ideal_max: 10, classificacao: 'atencao' },
+      joelho_frente_contato: { valor: 150, ideal_min: 135, ideal_max: 180, classificacao: 'ideal' },
+      joelho_posterior_contato: { valor: 92, ideal_min: 0, ideal_max: 101, classificacao: 'ideal' },
+      bracos: { valor: 91, ideal_min: 75, ideal_max: 85, classificacao: 'fora' },
     },
     comentarios_angulos: {
       tronco: 'Inclinação anterior um pouco acima do ideal, sugerindo necessidade de controle de tronco durante a fase de apoio.',
-      joelho_frente_contato: 'Menor extensão no contato inicial, compatível com maior demanda excêntrica no quadríceps.',
+      joelho_frente_contato: 'Ângulo do joelho no contato inicial dentro da faixa de referência.',
       bracos: 'Oscilação de braços acima da referência, sugerindo compensação rotacional de tronco.',
     },
     achados: {

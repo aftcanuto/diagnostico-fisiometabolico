@@ -1,5 +1,8 @@
 'use client';
+import { isAnthropometryV2 } from '@/lib/anthropometry-record';
+import AnthropometryResults from '@/components/AnthropometryResults';
 import { useId, useMemo, useRef, useState } from 'react';
+import { JumpTestSummary } from '@/components/JumpTestSummary';
 import { LineChart } from '@/components/ui/LineChart';
 import { BarChart } from '@/components/ui/BarChart';
 import { ZonasChart } from '@/components/ui/ZonasChart';
@@ -282,6 +285,9 @@ function PreviewMetricLine({ label, value }: { label: string; value: any }) {
 function formatDashboardValue(v: any): string {
   if (v == null || v === '') return '-';
   if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+  if (typeof v === 'number') return Number.isFinite(v)
+    ? v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+    : '-';
   if (typeof v !== 'object') return String(v);
   if (Array.isArray(v)) {
     const itens = v.map(formatDashboardValue).filter(x => x && x !== '-');
@@ -327,14 +333,14 @@ function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|nul
     <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
       <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>FFMI e potencial muscular</div>
       <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Índice de massa livre de gordura e limite natural estimado</div>
-      <div style={{display:'grid',gridTemplateColumns:'minmax(170px,.7fr) minmax(260px,1.3fr)',gap:20,alignItems:'center'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:20,alignItems:'center'}}>
         <div style={{padding:'18px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
           <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
           <div style={{fontSize:52,fontWeight:700,lineHeight:.95,letterSpacing:'-1px',color:'#10b981'}}>{ffmi??'—'}</div>
           <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginTop:8}}>Índice de massa livre de gordura</div>
         </div>
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:8,marginBottom:16}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:8,marginBottom:16}}>
             {massaMagra!=null&&<MetricLine label="Massa magra" value={massaMagra} unit="kg"/>}
             {massaOssea!=null&&<MetricLine label="Massa óssea" value={massaOssea} unit="kg"/>}
             {peso!=null&&<MetricLine label="Peso corporal" value={peso} unit="kg"/>}
@@ -480,7 +486,7 @@ function ComparativoPremium({ atual, anterior, gorduraAtual, gorduraAnterior }: 
 
       {temAnterior ? (
         <>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,210px),1fr))',gap:12}}>
             {metricas.map(m => {
               const a = numOrNull(m.atual);
               const p = numOrNull(m.anterior);
@@ -507,7 +513,7 @@ function ComparativoPremium({ atual, anterior, gorduraAtual, gorduraAnterior }: 
           </div>
 
           {(fotoAtual || fotoAnterior) && (
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginTop:16}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))',gap:12,marginTop:16}}>
               {[
                 ['Foto postural anterior', fotoAnterior, anterior?.data],
                 ['Foto postural atual', fotoAtual, atual.data],
@@ -653,7 +659,7 @@ function QuickModuleEditor({ avaliacaoId, label, tabela, row, onSaved }: { avali
           {status==='saving'?'Salvando...':status==='saved'?'Salvo':'Salvar'}
         </button>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:10,padding:14}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))',gap:10,padding:14}}>
         {flatFields.map((f) => {
           const big = String(draft[f.id] ?? '').length > 80 || /observ|coment|analise|achado|texto|descricao|histor/i.test(f.id);
           return (
@@ -944,9 +950,11 @@ function QuickEditPanel({ avaliacao, defaultOpen = false }: { avaliacao: Avaliac
   const modules = [
     ['anamnese','Anamnese',(avaliacao as any).anamnese],
     ['sinais_vitais','Sinais vitais',(avaliacao as any).sinais_vitais],
-    ['posturografia','Posturografia',(avaliacao as any).posturografia],
     ['bioimpedancia','Bioimpedância',(avaliacao as any).bioimpedancia],
+    ['posturografia','Posturografia',(avaliacao as any).posturografia],
+    ['termografia','Termografia funcional',(avaliacao as any).termografia],
     ['antropometria','Antropometria',(avaliacao as any).antropometria],
+    ['jump_test','Jump Test',(avaliacao as any).jump_test],
     ['flexibilidade','Flexibilidade',(avaliacao as any).flexibilidade],
     ['forca','Força',(avaliacao as any).forca],
     ['rml','RML',(avaliacao as any).rml],
@@ -986,7 +994,7 @@ function QuickEditPanel({ avaliacao, defaultOpen = false }: { avaliacao: Avaliac
       </div>
       {active&&(
         <div style={{marginTop:14}}>
-          <QuickModuleEditor key={active[0]} avaliacaoId={avaliacao.id} tabela={active[0]} label={active[1]} row={active[2]} onSaved={()=>setSelected(null)}/>
+          {active[0] === 'antropometria' && isAnthropometryV2(active[2]) ? <a className="text-sm underline" href={`/avaliacoes/${avaliacao.id}/antropometria`}>Editar coleta Antropometria</a> : active[0] === 'jump_test' ? <a className="text-sm underline" href={`/avaliacoes/${avaliacao.id}/jump-test`}>Editar coleta Jump Test</a> : <QuickModuleEditor key={active[0]} avaliacaoId={avaliacao.id} tabela={active[0]} label={active[1]} row={active[2]} onSaved={()=>setSelected(null)}/>}
         </div>
       )}
       {activeKey==='__analises'&&hasAnalises&&(
@@ -1022,7 +1030,7 @@ function BiomecanicaRunnerCompare({ ang }: { ang: Record<string, any> }) {
       ].map(([plano, keys]: any) => keys.length ? (
         <div key={plano}>
           <div style={{ padding: '12px 14px 4px', fontSize: 10, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: .7 }}>{plano}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 10, padding: '0 14px 12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,230px),1fr))', gap: 10, padding: '0 14px 12px' }}>
         {keys.map((k: string) => {
           const v = ang[k]; const c = colorFor(v?.classificacao);
           const scaleMin = Math.min(0, v?.ideal_min ?? 0, v?.valor ?? 0);
@@ -1099,10 +1107,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
   const gorduraAnterior = anterior ? resolverPercentualGordura(anterior as any, anterior.antropometria, (anterior as any).bioimpedancia) : null;
   const pctG = gorduraAtual.valor;
   const peso   = atual.antropometria?.peso ?? (atual as any).bioimpedancia?.peso_kg;
-  const mlg    = atual.antropometria?.massa_magra ?? (atual as any).bioimpedancia?.massa_livre_gordura_kg;
+  const antroV2 = isAnthropometryV2(atual.antropometria);
+  const mlg    = atual.antropometria?.massa_magra ?? (antroV2 ? null : (atual as any).bioimpedancia?.massa_livre_gordura_kg);
   const imc    = atual.antropometria?.imc ?? (atual as any).bioimpedancia?.imc;
   const altura = atual.antropometria?.estatura ?? (atual as any).bioimpedancia?.altura_cm ?? null;
-  const massaOssea = atual.antropometria?.massa_ossea ?? (atual as any).bioimpedancia?.massa_ossea_kg ?? null;
+  const massaOssea = atual.antropometria?.massa_ossea ?? (antroV2 ? null : (atual as any).bioimpedancia?.massa_ossea_kg) ?? null;
   const ffmiRaw = atual.antropometria?.ffmi as any;
   const ffmiSalvo = parseNumeroSeguro(
     typeof ffmiRaw === 'object'
@@ -1339,7 +1348,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         </div>
 
         {/* Corpo: gauge global + scores */}
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))', gap: 24, alignItems: 'start' }}>
 
           {/* Score global */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
@@ -1509,7 +1518,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           {false && <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'22px 24px'}}>
             <div style={{fontSize:15,fontWeight:700,color:'#0f172a',marginBottom:4}}>Comparativo: atual vs. anterior</div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Principais marcadores da avaliação selecionada</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',gap:10}}>
               <CompRow label="Peso"        atual={atual?.antropometria?.peso}                 anterior={anterior?.antropometria?.peso}                  unidade=" kg"        direcao="descer_bom" />
               <CompRow label="% Gordura"   atual={gorduraAtual.valor}                           anterior={gorduraAnterior?.valor}                         unidade="%"          direcao="descer_bom" />
               <CompRow label="Massa magra" atual={atual?.antropometria?.massa_magra}           anterior={anterior?.antropometria?.massa_magra}            unidade=" kg"        direcao="subir_bom" />
@@ -1523,13 +1532,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         </div>
       )}
 
-      {/* ══ MÓDULOS ADICIONAIS — Sinais Vitais, Flexibilidade, Posturografia ══ */}
+      {/* ══ MÓDULOS ADICIONAIS ══ */}
       {(() => {
         const sv   = atual.sinais_vitais as any;
         const flex = atual.flexibilidade as any;
         const post = atual.posturografia as any;
+        const term = atual.termografia as any;
         const anam = atual.anamnese as any;
-        if (!sv && !flex && !post && !anam) return null;
+        if (!sv && !flex && !post && !term && !anam) return null;
 
         const corFlex = flex?.classificacao === 'Excelente' ? '#16a34a'
           : flex?.classificacao === 'Bom' ? '#10b981'
@@ -1547,7 +1557,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   Anamnese
                   <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.anamnese)} /></span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))', gap: 10 }}>
                   {Object.entries(cleanModulo(anam)).filter(([,v]) => v != null && v !== '').slice(0, 8).map(([k,v]) => (
                     <PreviewMetricLine key={k} label={humanField(k)} value={v} />
                   ))}
@@ -1563,7 +1573,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   ❤️ Sinais Vitais
                   <span style={{marginLeft:8}}><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.sinais_vitais)} /></span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,140px),1fr))', gap: 10 }}>
                   {sv.pa_sistolica != null && sv.pa_diastolica != null && (
                     <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
                       <div style={{ fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 3 }}>Pressão arterial</div>
@@ -1610,7 +1620,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     </div>
                   </div>
                   {flex.tentativa_1 != null && (
-                    <div style={{flex:1,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:10,minWidth:260}}>
+                    <div style={{flex:1,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,130px),1fr))',gap:10,minWidth:'min(100%,260px)'}}>
                       {[flex.tentativa_1, flex.tentativa_2, flex.tentativa_3].filter(Boolean).map((v, i) => (
                         <MetricLine key={i} label={`Tentativa ${i+1}`} value={v} unit="cm"/>
                       ))}
@@ -1631,7 +1641,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 </div>
                 {/* Fotos de posturografia — somente no modo clínico */}
                 {modo === 'clinico' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 10, marginBottom: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,120px),1fr))', gap: 10, marginBottom: 12 }}>
                     {[
                       [post.foto_anterior,    'Anterior'],
                       [post.foto_posterior,   'Posterior'],
@@ -1696,6 +1706,25 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 })()}
               </div>
             )}
+
+            {term && (
+              <div style={{ order: 35, background: 'white', borderRadius: 14, padding: '18px 20px', color: '#0f172a' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
+                  <span>Termografia funcional</span>
+                  <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.termografia)} />
+                </div>
+                <div style={{ fontSize: 11, color:'#94a3b8', marginBottom: 12 }}>Condições técnicas e regiões de interesse</div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,140px),1fr))', gap:8 }}>
+                  <PreviewMetricLine label="Temperatura ambiente" value={term.temperatura_ambiente != null ? `${term.temperatura_ambiente} °C` : 'Não informada'} />
+                  <PreviewMetricLine label="Umidade relativa" value={term.umidade_relativa != null ? `${term.umidade_relativa}%` : 'Não informada'} />
+                  <PreviewMetricLine label="Aclimatação" value={term.tempo_aclimatacao_min != null ? `${term.tempo_aclimatacao_min} min` : 'Não informada'} />
+                  <PreviewMetricLine label="Regiões analisadas" value={Array.isArray(term.rois) ? term.rois.length : 0} />
+                </div>
+                {term.conclusao_funcional && (
+                  <div style={{ marginTop: 10, fontSize: 12, lineHeight: 1.6, color:'#475569' }}>{term.conclusao_funcional}</div>
+                )}
+              </div>
+            )}
           </div>
         );
       })()}
@@ -1715,7 +1744,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             const prev = pos > 0 ? hist.ordenadas[pos - 1] : null;
             const emAndamento = a.status !== 'finalizada';
             return (
-              <div key={`timeline-${a.id}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(180px,220px) minmax(0,1fr) auto',
+              <div key={`timeline-${a.id}`} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,180px),1fr))',
                 gap: 14, alignItems: 'center', padding: 14, border: '1px solid #e2e8f0',
                 borderRadius: 14, background: a.id === atual.id ? '#f8fafc' : '#ffffff' }}>
                 <div style={{ minWidth: 0 }}>
@@ -1769,18 +1798,18 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         const segEntries = Object.entries(segMagra).filter(([,v]) => v != null && v !== '');
         if (!itens.length && !segEntries.length) return null;
         return (
-          <div style={{order:45, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
+          <div style={{order:25, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a'}}>
             <div style={{display:'flex', alignItems:'center', gap:8, fontSize:18, fontWeight:700, marginBottom:4}}>
               <span>Bioimpedância</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.bioimpedancia)} />
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Composição corporal e dados metabólicos</div>
-            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,190px),1fr))', gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
             {segEntries.length > 0 && (
               <div style={{marginTop:14}}>
                 <div style={{fontSize:11, fontWeight:600, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Massa magra segmentar</div>
-                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))', gap:8}}>
                   {segEntries.map(([k,v]: any) => {
                     const valor = typeof v === 'object' && v
                       ? [v.kg != null ? `${v.kg} kg` : null, v.pct != null ? `${v.pct}%` : null].filter(Boolean).join(' · ')
@@ -1796,6 +1825,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
 
       {atual.antropometria && (() => {
         const a = atual.antropometria as any;
+        if (isAnthropometryV2(a) && a.resultados_v2?.version === 2) return (
+          <div style={{order:55, background:'white', border:'1px solid #e2e8f0', borderRadius:16, padding:'24px 28px', color:'#0f172a', minWidth:0}}>
+            <AnthropometryResults results={a.resultados_v2} selectedOnly />
+          </div>
+        );
         const dobras = a.dobras ?? {};
         const dobraNumerica = (v: any): number | null => {
           const raw = valorValidado(v);
@@ -1824,13 +1858,13 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               <span>Antropometria</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.antropometria)} />
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Medidas ISAK, dobras cutâneas e composição corporal</div>
-            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,190px),1fr))', gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
             {dobrasValidas.length > 0 && (
               <div style={{marginTop:14}}>
                 <div style={{fontSize:11, fontWeight:600, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.6px', marginBottom:8}}>Dobras cutâneas</div>
-                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:8}}>
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))', gap:8}}>
                   {dobrasValidas.map(({chave, valor}) => <MetricLine key={chave} label={humanField(chave)} value={valor} unit="mm"/>)}
                 </div>
               </div>
@@ -1859,7 +1893,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               <span>Força muscular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.forca)} /><ModuleScoreBadge score={sc.forca}/>
             </div>
             <div style={{fontSize:12, color:'#94a3b8', marginBottom:16}}>Preensão palmar, força relativa e assimetria</div>
-            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:8}}>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,190px),1fr))', gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
             {!((f as any)?.sptech_testes?.length > 0) && !((f as any)?.tracao_testes?.length > 0) && (
@@ -1960,12 +1994,12 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 const LadoCard = ({ lado, titulo, acento }: { lado: any; titulo: string; acento: string }) => {
                   if (!lado?.kgf && !lado?.torque_nm) return null;
                   return (
-                    <div style={{ flex: 1, padding: '10px 12px',
+                    <div style={{ flex: '1 1 180px', minWidth: 0, padding: '10px 12px',
                       background: '#f8fafc', borderRadius: 10,
                       border: `1px solid ${acento}30` }}>
                       <div style={{ fontSize: 9, fontWeight: 600, color: acento,
                         textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{titulo}</div>
-                      <div style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'baseline' }}>
                         {lado.kgf && <div style={{ fontSize: 20, fontWeight: 600, color: '#0f172a' }}>
                           {lado.kgf}<span style={{ fontSize: 10, fontWeight: 400, color: '#94a3b8', marginLeft: 2 }}>kgf</span>
                         </div>}
@@ -2016,7 +2050,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                         </span>
                       )}
                     </div>
-                    <div style={{ padding: 10, display: 'flex', gap: 10 }}>
+                    <div style={{ padding: 10, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                       {isBilat ? (
                         <>
                           <LadoCard lado={t.lado_d} titulo="◀ Lado Direito" acento="#3b82f6"/>
@@ -2038,11 +2072,11 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 const LadoCard = ({ lado, titulo, acento }: { lado: any; titulo: string; acento: string }) => {
                   if (!lado?.fim_kgf && !lado?.rm1_kg && !lado?.rfd_kgf_s) return null;
                   return (
-                    <div style={{ flex: 1, padding: '10px 12px', background: '#f8fafc',
+                    <div style={{ flex: '1 1 260px', minWidth: 0, padding: '10px 12px', background: '#f8fafc',
                       borderRadius: 10, border: `1px solid ${acento}30` }}>
                       <div style={{ fontSize: 9, fontWeight: 600, color: acento,
                         textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{titulo}</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,100px),1fr))', gap: 8 }}>
                         {[
                           ['FIM', lado.fim_kgf, 'kgf'],
                           ['FIM', lado.fim_n, 'N'],
@@ -2082,7 +2116,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                         Assimetria {t.assimetria_pct}% · {t.classificacao_assimetria}
                       </span>}
                     </div>
-                    <div style={{ padding: 10, display: 'flex', gap: 10 }}>
+                    <div style={{ padding: 10, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                       <LadoCard lado={t.lado_d} titulo="◀ Lado Direito" acento="#3b82f6"/>
                       <LadoCard lado={t.lado_e} titulo="Lado Esquerdo ▶" acento="#8b5cf6"/>
                     </div>
@@ -2182,7 +2216,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         </div>
       )}
 
-      {(ffmiValor != null || mlg != null) && (
+      {!antroV2 && (ffmiValor != null || mlg != null) && (
         <div style={{order: 50}}>
           <FfmiCard ffmi={ffmiValor ?? null} massaMagra={mlg ?? null} massaOssea={massaOssea ?? null}
             peso={peso ?? null} altura={altura ?? null} sexo={pacienteSexo}/>
@@ -2193,7 +2227,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         <div style={{order: 52, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
           <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Circunferências corporais</div>
           <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Medidas organizadas de cima para baixo no corpo</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:8}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:8}}>
             {circDisplayItems.map(([k,l])=><MetricLine key={k} label={l} value={circ[k]} unit="cm"/>)}
           </div>
         </div>
@@ -2203,13 +2237,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         <div style={{order: 53, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
           <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Diâmetros ósseos</div>
           <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Medidas antropométricas de referência ISAK</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:8}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:8}}>
             {diamDisplayItems.map(([k,l])=><MetricLine key={k} label={l} value={diam[k]} unit="cm"/>)}
           </div>
         </div>
       )}
 
       {/* ══ RML — RESISTÊNCIA MUSCULAR LOCALIZADA ══ */}
+      {atual.jump_test && <div style={{ order: 56, minWidth: 0 }}><JumpTestSummary data={atual.jump_test} previous={hist.ordenadas[hist.ordenadas.findIndex(a => a.id === atual.id) - 1]?.jump_test} previousDate={hist.ordenadas[hist.ordenadas.findIndex(a => a.id === atual.id) - 1]?.data}/><AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.jump_test)}/></div>}
       {atual.cardiorrespiratorio && (() => {
         const cardio = atual.cardiorrespiratorio as any;
         const sv = atual.sinais_vitais as any;
@@ -2233,14 +2268,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
           <div style={{order: 90, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:700,marginBottom:4}}><span>Saúde cardiovascular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /><ModuleScoreBadge score={sc.cardiorrespiratorio}/></div>
             <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aerobica, sinais vitais e zonas de treinamento</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:8}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,190px),1fr))',gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
             {cardio.protocolo && <div style={{marginTop:10}}><MetricLine label="Protocolo" value={cardio.protocolo}/></div>}
             {velocidadesTreinoItems.length > 0 && (
               <div style={{marginTop:16}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.6px',marginBottom:8}}>Velocidades de treino</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:8}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',gap:8}}>
                   {velocidadesTreinoItems.map((z) => {
                     const valor = z.min != null && z.max != null && z.min !== z.max ? `${z.min}-${z.max}` : z.min ?? z.max;
                     return <MetricLine key={z.label} label={`${z.label} · ${z.nome}`} value={valor} unit="km/h" color="#10b981"/>;
@@ -2251,7 +2286,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             {zonasLimiarItems.length > 0 && (
               <div style={{marginTop:16}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.6px',marginBottom:8}}>Zonas por limiar</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:8}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',gap:8}}>
                   {zonasLimiarItems.map((z) => {
                     const bpm = z.bpm_min != null || z.bpm_max != null ? `${z.bpm_min ?? '—'}-${z.bpm_max ?? '—'}` : '—';
                     const pct = z.pct_min != null || z.pct_max != null ? ` · ${z.pct_min ?? '—'}-${z.pct_max ?? '—'}%` : '';
@@ -2308,7 +2343,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,140px),1fr))', gap: 10, marginBottom: 16 }}>
               {ativos.map((t, i) => {
                 const cor = t.cls ? (COR[t.cls] ?? '#6b7280') : '#6b7280';
                 return (
@@ -2491,7 +2526,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10 }}>
                   Gráficos cinemáticos
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px,1fr))', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%,280px),1fr))', gap: 14 }}>
                   {[
                     ['ombro_url', 'ombro', 'Ombro'], ['cotovelo_url', 'cotovelo', 'Cotovelo'], ['quadril_url', 'quadril', 'Quadril'], ['joelho_url', 'joelho', 'Joelho'], ['tornozelo_url', 'tornozelo', 'Tornozelo'],
                   ].filter(([k]) => bio.graficos[k]).map(([k, _ck, l]) => (
@@ -2572,7 +2607,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               </span>
             </div>
             <div style={{ fontSize: 12, color:'#64748b', marginBottom: 14 }}>TMB, VET e distribuição de macronutrientes calculados a partir da avaliação.</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))', gap:10 }}>
               {metricas.map(([label, value, unit]) => (
                 <div key={label} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:'12px 14px' }}>
                   <div style={{ fontSize:10, fontWeight:800, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.7px', marginBottom:6 }}>{label}</div>
@@ -2613,7 +2648,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               return 'revisao';
             })();
             return (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              <div key={a.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between',
                 padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

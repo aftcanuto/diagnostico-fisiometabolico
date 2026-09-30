@@ -24,27 +24,29 @@ export function PublicDocumentLayout({
       style={{ fontFamily }}
     >
       <div className="mx-auto w-full min-w-0 max-w-3xl">
-        <header className="relative isolate overflow-hidden rounded-[2rem] border border-[#E5DDD2] bg-[#FAF5EF] p-5 shadow-[0_14px_32px_rgba(12,12,12,0.07)] sm:p-7">
-          <div className="relative flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center">
+        <header className="relative isolate overflow-hidden rounded-[2rem] border border-[#E5DDD2] bg-[#FAF5EF] p-[1.125rem] shadow-[0_14px_32px_rgba(12,12,12,0.07)] sm:p-7">
+          <div className="relative grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-4 sm:flex sm:items-center sm:gap-4">
             {clinica?.logo_url && (
               <img
                 src={clinica.logo_url}
                 alt=""
-                className="h-14 w-14 shrink-0 rounded-2xl border border-[#E5DDD2] bg-white object-contain p-1 shadow-sm sm:h-16 sm:w-16"
+                className="h-12 w-12 shrink-0 rounded-xl border border-[#E5DDD2] bg-white object-contain p-1 shadow-sm sm:h-16 sm:w-16 sm:rounded-2xl"
               />
             )}
-            <div className="w-full min-w-0">
-              <div className="inline-flex max-w-full break-words rounded-full bg-[#E8F7F1] px-4 py-2 text-xs font-bold uppercase tracking-normal text-[#155C47] [overflow-wrap:anywhere]">
+            <div className="contents sm:block sm:min-w-0 sm:flex-1">
+              <div className="inline-flex max-w-full justify-self-start break-words rounded-full bg-[#E8F7F1] px-3 py-2 text-[0.68rem] font-bold uppercase leading-4 tracking-normal text-[#155C47] [overflow-wrap:anywhere] sm:px-4 sm:text-xs">
                 {clinica?.nome ?? 'Diagnóstico Fisiometabólico'}
               </div>
-              <h1 className="mt-3 max-w-full break-words font-serif text-[1.625rem] font-semibold leading-[1.02] tracking-normal text-[#0C0C0C] sm:text-4xl">
-                {titulo}
-              </h1>
-              {subtitulo && (
-                <p className="mt-3 max-w-full break-words text-sm leading-6 text-[#5A5A5A] [overflow-wrap:anywhere]">
-                  {subtitulo}
-                </p>
-              )}
+              <div className="col-span-2 min-w-0 sm:mt-3">
+                <h1 className="max-w-full break-words font-serif text-[1.625rem] font-semibold leading-[1.02] tracking-normal text-[#0C0C0C] sm:text-4xl">
+                  {titulo}
+                </h1>
+                {subtitulo && (
+                  <p className="mt-2 max-w-full break-words text-sm leading-6 text-[#5A5A5A] [overflow-wrap:anywhere] sm:mt-3">
+                    {subtitulo}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </header>

@@ -16,10 +16,11 @@ const MODULOS_META: Record<string, string> = {
   rml: 'RML',
   cardiorrespiratorio: 'Cardio',
   biomecanica_corrida: 'Biomecanica da corrida',
+  jump_test: 'Jump Test',
 };
 
 export default async function ProdutosPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: clinicaId } = await supabase.rpc('current_clinica_id');
   const { data: produtos } = await supabase.from('produtos')
     .select('*')

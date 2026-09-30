@@ -19,6 +19,10 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+supabase/.temp/
+tmp/jump-test/
+tmp/jump-validation/
+tmp/
 
 preview-*.html
 diagnostico-fisiometabolico-v*.zip

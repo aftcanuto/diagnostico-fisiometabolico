@@ -2,6 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
+  // O cron usa CRON_SECRET na propria rota e nao possui sessao de usuario.
+  if (request.nextUrl.pathname === '/api/cron/supabase-keepalive') {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

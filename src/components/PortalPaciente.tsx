@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { JumpTestSummary } from '@/components/JumpTestSummary';
 import { consolidarHistorico, type AvaliacaoHidratada } from '@/lib/historico';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { LineChart } from '@/components/ui/LineChart';
@@ -11,7 +12,9 @@ import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
 import { scoreCardio, scoreComposicaoCorporal, scoreGlobal, scorePostura } from '@/lib/scores';
 import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura } from '@/lib/bodyComposition';
-import { REFERENCIAS_CLINICAS } from '@/lib/clinical/references';
+import { referenciasAvaliacao, modulosDaAvaliacao, MODULOS_REFERENCIAS } from '@/lib/clinical/references';
+import { isAnthropometryV2 } from '@/lib/anthropometry-record';
+import AnthropometryResults from '@/components/AnthropometryResults';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 
@@ -516,14 +519,14 @@ function FfmiPotencial({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:numbe
   const pct=massaMagra!=null&&massaMax?Math.max(0,Math.min(100,+((massaMagra/massaMax)*100).toFixed(1))):null;
   return (
     <Card>
-      <div style={{display:'grid',gridTemplateColumns:'minmax(170px,.7fr) minmax(260px,1.3fr)',gap:20,alignItems:'center'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:20,alignItems:'center'}}>
         <div style={{padding:'18px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
           <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
           <div style={{fontSize:52,fontWeight:700,lineHeight:.95,letterSpacing:'-1px',color:'#10b981'}}>{ffmi??'—'}</div>
           <div style={{fontSize:12,fontWeight:700,color:'#64748b',marginTop:8}}>Índice de massa livre de gordura</div>
         </div>
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:8,marginBottom:16}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:8,marginBottom:16}}>
             {massaMagra!=null&&<MetricaHorizontal label="Massa magra" valor={massaMagra} un="kg" nowrapValor/>}
             {massaOssea!=null&&<MetricaHorizontal label="Massa óssea" valor={massaOssea} un="kg" nowrapValor/>}
             {peso!=null&&<MetricaHorizontal label="Peso corporal" valor={peso} un="kg" nowrapValor/>}
@@ -633,10 +636,11 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const gorduraAnterior = ant ? resolverPercentualGordura(ant as any, ant.antropometria, (ant as any).bioimpedancia) : null;
   const pctG=gorduraAtual.valor;
   const peso=atual.antropometria?.peso??(atual as any).bioimpedancia?.peso_kg;
-  const mlg=atual.antropometria?.massa_magra??(atual as any).bioimpedancia?.massa_livre_gordura_kg;
+  const antroV2 = isAnthropometryV2(atual.antropometria);
+  const mlg=atual.antropometria?.massa_magra??(antroV2 ? null : (atual as any).bioimpedancia?.massa_livre_gordura_kg);
   const imc=atual.antropometria?.imc??(atual as any).bioimpedancia?.imc;
   const altura=atual.antropometria?.estatura??(atual as any).bioimpedancia?.altura_cm;
-  const massaOssea=atual.antropometria?.massa_ossea??(atual as any).bioimpedancia?.massa_ossea_kg;
+  const massaOssea=atual.antropometria?.massa_ossea??(antroV2 ? null : (atual as any).bioimpedancia?.massa_ossea_kg);
   const ffmiRaw=atual.antropometria?.ffmi as any;
   const alturaCalculada=altura??(peso&&imc?Math.sqrt(Number(peso)/Number(imc))*100:null);
   const ffmiFallback=mlg&&alturaCalculada?+(Number(mlg)/((Number(alturaCalculada)/100)**2)).toFixed(1):null;
@@ -773,6 +777,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const anamneseRest=anamneseItems.filter(i=>!anamneseTopLabels.includes(i.label)&&!anamneseFullLabels.includes(i.label));
   const modulosAnalise=[
     ['anamnese','Anamnese'],['sinais_vitais','Sinais vitais'],['posturografia','Posturografia'],
+    ['termografia','Termografia funcional'],
+    ['jump_test','Jump Test'],
     ['bioimpedancia','Bioimpedância'],['antropometria','Antropometria'],['flexibilidade','Flexibilidade'],
     ['forca','Força'],['rml','RML'],['cardiorrespiratorio','Cardiorrespiratório'],
     ['biomecanica_corrida','Biomecânica da corrida'],['conclusao_global','Conclusão global'],
@@ -781,10 +787,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     .map(([k,label])=>({k,label,texto:textoAnalise((atual as any).analises_ia?.[k])}))
     .filter(i=>i.texto);
   const planoAcaoPaciente=textoPlanoAcao((atual as any).analises_ia?.conclusao_global);
-  const referenciasTexto=[
-    ...REFERENCIAS_CLINICAS.geral,
-    ...modulosAnalise.flatMap(([k])=>REFERENCIAS_CLINICAS[k]??[]),
-  ].filter((r,i,arr)=>arr.indexOf(r)===i).map((r,i)=>`${i+1}. ${r}`).join('\n\n');
+  const modulosReferencias = modulosDaAvaliacao(atual);
+  const referencias = referenciasAvaliacao(modulosReferencias, atual.antropometria);
   const segs=[
     {k:'braco_dir',l:'Braço direito'},
     {k:'braco_esq',l:'Braço esquerdo'},
@@ -890,7 +894,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         <div style={{background:'linear-gradient(180deg,#ffffff,#f8fafc)',borderRadius:24,padding:18,
           border:'1px solid #dbe7e2',boxShadow:'0 24px 60px rgba(15,23,42,0.10)'}}>
 
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:16,alignItems:'start'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,250px),1fr))',gap:16,alignItems:'start'}}>
             {/* Score global */}
             <div style={{position:'relative',overflow:'hidden',borderRadius:18,padding:20,
               background:'linear-gradient(180deg,#ffffff,#f8fafc)',color:'#0f172a',
@@ -921,7 +925,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                     borderRadius:14,padding:'12px 14px',
                     boxShadow:'0 10px 24px rgba(15,23,42,.045)',
                   }}>
-                    <div style={{display:'grid',gridTemplateColumns:'90px minmax(80px,1fr) auto',alignItems:'center',gap:10}}>
+                    <div style={{display:'grid',gridTemplateColumns:'90px minmax(min(100%,80px),1fr) auto',alignItems:'center',gap:10}}>
                       <div style={{minWidth:0}}>
                         <div style={{fontSize:12,fontWeight:700,color:'#0f172a',letterSpacing:.2}}>{s.label}</div>
                         <div style={{fontSize:9,fontWeight:700,color:hasVal?cor:'#94a3b8',textTransform:'uppercase',letterSpacing:.7,marginTop:3}}>
@@ -977,7 +981,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           {sv&&(
             <Card>
               <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Sinais vitais</h3>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))',gap:8}}>
                 {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
                 {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
                 {sv?.spo2!=null&&<MetricaHorizontal label="SpO2" valor={`${sv.spo2}%`}/>}
@@ -992,8 +996,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 3. COMPOSIÇÃO CORPORAL */}
       {(pctG!=null||peso!=null)&&(
         <Secao ordem={40} titulo="Dados corporais" sub="Composição corporal, circunferências e medidas segmentadas" score={sc.composicao_corporal}>
-          <Card style={{overflowX:'auto'}}>
-            <div style={{minWidth:620}}>
+          <Card style={{minWidth:0}}>
+            <div style={{minWidth:0}}>
               <SilhuetaCircunferencias
                 sexo={paciente.sexo}
                 dados={{
@@ -1032,7 +1036,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         </Secao>
       )}
 
-      {(ffmiValor!=null||mlg!=null)&&(
+      {!antroV2 && (ffmiValor!=null||mlg!=null)&&(
         <Secao ordem={50} titulo="FFMI e potencial muscular" sub="Índice de massa livre de gordura e limite natural estimado" score={sc.composicao_corporal}>
           <FfmiPotencial
             ffmi={ffmiValor??null}
@@ -1048,7 +1052,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {circDisplayItems.length>0&&(
         <Secao ordem={52} titulo="Circunferências corporais" sub="Medidas organizadas de cima para baixo no corpo">
           <Card>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:8}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:8}}>
               {circDisplayItems.map(([k,l])=>(
                 <MetricaHorizontal key={k} label={l} valor={circ[k]} un="cm"/>
               ))}
@@ -1060,7 +1064,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {diamDisplayItems.length>0&&(
         <Secao ordem={53} titulo="Diâmetros ósseos" sub="Medidas antropométricas de referência ISAK">
           <Card>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:8}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:8}}>
               {diamDisplayItems.map(([k,l])=>(
                 <MetricaHorizontal key={k} label={l} valor={diam[k]} un="cm"/>
               ))}
@@ -1071,9 +1075,9 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 3b. BIOIMPEDÂNCIA DETALHADA */}
       {bioImp&&(
-        <Secao ordem={45} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar" score={sc.composicao_corporal}>
+        <Secao ordem={25} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar" score={sc.composicao_corporal}>
           <Card style={{marginBottom:14}}>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(118px,1fr))',gap:8}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,118px),1fr))',gap:8}}>
               {bioImp.aparelho&&<Metrica label="Aparelho" valor={bioImp.aparelho}/>}
               {bioImp.agua_corporal_kg!=null&&<Metrica label="Água corporal" valor={bioImp.agua_corporal_kg} un="kg" cor="#0ea5e9"/>}
               {bioImp.agua_corporal_pct!=null&&<Metrica label="Água corporal" valor={bioImp.agua_corporal_pct} un="%" cor="#0ea5e9"/>}
@@ -1085,7 +1089,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             </div>
           </Card>
           {(bioImp.segmentar_magra||bioImp.segmentar_gordura)&&(
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,280px),1fr))',gap:14}}>
               {bioImp.segmentar_magra&&(
                 <Card>
                   <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Massa magra por segmento</h3>
@@ -1131,6 +1135,11 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 3c. ANTROPOMETRIA DETALHADA */}
       {(() => {
         const antropometria = atual.antropometria as any;
+        if (isAnthropometryV2(antropometria) && antropometria.resultados_v2?.version === 2) return (
+          <Secao ordem={55} titulo="Antropometria" sub="Medidas, metodos selecionados e proporcionalidade" score={sc.composicao_corporal}>
+            <AnthropometryResults results={antropometria.resultados_v2} selectedOnly />
+          </Secao>
+        );
         const valorDobra = (v:any): number | null => {
           const raw = v && typeof v === 'object'
             ? v.media ?? v.média ?? v['média'] ?? v.validada ?? v.validado ?? v.valor ?? v.resultado ?? v.m3 ?? v.m2 ?? v.m1
@@ -1154,11 +1163,11 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
         return (
           <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares" score={sc.composicao_corporal}>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
               {dobrasValidas.length > 0&&(
                 <Card>
                   <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Dobras cutâneas</h3>
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))',gap:8}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,110px),1fr))',gap:8}}>
                     {dobrasValidas.map(({chave, valor})=>(
                       <Metrica key={chave} label={humanLabel(chave)} valor={valor} un="mm"/>
                     ))}
@@ -1181,11 +1190,12 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       })()}
 
       {/* 4. CARDIOVASCULAR */}
+      {atual.jump_test && <Secao ordem={56} titulo="Jump Test" sub="Capacidades neuromusculares"><JumpTestSummary data={atual.jump_test} previous={ant?.jump_test} previousDate={ant?.data}/></Secao>}
       {(vo2!=null||sv||zonasItems.length>0)&&(
         <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica, sinais vitais e zonas de treinamento" score={sc.cardiorrespiratorio}>
           {(vo2!=null||sv)&&(
             <Card style={{marginBottom:14}}>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,230px),1fr))',gap:8}}>
                 {vo2!=null&&<MetricaHorizontal label="VO2máx" valor={vo2} un="ml/kg/min" cor="#10b981"
                   d={dlt(vo2,ant?.cardiorrespiratorio?.vo2max)} dBoa="subir"/>}
                 {atual.cardiorrespiratorio?.classificacao_vo2&&<MetricaHorizontal label="Classificação" valor={atual.cardiorrespiratorio.classificacao_vo2}/>}
@@ -1216,11 +1226,11 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 4b. CARDIO AVANÇADO */}
       {((atual.cardiorrespiratorio as any)?.rec_fc||zonasLimiarItems.length>0||velocidadesTreinoItems.length>0)&&(
         <Secao ordem={91} titulo="Cardiorrespiratório avançado" sub="Recuperação de frequência cardíaca, limiares e velocidades" score={sc.cardiorrespiratorio}>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
             {(atual.cardiorrespiratorio as any)?.rec_fc&&(
               <Card>
                 <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Recuperação da FC</h3>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:8}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,100px),1fr))',gap:8}}>
                   {[10,30,60].map(String).filter(k=>(atual.cardiorrespiratorio as any).rec_fc[k]!=null).map((k)=>(
                     <Metrica key={k} label={`${k}s`} valor={(atual.cardiorrespiratorio as any).rec_fc[k]} un="bpm"/>
                   ))}
@@ -1269,7 +1279,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           {(atual.forca?.preensao_dir_kgf||atual.forca?.preensao_esq_kgf)&&(
             <Card style={{marginBottom:14}}>
               <h3 style={{fontSize:13,fontWeight:600,color:'#475569',margin:'0 0 12px'}}>Preensão palmar</h3>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:8,overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,100px),1fr))',gap:8,overflow:'hidden'}}>
                 {(atual.forca as any)?.esporte_contexto&&<Metrica label="Contexto" valor={labelEsporteForca((atual.forca as any).esporte_contexto)}/>}
                 {(atual.forca as any)?.finalidade_teste&&<Metrica label="Finalidade" valor={labelFinalidadeForca((atual.forca as any).finalidade_teste)}/>}
                 {(atual.forca as any)?.lado_dominante&&<Metrica label="Lado dominante" valor={labelLadoDominante((atual.forca as any).lado_dominante)}/>}
@@ -1380,7 +1390,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           {(atual.forca as any)?.sptech_relacoes?.length>0&&(
             <Card>
               <h3 style={{fontSize:13,fontWeight:600,color:'#475569',margin:'0 0 12px'}}>Relações de força</h3>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:8}}>
                 {(atual.forca as any).sptech_relacoes.map((r:any,i:number)=>(
                   <Metrica key={i} label={r.nome??r.relacao??`Relação ${i+1}`} valor={r.valor??r.percentual} un={r.unidade??'%'} cor="#8b5cf6"/>
                 ))}
@@ -1394,7 +1404,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {flex&&(
         <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — Sit and Reach" score={sc.flexibilidade}>
           <Card>
-            <div style={{display:'flex',alignItems:'center',gap:24}}>
+            <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:24}}>
               <div style={{textAlign:'center',flexShrink:0}}>
                 <div style={{fontSize:44,fontWeight:700,color:corFlex,lineHeight:1}}>{flex.melhor_resultado??'—'}</div>
                 <div style={{fontSize:12,color:'#94a3b8',marginTop:2}}>cm</div>
@@ -1402,8 +1412,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   fontSize:11,fontWeight:600,background:`${corFlex}15`,color:corFlex}}>{flex.classificacao??'—'}</div>
               </div>
               {flex.tentativa_1!=null&&(
-                <div style={{flex:1,borderLeft:'1px solid #f1f5f9',paddingLeft:20,display:'flex',gap:10}}>
-                  {[flex.tentativa_1,flex.tentativa_2,flex.tentativa_3].filter(Boolean).map((v:any,i:number)=>(
+                <div style={{flex:'1 1 220px',minWidth:0,display:'flex',flexWrap:'wrap',gap:10}}>
+                  {[flex.tentativa_1,flex.tentativa_2,flex.tentativa_3].map((v:any,i:number)=>(v!=null&&
                     <Metrica key={i} label={`Tentativa ${i+1}`} valor={v} un="cm"/>
                   ))}
                 </div>
@@ -1418,7 +1428,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         const desv=Object.entries(post.alinhamentos??{}).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' '));
         return <Secao ordem={30} titulo="Avaliação postural" score={sc.postura}>
           <Card>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:10,marginBottom:14}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))',gap:10,marginBottom:14}}>
               <FotoPostura src={post.foto_anterior} label="Anterior"/>
               <FotoPostura src={post.foto_posterior} label="Posterior"/>
               <FotoPostura src={post.foto_lateral_dir} label="Lateral direita"/>
@@ -1553,7 +1563,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 </div>
               )}
               {keys.length > 0 && (
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12,marginBottom:grafItems.length?16:0}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,210px),1fr))',gap:12,marginBottom:grafItems.length?16:0}}>
                   {keys.map(k => <AnguloGauge key={k} label={labels[k]} v={ang[k]} comentario={comentAngs[k]}/>)}
                 </div>
               )}
@@ -1568,7 +1578,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                   <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:10}}>
                     Gráficos cinemáticos
                   </div>
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',gap:14}}>
                     {grafItems.map(([k,_ck,l]) => (
                       <div key={k} style={{width:'100%',minWidth:0}}>
                         <div style={{fontSize:11,color:'#0f172a',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:6}}>{l}</div>
@@ -1595,13 +1605,13 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 8. EVOLUÇÃO */}
       {hist.ordenadas.length>=2&&(
         <Secao ordem={110} titulo="Sua evolução" sub="Progresso ao longo das avaliações">
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,280px),1fr))',gap:14}}>
             {/* Evolução dos scores com leitura clínica */}
             <div style={{gridColumn:'1 / -1'}}>
               <Card bg="#ffffff" style={{boxShadow:'0 18px 42px rgba(15,23,42,.05)'}}>
                 <h3 style={{fontSize:14,fontWeight:700,color:'#0f172a',margin:'0 0 4px'}}>Evolução dos scores</h3>
                 <p style={{fontSize:12,color:'#94a3b8',margin:'0 0 18px'}}>Tendência visual dos principais domínios avaliados</p>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
                   {[
                     {
                       nome:'Score Global',
@@ -1730,7 +1740,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 </span>
                 <TooltipInfo texto={tooltip} label="Ver detalhes da orientação nutricional" placement="top"/>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,140px),1fr))',gap:10}}>
                 {metricas.map(([label,value,unit])=>(
                   <div key={label} style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:12,padding:'12px 14px'}}>
                     <div style={{fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.7px',marginBottom:6}}>{label}</div>
@@ -1772,15 +1782,16 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         </Secao>
       )}
 
-      <Secao ordem={118} titulo="Referências">
-        <Card style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>Base técnica e científica utilizada</div>
-            <div style={{fontSize:12,color:'#94a3b8',marginTop:3}}>Passe o mouse no ícone para ver as referências cadastradas.</div>
-          </div>
-          <TooltipInfo texto={referenciasTexto} label="Ver referências" placement="top"/>
-        </Card>
-      </Secao>
+      {referencias.length > 0 && <Secao ordem={118} titulo="Referências">
+        <ol style={{paddingLeft:20,margin:0,display:'grid',gap:16,fontSize:12,lineHeight:1.6,overflowWrap:'anywhere'}}>
+          {referencias.map(ref => <li key={ref.id} data-reference-id={ref.id}>
+            <div style={{fontWeight:600,color:'#475569'}}>{ref.modulos.filter(m=>modulosReferencias[m]===true).map(m=>MODULOS_REFERENCIAS[m]).join(' · ')}</div>
+            <div>{ref.texto}</div>
+            {ref.nota && <div style={{color:'#64748b'}}>{ref.nota}</div>}
+            <a href={ref.url} target="_blank" rel="noopener noreferrer" style={{color:'#047857',textDecoration:'underline'}}>{ref.url}</a>
+          </li>)}
+        </ol>
+      </Secao>}
 
       <Secao ordem={119} titulo="Linha do tempo do paciente" sub="Evolucao das avaliacoes finalizadas">
         <Card>
@@ -1789,7 +1800,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               const pos=hist.ordenadas.findIndex(item=>item.id===a.id);
               const prev=pos>0?hist.ordenadas[pos-1]:null;
               return (
-                <div key={`timeline-${a.id}`} style={{display:'grid',gridTemplateColumns:'minmax(150px,190px) minmax(0,1fr) auto',
+                <div key={`timeline-${a.id}`} style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',
                   gap:12,alignItems:'center',padding:12,border:'1px solid #e2e8f0',borderRadius:14,
                   background:a.id===atual.id?'#f8fafc':'#fff'}}>
                   <div style={{minWidth:0}}>

@@ -1,4 +1,5 @@
 'use client';
+import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
@@ -161,7 +162,7 @@ export function PacienteDocumentosCentral({
     dados.consentimentoAceites.filter((a) => a.aceito_em && !a.revogado).length ||
     consentimentosAceitosPorLink.length;
 
-  const origem = typeof window === 'undefined' ? '' : window.location.origin;
+  const origem = PUBLIC_APP_ORIGIN;
   const linksAtivos = dados.portalTokens.length + dados.anamneseLinks.length + dados.consentimentoLinks.length;
   const comprovantePdfUrl = (token?: string | null) =>
     token ? `${origem}/api/consentimento-comprovante?token=${encodeURIComponent(token)}` : '';

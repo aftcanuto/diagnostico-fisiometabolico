@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { usuarioPodeAcessarAvaliacao } from '@/lib/api/permissions';
+import { jumpAnalysisUsable } from '@/lib/jump-test';
+import { anthropometryAnalysisUsable } from '@/lib/anthropometry-record';
 
 export const runtime = 'nodejs';
 const CAMPOS_IA = 'tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, modelo_ia, gerado_em';
@@ -16,6 +18,7 @@ const TIPOS_IA = new Set([
   'sinais_vitais',
   'posturografia',
   'termografia',
+  'jump_test',
   'bioimpedancia',
   'antropometria',
   'flexibilidade',
@@ -28,7 +31,7 @@ const TIPOS_IA = new Set([
 ]);
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -61,11 +64,14 @@ export async function GET(req: NextRequest) {
   }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ data: data ?? [] });
+  const { data: jump } = await admin.from('jump_test').select('updated_at').eq('avaliacao_id', avaliacaoId).maybeSingle();
+  const { data: anthropometry, error: anthropometryError } = await admin.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
+  if (anthropometryError) return NextResponse.json({ error: 'Falha ao conferir a revisao da antropometria.' }, { status: 500 });
+  return NextResponse.json({ data: (data ?? []).filter((a: any) => jumpAnalysisUsable(a, jump) && anthropometryAnalysisUsable(a, anthropometry)) });
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 

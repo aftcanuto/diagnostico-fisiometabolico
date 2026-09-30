@@ -32,6 +32,7 @@ const ENVS_CRITICAS = [
   'ANTHROPIC_API_KEY',
   'ANTHROPIC_MODEL',
   'NEXT_PUBLIC_APP_URL',
+  'CRON_SECRET',
 ];
 
 async function countRows(admin: any, table: string) {
@@ -65,7 +66,7 @@ async function pdfStatus() {
 }
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

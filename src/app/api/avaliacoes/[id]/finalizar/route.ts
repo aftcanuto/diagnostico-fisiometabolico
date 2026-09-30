@@ -5,7 +5,7 @@ import { registrarEventoProntuarioAvaliacao } from '@/lib/prontuario';
 export const runtime = 'nodejs';
 
 async function validarAcesso(userId: string, avaliacaoId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: visivel } = await supabase
     .from('avaliacoes')
     .select('id')
@@ -37,7 +37,7 @@ async function validarAcesso(userId: string, avaliacaoId: string) {
 
 export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
 
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Sessao expirada' }, { status: 401 });
 

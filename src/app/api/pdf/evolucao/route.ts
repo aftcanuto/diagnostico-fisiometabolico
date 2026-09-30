@@ -3,6 +3,7 @@ import { calcIdade } from '@/lib/calculations/antropometria';
 import { launchPdfBrowser } from '@/lib/pdf/browser';
 import { renderEvolutionReportHTML } from '@/lib/pdf/evolution-template';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { anthropometryAnalysisUsable } from '@/lib/anthropometry-record';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   const pacienteId = request.nextUrl.searchParams.get('pacienteId');
   if (!pacienteId) return NextResponse.json({ error: 'pacienteId required' }, { status: 400 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -36,10 +37,10 @@ export async function GET(request: NextRequest) {
   const { data: avaliacoesBase, error: avaliacoesError } = await admin
     .from('avaliacoes')
     .select(`
-      id, data, tipo, status, clinica_id, avaliador_id,
+      id, data, tipo, status, clinica_id, avaliador_id, modulos_selecionados,
       fonte_gordura_relatorio, percentual_gordura_relatorio,
       scores(*), antropometria(*), forca(*), cardiorrespiratorio(*),
-      posturografia(*), termografia(*), sinais_vitais(*), anamnese(*)
+      posturografia(*), termografia(*), jump_test(*), sinais_vitais(*), anamnese(*)
     `)
     .eq('paciente_id', pacienteId)
     .eq('status', 'finalizada')
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       : Promise.resolve({ data: null }),
   ]);
 
-  if (!analiseEvolucao?.texto_editado?.trim()) {
+  if (!analiseEvolucao?.texto_editado?.trim() || !anthropometryAnalysisUsable({ ...analiseEvolucao, tipo: 'evolucao' }, flat(ultima.antropometria))) {
     return NextResponse.json(
       { error: 'Revise e salve a análise de evolução antes de gerar o relatório.' },
       { status: 409 },
@@ -98,6 +99,7 @@ export async function GET(request: NextRequest) {
     cardiorrespiratorio: flat(avaliacao.cardiorrespiratorio),
     posturografia: flat(avaliacao.posturografia),
     termografia: flat(avaliacao.termografia),
+    jump_test: flat(avaliacao.jump_test),
     sinais_vitais: flat(avaliacao.sinais_vitais),
     anamnese: flat(avaliacao.anamnese),
     bioimpedancia: bioMap[avaliacao.id] ?? null,

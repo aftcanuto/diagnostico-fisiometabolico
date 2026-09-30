@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { jumpAnalysisUsable } from '@/lib/jump-test';
+import { anthropometryAnalysisUsable } from '@/lib/anthropometry-record';
 import { unstable_noStore as noStore } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/server';
 import { PortalPaciente } from '@/components/PortalPaciente';
@@ -35,6 +37,8 @@ export default async function PortalPacientePage(props: { params: Promise<{ toke
         rml(*),
         cardiorrespiratorio(*),
         posturografia(*),
+        termografia(*),
+        jump_test(*),
         sinais_vitais(*),
         anamnese(*),
         biomecanica_corrida(*),
@@ -68,7 +72,7 @@ export default async function PortalPacientePage(props: { params: Promise<{ toke
   const normalizadas = (avaliacoes ?? []).map((a: any) => {
     const um = (v: any) => Array.isArray(v) ? (v[0] ?? null) : v;
     const analises = Array.isArray(a.analises_ia)
-      ? Object.fromEntries(a.analises_ia.map((ia: any) => [
+      ? Object.fromEntries(a.analises_ia.filter((ia: any) => jumpAnalysisUsable(ia, um(a.jump_test)) && anthropometryAnalysisUsable(ia, um(a.antropometria))).map((ia: any) => [
           ia.tipo,
           {
             conteudo: ia.conteudo,
@@ -91,6 +95,8 @@ export default async function PortalPacientePage(props: { params: Promise<{ toke
       rml: um(a.rml),
       cardiorrespiratorio: um(a.cardiorrespiratorio),
       posturografia: um(a.posturografia),
+      termografia: um(a.termografia),
+      jump_test: um(a.jump_test),
       sinais_vitais: um(a.sinais_vitais),
       anamnese: um(a.anamnese),
       biomecanica_corrida: um(a.biomecanica_corrida),
