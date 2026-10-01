@@ -14,6 +14,7 @@ const client = {
       update(value) { payload = value; return this; },
       insert(value) { payload = value; return this; },
       eq(key, value) { filters[key] = value; return this; },
+      is(key, value) { filters[key] = value; return this; },
       async maybeSingle() {
         if (table === 'avaliacoes') return { data: evaluation };
         if (table === 'avaliadores') return { data: { nome: 'Profissional teste', qualificacao_isak: { status: 'pending', level: 1 } } };
@@ -21,7 +22,7 @@ const client = {
         if (!payload) return { data: structuredClone(row) };
         if (failure) return { error: { code: '42501' } };
         if (conflict) return { data: null };
-        if (row) assert.equal(filters.revision_v2, row.revision_v2);
+        if (row) assert.equal(filters.revision_v2, row.revision_v2 ?? null);
         assert.equal(payload.avaliacao_id, 'test');
         assert.equal(payload.registro_v2.version, 2);
         assert.equal(payload.resultados_v2.version, 2);
@@ -52,6 +53,8 @@ async function main() {
   reset(); evaluation = null; assert.equal((await send()).status, 403);
   reset(); evaluation.status = 'finalizada'; assert.equal((await send()).status, 409);
   reset(); row = { peso: 80 }; assert.equal((await send()).status, 409); assert.equal(row.peso, 80);
+  reset(); row = { dobras: { triceps: { m1: null, m2: null, m3: null, media: null } }, circunferencias: {}, diametros: {} };
+  assert.equal((await send()).status, 200); assert.equal(row.registro_v2.version, 2); assert.equal(row.revision_v2, 1);
   reset(); assert.equal((await send({ expected_revision: undefined })).status, 400);
   reset(); assert.equal((await send()).status, 200); assert.equal(row.revision_v2, 1);
   assert.equal(row.resultados_v2.professional.qualification.status, 'pending');

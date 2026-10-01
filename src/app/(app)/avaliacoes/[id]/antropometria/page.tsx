@@ -6,6 +6,7 @@ import LegacyAnthropometryForm from '@/components/LegacyAnthropometryForm';
 import AnthropometryForm from '@/components/AnthropometryForm';
 import { Button } from '@/components/ui/Button';
 import { buscarModulo } from '@/lib/modulos';
+import { hasLegacyAnthropometryData } from '@/lib/anthropometry-record';
 
 export default function AntropometriaPage(props: { params: Promise<{ id: string }> }) {
   const { id } = use(props.params);
@@ -31,10 +32,9 @@ export default function AntropometriaPage(props: { params: Promise<{ id: string 
   </div>;
   if (!state || state.id !== id) return <p role="status">Carregando antropometria...</p>;
 
-  // An existing legacy row is never converted implicitly, even when it is empty.
-  if (state.row && state.row.registro_v2 == null) return <div className="space-y-4">
+  if (hasLegacyAnthropometryData(state.row)) return <div className="space-y-4">
     <p className="border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900">Avaliacao historica: coleta e metodos legados preservados.</p>
     <LegacyAnthropometryForm {...props} />
   </div>;
-  return <AnthropometryForm key={id} avaliacaoId={id} initialRow={state.row} />;
+  return <AnthropometryForm key={id} avaliacaoId={id} initialRow={state.row?.registro_v2 ? state.row : null} />;
 }

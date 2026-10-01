@@ -1714,7 +1714,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.termografia)} />
                 </div>
                 <div style={{ fontSize: 11, color:'#94a3b8', marginBottom: 12 }}>Condições técnicas e regiões de interesse</div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,140px),1fr))', gap:8 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap:8 }}>
                   <PreviewMetricLine label="Temperatura ambiente" value={term.temperatura_ambiente != null ? `${term.temperatura_ambiente} °C` : 'Não informada'} />
                   <PreviewMetricLine label="Umidade relativa" value={term.umidade_relativa != null ? `${term.umidade_relativa}%` : 'Não informada'} />
                   <PreviewMetricLine label="Aclimatação" value={term.tempo_aclimatacao_min != null ? `${term.tempo_aclimatacao_min} min` : 'Não informada'} />

@@ -3,6 +3,13 @@ import {
   MEASUREMENTS, calculateAnthropometry, compareAnthropometry, legacyProjection,
   newAnthropometry, selectedReferences,
 } from '../src/lib/anthropometry';
+import { hasLegacyAnthropometryData } from '../src/lib/anthropometry-record';
+
+assert.equal(hasLegacyAnthropometryData(null), false);
+assert.equal(hasLegacyAnthropometryData({ dobras: { triceps: { m1: null, m2: null, m3: null, media: null } }, circunferencias: {}, diametros: {} }), false);
+assert.equal(hasLegacyAnthropometryData({ dobras: { triceps: { m1: 0 } } }), true);
+assert.equal(hasLegacyAnthropometryData({ peso: 80 }), true);
+assert.equal(hasLegacyAnthropometryData({ registro_v2: { version: 2 }, peso: 80 }), false);
 
 const input = newAnthropometry();
 const values: Record<string, number> = {

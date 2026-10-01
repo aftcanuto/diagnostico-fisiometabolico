@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { anthropometrySchema, calculateAnthropometry, legacyProjection } from '@/lib/anthropometry';
 import { qualificationSchema } from '@/lib/isak-qualification';
+import { hasLegacyAnthropometryData } from '@/lib/anthropometry-record';
 
 export async function saveAnthropometryV2(avaliacaoId: string, payload: any) {
   const parsed = anthropometrySchema.safeParse(payload.registro_v2);
@@ -21,7 +22,7 @@ export async function saveAnthropometryV2(avaliacaoId: string, payload: any) {
   if (!patient?.data_nascimento || !['M', 'F'].includes(patient.sexo)) return NextResponse.json({ error: 'Confira o cadastro do paciente.' }, { status: 400 });
   const { data: current, error: readError } = await sb.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
   if (readError) return NextResponse.json({ error: 'Nao foi possivel consultar a antropometria. Confira a migration.' }, { status: 500 });
-  if (current && !current.registro_v2) return NextResponse.json({ error: 'Avaliacao legada preservada: use o formulario original.' }, { status: 409 });
+  if (hasLegacyAnthropometryData(current)) return NextResponse.json({ error: 'Avaliacao legada preservada: use o formulario original.' }, { status: 409 });
   if ((current?.revision_v2 ?? null) !== payload.expected_revision) return NextResponse.json({ error: 'Coleta alterada em outra sessao. Recarregue antes de salvar.' }, { status: 409 });
 
   const results = calculateAnthropometry(parsed.data, { date: aval.data, birthDate: patient.data_nascimento, sex: patient.sexo });
@@ -36,7 +37,9 @@ export async function saveAnthropometryV2(avaliacaoId: string, payload: any) {
   };
   // The single row write persists raw collection, selected methods and derived values atomically.
   const operation = current
-    ? sb.from('antropometria').update(data).eq('avaliacao_id', avaliacaoId).eq('revision_v2', current.revision_v2)
+    ? current.revision_v2 == null
+      ? sb.from('antropometria').update(data).eq('avaliacao_id', avaliacaoId).is('revision_v2', null)
+      : sb.from('antropometria').update(data).eq('avaliacao_id', avaliacaoId).eq('revision_v2', current.revision_v2)
     : sb.from('antropometria').insert(data);
   const saved = await operation.select('*').maybeSingle();
   if (saved.error) return NextResponse.json({ error: saved.error.code === '23505'

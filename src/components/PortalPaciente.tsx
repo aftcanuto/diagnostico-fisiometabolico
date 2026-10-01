@@ -993,6 +993,90 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         </Secao>
       )}
 
+      {atual.termografia&&(() => {
+        const t = atual.termografia as any;
+        const vistas = [
+          ['foto_anterior','Anterior'], ['foto_posterior','Posterior'],
+          ['foto_lateral_dir','Lateral direita'], ['foto_lateral_esq','Lateral esquerda'],
+        ].filter(([key])=>Boolean(t[key]));
+        const rois = Array.isArray(t.rois) ? t.rois : [];
+        const complementares = Array.isArray(t.imagens_complementares) ? t.imagens_complementares : [];
+        const grupos = new Map<string, any>();
+        for (const roi of rois) {
+          const nome = roi.regiao === 'Personalizada' ? roi.nome_personalizado : roi.regiao;
+          if (!nome) continue;
+          grupos.set(nome, { ...(grupos.get(nome) ?? {}), [roi.lado]:roi });
+        }
+        const deltas = Array.from(grupos.entries()).flatMap(([regiao, lados]) => {
+          const direita = Number(lados.D?.temp_media), esquerda = Number(lados.E?.temp_media);
+          return Number.isFinite(direita) && Number.isFinite(esquerda)
+            ? [{ regiao, direita, esquerda, delta:Math.abs(direita - esquerda) }] : [];
+        }).sort((a,b)=>b.delta-a.delta);
+        return (
+          <Secao ordem={35} titulo="Termografia funcional" sub="Condições técnicas, regiões de interesse e registros termográficos">
+            <Card style={{marginBottom:14}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:8}}>
+                <Metrica label="Temperatura ambiente" valor={t.temperatura_ambiente??'Não informada'} un={t.temperatura_ambiente!=null?'°C':''}/>
+                <Metrica label="Umidade relativa" valor={t.umidade_relativa??'Não informada'} un={t.umidade_relativa!=null?'%':''}/>
+                <Metrica label="Aclimatação" valor={t.tempo_aclimatacao_min??'Não informada'} un={t.tempo_aclimatacao_min!=null?'min':''}/>
+                <Metrica label="Emissividade" valor={t.emissividade??0.98}/>
+                {t.equipamento_modelo&&<Metrica label="Equipamento" valor={`${t.equipamento_fabricante??''} ${t.equipamento_modelo}`.trim()}/>}
+                {t.equipamento_software&&<Metrica label="Software" valor={t.equipamento_software}/>}
+              </div>
+            </Card>
+            {vistas.length>0&&(
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:10,marginBottom:14}}>
+                {vistas.map(([key,label])=>(
+                  <div key={key} style={{border:'1px solid #e2e8f0',borderRadius:8,overflow:'hidden',background:'#f8fafc',minWidth:0}}>
+                    <div style={{aspectRatio:'3 / 4',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      <img src={t[key]} alt={`Termograma ${label}`} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                    </div>
+                    <div style={{fontSize:10,fontWeight:700,color:'#475569',textAlign:'center',padding:'7px 5px'}}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {rois.length>0&&(
+              <Card style={{marginBottom:14,minWidth:0}}>
+                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Regiões de interesse</h3>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))',gap:8,minWidth:0}}>
+                  {rois.map((roi:any,index:number)=><div key={`${roi.regiao}-${roi.lado}-${index}`} style={{border:'1px solid #e2e8f0',borderRadius:8,padding:'10px 12px',background:'#f8fafc',minWidth:0}}>
+                    <div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'baseline',marginBottom:8}}>
+                      <strong style={{fontSize:11,color:'#0f172a',overflowWrap:'anywhere'}}>{roi.regiao==='Personalizada'?roi.nome_personalizado:roi.regiao}</strong>
+                      <span style={{fontSize:10,fontWeight:700,color:'#059669'}}>Lado {roi.lado}</span>
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:6,fontSize:10,color:'#475569'}}>
+                      <span>Média <b>{roi.temp_media??'—'} °C</b></span><span>Mín. <b>{roi.temp_min??'—'} °C</b></span>
+                      <span>Máx. <b>{roi.temp_max??'—'} °C</b></span><span>Dor <b>{roi.dor?(roi.intensidade_dor||'Sim'):'Não'}</b></span>
+                    </div>
+                  </div>)}
+                </div>
+              </Card>
+            )}
+            {deltas.length>0&&(
+              <Card style={{marginBottom:14}}>
+                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Comparação bilateral</h3>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,190px),1fr))',gap:8}}>
+                  {deltas.map(item=><MetricaHorizontal key={item.regiao} label={item.regiao} valor={`D ${item.direita} °C · E ${item.esquerda} °C · Δ ${item.delta.toFixed(1)} °C`}/>)}
+                </div>
+              </Card>
+            )}
+            {complementares.length>0&&(
+              <div style={{marginBottom:14}}>
+                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Imagens termográficas complementares</h3>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:10}}>
+                  {complementares.map((imagem:any,index:number)=><div key={`${imagem.path??imagem.url}-${index}`} style={{border:'1px solid #e2e8f0',borderRadius:8,overflow:'hidden',background:'#f8fafc',minWidth:0}}>
+                    <div style={{aspectRatio:'3 / 4',display:'flex',alignItems:'center',justifyContent:'center'}}><img src={imagem.url} alt={imagem.titulo||`Imagem complementar ${index+1}`} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/></div>
+                    <div style={{fontSize:10,fontWeight:700,color:'#475569',textAlign:'center',padding:'7px 5px'}}>{imagem.titulo||`Imagem complementar ${index+1}`}</div>
+                  </div>)}
+                </div>
+              </div>
+            )}
+            {t.conclusao_funcional&&<Card><h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 8px'}}>Conclusão profissional</h3><p style={{fontSize:12,lineHeight:1.65,color:'#475569',margin:0}}>{t.conclusao_funcional}</p></Card>}
+          </Secao>
+        );
+      })()}
+
       {/* 3. COMPOSIÇÃO CORPORAL */}
       {(pctG!=null||peso!=null)&&(
         <Secao ordem={40} titulo="Dados corporais" sub="Composição corporal, circunferências e medidas segmentadas" score={sc.composicao_corporal}>

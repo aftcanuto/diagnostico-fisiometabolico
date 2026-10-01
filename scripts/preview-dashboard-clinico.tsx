@@ -42,6 +42,7 @@ const doc = `<!doctype html>
     .flex { display: flex; }
     .grid { display: grid; }
     .hidden { display: none; }
+    .overflow-x-auto { overflow-x: auto; max-width: 100%; }
     .items-center { align-items: center; }
     .items-baseline { align-items: baseline; }
     .justify-between { justify-content: space-between; }
@@ -92,6 +93,8 @@ const doc = `<!doctype html>
     .opacity-30 { opacity: .3; }
     .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
     @media (min-width: 768px) {
+      .md\\:hidden { display: none; }
+      .md\\:block { display: block; }
       .md\\:flex-row { flex-direction: row; }
       .md\\:items-center { align-items: center; }
       .md\\:justify-between { justify-content: space-between; }

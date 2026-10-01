@@ -186,8 +186,11 @@ export default function LegacyAnthropometryForm(props: { params: Promise<{ id: s
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Dobras cutâneas (mm) — protocolo ISAK 7 pontos</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Dobras cutâneas (mm) — modelo histórico de 7 pontos</CardTitle></CardHeader>
         <CardBody>
+          <p className="mb-2 text-xs font-medium text-amber-700">
+            Registro legado preservado para consulta; estes pontos não representam a coleta ISAK atual.
+          </p>
           <p className="text-xs text-slate-500 mb-3">
             2 medidas obrigatórias. Se a diferença entre elas for &gt; 5%, uma 3ª medida é exigida; usa-se a mediana.
           </p>

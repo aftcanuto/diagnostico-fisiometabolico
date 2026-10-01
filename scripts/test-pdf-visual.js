@@ -112,17 +112,40 @@ async function main() {
         .filter((item) => item.overlapsFooter)
         .slice(0, 12);
 
-      const pages = document.querySelectorAll('.page').length;
-      const overflowPages = Array.from(document.querySelectorAll('.page'))
-        .map((el, index) => ({ index: index + 1, scrollHeight: el.scrollHeight, clientHeight: el.clientHeight }))
-        .filter((item) => item.scrollHeight > item.clientHeight + 4);
+      const pageAudit = Array.from(document.querySelectorAll('.page')).map((el, index) => {
+        const bounds = el.getBoundingClientRect();
+        const footer = el.querySelector(':scope > .pdf-footer')?.getBoundingClientRect();
+        const limit = footer?.top ?? bounds.bottom;
+        const content = Array.from(el.children).filter(child => !child.classList.contains('pdf-footer'));
+        const overflowing = content.filter(child => child.getBoundingClientRect().bottom > limit + 1);
+        const text = String(el.textContent || '').replace(/\s+/g, ' ').trim();
+        return {
+          index:index + 1,
+          title:el.querySelector('h1,h2,.mod-title')?.textContent?.replace(/\s+/g, ' ').trim().slice(0, 100) ?? '',
+          textLength:text.length,
+          scrollHeight:el.scrollHeight,
+          clientHeight:el.clientHeight,
+          overflow:overflowing.map(child => ({ className:String(child.className).slice(0, 120), excess:Math.round(child.getBoundingClientRect().bottom - limit) })),
+        };
+      });
+      const overflowPages = pageAudit.filter(item => item.overflow.length > 0);
+      const emptyPages = pageAudit.filter(item => item.textLength < 20);
+      const heightMismatches = pageAudit
+        .filter(item => item.scrollHeight > item.clientHeight + 4)
+        .map(({index,title,scrollHeight,clientHeight}) => ({index,title,scrollHeight,clientHeight}));
+      const tractionCards = Array.from(document.querySelectorAll('.traction-test-card'));
+      const tractionPages = new Set(tractionCards.map(card => card.closest('.page'))).size;
 
       return {
         badImages,
         hasFooterData,
         cutCards,
         overflowPages,
-        pages,
+        pages:pageAudit.length,
+        emptyPages,
+        heightMismatches,
+        tractionCards:tractionCards.length,
+        tractionPages,
       };
     });
 
@@ -130,6 +153,11 @@ async function main() {
     if (result.badImages.length) errors.push('Imagem quebrada no preview do PDF');
     if (!result.hasFooterData) errors.push('Dados de rodape do PDF ausentes');
     if (result.cutCards.length) errors.push('Cards ou blocos atravessando area de quebra/rodape');
+    if (result.overflowPages.length) errors.push('Conteudo direto ultrapassando o rodape');
+    if (result.emptyPages.length) errors.push('Pagina vazia ou sem conteudo util');
+    if (result.tractionCards >= 4 && result.tractionPages > Math.ceil(result.tractionCards / 2)) {
+      errors.push('Dinamometria por tracao ocupa paginas demais para a quantidade de testes');
+    }
 
     if (errors.length) {
       fail('Teste visual do PDF encontrou problemas', {
@@ -137,6 +165,7 @@ async function main() {
         badImages: result.badImages,
         cutCards: result.cutCards,
         overflowPages: result.overflowPages,
+        emptyPages: result.emptyPages,
       });
     }
 
@@ -145,7 +174,11 @@ async function main() {
       pages: result.pages,
       badImages: 0,
       cutCards: 0,
-      overflowPages: result.overflowPages.length,
+      overflowPages: result.overflowPages,
+      emptyPages: result.emptyPages,
+      heightMismatches: result.heightMismatches,
+      tractionCards: result.tractionCards,
+      tractionPages: result.tractionPages,
     }, null, 2));
   } finally {
     await browser.close();

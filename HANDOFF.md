@@ -4,6 +4,28 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-01 - Auditoria integral do relatorio e portal com todos os modulos
+
+- Corrigida a paginacao da dinamometria por tracao: o template criava uma pagina completa para cada teste muscular. Os sete testes do cenario completo agora ocupam tres paginas balanceadas (3 + 3 + 1 com analise clinica), preservando cada teste como bloco indivisivel. O relatorio completo caiu de 40 para 36 paginas e a analise de forca, antes omitida quando havia tracao, voltou a aparecer ao final da secao.
+- Criado um cenario de auditoria realmente completo com todos os modulos, Antropometria V2 com 26 medidas, seis protocolos do Jump Test, termografia com quatro imagens basais e quatro complementares, referencias e analises simuladas. Os previews anteriores nao cobriam integralmente esses tres modulos.
+- O portal do paciente passou a exibir o conteudo completo da termografia: condicoes tecnicas, imagens, ROIs, comparacao bilateral, imagens complementares e conclusao profissional.
+- O resumo do Jump Test no portal ganhou apresentacao responsiva em linhas de metricas no mobile; a tabela completa permanece no desktop. Assim, todas as informacoes ficam visiveis em 320 e 390 px sem rolagem horizontal.
+- Corrigido um overflow de 9 px nos indicadores tecnicos da termografia do painel clinico em 390 px, aumentando a largura minima real das colunas antes de formar a grade.
+- A paginacao das referencias do PDF foi equilibrada quando restam apenas um ou dois itens. O relatorio completo caiu de 41 para 40 elementos de pagina (capa sem numeracao e 39 paginas numeradas), sem deixar uma pagina final quase vazia.
+- Auditoria automatica aprovada no portal e painel clinico em 320, 390, 768 e 1280 px: largura exata do viewport, nenhuma imagem quebrada e nenhum elemento fora da area util. As paginas criticas de termografia, antropometria, Jump Test, protocolos e referencias foram inspecionadas visualmente.
+- PDF completo aprovado sem pagina vazia, card cortado, imagem quebrada ou bloco invadindo o rodape. Tres paginas extensas de forca mantem diferenca de 6 px entre `scrollHeight` e `clientHeight` causada por efeitos CSS; a verificacao direta dos limites e as capturas confirmam que nao existe extrapolacao visual.
+- Adicionado `scripts/export-full-test-pdf.cjs` para exportar de forma reproduzivel o mesmo cenario completo auditado. O arquivo de conferencia foi gerado em `output/pdf/relatorio-teste-completo-medfit.pdf`, com 40 paginas A4 e verificacao visual apos renderizacao por Poppler.
+- Validacoes aprovadas: `test:full`, `test:pdf-visual`, `test:layout`, `test:references`, `test:jump`, `test:anthropometry`, TypeScript, lint e build de producao. Sem migration nova, sem alteracao de dados reais, sem envio a IA e sem deploy nesta etapa.
+
+### 2026-09-30 - Correcao da selecao entre Antropometria V2 e formulario historico
+
+- Corrigida a causa de avaliacoes novas exibirem o formulario antigo: linhas criadas pelo autosave apenas com a estrutura vazia de dobras nao sao mais classificadas como coleta historica.
+- Um rascunho legado vazio agora pode ser iniciado e salvo como Antropometria V2. A operacao usa controle atomico para confirmar que `revision_v2` continua nula antes da conversao.
+- Avaliacoes antigas com qualquer medida ou resultado real continuam preservadas no formulario legado, sem conversao ou perda de dados.
+- O formulario antigo deixou de se apresentar incorretamente como "protocolo ISAK 7 pontos" e passou a informar que e um modelo historico, distinto da coleta ISAK atual.
+- Consulta sem valores clinicos confirmou que a unica avaliacao em andamento possui apenas o rascunho estrutural vazio; nenhuma leitura real sera convertida. Sem migration adicional e sem alteracao automatica de registros no Supabase.
+- Suite antropometrica, API simulada, TypeScript, lint, build e teste visual aprovados. O navegador confirmou 26 campos, as oito dobras ISAK corretas, salvamento, mobile em 320/390/768 px e PDF de oito paginas.
+
 ### 2026-09-29 - Publicacao da Antropometria V2
 
 - Migration `20260928170549_anthropometry_v2.sql` aplicada no projeto Supabase `kjfhhrdfsgvdqygbvmwb` por SQL direto, devido ao historico antigo de migrations manuais. Colunas, tipos, constraints validadas e RLS ativo em `antropometria` e `avaliadores` foram confirmados; versao registrada como aplicada sem reparar ou remover entradas historicas anteriores.

@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderLaudoHTML, type LaudoData } from '../src/lib/pdf/template';
+import { completeAnthropometry, completeJumpTest, completeThermography } from './fixtures/complete-modules';
 
 const svgDataUrl = (svg: string) =>
   `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
@@ -90,8 +91,10 @@ export const dados: LaudoData = {
     anamnese: true,
     sinais_vitais: true,
     posturografia: true,
+    termografia: true,
     bioimpedancia: true,
     antropometria: true,
+    jump_test: true,
     flexibilidade: true,
     forca: true,
     rml: true,
@@ -131,6 +134,7 @@ export const dados: LaudoData = {
       },
       observacoes: 'Leve anteriorização de cabeça e tendência à anteversão pélvica.',
     },
+    termografia: completeThermography(),
     bioimpedancia: {
       aparelho: 'InBody 570',
       peso_kg: 68.4,
@@ -158,38 +162,8 @@ export const dados: LaudoData = {
         perna_esq: { kg: 3.5, pct: 27 },
       },
     },
-    antropometria: {
-      peso: 68.4,
-      estatura: 166,
-      imc: 24.8,
-      percentual_gordura: 26.9,
-      massa_magra: 50.0,
-      massa_ossea: 2.7,
-      rcq: 0.78,
-      ffmi: 18.1,
-      dobras: {
-        triceps: { m1: 18, m2: 17, m3: null, media: 17.5 },
-        subescapular: { m1: 14, m2: 15, m3: null, media: 14.5 },
-        peitoral: { m1: 11, m2: 12, m3: null, media: 11.5 },
-        axilar_media: { m1: 16, m2: 16, m3: null, media: 16 },
-        supra_iliaca: { m1: 19, m2: 20, m3: null, media: 19.5 },
-        abdominal: { m1: 24, m2: 25, m3: null, media: 24.5 },
-        coxa: { m1: 28, m2: 27, m3: null, media: 27.5 },
-      },
-      circunferencias: {
-        pescoco: 33,
-        ombro: 102,
-        torax: 88,
-        cintura: 72,
-        abdome: 84,
-        quadril: 92,
-        braco_dir_relaxado: 28.2,
-        braco_esq_relaxado: 27.9,
-        panturrilha_dir: 36.5,
-        panturrilha_esq: 36.1,
-      },
-      somatotipo: { endomorfia: 4.1, mesomorfia: 3.7, ectomorfia: 1.9, classificacao: 'Endo-mesomorfo' },
-    },
+    antropometria: completeAnthropometry(),
+    jump_test: completeJumpTest(),
     flexibilidade: {
       tentativa_1: 28.5,
       tentativa_2: 31.0,

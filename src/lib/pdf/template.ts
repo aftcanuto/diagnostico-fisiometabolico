@@ -321,7 +321,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 .kpi-label { font-size: 9px; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
 .kpi-val { font-size: 15px; font-weight: 750; color: #111827; line-height: 1.18; letter-spacing: 0; overflow-wrap: normal; word-break: normal; hyphens: none; }
 .kpi-unit { font-size: 10px; color: #9ca3af; font-weight: 400; }
-.traction-test-card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 14px; }
+.traction-test-card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--pdf-line); }
 .traction-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; break-inside: avoid; page-break-inside: avoid; }
 .traction-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin: 0; break-inside: avoid; page-break-inside: avoid; }
 .traction-kpi-grid .kpi { padding: 8px 9px; min-height: 50px; }
@@ -1443,7 +1443,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
     </tr>`).join('')}</tbody></table>`;
   })()}
   `;
-  const tracaoPages = trT.map((t:any) => {
+  const tracaoCards = trT.map((t:any, index:number) => {
     const ap = parseFloat(t.assimetria_pct);
     const side = (lado:any, title:string, color:string) => `
       <div style="border:1px solid ${color}25;border-radius:10px;background:#f8fafc;padding:10px">
@@ -1462,9 +1462,7 @@ function pgForca(f: any, score: number | null, ia?: any): string {
           ${kpi('Duração',lado?.duracao_s,'s')}
         </div>
       </div>`;
-    return pgModulo('Força', score, `
-      <div class="sec-sub">Dinamometria por tracao</div>
-      <div class="traction-test-card">
+    const card = `<div class="traction-test-card">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
           <div style="font-size:13px;font-weight:800;color:#111827">${x(t.musculo||'Teste de tracao')}</div>
           ${t.exercicio_ref?`<span style="font-size:10px;color:#64748b">${x(t.exercicio_ref)}</span>`:''}
@@ -1483,10 +1481,14 @@ function pgForca(f: any, score: number | null, ia?: any): string {
           ${kpi('Diferenca abs.',t.diferenca_abs_kgf,'kgf')}
         </div>
         ${t.observacoes?`<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.35">${x(t.observacoes)}</div>`:''}
-      </div>
-    `);
+      </div>`;
+    const analiseFinal = index === trT.length - 1 ? aiBlock(ia) : '';
+    return analiseFinal ? `<div class="pdf-keep-group">${card}${analiseFinal}</div>` : card;
   }).join('');
-  return pgModulo('Força', score, principalHtml, trT.length ? undefined : ia) + tracaoPages;
+  const tracaoModulo = trT.length
+    ? pgModulo('Força', score, `<div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px">Dinamometria por tracao</div>${tracaoCards}`)
+    : '';
+  return pgModulo('Força', score, principalHtml, trT.length ? undefined : ia) + tracaoModulo;
 }
 
 // ─── pgRML — Resistência Muscular Localizada ────────────────────────────────
@@ -2061,12 +2063,18 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
   if (d.modulos.jump_test && !protos.some((p: any) => /jump\s*test/i.test(`${p.label} ${p.texto}`))) {
     protos.push({ label: 'Jump Test', texto: 'SJ, CMJ e DJ: tres tentativas validas por protocolo; CMJ unilateral: tres por perna; saltos repetidos: serie de 15 s. Altura de queda e protocolos realizados conforme registro da coleta.' });
   }
+  const gruposRefs = [];
+  for (let i = 0; i < refs.length; i += 9) gruposRefs.push(refs.slice(i, i + 9));
+  if (gruposRefs.length > 1 && gruposRefs.at(-1)!.length <= 2) {
+    gruposRefs.at(-2)!.push(...gruposRefs.pop()!);
+  }
   const paginasRefs = [];
-  for (let i = 0; i < refs.length; i += 9) {
+  let inicioRef = 1;
+  for (const grupoRefs of gruposRefs) {
     paginasRefs.push(`<section class="ref-section page module" style="page-break-after:auto">
       <div class="mod-head"><div class="mod-title">Referências bibliográficas</div></div>
-      <ol start="${i + 1}" style="padding-left:18px;font-size:11px;line-height:1.5;overflow-wrap:anywhere">
-        ${refs.slice(i, i + 9).map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:16px;break-inside:avoid">
+      <ol start="${inicioRef}" style="padding-left:18px;font-size:11px;line-height:1.5;overflow-wrap:anywhere">
+        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:16px;break-inside:avoid">
           <div style="font-weight:700;color:${pri}">${x(ref.modulos.filter(m => d.modulos[m] === true).map(m => MODULOS_REFERENCIAS[m]).join(' · '))}</div>
           <div>${x(ref.texto)}</div>
           ${ref.nota ? `<div style="color:#64748b">${x(ref.nota)}</div>` : ''}
@@ -2074,6 +2082,7 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
         </li>`).join('')}
       </ol>
     </section>`);
+    inicioRef += grupoRefs.length;
   }
   return `<section class="ref-section page module" style="page-break-after:auto">
     <div class="mod-head"><div class="mod-title">Protocolos utilizados</div></div>

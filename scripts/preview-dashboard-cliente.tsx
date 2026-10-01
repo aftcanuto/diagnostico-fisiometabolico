@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PortalPaciente } from '../src/components/PortalPaciente';
+import { completeAnthropometry, completeJumpTest, completeThermography } from './fixtures/complete-modules';
 
 const svgDataUrl = (svg: string) =>
   `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
@@ -49,55 +50,7 @@ export const avaliacaoAtual: any = {
     nivel_estresse: 4,
     historico_lesoes: 'Entorse leve de tornozelo há 2 anos',
   },
-  antropometria: {
-    peso: 68.4,
-    estatura: 166,
-    percentual_gordura: 26.9,
-    massa_magra: 50,
-    massa_ossea: 2.7,
-    imc: 24.8,
-    rcq: 0.78,
-    ffmi: 18.1,
-    somatotipo: { endomorfia: 4.1, mesomorfia: 3.8, ectomorfia: 2.2 },
-    dobras: {
-      tricipital: 18,
-      subescapular: 16,
-      peitoral: 10,
-      axilar_media: 14,
-      suprailiaca: 20,
-      abdominal: 24,
-      coxa: 26,
-    },
-    diametros_osseos: {
-      biacromial: 36.8,
-      torax_transverso: 27.4,
-      torax_anteroposterior: 18.6,
-      biiliocristal: 28.9,
-      umero_biepicondiliano: 6.2,
-      femur_biepicondiliano: 8.9,
-      punho: 5.4,
-      tornozelo: 6.8,
-    },
-    circunferencias: {
-      pescoco: 34,
-      ombro: 102,
-      torax: 88,
-      braco_relaxado: 28.8,
-      braco_dir_relaxado: 29,
-      braco_esq_relaxado: 28.5,
-      braco_dir_contraido: 31,
-      braco_esq_contraido: 30.5,
-      antebraco_dir: 24,
-      antebraco_esq: 23.7,
-      cintura: 72,
-      abdome: 84,
-      quadril: 92,
-      coxa_dir_medial: 54,
-      coxa_esq_medial: 53.5,
-      panturrilha_dir: 36,
-      panturrilha_esq: 35.6,
-    },
-  },
+  antropometria: completeAnthropometry(),
   bioimpedancia: {
     aparelho: 'InBody 370S',
     peso_kg: 68.4,
@@ -233,6 +186,8 @@ export const avaliacaoAtual: any = {
       anteversao_pelve: false,
     },
   },
+  termografia: completeThermography(),
+  jump_test: completeJumpTest(),
   rml: {
     categoria: 'jovem_ativo',
     mmss_modalidade: 'modificada',
@@ -292,13 +247,8 @@ export const avaliacaoAnterior: any = {
     rml: 69,
     cardiorrespiratorio: 78,
   },
-  antropometria: {
-    ...avaliacaoAtual.antropometria,
-    peso: 70.1,
-    percentual_gordura: 29.2,
-    massa_magra: 49.1,
-    imc: 25.4,
-  },
+  antropometria: completeAnthropometry(1.02),
+  jump_test: completeJumpTest(0.94),
   bioimpedancia: {
     ...avaliacaoAtual.bioimpedancia,
     peso_kg: 70.1,
@@ -340,6 +290,9 @@ const doc = `<!doctype html>
     * { box-sizing: border-box; }
     body { margin: 0; background: #eef3f2; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     button, select { font-family: inherit; }
+    .hidden { display: none; }
+    .overflow-x-auto { overflow-x: auto; max-width: 100%; }
+    @media (min-width: 768px) { .md\\:hidden { display: none; } .md\\:block { display: block; } }
   </style>
 </head>
 <body>${html}</body>
