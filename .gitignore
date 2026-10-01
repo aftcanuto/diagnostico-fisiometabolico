@@ -4,6 +4,7 @@ node_modules/
 .tmp-preview-laudo/
 .tmp-portal-restore*
 out/
+output/
 build/
 .DS_Store
 

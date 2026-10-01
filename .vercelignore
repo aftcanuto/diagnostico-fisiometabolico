@@ -4,6 +4,7 @@ node_modules/
 .vercel/
 .env*
 tmp/
+output/
 .npm-cache/
 .tmp-*/
 preview-*.html
