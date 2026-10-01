@@ -6,6 +6,7 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ### 2026-10-01 - Auditoria integral do relatorio e portal com todos os modulos
 
+- Publicacao concluida nos commits `c3ffec6` e `0ea505b`. Deployment de producao `dpl_CoqwvwwpjUcwf2k2szFFfJfUaz8W` em estado READY, alias `https://avaliacao.medfit.med.br` atualizado e `/login` confirmado com HTTP 200. A pasta local `output/` passou a ser ignorada pelo Git e pela Vercel para impedir o envio de PDFs e artefatos de teste.
 - Corrigida a paginacao da dinamometria por tracao: o template criava uma pagina completa para cada teste muscular. Os sete testes do cenario completo agora ocupam tres paginas balanceadas (3 + 3 + 1 com analise clinica), preservando cada teste como bloco indivisivel. O relatorio completo caiu de 40 para 36 paginas e a analise de forca, antes omitida quando havia tracao, voltou a aparecer ao final da secao.
 - Criado um cenario de auditoria realmente completo com todos os modulos, Antropometria V2 com 26 medidas, seis protocolos do Jump Test, termografia com quatro imagens basais e quatro complementares, referencias e analises simuladas. Os previews anteriores nao cobriam integralmente esses tres modulos.
 - O portal do paciente passou a exibir o conteudo completo da termografia: condicoes tecnicas, imagens, ROIs, comparacao bilateral, imagens complementares e conclusao profissional.
