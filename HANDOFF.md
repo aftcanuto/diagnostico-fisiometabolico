@@ -1282,3 +1282,16 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Validacoes aprovadas: `npm run predeploy`, `npm run build`, teste dedicado de CPF/hashes/migration, auditoria do banco, TypeScript e lint. PDF geral com 34 paginas sem cortes; permanece somente a diferenca geometrica conhecida de 7 px em uma pagina de forca, sem extrapolacao visual.
 - Publicado em producao no deployment `dpl_421c8XxfMtWCGUoH2FXWnyUQeTCq`, status `READY`, com alias `https://avaliacao.medfit.med.br`.
 - Teste real do aceite legado em producao aprovado sem exposicao do token ou de dados pessoais: resposta `200 application/pdf`, assinatura `%PDF-`, 81.929 bytes, `Cache-Control: private, no-store`, caminho e hash persistidos e download confirmado no bucket privado. As duas APIs publicas retornam erros de validacao em JSON quando chamadas sem dados, sem redirecionamento para login.
+
+## 2026-10-04 - Refinamento da vitrine de produtos
+
+- A vitrine publica foi aproximada da linguagem visual do site institucional MedFit: fundo neutro claro, tipografia editorial, verde institucional, hero sem card decorativo e componentes com bordas e sombras mais discretas.
+- Os produtos agora aparecem em cards compactos. No estado fechado ficam visiveis apenas imagem, selo quando aplicavel, titulo, subtitulo, preco, duracao e o controle `Saiba mais`.
+- Descricao, itens, beneficios, sinal, acoes de agendamento/consulta e compartilhamento ficam dentro da expansao nativa e acessivel do card.
+- O formulario administrativo ganhou previa no mesmo formato da vitrine e controles deslizantes para definir o foco horizontal e vertical da imagem entre 0% e 100%. Produtos antigos permanecem centralizados em 50%/50%.
+- Adicionada a opcao `Exibir preco sob consulta`. Quando marcada, a vitrine substitui o valor por `Sob consulta`, mostra a acao direta de contato e nao inicia pagamento online.
+- A API de agendamentos tambem bloqueia produtos sob consulta, impedindo a criacao de pagamento por chamada direta.
+- Migration `20261005043000_catalogo_cards_compactos.sql` aplicada no Supabase, adicionando `preco_sob_consulta`, `imagem_posicao_x` e `imagem_posicao_y` com defaults retrocompativeis e constraints de 0 a 100. Confirmados os tres campos, as duas constraints, o registro no historico e os sete produtos existentes preservados em `false` e foco `50%/50%`.
+- Validacao visual local aprovada em 1440x1000 e 390x844 com as imagens publicas atuais: tres cards e tres expansores renderizados, detalhes ocultos no estado fechado, expansao funcional, focos `42% 45%`, `35% 50%` e `72% 40%` respeitados, `Sob consulta` exibido e nenhum overflow horizontal.
+- Validacoes aprovadas: teste dedicado da vitrine, auditoria das 74 migrations, TypeScript, lint, build e `npm run predeploy` completo. O PDF geral manteve 34 paginas sem cortes ou overflow; permanece apenas a diferenca geometrica conhecida de 7 px na pagina de forca.
+- Advisors executados apos a migration sem alerta novo relacionado a vitrine; permanecem somente os avisos preexistentes de seguranca e desempenho ja documentados. Codigo ainda nao publicado nesta etapa.

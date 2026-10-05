@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Field, Input, Textarea } from '@/components/ui/Input';
-import { ArrowLeft, ImageIcon, Package, Plus, Save, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, ImageIcon, Package, Plus, RotateCcw, Save, Trash2, Upload } from 'lucide-react';
 
 const VAZIO = {
   nome: '',
@@ -14,11 +14,14 @@ const VAZIO = {
   descricao: '',
   selo: '',
   imagem_url: '',
+  imagem_posicao_x: 50,
+  imagem_posicao_y: 50,
   itens_texto: '',
   beneficios_texto: '',
   pacote_itens_texto: '',
   duracao_minutos: '',
   preco: '',
+  preco_sob_consulta: false,
   sinal_percentual: '0',
   whatsapp_texto: '',
   checkout_resumo_texto: '',
@@ -75,6 +78,9 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
       pacote_itens_texto: Array.isArray(produto.pacote_itens) ? produto.pacote_itens.join('\n') : '',
       duracao_minutos: produto.duracao_minutos ?? '',
       preco: produto.preco ?? '',
+      preco_sob_consulta: !!produto.preco_sob_consulta,
+      imagem_posicao_x: limitarPercentual(produto.imagem_posicao_x),
+      imagem_posicao_y: limitarPercentual(produto.imagem_posicao_y),
       sinal_percentual: produto.sinal_percentual ?? '0',
       checkout_resumo_texto: produto.checkout_resumo_texto ?? '',
       politica_pagamento: produto.politica_pagamento ?? '',
@@ -101,11 +107,14 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
       descricao: selecionado.descricao?.trim() || null,
       selo: selecionado.selo?.trim() || null,
       imagem_url: selecionado.imagem_url?.trim() || null,
+      imagem_posicao_x: limitarPercentual(selecionado.imagem_posicao_x),
+      imagem_posicao_y: limitarPercentual(selecionado.imagem_posicao_y),
       itens_inclusos: linhas(selecionado.itens_texto),
       beneficios: linhas(selecionado.beneficios_texto),
       pacote_itens: linhas(selecionado.pacote_itens_texto),
       duracao_minutos: selecionado.duracao_minutos === '' ? null : Number(selecionado.duracao_minutos),
       preco: selecionado.preco === '' ? null : Number(selecionado.preco),
+      preco_sob_consulta: !!selecionado.preco_sob_consulta,
       sinal_percentual: selecionado.sinal_percentual === '' ? 0 : Number(selecionado.sinal_percentual),
       whatsapp_texto: selecionado.whatsapp_texto?.trim() || null,
       checkout_resumo_texto: selecionado.checkout_resumo_texto?.trim() || null,
@@ -165,7 +174,9 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
     setSelecionado((s: any) => ({ ...s, imagem_url: data.publicUrl }));
   }
 
-  const valorSinal = calcularSinal(selecionado.preco, selecionado.sinal_percentual);
+  const valorSinal = selecionado.preco_sob_consulta
+    ? 0
+    : calcularSinal(selecionado.preco, selecionado.sinal_percentual);
   const agendaPreview = useMemo(
     () => normalizarAgendaHorarios(textoParaAgenda(selecionado.agenda_horarios_texto)),
     [selecionado.agenda_horarios_texto]
@@ -226,7 +237,7 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
                 <div className="font-semibold text-slate-800">{produto.nome}</div>
                 <div className="mt-0.5 text-xs text-slate-500">
                   {produto.destaque ? 'Destaque · ' : ''}{produto.ativo ? 'Ativo' : 'Inativo'}
-                  {produto.preco != null ? ` · ${moeda(produto.preco)}` : ''}
+                  {produto.preco_sob_consulta ? ' · Sob consulta' : produto.preco != null ? ` · ${moeda(produto.preco)}` : ''}
                 </div>
               </button>
             ))}
@@ -257,12 +268,28 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
             </Field>
             <div className="grid gap-4 md:grid-cols-4">
               <Field label="Duração (min)"><Input type="number" value={selecionado.duracao_minutos ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, duracao_minutos: e.target.value }))} /></Field>
-              <Field label="Preço (R$)"><Input type="number" step="0.01" value={selecionado.preco ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, preco: e.target.value }))} /></Field>
-              <Field label="% do sinal"><Input type="number" min="0" max="100" step="0.01" value={selecionado.sinal_percentual ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, sinal_percentual: e.target.value }))} /></Field>
+              <Field label="Preço (R$)"><Input type="number" step="0.01" value={selecionado.preco ?? ''} disabled={!!selecionado.preco_sob_consulta} onChange={e => setSelecionado((s: any) => ({ ...s, preco: e.target.value }))} /></Field>
+              <Field label="% do sinal"><Input type="number" min="0" max="100" step="0.01" value={selecionado.sinal_percentual ?? ''} disabled={!!selecionado.preco_sob_consulta} onChange={e => setSelecionado((s: any) => ({ ...s, sinal_percentual: e.target.value }))} /></Field>
               <Field label="Ordem"><Input type="number" value={selecionado.ordem ?? 0} onChange={e => setSelecionado((s: any) => ({ ...s, ordem: e.target.value }))} /></Field>
             </div>
-            <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-              Sinal calculado: <b>{valorSinal ? moeda(valorSinal) : 'R$ 0,00'}</b>. Este percentual será usado no pagamento.
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={!!selecionado.preco_sob_consulta}
+                  onChange={e => setSelecionado((s: any) => ({ ...s, preco_sob_consulta: e.target.checked }))}
+                />
+                <span>
+                  <span className="block font-semibold text-slate-800">Exibir preço sob consulta</span>
+                  <span className="block text-slate-500">Substitui o valor na vitrine e direciona o cliente para contato, sem iniciar pagamento online.</span>
+                </span>
+              </label>
+            </div>
+            <div className={`rounded-lg border px-4 py-3 text-sm ${selecionado.preco_sob_consulta ? 'border-slate-200 bg-slate-50 text-slate-600' : 'border-emerald-100 bg-emerald-50 text-emerald-900'}`}>
+              {selecionado.preco_sob_consulta
+                ? 'Pagamento online desativado para este produto.'
+                : <>Sinal calculado: <b>{valorSinal ? moeda(valorSinal) : 'R$ 0,00'}</b>. Este percentual será usado no pagamento.</>}
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4">
               <label className="flex items-start gap-3 text-sm">
@@ -330,11 +357,47 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
             <Field label="Imagem da vitrine">
               <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 {selecionado.imagem_url ? (
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                    <img src={selecionado.imagem_url} alt="Imagem do produto" className="h-24 w-24 rounded-lg border border-slate-200 bg-white object-cover" />
-                    <div className="flex-1 space-y-2">
+                  <div className="space-y-4">
+                    <div className="aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-white">
+                      <img
+                        src={selecionado.imagem_url}
+                        alt="Prévia do enquadramento da imagem do produto"
+                        className="h-full w-full object-cover"
+                        style={{ objectPosition: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%` }}
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Input value={selecionado.imagem_url ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, imagem_url: e.target.value }))} />
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setSelecionado((s: any) => ({ ...s, imagem_url: '' }))}>Remover imagem</Button>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <label className="text-xs font-semibold text-slate-600">
+                          Posição horizontal: {limitarPercentual(selecionado.imagem_posicao_x)}%
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={limitarPercentual(selecionado.imagem_posicao_x)}
+                            onChange={e => setSelecionado((s: any) => ({ ...s, imagem_posicao_x: Number(e.target.value) }))}
+                            className="mt-2 w-full accent-emerald-600"
+                          />
+                        </label>
+                        <label className="text-xs font-semibold text-slate-600">
+                          Posição vertical: {limitarPercentual(selecionado.imagem_posicao_y)}%
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={limitarPercentual(selecionado.imagem_posicao_y)}
+                            onChange={e => setSelecionado((s: any) => ({ ...s, imagem_posicao_y: Number(e.target.value) }))}
+                            className="mt-2 w-full accent-emerald-600"
+                          />
+                        </label>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" size="sm" onClick={() => setSelecionado((s: any) => ({ ...s, imagem_posicao_x: 50, imagem_posicao_y: 50 }))}>
+                          <RotateCcw className="h-4 w-4" /> Centralizar
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setSelecionado((s: any) => ({ ...s, imagem_url: '' }))}>Remover imagem</Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -429,6 +492,12 @@ function calcularSinal(preco: string | number | null | undefined, percentual: st
 
 function moeda(valor: number | string) {
   return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function limitarPercentual(value: unknown) {
+  const numero = Number(value);
+  if (!Number.isFinite(numero)) return 50;
+  return Math.min(100, Math.max(0, Math.round(numero)));
 }
 
 const DIAS_SEMANA = [

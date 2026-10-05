@@ -467,6 +467,9 @@ function main() {
     'beneficios',
     'sinal_percentual',
     'whatsapp_texto',
+    'preco_sob_consulta',
+    'imagem_posicao_x',
+    'CatalogoProdutoCard',
   ]);
   assertCodigoContem('src/app/api/admin/health/route.ts', [
     'sistema_migrations_aplicadas',

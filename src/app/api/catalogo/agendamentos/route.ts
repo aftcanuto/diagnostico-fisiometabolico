@@ -15,13 +15,16 @@ export async function POST(req: NextRequest) {
   await expirarPedidosAntigos(admin);
   const { data: produto } = await admin
     .from('catalogo_produtos')
-    .select('id,clinica_id,nome,preco,sinal_percentual,ativo,agenda_horarios,exigir_data_agendamento,cupom_codigo,cupom_tipo,cupom_valor,cupom_ativo,cupom_validade,cupom_limite_usos,cupom_usos')
+    .select('id,clinica_id,nome,preco,preco_sob_consulta,sinal_percentual,ativo,agenda_horarios,exigir_data_agendamento,cupom_codigo,cupom_tipo,cupom_valor,cupom_ativo,cupom_validade,cupom_limite_usos,cupom_usos')
     .eq('id', produtoId)
     .eq('clinica_id', clinicaId)
     .eq('ativo', true)
     .maybeSingle();
 
   if (!produto) return NextResponse.json({ error: 'Produto não encontrado.' }, { status: 404 });
+  if (produto.preco_sob_consulta) {
+    return NextResponse.json({ error: 'Este produto possui preço sob consulta. Fale com a clínica pelo WhatsApp.' }, { status: 400 });
+  }
 
   const exigeData = produto.exigir_data_agendamento !== false;
   if (exigeData) {
