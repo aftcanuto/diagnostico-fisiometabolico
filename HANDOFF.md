@@ -4,6 +4,20 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Progressao proporcional do zoom da vitrine
+
+- Corrigido o salto visual entre 95% e 100%, causado pela troca abrupta entre `contain` e `cover`.
+- Criado `CatalogoImagemEnquadrada`, componente unico usado no card publico e na previa administrativa.
+- A escala de cobertura agora e calculada pela proporcao natural de cada foto em relacao a moldura 16:9.
+- Entre 60% e 100%, a escala progride continuamente da imagem inteira ate o preenchimento exato; acima de 100%, o zoom parte da escala de cobertura.
+- Testes numericos cobrem os pontos 60%, 95%, 100% e 180%, incluindo a proximidade proporcional entre 95% e 100%.
+- Comparacao visual com a foto real de Antropometria (`3024 x 4032`) confirmou escala `2,199x` em 95% e `2,370x` em 100%, diferenca progressiva de 7,23%, sem troca de modo.
+- A troca de arquivo na previa reinicia o calculo de proporcao para evitar reaproveitar temporariamente a escala da imagem anterior.
+- Validacoes aprovadas: teste dedicado da vitrine com calculos proporcionais, TypeScript sem cache, comparacao visual lado a lado e build de producao limpo.
+- Suite `npm run predeploy` aprovada antes da publicacao, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
+- Nao requer migration.
+- Alteracao ainda nao publicada.
+
 ### 2026-10-05 - Zoom out real com preenchimento integral
 
 - O controle de zoom da vitrine voltou ao intervalo de 60% a 180%.

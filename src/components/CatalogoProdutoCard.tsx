@@ -1,5 +1,6 @@
 import { Check, Clock, MessageCircle, Package, Plus, Share2 } from 'lucide-react';
 import { CatalogoAgendamentoButton } from '@/components/CatalogoAgendamentoButton';
+import { CatalogoImagemEnquadrada } from '@/components/CatalogoImagemEnquadrada';
 
 type Produto = {
   id: string;
@@ -46,11 +47,6 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
   const preco = sobConsulta ? 'Sob consulta' : moeda(produto.preco);
   const sinal = sobConsulta ? null : valorSinal(produto);
   const contatoHref = hrefProduto(produto, telefone, site, email);
-  const posicaoX = limitarPercentual(produto.imagem_posicao_x);
-  const posicaoY = limitarPercentual(produto.imagem_posicao_y);
-  const zoomImagem = limitarZoom(produto.imagem_zoom);
-  const escalaImagem = calcularEscalaImagem(zoomImagem);
-
   return (
     <article
       id={`produto-${produto.id}`}
@@ -59,24 +55,12 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
       <div className="relative aspect-[16/9] shrink-0 overflow-hidden border-b border-[#E4E9E5] bg-[#EEF1ED]">
         {produto.imagem_url ? (
           <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover/card:scale-[1.02] motion-reduce:transform-none">
-            <img
-              src={produto.imagem_url}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-xl"
-              style={{ objectPosition: `${posicaoX}% ${posicaoY}%` }}
-            />
-            <div className="absolute inset-0 bg-[#153B31]/10" aria-hidden="true" />
-            <img
+            <CatalogoImagemEnquadrada
               src={produto.imagem_url}
               alt={`Imagem de ${produto.nome}`}
-              className="absolute inset-0 h-full w-full max-w-none drop-shadow-[0_5px_14px_rgba(13,42,33,0.20)]"
-              style={{
-                objectFit: zoomImagem < 100 ? 'contain' : 'cover',
-                objectPosition: `${posicaoX}% ${posicaoY}%`,
-                transform: `scale(${escalaImagem})`,
-                transformOrigin: `${posicaoX}% ${posicaoY}%`,
-              }}
+              posicaoX={produto.imagem_posicao_x}
+              posicaoY={produto.imagem_posicao_y}
+              zoom={produto.imagem_zoom}
             />
           </div>
         ) : (
@@ -233,19 +217,4 @@ function valorSinal(produto: Produto) {
   const percentual = Number(produto.sinal_percentual);
   if (!Number.isFinite(preco) || !Number.isFinite(percentual) || percentual <= 0) return null;
   return preco * percentual / 100;
-}
-
-function limitarPercentual(value: unknown) {
-  const numero = Number(value);
-  return Number.isFinite(numero) ? Math.min(100, Math.max(0, Math.round(numero))) : 50;
-}
-
-function limitarZoom(value: unknown) {
-  const numero = Number(value);
-  return Number.isFinite(numero) ? Math.min(180, Math.max(60, Math.round(numero))) : 100;
-}
-
-function calcularEscalaImagem(zoom: number) {
-  if (zoom >= 100) return zoom / 100;
-  return 0.85 + ((zoom - 60) / 40) * 0.15;
 }

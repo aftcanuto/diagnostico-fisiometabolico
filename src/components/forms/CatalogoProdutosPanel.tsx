@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Field, Input, Textarea } from '@/components/ui/Input';
 import { ArrowLeft, ImageIcon, Package, Plus, RotateCcw, Save, Trash2, Upload } from 'lucide-react';
+import { CatalogoImagemEnquadrada } from '@/components/CatalogoImagemEnquadrada';
 
 const VAZIO = {
   nome: '',
@@ -362,26 +363,12 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
                 {selecionado.imagem_url ? (
                   <div className="space-y-4">
                     <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-[#EEF1ED]">
-                      <img
-                        src={selecionado.imagem_url}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-xl"
-                        style={{
-                          objectPosition: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%`,
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-[#153B31]/10" aria-hidden="true" />
-                      <img
+                      <CatalogoImagemEnquadrada
                         src={selecionado.imagem_url}
                         alt="Prévia do enquadramento da imagem do produto"
-                        className="absolute inset-0 h-full w-full max-w-none drop-shadow-[0_5px_14px_rgba(13,42,33,0.20)]"
-                        style={{
-                          objectFit: limitarZoom(selecionado.imagem_zoom) < 100 ? 'contain' : 'cover',
-                          objectPosition: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%`,
-                          transform: `scale(${calcularEscalaImagem(limitarZoom(selecionado.imagem_zoom))})`,
-                          transformOrigin: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%`,
-                        }}
+                        posicaoX={selecionado.imagem_posicao_x}
+                        posicaoY={selecionado.imagem_posicao_y}
+                        zoom={selecionado.imagem_zoom}
                       />
                     </div>
                     <div className="space-y-2">
@@ -534,11 +521,6 @@ function limitarZoom(value: unknown) {
   const numero = Number(value);
   if (!Number.isFinite(numero)) return 100;
   return Math.min(180, Math.max(60, Math.round(numero)));
-}
-
-function calcularEscalaImagem(zoom: number) {
-  if (zoom >= 100) return zoom / 100;
-  return 0.85 + ((zoom - 60) / 40) * 0.15;
 }
 
 const DIAS_SEMANA = [
