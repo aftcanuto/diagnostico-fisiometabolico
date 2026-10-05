@@ -12,7 +12,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - A previa administrativa usa exatamente a mesma regra visual do card publico.
 - Validacao local confirmou as sete fotos carregadas com `object-fit: cover`, molduras totalmente preenchidas e nenhum erro de console; Antropometria e Bioimpedancia foram conferidas visualmente.
 - Suite `npm run predeploy` aprovada, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
-- Alteracao ainda nao publicada.
+- Publicado no commit `a6e5c25`, deployment `dpl_5s99zsNGGtdinidnS2HoSyM34W3M`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao final em producao aprovada em desktop e mobile: sete cards, sete imagens carregadas em `cover`, cinco links no rodape, alturas de 166 px e 237 px, sem overflow horizontal ou erros de console.
 
 ### 2026-10-05 - Rodape compacto da vitrine
 
@@ -20,7 +21,7 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Icones, botoes, textos e espacamentos foram refinados; as setas externas redundantes foram removidas.
 - Os contatos passaram a usar largura natural: duas linhas no celular e uma no desktop, sem blocos largos desnecessarios.
 - Validacao visual aprovada em 1440x1000 e 390x844: rodape com 166 px e 237 px, respectivamente; cinco links de 32 px, icones de 12 px, sem overflow horizontal ou erros de console.
-- Alteracao ainda nao publicada.
+- Publicado junto ao commit `a6e5c25` no deployment `dpl_5s99zsNGGtdinidnS2HoSyM34W3M`.
 
 ### 2026-10-05 - Zoom real das fotos e novo rodape da vitrine
 
