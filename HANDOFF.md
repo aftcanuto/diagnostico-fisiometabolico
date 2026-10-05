@@ -12,7 +12,9 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Migration `20261005034529_catalogo_imagem_zoom.sql` criada pelo Supabase CLI e aplicada no projeto `kjfhhrdfsgvdqygbvmwb`. Coluna, constraint 60-180, registro e sete produtos preservados em 100% foram confirmados.
 - Validacao visual aprovada em 1440x1000 e 390x844: zoom real medido em 0,60x e 1,80x, sete cards uniformes, cinco links no rodape, nenhuma imagem quebrada, overflow horizontal, elemento fora da tela ou erro de console.
 - Validacoes aprovadas: integridade textual, auditoria das 75 migrations, smoke test completo, referencias, PDF visual, calculos, backup, nutricao, evolucao, Jump Test, Antropometria, comprovantes de consentimento, teste dedicado da vitrine, TypeScript sem cache, lint e build de producao.
-- Advisors nao apontaram alerta novo relacionado a esta migration; permanecem os avisos preexistentes de seguranca e desempenho ja documentados. Codigo ainda nao publicado nesta etapa.
+- Advisors nao apontaram alerta novo relacionado a esta migration; permanecem os avisos preexistentes de seguranca e desempenho ja documentados.
+- Publicado no commit `221006b`, deployment `dpl_8dtFpWuzc1Myv2V8CcC6B7HyFcgC`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao final em producao aprovada em desktop e mobile: HTTP 200, sete cards com 432 px, zoom 100% lido do banco, posicoes preservadas, cinco links no rodape, zero overflow, imagem quebrada, elemento fora da tela ou erro de console.
 
 ### 2026-10-05 - Refinamento visual e uniformidade dos cards da vitrine
 
