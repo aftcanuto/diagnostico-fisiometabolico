@@ -173,12 +173,12 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
               <h2 className="mt-1 max-w-xl font-serif text-xl font-semibold leading-tight md:text-2xl">{rodapeTitulo}</h2>
               {rodapeTexto && <p className="mt-1 max-w-2xl text-xs leading-5 text-white/70">{rodapeTexto}</p>}
             </div>
-            <nav aria-label="Contatos da clínica" className="flex flex-wrap gap-1.5 md:max-w-xl md:justify-end">
-              {whatsapp && <FooterLink href={whatsapp} label="WhatsApp" icon={<MessageCircle className="h-3 w-3" />} />}
-              {clinica.email && <FooterLink href={`mailto:${clinica.email}`} label="E-mail" icon={<Mail className="h-3 w-3" />} external={false} />}
-              {site && <FooterLink href={site} label="Site" icon={<Globe2 className="h-3 w-3" />} />}
-              {instagram && <FooterLink href={instagram} label="Instagram" icon={<Instagram className="h-3 w-3" />} />}
-              {clinica.endereco && <FooterLink href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} label="Como chegar" icon={<MapPin className="h-3 w-3" />} />}
+            <nav aria-label="Contatos da clínica" className="flex flex-nowrap items-center gap-0.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-1 md:max-w-xl md:justify-end md:overflow-visible md:pb-0">
+              {whatsapp && <FooterLink href={whatsapp} label="WhatsApp" icon={<MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />} />}
+              {clinica.email && <FooterLink href={`mailto:${clinica.email}`} label="E-mail" icon={<Mail className="h-2.5 w-2.5 sm:h-3 sm:w-3" />} external={false} />}
+              {site && <FooterLink href={site} label="Site" icon={<Globe2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />} />}
+              {instagram && <FooterLink href={instagram} label="Instagram" icon={<Instagram className="h-2.5 w-2.5 sm:h-3 sm:w-3" />} />}
+              {clinica.endereco && <FooterLink href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} label="Como chegar" mobileLabel="Mapa" icon={<MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />} />}
             </nav>
           </div>
           <div className="mt-4 flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-white/15 pt-2.5 text-[9px] text-white/55">
@@ -191,15 +191,18 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
   );
 }
 
-function FooterLink({ href, label, icon, external = true }: { href: string; label: string; icon: ReactNode; external?: boolean }) {
+function FooterLink({ href, label, mobileLabel, icon, external = true }: { href: string; label: string; mobileLabel?: string; icon: ReactNode; external?: boolean }) {
   return (
     <a
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noreferrer' : undefined}
-      className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-white/12 bg-white/[0.04] px-2.5 py-1.5 text-[11px] font-medium text-white/90 transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.09] motion-reduce:transform-none"
+      className="inline-flex min-h-7 flex-none items-center gap-1 rounded-md border border-white/12 bg-white/[0.04] px-1 py-1 text-[9px] font-medium text-white/90 transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.09] motion-reduce:transform-none max-[359px]:gap-0.5 max-[359px]:px-0.5 sm:min-h-8 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-[11px]"
     >
-      <span className="inline-flex items-center gap-1.5">{icon}{label}</span>
+      <span className="inline-flex items-center gap-1 sm:gap-1.5">
+        {icon}
+        {mobileLabel ? <><span className="sm:hidden">{mobileLabel}</span><span className="hidden sm:inline">{label}</span></> : label}
+      </span>
     </a>
   );
 }

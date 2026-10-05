@@ -41,7 +41,9 @@ assert.ok(zoomMigration.includes('imagem_zoom') && zoomMigration.includes('betwe
 assert.ok(page.includes('imagem_zoom'), 'Consulta publica sem zoom');
 assert.ok(page.includes('FooterLink') && page.includes('bg-[#153B31]'), 'Rodape refinado ausente');
 assert.ok(page.includes('py-5 md:py-6'), 'Rodape deve manter espacamento vertical compacto');
-assert.ok(page.includes('min-h-8'), 'Links do rodape devem usar altura compacta');
+assert.ok(page.includes('min-h-7') && page.includes('sm:min-h-8'), 'Links do rodape devem usar altura compacta e responsiva');
+assert.ok(page.includes('flex-nowrap') && page.includes('overflow-x-auto'), 'Contatos mobile devem permanecer em uma unica linha');
+assert.ok(page.includes('mobileLabel="Mapa"') && page.includes('sm:hidden'), 'Rotulo mobile do mapa deve ser compacto');
 assert.ok(!page.includes('ArrowUpRight'), 'Links do rodape nao devem exibir setas redundantes');
 
 const coberturaRetrato = calcularEscalaCobertura(900, 1200);

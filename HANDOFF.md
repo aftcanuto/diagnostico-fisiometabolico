@@ -4,6 +4,17 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Contatos do rodape em uma linha no mobile
+
+- Os cinco contatos do rodape agora permanecem em uma unica linha no celular, com icones de 10 px, botoes de 28 px e tipografia compacta.
+- O rotulo `Como chegar` e exibido como `Mapa` apenas no mobile; o texto completo foi preservado a partir do breakpoint `sm`.
+- Abaixo de 360 px, margens e espacos internos recebem compactacao adicional; a rolagem horizontal sem barra fica apenas como protecao para larguras excepcionais.
+- O layout desktop foi preservado.
+- Validacao visual aprovada em 320 px e 390 px: cinco contatos completos, uma unica linha, botoes com 28 px, sem overflow horizontal da pagina e sem erros no console.
+- Validacoes aprovadas: teste dedicado da vitrine, TypeScript sem cache e build de producao.
+- Nao requer migration.
+- Alteracao ainda nao publicada.
+
 ### 2026-10-05 - Progressao proporcional do zoom da vitrine
 
 - Corrigido o salto visual entre 95% e 100%, causado pela troca abrupta entre `contain` e `cover`.
