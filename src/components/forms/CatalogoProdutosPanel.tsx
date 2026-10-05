@@ -364,6 +364,7 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
                   <div className="space-y-4">
                     <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-[#EEF1ED]">
                       <CatalogoImagemEnquadrada
+                        key={selecionado.imagem_url}
                         src={selecionado.imagem_url}
                         alt="Prévia do enquadramento da imagem do produto"
                         posicaoX={selecionado.imagem_posicao_x}

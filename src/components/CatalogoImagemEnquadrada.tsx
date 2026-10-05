@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const PROPORCAO_MOLDURA = 16 / 9;
 
@@ -17,12 +17,14 @@ export function CatalogoImagemEnquadrada({ src, alt, posicaoX, posicaoY, zoom }:
   const y = limitarPercentual(posicaoY);
   const zoomNormalizado = limitarZoom(zoom);
   const [escalaCobertura, setEscalaCobertura] = useState(1);
-  const [carregada, setCarregada] = useState(false);
+  const imagemPrincipalRef = useRef<HTMLImageElement>(null);
   const escala = calcularEscalaEnquadramento(zoomNormalizado, escalaCobertura);
 
   useEffect(() => {
-    setEscalaCobertura(1);
-    setCarregada(false);
+    const imagem = imagemPrincipalRef.current;
+    if (imagem?.complete) {
+      setEscalaCobertura(calcularEscalaCobertura(imagem.naturalWidth, imagem.naturalHeight));
+    }
   }, [src]);
 
   return (
@@ -36,9 +38,10 @@ export function CatalogoImagemEnquadrada({ src, alt, posicaoX, posicaoY, zoom }:
       />
       <div className="absolute inset-0 bg-[#153B31]/10" aria-hidden="true" />
       <img
+        ref={imagemPrincipalRef}
         src={src}
         alt={alt}
-        className={`absolute inset-0 h-full w-full max-w-none object-contain drop-shadow-[0_5px_14px_rgba(13,42,33,0.20)] transition-[opacity,transform] duration-200 ${carregada ? 'opacity-100' : 'opacity-0'}`}
+        className="absolute inset-0 h-full w-full max-w-none object-contain drop-shadow-[0_5px_14px_rgba(13,42,33,0.20)] transition-transform duration-200"
         style={{
           objectPosition: `${x}% ${y}%`,
           transform: `scale(${escala})`,
@@ -47,7 +50,6 @@ export function CatalogoImagemEnquadrada({ src, alt, posicaoX, posicaoY, zoom }:
         onLoad={(event) => {
           const imagem = event.currentTarget;
           setEscalaCobertura(calcularEscalaCobertura(imagem.naturalWidth, imagem.naturalHeight));
-          setCarregada(true);
         }}
       />
     </>

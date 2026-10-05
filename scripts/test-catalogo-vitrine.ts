@@ -28,6 +28,8 @@ assert.ok(card.includes('hover:-translate-y-1') && card.includes('motion-reduce:
 assert.ok(card.includes('CatalogoImagemEnquadrada'), 'Card sem enquadramento configuravel');
 assert.ok(framedImage.includes('aria-hidden="true"') && framedImage.includes('blur-xl'), 'Card sem camada de preenchimento para zoom aberto');
 assert.ok(framedImage.includes('object-contain') && framedImage.includes('calcularEscalaEnquadramento'), 'Card sem progressao proporcional do zoom');
+assert.ok(framedImage.includes('imagem?.complete') && !framedImage.includes('opacity-0'), 'Imagem em cache deve ser medida e permanecer visivel');
+assert.ok(card.includes('key={produto.imagem_url}') && form.includes('key={selecionado.imagem_url}'), 'Troca de imagem deve reiniciar o componente');
 assert.ok(card.includes("const preco = sobConsulta ? 'Sob consulta'"), 'Card sem preco sob consulta');
 assert.ok(card.includes('Consultar'), 'Card sob consulta sem acao de contato');
 assert.ok(checkout.includes('produto.preco_sob_consulta'), 'Checkout nao bloqueia produto sob consulta');

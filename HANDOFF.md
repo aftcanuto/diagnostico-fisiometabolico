@@ -12,7 +12,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Entre 60% e 100%, a escala progride continuamente da imagem inteira ate o preenchimento exato; acima de 100%, o zoom parte da escala de cobertura.
 - Testes numericos cobrem os pontos 60%, 95%, 100% e 180%, incluindo a proximidade proporcional entre 95% e 100%.
 - Comparacao visual com a foto real de Antropometria (`3024 x 4032`) confirmou escala `2,199x` em 95% e `2,370x` em 100%, diferenca progressiva de 7,23%, sem troca de modo.
-- A troca de arquivo na previa reinicia o calculo de proporcao para evitar reaproveitar temporariamente a escala da imagem anterior.
+- A troca de arquivo na previa remonta o componente pelo `key` da URL; imagens ja presentes no cache tambem sao medidas apos a montagem, sem depender apenas de `onLoad` e sem ocultar a camada principal.
+- A verificacao do primeiro deployment detectou a camada principal invisivel por uma disputa de estado; o hotfix removeu a opacidade condicional e confirmou localmente opacidade 1 com escala proporcional calculada.
 - Validacoes aprovadas: teste dedicado da vitrine com calculos proporcionais, TypeScript sem cache, comparacao visual lado a lado e build de producao limpo.
 - Suite `npm run predeploy` aprovada antes da publicacao, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
 - Nao requer migration.

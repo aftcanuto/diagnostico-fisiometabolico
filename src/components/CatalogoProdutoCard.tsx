@@ -56,6 +56,7 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
         {produto.imagem_url ? (
           <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover/card:scale-[1.02] motion-reduce:transform-none">
             <CatalogoImagemEnquadrada
+              key={produto.imagem_url}
               src={produto.imagem_url}
               alt={`Imagem de ${produto.nome}`}
               posicaoX={produto.imagem_posicao_x}
