@@ -10,7 +10,9 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - O visual recebeu sombra mais presente, borda refinada, elevacao de 4 px no hover, ampliacao suave da imagem, selo flutuante, preco destacado e controle de expansao circular.
 - As animacoes respeitam a preferencia de reducao de movimento do sistema; nenhuma informacao, acao, enquadramento ou comportamento de pagamento foi alterado.
 - Verificacao local aprovada com os sete produtos reais em 1440x1000 e 390x844: todos os cards fechados mediram exatamente 432 px, expansao isolada, zero overflow horizontal, zero imagem quebrada e nenhum erro de console.
-- Teste dedicado e build de producao aprovados. Sem migration ou alteracao de dados. Codigo ainda nao publicado nesta etapa.
+- Teste dedicado e build de producao aprovados. Sem migration ou alteracao de dados.
+- Publicado no commit `cbb227b`, deployment `dpl_4aRZTJkcAUo8uHAbWgR99DLqHETg`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao final em producao confirmou HTTP 200, sete cards fechados com 432 px e diferenca zero, elevacao de 4 px no hover, expansao isolada, zero overflow horizontal, zero imagem quebrada e nenhum erro de console.
 
 ### 2026-10-05 - Publicacao da vitrine compacta
 
