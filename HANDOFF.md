@@ -4,6 +4,14 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Publicacao da vitrine compacta
+
+- Refinamento da vitrine publicado nos commits `f30a048` e `08f0aca`; migration `20261005043000_catalogo_cards_compactos.sql` aplicada e registrada no Supabase.
+- O conteudo expandido passou a ter altura maxima de 28 rem em tablet/desktop, com rolagem interna e acoes fora da area rolavel. No celular, a expansao continua integral para evitar rolagem aninhada.
+- Deploy de producao `dpl_2gKNZcFdjoYy9unUgNkcLhCeVCa3` concluido como `READY`; alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao na vitrine publica aprovada em 1440x1000 e 390x844: HTTP 200, sete cards e expansores, expansao funcional, nenhuma imagem quebrada, nenhum overflow horizontal e nenhum erro de console.
+- Teste dedicado `npm run test:catalogo-vitrine` e build de producao aprovados. As capturas temporarias de verificacao nao fazem parte do repositorio.
+
 ### 2026-10-01 - Auditoria integral do relatorio e portal com todos os modulos
 
 - Publicacao concluida nos commits `c3ffec6` e `0ea505b`. Deployment de producao `dpl_CoqwvwwpjUcwf2k2szFFfJfUaz8W` em estado READY, alias `https://avaliacao.medfit.med.br` atualizado e `/login` confirmado com HTTP 200. A pasta local `output/` passou a ser ignorada pelo Git e pela Vercel para impedir o envio de PDFs e artefatos de teste.
@@ -1294,4 +1302,4 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Migration `20261005043000_catalogo_cards_compactos.sql` aplicada no Supabase, adicionando `preco_sob_consulta`, `imagem_posicao_x` e `imagem_posicao_y` com defaults retrocompativeis e constraints de 0 a 100. Confirmados os tres campos, as duas constraints, o registro no historico e os sete produtos existentes preservados em `false` e foco `50%/50%`.
 - Validacao visual local aprovada em 1440x1000 e 390x844 com as imagens publicas atuais: tres cards e tres expansores renderizados, detalhes ocultos no estado fechado, expansao funcional, focos `42% 45%`, `35% 50%` e `72% 40%` respeitados, `Sob consulta` exibido e nenhum overflow horizontal.
 - Validacoes aprovadas: teste dedicado da vitrine, auditoria das 74 migrations, TypeScript, lint, build e `npm run predeploy` completo. O PDF geral manteve 34 paginas sem cortes ou overflow; permanece apenas a diferenca geometrica conhecida de 7 px na pagina de forca.
-- Advisors executados apos a migration sem alerta novo relacionado a vitrine; permanecem somente os avisos preexistentes de seguranca e desempenho ja documentados. Codigo ainda nao publicado nesta etapa.
+- Advisors executados apos a migration sem alerta novo relacionado a vitrine; permanecem somente os avisos preexistentes de seguranca e desempenho ja documentados. Publicacao concluida conforme a entrada de 2026-10-05.
