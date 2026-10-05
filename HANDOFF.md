@@ -4,6 +4,24 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Fotos da vitrine sem faixas vazias
+
+- O zoom minimo da vitrine passou a ser o enquadramento `cover` de 100%, que representa o maior campo de visao possivel sem deixar areas vazias no quadro 16:9.
+- Fotos com valores antigos abaixo de 100% sao normalizadas visualmente para 100%, sem migration nem alteracao destrutiva dos dados existentes.
+- Foco horizontal e vertical foram preservados e agora controlam `object-position`; o zoom de 100% a 180% usa escala com origem no ponto focal.
+- A previa administrativa usa exatamente a mesma regra visual do card publico.
+- Validacao local confirmou as sete fotos carregadas com `object-fit: cover`, molduras totalmente preenchidas e nenhum erro de console; Antropometria e Bioimpedancia foram conferidas visualmente.
+- Suite `npm run predeploy` aprovada, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
+- Alteracao ainda nao publicada.
+
+### 2026-10-05 - Rodape compacto da vitrine
+
+- O rodape publico do catalogo foi reduzido para ocupar menos altura em desktop e mobile.
+- Icones, botoes, textos e espacamentos foram refinados; as setas externas redundantes foram removidas.
+- Os contatos passaram a usar largura natural: duas linhas no celular e uma no desktop, sem blocos largos desnecessarios.
+- Validacao visual aprovada em 1440x1000 e 390x844: rodape com 166 px e 237 px, respectivamente; cinco links de 32 px, icones de 12 px, sem overflow horizontal ou erros de console.
+- Alteracao ainda nao publicada.
+
 ### 2026-10-05 - Zoom real das fotos e novo rodape da vitrine
 
 - Adicionado zoom configuravel por produto entre 60% e 180%, com foco horizontal e vertical. A imagem deixou de depender de `object-cover`: reduzir o zoom agora revela mais da foto e ampliar cria recorte controlado pelo ponto X/Y.

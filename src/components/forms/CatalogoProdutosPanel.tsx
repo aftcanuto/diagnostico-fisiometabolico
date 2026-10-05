@@ -365,12 +365,11 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
                       <img
                         src={selecionado.imagem_url}
                         alt="Prévia do enquadramento da imagem do produto"
-                        className="absolute h-auto max-w-none"
+                        className="absolute inset-0 h-full w-full max-w-none object-cover"
                         style={{
-                          width: `${limitarZoom(selecionado.imagem_zoom)}%`,
-                          left: `${limitarPercentual(selecionado.imagem_posicao_x)}%`,
-                          top: `${limitarPercentual(selecionado.imagem_posicao_y)}%`,
-                          transform: `translate(-${limitarPercentual(selecionado.imagem_posicao_x)}%, -${limitarPercentual(selecionado.imagem_posicao_y)}%)`,
+                          objectPosition: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%`,
+                          transform: `scale(${limitarZoom(selecionado.imagem_zoom) / 100})`,
+                          transformOrigin: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%`,
                         }}
                       />
                     </div>
@@ -403,7 +402,7 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
                           Zoom: {limitarZoom(selecionado.imagem_zoom)}%
                           <input
                             type="range"
-                            min="60"
+                            min="100"
                             max="180"
                             step="5"
                             value={limitarZoom(selecionado.imagem_zoom)}
@@ -523,7 +522,7 @@ function limitarPercentual(value: unknown) {
 function limitarZoom(value: unknown) {
   const numero = Number(value);
   if (!Number.isFinite(numero)) return 100;
-  return Math.min(180, Math.max(60, Math.round(numero)));
+  return Math.min(180, Math.max(100, Math.round(numero)));
 }
 
 const DIAS_SEMANA = [

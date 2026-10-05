@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { ArrowUpRight, Globe2, Instagram, Mail, MapPin, MessageCircle } from 'lucide-react';
+import { Globe2, Instagram, Mail, MapPin, MessageCircle } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/server';
 import { CatalogoProdutoCard } from '@/components/CatalogoProdutoCard';
 
@@ -165,23 +165,23 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
 
       </section>
 
-      <footer className="mt-14 border-t-4 border-[#29A77D] bg-[#153B31] text-white">
-        <div className="mx-auto max-w-6xl px-5 py-10 md:py-12">
-          <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)] md:items-end">
+      <footer className="mt-10 border-t-2 border-[#29A77D] bg-[#153B31] text-white">
+        <div className="mx-auto max-w-6xl px-5 py-5 md:py-6">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
             <div>
-              <p className="text-xs font-bold uppercase text-[#9DDBC3]">MedFit Saúde e Bem-estar</p>
-              <h2 className="mt-3 max-w-xl font-serif text-3xl font-semibold leading-tight md:text-4xl">{rodapeTitulo}</h2>
-              {rodapeTexto && <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 md:text-base">{rodapeTexto}</p>}
+              <p className="text-[10px] font-bold uppercase text-[#9DDBC3]">MedFit Saúde e Bem-estar</p>
+              <h2 className="mt-1 max-w-xl font-serif text-xl font-semibold leading-tight md:text-2xl">{rodapeTitulo}</h2>
+              {rodapeTexto && <p className="mt-1 max-w-2xl text-xs leading-5 text-white/70">{rodapeTexto}</p>}
             </div>
-            <nav aria-label="Contatos da clínica" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-2">
-              {whatsapp && <FooterLink href={whatsapp} label="WhatsApp" icon={<MessageCircle className="h-4 w-4" />} />}
-              {clinica.email && <FooterLink href={`mailto:${clinica.email}`} label="E-mail" icon={<Mail className="h-4 w-4" />} external={false} />}
-              {site && <FooterLink href={site} label="Site" icon={<Globe2 className="h-4 w-4" />} />}
-              {instagram && <FooterLink href={instagram} label="Instagram" icon={<Instagram className="h-4 w-4" />} />}
-              {clinica.endereco && <FooterLink href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} label="Como chegar" icon={<MapPin className="h-4 w-4" />} />}
+            <nav aria-label="Contatos da clínica" className="flex flex-wrap gap-1.5 md:max-w-xl md:justify-end">
+              {whatsapp && <FooterLink href={whatsapp} label="WhatsApp" icon={<MessageCircle className="h-3 w-3" />} />}
+              {clinica.email && <FooterLink href={`mailto:${clinica.email}`} label="E-mail" icon={<Mail className="h-3 w-3" />} external={false} />}
+              {site && <FooterLink href={site} label="Site" icon={<Globe2 className="h-3 w-3" />} />}
+              {instagram && <FooterLink href={instagram} label="Instagram" icon={<Instagram className="h-3 w-3" />} />}
+              {clinica.endereco && <FooterLink href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} label="Como chegar" icon={<MapPin className="h-3 w-3" />} />}
             </nav>
           </div>
-          <div className="mt-9 flex flex-col gap-2 border-t border-white/15 pt-5 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-white/15 pt-2.5 text-[9px] text-white/55">
             <span>{clinica.nome} · Produtos e serviços</span>
             <span>Avaliar. Entender. Evoluir.</span>
           </div>
@@ -197,10 +197,9 @@ function FooterLink({ href, label, icon, external = true }: { href: string; labe
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noreferrer' : undefined}
-      className="group/link inline-flex min-h-11 items-center justify-between gap-3 rounded-md border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-sm font-semibold text-white transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.11] motion-reduce:transform-none"
+      className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-white/12 bg-white/[0.04] px-2.5 py-1.5 text-[11px] font-medium text-white/90 transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.09] motion-reduce:transform-none"
     >
-      <span className="inline-flex items-center gap-2 text-white/90">{icon}{label}</span>
-      <ArrowUpRight className="h-3.5 w-3.5 text-[#9DDBC3] transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 motion-reduce:transform-none" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1.5">{icon}{label}</span>
     </a>
   );
 }

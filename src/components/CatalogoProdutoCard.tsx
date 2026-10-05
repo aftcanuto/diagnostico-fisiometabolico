@@ -61,12 +61,11 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
             <img
               src={produto.imagem_url}
               alt={`Imagem de ${produto.nome}`}
-              className="absolute h-auto max-w-none"
+              className="absolute inset-0 h-full w-full max-w-none object-cover"
               style={{
-                width: `${zoomImagem}%`,
-                left: `${posicaoX}%`,
-                top: `${posicaoY}%`,
-                transform: `translate(-${posicaoX}%, -${posicaoY}%)`,
+                objectPosition: `${posicaoX}% ${posicaoY}%`,
+                transform: `scale(${zoomImagem / 100})`,
+                transformOrigin: `${posicaoX}% ${posicaoY}%`,
               }}
             />
           </div>
@@ -233,5 +232,5 @@ function limitarPercentual(value: unknown) {
 
 function limitarZoom(value: unknown) {
   const numero = Number(value);
-  return Number.isFinite(numero) ? Math.min(180, Math.max(60, Math.round(numero))) : 100;
+  return Number.isFinite(numero) ? Math.min(180, Math.max(100, Math.round(numero))) : 100;
 }
