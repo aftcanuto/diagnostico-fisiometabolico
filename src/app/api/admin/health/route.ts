@@ -14,11 +14,12 @@ const TABELAS_CRITICAS = [
   'pdf_config',
   'consentimento_modelos',
   'consentimento_aceites',
+  'documentos_pre_teste_aceites',
   'paciente_tokens',
   'prontuario_eventos',
 ];
 
-const BUCKETS_CRITICOS = ['posturografia', 'branding', 'biomecanica', 'produto-imagens'];
+const BUCKETS_CRITICOS = ['posturografia', 'branding', 'biomecanica', 'produto-imagens', 'consentimento-comprovantes'];
 
 const TABLE_COUNT_COLUMNS: Record<string, string> = {
   scores: 'avaliacao_id',

@@ -2,7 +2,7 @@
 import { PUBLIC_APP_ORIGIN } from '@/lib/public-origin';
 
 import { useEffect, useState } from 'react';
-import { Clipboard, FileText, Link2, Loader2, Send, X } from 'lucide-react';
+import { Clipboard, Download, FileText, Link2, Loader2, Send, X } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
@@ -118,9 +118,22 @@ export function DocumentosPreTesteAvulsos() {
           <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Links recentes</div>
           <div className="space-y-2">{dados.envios.map((envio: any) => {
             const url = `${origin}/pre-atendimento/documento/${envio.token}`;
+            const concluido = Boolean(envio.respondido_em || envio.aceito_em);
+            const comprovanteUrl = envio.aceite
+              ? `/api/documentos-pre-teste-comprovante?id=${encodeURIComponent(envio.id)}`
+              : null;
             return <div key={envio.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
-              <div><FileText className="mr-2 inline h-4 w-4 text-brand-600" /><b>{envio.destinatario_nome || 'Uso avulso'}</b> · {labelTipo(envio.tipo)}<span className="ml-2 text-xs text-slate-400">{envio.respondido_em || envio.aceito_em ? 'Concluído' : 'Aguardando'}</span></div>
-              <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => copiar(url)}><Clipboard className="h-3 w-3" /> Copiar</Button><Button size="sm" variant="ghost" disabled={revogando === envio.id} onClick={() => revogar(envio.id)}>{revogando === envio.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />} {revogando === envio.id ? 'Revogando...' : 'Revogar'}</Button></div>
+              <div className="min-w-0">
+                <div><FileText className="mr-2 inline h-4 w-4 text-brand-600" /><b>{envio.destinatario_nome || 'Uso avulso'}</b> · {labelTipo(envio.tipo)}<span className="ml-2 text-xs text-slate-400">{concluido ? 'Concluído' : 'Aguardando'}</span></div>
+                {envio.aceite && <div className="mt-1 truncate font-mono text-[11px] text-emerald-700">
+                  {envio.aceite.comprovante_codigo} · {envio.aceite.nivel_evidencia === 'parcial_legado' ? 'evidência parcial' : 'evidência completa'}
+                </div>}
+              </div>
+              <div className="flex flex-wrap gap-1">
+                <Button size="sm" variant="ghost" onClick={() => copiar(url)}><Clipboard className="h-3 w-3" /> {concluido ? 'Copiar acesso' : 'Copiar'}</Button>
+                {comprovanteUrl && <a href={comprovanteUrl} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-brand-700 transition hover:bg-brand-50"><Download className="h-3 w-3" /> Comprovante</a>}
+                {!concluido && !envio.revogado && <Button size="sm" variant="ghost" disabled={revogando === envio.id} onClick={() => revogar(envio.id)}>{revogando === envio.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />} {revogando === envio.id ? 'Revogando...' : 'Revogar link'}</Button>}
+              </div>
             </div>;
           })}</div>
         </div>}

@@ -15,11 +15,26 @@ export async function GET() {
     admin.from('anamnese_templates').select('id,nome,descricao').eq('clinica_id', clinicaId).eq('ativo', true).order('nome'),
     admin.from('consentimento_modelos').select('id,nome,tipo,versao').eq('clinica_id', clinicaId).eq('ativo', true).order('nome'),
     admin.from('protocolo_recomendacoes').select('id,titulo,titulo_documento,modulo').eq('clinica_id', clinicaId).eq('ativo', true).order('modulo').order('titulo'),
-    admin.from('documentos_pre_teste_avulsos').select('*').eq('clinica_id', clinicaId).eq('revogado', false).order('created_at', { ascending: false }).limit(12),
+    admin.from('documentos_pre_teste_avulsos').select('*').eq('clinica_id', clinicaId).or('revogado.eq.false,aceito_em.not.is.null').order('created_at', { ascending: false }).limit(12),
   ]);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ anamneses: anamneses ?? [], consentimentos: consentimentos ?? [], recomendacoes: recomendacoes ?? [], envios: envios ?? [] });
+  const idsConsentimento = (envios ?? [])
+    .filter((envio: any) => envio.tipo === 'consentimento')
+    .map((envio: any) => envio.id);
+  const { data: aceites } = idsConsentimento.length
+    ? await admin
+      .from('documentos_pre_teste_aceites')
+      .select('documento_id,comprovante_codigo,aceito_em,nivel_evidencia,revogado')
+      .in('documento_id', idsConsentimento)
+    : { data: [] };
+  const aceitePorDocumento = new Map((aceites ?? []).map((aceite: any) => [aceite.documento_id, aceite]));
+  const enviosComAceite = (envios ?? []).map((envio: any) => ({
+    ...envio,
+    aceite: aceitePorDocumento.get(envio.id) ?? null,
+  }));
+
+  return NextResponse.json({ anamneses: anamneses ?? [], consentimentos: consentimentos ?? [], recomendacoes: recomendacoes ?? [], envios: enviosComAceite });
 }
 
 export async function POST(req: NextRequest) {

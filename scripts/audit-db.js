@@ -31,6 +31,7 @@ const expectedTables = [
   'consentimento_modelos',
   'consentimento_links',
   'consentimento_aceites',
+  'documentos_pre_teste_aceites',
   'protocolo_recomendacoes',
   'protocolo_envios',
   'paciente_anamnese_links',
@@ -107,6 +108,7 @@ function audit() {
   const hasBrandingBucket = /['"]branding['"]/i.test(sql);
   const hasBiomecanicaBucket = /['"]biomecanica['"]/i.test(sql);
   const hasProdutoImagensBucket = /['"]produto-imagens['"]/i.test(sql);
+  const hasConsentimentoComprovantesBucket = /['"]consentimento-comprovantes['"]/i.test(sql);
 
   const hasTracao = /tracao_testes/i.test(sql);
   const hasModeloDinamometria = /modelo_dinamometria/i.test(sql);
@@ -117,6 +119,9 @@ function audit() {
   const hasConsentimentoEvidencias = /consentimento_aceites[\s\S]*texto_hash/i.test(sql)
     && /consentimento_aceites[\s\S]*comprovante_codigo/i.test(sql)
     && /digest\(/i.test(sql);
+  const hasConsentimentoAvulsoEvidencias = /documentos_pre_teste_aceites[\s\S]*evidencia_hash/i.test(sql)
+    && /documentos_pre_teste_aceites[\s\S]*nivel_evidencia/i.test(sql)
+    && hasConsentimentoComprovantesBucket;
   const hasProtocolosStatus = /protocolo_envios[\s\S]*status/i.test(sql);
   const hasPlanoAcaoTemplates = /plano_acao_modelos[\s\S]*metas_30_dias/i.test(sql);
   const hasPlanoAlimentarTemplates = /plano_alimentar_modelos[\s\S]*proteina_g_kg/i.test(sql)
@@ -155,6 +160,7 @@ function audit() {
     !hasBrandingBucket && 'Bucket branding nao encontrado nas migrations',
     !hasBiomecanicaBucket && 'Bucket biomecanica nao encontrado nas migrations',
     !hasProdutoImagensBucket && 'Bucket produto-imagens nao encontrado nas migrations',
+    !hasConsentimentoComprovantesBucket && 'Bucket consentimento-comprovantes nao encontrado nas migrations',
     !hasSptech && 'Campos SPTech nao encontrados nas migrations',
     !hasModeloDinamometria && 'Campo modelo_dinamometria nao encontrado nas migrations',
     !hasTracao && 'Campo tracao_testes nao encontrado nas migrations',
@@ -162,6 +168,7 @@ function audit() {
     !hasAnamneseSingleUse && 'Controle de resposta unica da anamnese publica nao encontrado nas migrations',
     !hasConsentimentoSingleUse && 'Controle de aceite unico de consentimento nao encontrado nas migrations',
     !hasConsentimentoEvidencias && 'Campos de evidencia legal de consentimento nao encontrados nas migrations',
+    !hasConsentimentoAvulsoEvidencias && 'Evidencias de consentimento avulso nao encontradas nas migrations',
     !hasProtocolosStatus && 'Status de envios de protocolo nao encontrado nas migrations',
     !hasPlanoAcaoTemplates && 'Modelos de plano de acao nao encontrados nas migrations',
     !hasPlanoAlimentarTemplates && 'Templates de orientacao nutricional nao encontrados nas migrations',
@@ -184,6 +191,7 @@ function audit() {
       branding: hasBrandingBucket,
       biomecanica: hasBiomecanicaBucket,
       produto_imagens: hasProdutoImagensBucket,
+      consentimento_comprovantes: hasConsentimentoComprovantesBucket,
     },
     criticalFields: {
       sptech_testes: hasSptech,
@@ -194,6 +202,7 @@ function audit() {
       anamnese_publica_resposta_unica: hasAnamneseSingleUse,
       consentimento_publico_aceite_unico: hasConsentimentoSingleUse,
       consentimento_evidencias_legais: hasConsentimentoEvidencias,
+      consentimento_avulso_evidencias: hasConsentimentoAvulsoEvidencias,
       protocolo_envio_status: hasProtocolosStatus,
       plano_acao_modelos: hasPlanoAcaoTemplates,
       plano_alimentar_modelos: hasPlanoAlimentarTemplates,

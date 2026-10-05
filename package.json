@@ -15,6 +15,7 @@
     "test:layout": "npm run test:full && node scripts/audit-layout.cjs",
     "test:references": "node scripts/test-references.cjs",
     "test:add-modules": "node scripts/test-add-modules.cjs",
+    "test:consent-evidence": "tsx scripts/test-consent-evidence.ts",
     "test:references-browser": "npm run test:references && node scripts/test-references-browser.cjs",
     "test:calculations": "tsx scripts/test-calculations.ts",
     "test:backup": "tsx scripts/test-backup-export.ts",
@@ -24,7 +25,7 @@
     "test:anthropometry": "tsx scripts/test-anthropometry.ts && tsx scripts/test-anthropometry-ai.ts && node scripts/test-anthropometry-api.cjs && node scripts/test-anthropometry-migration.cjs && tsx scripts/test-isak-qualification.ts",
     "test:anthropometry-browser": "tsx scripts/test-anthropometry-browser.ts",
     "test:jump-browser": "node scripts/test-jump-browser.cjs",
-    "predeploy": "npm run text:check && npm run db:audit && npm run test:full && npm run test:references && npm run test:pdf-visual && npm run test:calculations && npm run test:backup && npm run test:nutrition && npm run test:evolution-report && npm run test:jump && npm run test:anthropometry && npx tsc --noEmit && npm run lint",
+    "predeploy": "npm run text:check && npm run db:audit && npm run test:full && npm run test:references && npm run test:pdf-visual && npm run test:calculations && npm run test:backup && npm run test:nutrition && npm run test:evolution-report && npm run test:jump && npm run test:anthropometry && npm run test:consent-evidence && npx tsc --noEmit && npm run lint",
     "verify:release": "npm run predeploy && npm run build"
   },
   "dependencies": {

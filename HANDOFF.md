@@ -1257,3 +1257,25 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Sem alteracao de formulas, valores de referencia ou registros clinicos. Sem migration e sem deploy desta correcao.
 - Build de producao aprovado. Teste visual repetido em Chrome isolado apos timeout no ambiente restrito: aprovado em todas as quatro larguras e nas tres paginas de referencias.
 - Testes de paridade de referencias e navegacao responsiva aprovados; predeploy aprovado com TypeScript e lint. PDF de referencias com 3 paginas, sem extrapolacao detectada. O teste visual geral ainda sinaliza 3 paginas de forca com excedente preexistente de aproximadamente 6 px.
+
+## 2026-10-04 - Sincronizacao do registro de migrations
+
+- Investigado o alerta de migrations pendentes exibido pelo relatorio de saude do app.
+- Confirmado no Supabase que as migrations numeradas `001` a `069` ja estavam registradas e que as tres migrations recentes constavam no historico nativo do banco.
+- Verificados os objetos reais de Jump Test, as politicas RLS restauradas e as colunas/constraints da Antropometria v2; nenhuma alteracao estrutural estava pendente.
+- O alerta era um falso positivo: faltavam apenas os nomes completos das tres migrations recentes em `public.sistema_migrations_aplicadas`.
+- Registradas de forma idempotente `20260924024216_jump_test.sql`, `20260924133821_restore_core_rls.sql` e `20260928170549_anthropometry_v2.sql`.
+- Validacao final: `72/72` migrations esperadas registradas no diagnostico do app.
+- Sem migration nova, sem alteracao de schema, sem alteracao de codigo e sem necessidade de deploy.
+
+## 2026-10-04 - Comprovantes seguros para TCLE avulso
+
+- Identificada divergencia entre os dois fluxos de consentimento: termos vinculados ao paciente ja geravam evidencia completa, enquanto documentos avulsos registravam somente `aceito_em`.
+- Implementada trilha separada e somente leitura para TCLE/consentimentos avulsos, com snapshot do texto e versao, declaracao confirmada, nome do signatario, hash do CPF, quatro ultimos digitos, horario, IP, navegador, codigo unico e hashes SHA-256 do conteudo e da evidencia.
+- O CPF integral nao e armazenado. A interface valida o CPF, persiste somente o hash e exibe apenas os quatro ultimos digitos no comprovante.
+- O comprovante PDF e gerado no aceite, armazenado no bucket privado `consentimento-comprovantes` e entregue somente pelo backend mediante sessao da clinica ou token imprevisivel do documento. Se a geracao inicial falhar, o PDF e regenerado sob demanda sem perder o aceite.
+- Links expirados ou revogados continuam permitindo visualizar o comprovante de um aceite ja registrado, sem reabrir o formulario nem alterar o conteudo aceito.
+- A central de documentos avulsos passou a listar aceites concluidos, codigo do comprovante, nivel da evidencia e download autenticado do PDF. Links concluidos nao exibem mais a acao generica de revogacao do link.
+- Migration criada em `20261005021118_comprovantes_tcle_avulsos.sql`: tabela com RLS, grants apenas de leitura por clinica, bucket privado sem policies publicas e backfill explicitamente parcial dos aceites anteriores. O TCLE avulso ja aceito sera preservado sem inventar IP, navegador ou CPF.
+- Migration aplicada no Supabase apos autorizacao explicita. Confirmados RLS ativo, apenas `SELECT` para `authenticated`, bucket privado sem policies publicas, registro da migration e preservacao do unico aceite anterior como evidencia parcial. Codigo ainda nao publicado.
+- Validacoes aprovadas: `npm run predeploy`, `npm run build`, teste dedicado de CPF/hashes/migration, auditoria do banco, TypeScript e lint. PDF geral com 34 paginas sem cortes; permanece somente a diferenca geometrica conhecida de 7 px em uma pagina de forca, sem extrapolacao visual.
