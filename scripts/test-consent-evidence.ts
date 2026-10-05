@@ -15,6 +15,7 @@ const migrationPath = path.join(
   '20261005021118_comprovantes_tcle_avulsos.sql',
 );
 const migration = fs.readFileSync(migrationPath, 'utf8');
+const middleware = fs.readFileSync(path.join(process.cwd(), 'src', 'middleware.ts'), 'utf8');
 
 assert.equal(normalizarCpf('529.982.247-25'), '52998224725');
 assert.equal(cpfValido('529.982.247-25'), true);
@@ -44,6 +45,13 @@ for (const trecho of [
   'on conflict (documento_id) do nothing',
 ]) {
   assert.ok(migration.toLowerCase().includes(trecho.toLowerCase()), `Migration sem: ${trecho}`);
+}
+
+for (const rotaPublica of [
+  "url.pathname === '/api/documentos-pre-teste-publico'",
+  "url.pathname === '/api/documentos-pre-teste-comprovante'",
+]) {
+  assert.ok(middleware.includes(rotaPublica), `Middleware bloqueia a rota publica: ${rotaPublica}`);
 }
 
 console.log('Consent evidence tests passed.');

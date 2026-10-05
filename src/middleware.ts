@@ -36,6 +36,8 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith('/pre-atendimento/') ||
     url.pathname.startsWith('/api/catalogo/') ||
     url.pathname.startsWith('/api/consentimento-publico') ||
+    url.pathname === '/api/documentos-pre-teste-publico' ||
+    url.pathname === '/api/documentos-pre-teste-comprovante' ||
     url.pathname.startsWith('/api/anamnese-publica') ||
     url.pathname.startsWith('/api/pdf/publico');
 
