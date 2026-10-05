@@ -86,19 +86,21 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
               <Plus className="h-4 w-4 transition-transform duration-200 group-open:rotate-45" aria-hidden="true" />
             </summary>
             <div className="pb-1">
-              {produto.descricao ? <p className="text-sm leading-6 text-[#59615C]">{produto.descricao}</p> : null}
-              {itens.length > 0 ? <ListaRotulos titulo="Inclui" itens={itens} /> : null}
-              {pacote.length > 0 ? <ListaChecks titulo="Pacote inclui" itens={pacote} cor={cor} /> : null}
-              {beneficios.length > 0 ? <ListaChecks titulo="Benefícios" itens={beneficios} cor={cor} /> : null}
-              {sinal != null ? (
-                <p className="mt-4 border-l-2 border-[#1D9E75] pl-3 text-sm text-[#39715F]">
-                  {produto.exigir_data_agendamento !== false ? 'Agendamento mediante sinal de ' : 'Pagamento online de '}
-                  <b>{moeda(sinal)}</b>
-                </p>
-              ) : null}
-              {!produto.descricao && itens.length === 0 && pacote.length === 0 && beneficios.length === 0 ? (
-                <p className="text-sm leading-6 text-[#59615C]">Fale com a equipe para conhecer todos os detalhes deste serviço.</p>
-              ) : null}
+              <div className="md:max-h-[28rem] md:overflow-y-auto md:overscroll-contain md:pr-2">
+                {produto.descricao ? <p className="text-sm leading-6 text-[#59615C]">{produto.descricao}</p> : null}
+                {itens.length > 0 ? <ListaRotulos titulo="Inclui" itens={itens} /> : null}
+                {pacote.length > 0 ? <ListaChecks titulo="Pacote inclui" itens={pacote} cor={cor} /> : null}
+                {beneficios.length > 0 ? <ListaChecks titulo="Benefícios" itens={beneficios} cor={cor} /> : null}
+                {sinal != null ? (
+                  <p className="mt-4 border-l-2 border-[#1D9E75] pl-3 text-sm text-[#39715F]">
+                    {produto.exigir_data_agendamento !== false ? 'Agendamento mediante sinal de ' : 'Pagamento online de '}
+                    <b>{moeda(sinal)}</b>
+                  </p>
+                ) : null}
+                {!produto.descricao && itens.length === 0 && pacote.length === 0 && beneficios.length === 0 ? (
+                  <p className="text-sm leading-6 text-[#59615C]">Fale com a equipe para conhecer todos os detalhes deste serviço.</p>
+                ) : null}
+              </div>
               <div className="mt-5 flex gap-2 border-t border-[#E8E4DD] pt-4">
                 {sobConsulta && contatoHref ? (
                   <a
