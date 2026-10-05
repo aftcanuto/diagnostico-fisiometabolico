@@ -17,7 +17,9 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Validacoes aprovadas: teste dedicado da vitrine com calculos proporcionais, TypeScript sem cache, comparacao visual lado a lado e build de producao limpo.
 - Suite `npm run predeploy` aprovada antes da publicacao, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
 - Nao requer migration.
-- Alteracao ainda nao publicada.
+- O deployment inicial `dpl_GGZLHEqUNvEB9qJd5Uziawv9ySyb` foi substituido apos a verificacao detectar a camada principal invisivel.
+- Hotfix publicado no commit `3d6d471`, deployment `dpl_Gcpcaau6jjJczHXqrU1XMEH435cR`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao final em producao mobile aprovada: foto principal com opacidade 1 e escala `2,370x`, fundo em `cover`, 14 imagens carregadas, sem overflow horizontal ou erros de console.
 
 ### 2026-10-05 - Zoom out real com preenchimento integral
 
