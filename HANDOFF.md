@@ -13,7 +13,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Validacao visual aprovada em 320 px e 390 px: cinco contatos completos, uma unica linha, botoes com 28 px, sem overflow horizontal da pagina e sem erros no console.
 - Validacoes aprovadas: teste dedicado da vitrine, TypeScript sem cache e build de producao.
 - Nao requer migration.
-- Alteracao ainda nao publicada.
+- Publicado no commit `c23e5f6`, deployment `dpl_BSRiivvqwCpvaDatn7FHTpuRg41u`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao final em producao aprovada em 320 px: cinco contatos completos em uma unica linha, sem overflow horizontal ou erros no console.
 
 ### 2026-10-05 - Progressao proporcional do zoom da vitrine
 
