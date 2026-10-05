@@ -24,13 +24,15 @@ assert.ok(card.includes('md:max-h-[28rem]'), 'Detalhes sem limite de altura em t
 assert.ok(card.includes('h-[27rem]') && card.includes('has-[details[open]]:h-auto'), 'Cards fechados sem altura uniforme');
 assert.ok(card.includes('hover:-translate-y-1') && card.includes('motion-reduce:transform-none'), 'Card sem elevacao acessivel');
 assert.ok(card.includes('objectPosition: `${posicaoX}% ${posicaoY}%`'), 'Card sem enquadramento configuravel');
-assert.ok(card.includes('object-cover') && card.includes('scale(${zoomImagem / 100})'), 'Card deve preencher a moldura em qualquer nivel de zoom');
+assert.ok(card.includes('aria-hidden="true"') && card.includes('blur-xl'), 'Card sem camada de preenchimento para zoom aberto');
+assert.ok(card.includes("zoomImagem < 100 ? 'contain' : 'cover'") && card.includes('scale(${escalaImagem})'), 'Card sem zoom out real e zoom in preservado');
+assert.ok(card.includes('return 0.85 + ((zoom - 60) / 40) * 0.15'), 'Zoom out deve preservar tamanho legivel da foto principal');
 assert.ok(card.includes("const preco = sobConsulta ? 'Sob consulta'"), 'Card sem preco sob consulta');
 assert.ok(card.includes('Consultar'), 'Card sob consulta sem acao de contato');
 assert.ok(checkout.includes('produto.preco_sob_consulta'), 'Checkout nao bloqueia produto sob consulta');
 assert.ok(form.includes('type="range"'), 'Formulario sem controles de enquadramento');
 assert.ok(form.includes('Zoom:') && form.includes('imagem_zoom'), 'Formulario sem controle de zoom');
-assert.ok(form.includes('min="100"') && form.includes('object-cover'), 'Zoom minimo deve preservar o preenchimento total da foto');
+assert.ok(form.includes('min="60"') && form.includes('blur-xl'), 'Previa deve permitir zoom out com preenchimento visual');
 assert.ok(migration.includes('between 0 and 100'), 'Migration sem limite do enquadramento');
 assert.ok(zoomMigration.includes('imagem_zoom') && zoomMigration.includes('between 60 and 180'), 'Migration sem zoom seguro');
 assert.ok(page.includes('imagem_zoom'), 'Consulta publica sem zoom');

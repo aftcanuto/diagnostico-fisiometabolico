@@ -4,6 +4,20 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Zoom out real com preenchimento integral
+
+- O controle de zoom da vitrine voltou ao intervalo de 60% a 180%.
+- Abaixo de 100%, a foto principal usa enquadramento `contain` e escala real para revelar mais do campo original.
+- Uma segunda camada decorativa da mesma foto, com `cover`, desfoque e leve sobreposicao institucional, preenche toda a moldura 16:9 sem faixas cinzas.
+- Para evitar uma miniatura excessivamente pequena, a faixa de zoom out de 60% a 100% e mapeada visualmente para escala de 85% a 100%; o `contain` ainda revela a imagem completa.
+- Acima de 100%, o comportamento de aproximacao com `cover` foi preservado.
+- A previa administrativa replica exatamente as duas camadas e o enquadramento do card publico.
+- Nao requer migration; a constraint existente ja aceita valores entre 60% e 180%.
+- Validacao visual aprovada em desktop e mobile com os sete produtos reais: Antropometria em 60% exibiu a foto vertical completa sobre o preenchimento desfocado; 14 camadas de imagem carregadas, sem overflow horizontal ou erros de console.
+- Validacoes aprovadas: teste dedicado da vitrine, TypeScript sem cache e build de producao.
+- Suite `npm run predeploy` aprovada antes da publicacao, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
+- Alteracao ainda nao publicada.
+
 ### 2026-10-05 - Fotos da vitrine sem faixas vazias
 
 - O zoom minimo da vitrine passou a ser o enquadramento `cover` de 100%, que representa o maior campo de visao possivel sem deixar areas vazias no quadro 16:9.

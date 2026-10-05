@@ -49,6 +49,7 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
   const posicaoX = limitarPercentual(produto.imagem_posicao_x);
   const posicaoY = limitarPercentual(produto.imagem_posicao_y);
   const zoomImagem = limitarZoom(produto.imagem_zoom);
+  const escalaImagem = calcularEscalaImagem(zoomImagem);
 
   return (
     <article
@@ -60,11 +61,20 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
           <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover/card:scale-[1.02] motion-reduce:transform-none">
             <img
               src={produto.imagem_url}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-xl"
+              style={{ objectPosition: `${posicaoX}% ${posicaoY}%` }}
+            />
+            <div className="absolute inset-0 bg-[#153B31]/10" aria-hidden="true" />
+            <img
+              src={produto.imagem_url}
               alt={`Imagem de ${produto.nome}`}
-              className="absolute inset-0 h-full w-full max-w-none object-cover"
+              className="absolute inset-0 h-full w-full max-w-none drop-shadow-[0_5px_14px_rgba(13,42,33,0.20)]"
               style={{
+                objectFit: zoomImagem < 100 ? 'contain' : 'cover',
                 objectPosition: `${posicaoX}% ${posicaoY}%`,
-                transform: `scale(${zoomImagem / 100})`,
+                transform: `scale(${escalaImagem})`,
                 transformOrigin: `${posicaoX}% ${posicaoY}%`,
               }}
             />
@@ -232,5 +242,10 @@ function limitarPercentual(value: unknown) {
 
 function limitarZoom(value: unknown) {
   const numero = Number(value);
-  return Number.isFinite(numero) ? Math.min(180, Math.max(100, Math.round(numero))) : 100;
+  return Number.isFinite(numero) ? Math.min(180, Math.max(60, Math.round(numero))) : 100;
+}
+
+function calcularEscalaImagem(zoom: number) {
+  if (zoom >= 100) return zoom / 100;
+  return 0.85 + ((zoom - 60) / 40) * 0.15;
 }
