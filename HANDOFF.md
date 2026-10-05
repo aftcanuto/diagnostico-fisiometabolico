@@ -16,7 +16,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Validacao visual aprovada em desktop e mobile com os sete produtos reais: Antropometria em 60% exibiu a foto vertical completa sobre o preenchimento desfocado; 14 camadas de imagem carregadas, sem overflow horizontal ou erros de console.
 - Validacoes aprovadas: teste dedicado da vitrine, TypeScript sem cache e build de producao.
 - Suite `npm run predeploy` aprovada antes da publicacao, incluindo auditoria das 75 migrations, smoke test, referencias, PDF visual, calculos, Jump Test, Antropometria, consentimento, vitrine, TypeScript e lint.
-- Alteracao ainda nao publicada.
+- Publicado no commit `34f3703`, deployment `dpl_4WckgqviVMrWaJFuD4n1G7oDu186`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
+- Verificacao final em producao mobile aprovada: sete cards, 14 camadas carregadas, Antropometria em `contain` com escala 85%, fundo em `cover`, sem overflow horizontal ou erros de console.
 
 ### 2026-10-05 - Fotos da vitrine sem faixas vazias
 
