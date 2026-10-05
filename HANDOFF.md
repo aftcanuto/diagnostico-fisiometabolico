@@ -4,6 +4,14 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Refinamento visual e uniformidade dos cards da vitrine
+
+- Todos os cards fechados da vitrine passaram a ter altura uniforme de 27 rem, com areas reservadas para titulo, subtitulo e duracao. Ao abrir `Saiba mais`, apenas o card escolhido retorna a altura automatica.
+- O visual recebeu sombra mais presente, borda refinada, elevacao de 4 px no hover, ampliacao suave da imagem, selo flutuante, preco destacado e controle de expansao circular.
+- As animacoes respeitam a preferencia de reducao de movimento do sistema; nenhuma informacao, acao, enquadramento ou comportamento de pagamento foi alterado.
+- Verificacao local aprovada com os sete produtos reais em 1440x1000 e 390x844: todos os cards fechados mediram exatamente 432 px, expansao isolada, zero overflow horizontal, zero imagem quebrada e nenhum erro de console.
+- Teste dedicado e build de producao aprovados. Sem migration ou alteracao de dados. Codigo ainda nao publicado nesta etapa.
+
 ### 2026-10-05 - Publicacao da vitrine compacta
 
 - Refinamento da vitrine publicado nos commits `f30a048` e `08f0aca`; migration `20261005043000_catalogo_cards_compactos.sql` aplicada e registrada no Supabase.

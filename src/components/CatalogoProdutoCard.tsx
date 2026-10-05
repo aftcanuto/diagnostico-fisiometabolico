@@ -49,41 +49,54 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
   const posicaoY = limitarPercentual(produto.imagem_posicao_y);
 
   return (
-    <article id={`produto-${produto.id}`} className="self-start overflow-hidden rounded-lg border border-[#DED9D0] bg-white shadow-[0_10px_30px_rgba(20,36,30,0.05)]">
-      <div className="relative aspect-[16/9] overflow-hidden bg-[#EEF1ED]">
+    <article
+      id={`produto-${produto.id}`}
+      className="group/card relative isolate flex h-[27rem] w-full self-start flex-col overflow-hidden rounded-lg border border-[#D9E0DA] bg-white shadow-[0_12px_32px_rgba(25,58,47,0.10)] transition-[transform,box-shadow,border-color] duration-300 has-[details[open]]:h-auto hover:-translate-y-1 hover:border-[#9FC8B8] hover:shadow-[0_22px_48px_rgba(25,58,47,0.16)] motion-reduce:transform-none"
+    >
+      <div className="relative aspect-[16/9] shrink-0 overflow-hidden border-b border-[#E4E9E5] bg-[#EEF1ED]">
         {produto.imagem_url ? (
           <img
             src={produto.imagem_url}
             alt={`Imagem de ${produto.nome}`}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.035] motion-reduce:transform-none"
             style={{ objectPosition: `${posicaoX}% ${posicaoY}%` }}
           />
         ) : (
           <div className="grid h-full place-items-center text-[#155C47]/25"><Package className="h-12 w-12" /></div>
         )}
         {(produto.selo || produto.destaque) ? (
-          <span className="absolute left-3 top-3 rounded-md border border-white/70 bg-white/90 px-2.5 py-1 text-xs font-semibold text-[#155C47] shadow-sm backdrop-blur-sm">
+          <span className="absolute left-3 top-3 rounded-md border border-white/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#155C47] shadow-[0_5px_16px_rgba(15,52,40,0.14)] backdrop-blur-sm">
             {produto.selo || 'Destaque'}
           </span>
         ) : null}
       </div>
 
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <h2 className="min-w-0 font-serif text-[1.35rem] font-semibold leading-tight text-[#111713]">{produto.nome}</h2>
-          {preco ? <div className="shrink-0 text-right text-sm font-bold text-[#155C47]">{preco}</div> : null}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex min-h-14 items-start justify-between gap-4">
+          <h2 className="line-clamp-2 min-w-0 font-serif text-[1.35rem] font-semibold leading-tight text-[#111713]">{produto.nome}</h2>
+          {preco ? (
+            <div className="shrink-0 rounded-md border border-[#DCEBE4] bg-[#F2F8F5] px-2 py-1 text-right text-sm font-bold text-[#155C47] shadow-[0_3px_10px_rgba(25,58,47,0.06)]">
+              {preco}
+            </div>
+          ) : null}
         </div>
-        {produto.subtitulo ? <p className="mt-2 line-clamp-2 text-sm leading-5 text-[#39715F]">{produto.subtitulo}</p> : null}
-        {produto.duracao_minutos ? (
-          <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-[#606963]">
-            <Clock className="h-3.5 w-3.5" /> {produto.duracao_minutos} min
-          </div>
-        ) : null}
+        <div className="mt-1 min-h-10">
+          {produto.subtitulo ? <p className="line-clamp-2 text-sm leading-5 text-[#39715F]">{produto.subtitulo}</p> : null}
+        </div>
+        <div className="mt-3 min-h-5">
+          {produto.duracao_minutos ? (
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-[#606963]">
+              <Clock className="h-3.5 w-3.5" /> {produto.duracao_minutos} min
+            </div>
+          ) : null}
+        </div>
 
-        <details className="group mt-4 border-t border-[#E8E4DD] pt-1">
-            <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-sm font-semibold text-[#155C47] [&::-webkit-details-marker]:hidden">
+        <details className="group mt-auto border-t border-[#E1E7E2] pt-1">
+            <summary className="-mx-2 flex cursor-pointer list-none items-center justify-between rounded-md px-2 py-3 text-sm font-semibold text-[#155C47] transition-colors hover:bg-[#F1F7F4] [&::-webkit-details-marker]:hidden">
               <span>Saiba mais</span>
-              <Plus className="h-4 w-4 transition-transform duration-200 group-open:rotate-45" aria-hidden="true" />
+              <span className="grid h-7 w-7 place-items-center rounded-full border border-[#C8DCD3] bg-white shadow-[0_3px_10px_rgba(25,58,47,0.08)] transition-colors group-hover:bg-[#EAF5F0]">
+                <Plus className="h-4 w-4 transition-transform duration-200 group-open:rotate-45" aria-hidden="true" />
+              </span>
             </summary>
             <div className="pb-1">
               <div className="md:max-h-[28rem] md:overflow-y-auto md:overscroll-contain md:pr-2">

@@ -20,6 +20,8 @@ for (const field of ['preco_sob_consulta', 'imagem_posicao_x', 'imagem_posicao_y
 
 assert.match(card, /<details[\s\S]*<summary[\s\S]*Saiba mais/);
 assert.ok(card.includes('md:max-h-[28rem]'), 'Detalhes sem limite de altura em telas maiores');
+assert.ok(card.includes('h-[27rem]') && card.includes('has-[details[open]]:h-auto'), 'Cards fechados sem altura uniforme');
+assert.ok(card.includes('hover:-translate-y-1') && card.includes('motion-reduce:transform-none'), 'Card sem elevacao acessivel');
 assert.ok(card.includes('objectPosition'), 'Card sem enquadramento configuravel');
 assert.ok(card.includes("const preco = sobConsulta ? 'Sob consulta'"), 'Card sem preco sob consulta');
 assert.ok(card.includes('Consultar'), 'Card sob consulta sem acao de contato');
