@@ -4,6 +4,16 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-05 - Zoom real das fotos e novo rodape da vitrine
+
+- Adicionado zoom configuravel por produto entre 60% e 180%, com foco horizontal e vertical. A imagem deixou de depender de `object-cover`: reduzir o zoom agora revela mais da foto e ampliar cria recorte controlado pelo ponto X/Y.
+- O formulario administrativo ganhou slider de zoom, previa imediata e acao `Restaurar enquadramento`, que volta para foco 50%/50% e zoom 100%.
+- O rodape publico foi reconstruido como faixa institucional de largura total, com hierarquia editorial, contraste mais elegante, cinco contatos organizados, microinteracoes e assinatura MedFit responsiva.
+- Migration `20261005034529_catalogo_imagem_zoom.sql` criada pelo Supabase CLI e aplicada no projeto `kjfhhrdfsgvdqygbvmwb`. Coluna, constraint 60-180, registro e sete produtos preservados em 100% foram confirmados.
+- Validacao visual aprovada em 1440x1000 e 390x844: zoom real medido em 0,60x e 1,80x, sete cards uniformes, cinco links no rodape, nenhuma imagem quebrada, overflow horizontal, elemento fora da tela ou erro de console.
+- Validacoes aprovadas: integridade textual, auditoria das 75 migrations, smoke test completo, referencias, PDF visual, calculos, backup, nutricao, evolucao, Jump Test, Antropometria, comprovantes de consentimento, teste dedicado da vitrine, TypeScript sem cache, lint e build de producao.
+- Advisors nao apontaram alerta novo relacionado a esta migration; permanecem os avisos preexistentes de seguranca e desempenho ja documentados. Codigo ainda nao publicado nesta etapa.
+
 ### 2026-10-05 - Refinamento visual e uniformidade dos cards da vitrine
 
 - Todos os cards fechados da vitrine passaram a ter altura uniforme de 27 rem, com areas reservadas para titulo, subtitulo e duracao. Ao abrir `Saiba mais`, apenas o card escolhido retorna a altura automatica.

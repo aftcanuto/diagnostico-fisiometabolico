@@ -14,6 +14,7 @@ type Produto = {
   imagem_url?: string | null;
   imagem_posicao_x?: number | null;
   imagem_posicao_y?: number | null;
+  imagem_zoom?: number | null;
   itens_inclusos?: unknown;
   beneficios?: unknown;
   pacote_itens?: unknown;
@@ -47,6 +48,7 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
   const contatoHref = hrefProduto(produto, telefone, site, email);
   const posicaoX = limitarPercentual(produto.imagem_posicao_x);
   const posicaoY = limitarPercentual(produto.imagem_posicao_y);
+  const zoomImagem = limitarZoom(produto.imagem_zoom);
 
   return (
     <article
@@ -55,12 +57,19 @@ export function CatalogoProdutoCard({ produto, clinicaId, telefone, site, email,
     >
       <div className="relative aspect-[16/9] shrink-0 overflow-hidden border-b border-[#E4E9E5] bg-[#EEF1ED]">
         {produto.imagem_url ? (
-          <img
-            src={produto.imagem_url}
-            alt={`Imagem de ${produto.nome}`}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.035] motion-reduce:transform-none"
-            style={{ objectPosition: `${posicaoX}% ${posicaoY}%` }}
-          />
+          <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover/card:scale-[1.02] motion-reduce:transform-none">
+            <img
+              src={produto.imagem_url}
+              alt={`Imagem de ${produto.nome}`}
+              className="absolute h-auto max-w-none"
+              style={{
+                width: `${zoomImagem}%`,
+                left: `${posicaoX}%`,
+                top: `${posicaoY}%`,
+                transform: `translate(-${posicaoX}%, -${posicaoY}%)`,
+              }}
+            />
+          </div>
         ) : (
           <div className="grid h-full place-items-center text-[#155C47]/25"><Package className="h-12 w-12" /></div>
         )}
@@ -220,4 +229,9 @@ function valorSinal(produto: Produto) {
 function limitarPercentual(value: unknown) {
   const numero = Number(value);
   return Number.isFinite(numero) ? Math.min(100, Math.max(0, Math.round(numero))) : 50;
+}
+
+function limitarZoom(value: unknown) {
+  const numero = Number(value);
+  return Number.isFinite(numero) ? Math.min(180, Math.max(60, Math.round(numero))) : 100;
 }

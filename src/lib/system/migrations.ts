@@ -73,6 +73,7 @@ export const MIGRATIONS_ESPERADAS = [
   '20260928170549_anthropometry_v2.sql',
   '20261005021118_comprovantes_tcle_avulsos.sql',
   '20261005043000_catalogo_cards_compactos.sql',
+  '20261005034529_catalogo_imagem_zoom.sql',
 ] as const;
 
 export const ULTIMA_MIGRATION_ESPERADA =

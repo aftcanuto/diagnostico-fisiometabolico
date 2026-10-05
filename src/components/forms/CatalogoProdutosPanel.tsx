@@ -16,6 +16,7 @@ const VAZIO = {
   imagem_url: '',
   imagem_posicao_x: 50,
   imagem_posicao_y: 50,
+  imagem_zoom: 100,
   itens_texto: '',
   beneficios_texto: '',
   pacote_itens_texto: '',
@@ -81,6 +82,7 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
       preco_sob_consulta: !!produto.preco_sob_consulta,
       imagem_posicao_x: limitarPercentual(produto.imagem_posicao_x),
       imagem_posicao_y: limitarPercentual(produto.imagem_posicao_y),
+      imagem_zoom: limitarZoom(produto.imagem_zoom),
       sinal_percentual: produto.sinal_percentual ?? '0',
       checkout_resumo_texto: produto.checkout_resumo_texto ?? '',
       politica_pagamento: produto.politica_pagamento ?? '',
@@ -109,6 +111,7 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
       imagem_url: selecionado.imagem_url?.trim() || null,
       imagem_posicao_x: limitarPercentual(selecionado.imagem_posicao_x),
       imagem_posicao_y: limitarPercentual(selecionado.imagem_posicao_y),
+      imagem_zoom: limitarZoom(selecionado.imagem_zoom),
       itens_inclusos: linhas(selecionado.itens_texto),
       beneficios: linhas(selecionado.beneficios_texto),
       pacote_itens: linhas(selecionado.pacote_itens_texto),
@@ -358,17 +361,22 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
               <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 {selecionado.imagem_url ? (
                   <div className="space-y-4">
-                    <div className="aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-white">
+                    <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-[#EEF1ED]">
                       <img
                         src={selecionado.imagem_url}
                         alt="Prévia do enquadramento da imagem do produto"
-                        className="h-full w-full object-cover"
-                        style={{ objectPosition: `${limitarPercentual(selecionado.imagem_posicao_x)}% ${limitarPercentual(selecionado.imagem_posicao_y)}%` }}
+                        className="absolute h-auto max-w-none"
+                        style={{
+                          width: `${limitarZoom(selecionado.imagem_zoom)}%`,
+                          left: `${limitarPercentual(selecionado.imagem_posicao_x)}%`,
+                          top: `${limitarPercentual(selecionado.imagem_posicao_y)}%`,
+                          transform: `translate(-${limitarPercentual(selecionado.imagem_posicao_x)}%, -${limitarPercentual(selecionado.imagem_posicao_y)}%)`,
+                        }}
                       />
                     </div>
                     <div className="space-y-2">
                       <Input value={selecionado.imagem_url ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, imagem_url: e.target.value }))} />
-                      <div className="grid gap-4 md:grid-cols-2">
+                      <div className="grid gap-4 md:grid-cols-3">
                         <label className="text-xs font-semibold text-slate-600">
                           Posição horizontal: {limitarPercentual(selecionado.imagem_posicao_x)}%
                           <input
@@ -391,10 +399,22 @@ export function CatalogoProdutosPanel({ clinicaId, catalogoHref }: { clinicaId: 
                             className="mt-2 w-full accent-emerald-600"
                           />
                         </label>
+                        <label className="text-xs font-semibold text-slate-600">
+                          Zoom: {limitarZoom(selecionado.imagem_zoom)}%
+                          <input
+                            type="range"
+                            min="60"
+                            max="180"
+                            step="5"
+                            value={limitarZoom(selecionado.imagem_zoom)}
+                            onChange={e => setSelecionado((s: any) => ({ ...s, imagem_zoom: Number(e.target.value) }))}
+                            className="mt-2 w-full accent-emerald-600"
+                          />
+                        </label>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Button type="button" variant="secondary" size="sm" onClick={() => setSelecionado((s: any) => ({ ...s, imagem_posicao_x: 50, imagem_posicao_y: 50 }))}>
-                          <RotateCcw className="h-4 w-4" /> Centralizar
+                        <Button type="button" variant="secondary" size="sm" onClick={() => setSelecionado((s: any) => ({ ...s, imagem_posicao_x: 50, imagem_posicao_y: 50, imagem_zoom: 100 }))}>
+                          <RotateCcw className="h-4 w-4" /> Restaurar enquadramento
                         </Button>
                         <Button type="button" variant="ghost" size="sm" onClick={() => setSelecionado((s: any) => ({ ...s, imagem_url: '' }))}>Remover imagem</Button>
                       </div>
@@ -498,6 +518,12 @@ function limitarPercentual(value: unknown) {
   const numero = Number(value);
   if (!Number.isFinite(numero)) return 50;
   return Math.min(100, Math.max(0, Math.round(numero)));
+}
+
+function limitarZoom(value: unknown) {
+  const numero = Number(value);
+  if (!Number.isFinite(numero)) return 100;
+  return Math.min(180, Math.max(60, Math.round(numero)));
 }
 
 const DIAS_SEMANA = [

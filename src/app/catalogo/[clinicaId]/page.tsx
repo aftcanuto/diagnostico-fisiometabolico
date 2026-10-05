@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { Mail, MapPin, MessageCircle } from 'lucide-react';
+import { ArrowUpRight, Globe2, Instagram, Mail, MapPin, MessageCircle } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/server';
 import { CatalogoProdutoCard } from '@/components/CatalogoProdutoCard';
 
@@ -19,6 +20,7 @@ type Produto = {
   imagem_url?: string | null;
   imagem_posicao_x?: number | null;
   imagem_posicao_y?: number | null;
+  imagem_zoom?: number | null;
   itens_inclusos?: unknown;
   beneficios?: unknown;
   pacote_itens?: unknown;
@@ -91,7 +93,7 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
 
   const { data: produtos } = await admin
     .from('catalogo_produtos')
-    .select('id,nome,subtitulo,descricao,selo,preco,preco_sob_consulta,sinal_percentual,duracao_minutos,imagem_url,imagem_posicao_x,imagem_posicao_y,itens_inclusos,beneficios,pacote_itens,whatsapp_texto,destaque,ativo,ordem,agenda_dias_semana,agenda_periodos,agenda_horarios,exigir_data_agendamento,checkout_resumo_texto,politica_pagamento,mensagem_pos_pagamento')
+    .select('id,nome,subtitulo,descricao,selo,preco,preco_sob_consulta,sinal_percentual,duracao_minutos,imagem_url,imagem_posicao_x,imagem_posicao_y,imagem_zoom,itens_inclusos,beneficios,pacote_itens,whatsapp_texto,destaque,ativo,ordem,agenda_dias_semana,agenda_periodos,agenda_horarios,exigir_data_agendamento,checkout_resumo_texto,politica_pagamento,mensagem_pos_pagamento')
     .eq('clinica_id', params.clinicaId)
     .eq('ativo', true)
     .order('destaque', { ascending: false })
@@ -161,22 +163,44 @@ export default async function CatalogoPage(props: { params: Promise<{ clinicaId:
           </div>
         )}
 
-        <section className="mt-12 border-t border-[#DCE2DD] py-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="font-serif text-3xl font-semibold tracking-[-0.035em] text-[#0C0C0C]">{rodapeTitulo}</h2>
-              {rodapeTexto && <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5A5A5A]">{rodapeTexto}</p>}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {whatsapp && <a className="inline-flex items-center gap-2 rounded-md border border-[#CFD8D2] bg-white px-4 py-2 text-sm font-semibold text-[#155C47] hover:bg-[#EEF6F1]" href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> WhatsApp</a>}
-              {clinica.email && <a className="inline-flex items-center gap-2 rounded-md border border-[#CFD8D2] bg-white px-4 py-2 text-sm font-semibold text-[#155C47] hover:bg-[#EEF6F1]" href={`mailto:${clinica.email}`}><Mail className="h-4 w-4" /> E-mail</a>}
-              {site && <a className="inline-flex items-center gap-2 rounded-md border border-[#CFD8D2] bg-white px-4 py-2 text-sm font-semibold text-[#155C47] hover:bg-[#EEF6F1]" href={site} target="_blank" rel="noreferrer">Site</a>}
-              {instagram && <a className="inline-flex items-center gap-2 rounded-md border border-[#CFD8D2] bg-white px-4 py-2 text-sm font-semibold text-[#155C47] hover:bg-[#EEF6F1]" href={instagram} target="_blank" rel="noreferrer">Instagram</a>}
-              {clinica.endereco && <a className="inline-flex items-center gap-2 rounded-md border border-[#CFD8D2] bg-white px-4 py-2 text-sm font-semibold text-[#155C47] hover:bg-[#EEF6F1]" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} target="_blank" rel="noreferrer"><MapPin className="h-4 w-4" /> Endereço</a>}
-            </div>
-          </div>
-        </section>
       </section>
+
+      <footer className="mt-14 border-t-4 border-[#29A77D] bg-[#153B31] text-white">
+        <div className="mx-auto max-w-6xl px-5 py-10 md:py-12">
+          <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)] md:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase text-[#9DDBC3]">MedFit Saúde e Bem-estar</p>
+              <h2 className="mt-3 max-w-xl font-serif text-3xl font-semibold leading-tight md:text-4xl">{rodapeTitulo}</h2>
+              {rodapeTexto && <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 md:text-base">{rodapeTexto}</p>}
+            </div>
+            <nav aria-label="Contatos da clínica" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-2">
+              {whatsapp && <FooterLink href={whatsapp} label="WhatsApp" icon={<MessageCircle className="h-4 w-4" />} />}
+              {clinica.email && <FooterLink href={`mailto:${clinica.email}`} label="E-mail" icon={<Mail className="h-4 w-4" />} external={false} />}
+              {site && <FooterLink href={site} label="Site" icon={<Globe2 className="h-4 w-4" />} />}
+              {instagram && <FooterLink href={instagram} label="Instagram" icon={<Instagram className="h-4 w-4" />} />}
+              {clinica.endereco && <FooterLink href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinica.endereco)}`} label="Como chegar" icon={<MapPin className="h-4 w-4" />} />}
+            </nav>
+          </div>
+          <div className="mt-9 flex flex-col gap-2 border-t border-white/15 pt-5 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
+            <span>{clinica.nome} · Produtos e serviços</span>
+            <span>Avaliar. Entender. Evoluir.</span>
+          </div>
+        </div>
+      </footer>
     </main>
+  );
+}
+
+function FooterLink({ href, label, icon, external = true }: { href: string; label: string; icon: ReactNode; external?: boolean }) {
+  return (
+    <a
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noreferrer' : undefined}
+      className="group/link inline-flex min-h-11 items-center justify-between gap-3 rounded-md border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-sm font-semibold text-white transition-[transform,background-color,border-color] hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.11] motion-reduce:transform-none"
+    >
+      <span className="inline-flex items-center gap-2 text-white/90">{icon}{label}</span>
+      <ArrowUpRight className="h-3.5 w-3.5 text-[#9DDBC3] transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 motion-reduce:transform-none" aria-hidden="true" />
+    </a>
   );
 }

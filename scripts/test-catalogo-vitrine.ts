@@ -7,6 +7,7 @@ function read(relativePath: string) {
 }
 
 const migration = read('supabase/migrations/20261005043000_catalogo_cards_compactos.sql');
+const zoomMigration = read('supabase/migrations/20261005034529_catalogo_imagem_zoom.sql');
 const card = read('src/components/CatalogoProdutoCard.tsx');
 const form = read('src/components/forms/CatalogoProdutosPanel.tsx');
 const checkout = read('src/app/api/catalogo/agendamentos/route.ts');
@@ -22,11 +23,16 @@ assert.match(card, /<details[\s\S]*<summary[\s\S]*Saiba mais/);
 assert.ok(card.includes('md:max-h-[28rem]'), 'Detalhes sem limite de altura em telas maiores');
 assert.ok(card.includes('h-[27rem]') && card.includes('has-[details[open]]:h-auto'), 'Cards fechados sem altura uniforme');
 assert.ok(card.includes('hover:-translate-y-1') && card.includes('motion-reduce:transform-none'), 'Card sem elevacao acessivel');
-assert.ok(card.includes('objectPosition'), 'Card sem enquadramento configuravel');
+assert.ok(card.includes('left: `${posicaoX}%`') && card.includes('top: `${posicaoY}%`'), 'Card sem enquadramento configuravel');
+assert.ok(card.includes('width: `${zoomImagem}%`') && card.includes('translate(-${posicaoX}%'), 'Card sem zoom real e foco combinados');
 assert.ok(card.includes("const preco = sobConsulta ? 'Sob consulta'"), 'Card sem preco sob consulta');
 assert.ok(card.includes('Consultar'), 'Card sob consulta sem acao de contato');
 assert.ok(checkout.includes('produto.preco_sob_consulta'), 'Checkout nao bloqueia produto sob consulta');
 assert.ok(form.includes('type="range"'), 'Formulario sem controles de enquadramento');
+assert.ok(form.includes('Zoom:') && form.includes('imagem_zoom'), 'Formulario sem controle de zoom');
 assert.ok(migration.includes('between 0 and 100'), 'Migration sem limite do enquadramento');
+assert.ok(zoomMigration.includes('imagem_zoom') && zoomMigration.includes('between 60 and 180'), 'Migration sem zoom seguro');
+assert.ok(page.includes('imagem_zoom'), 'Consulta publica sem zoom');
+assert.ok(page.includes('FooterLink') && page.includes('bg-[#153B31]'), 'Rodape refinado ausente');
 
 console.log('Catalog storefront tests passed.');
