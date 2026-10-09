@@ -286,7 +286,7 @@ function main() {
   });
   fs.writeFileSync(path.resolve('preview-laudo-termografia-isolada.html'), termografiaIsolada, 'utf8');
   assert(termografiaIsolada.includes('Tipo</div><div class="chip-val"') && termografiaIsolada.includes('Termografia funcional'), 'Capa isolada deveria identificar Termografia funcional');
-  assert(!termografiaIsolada.includes('Score Global</div>'), 'Laudo isolado nao deve mostrar score global vazio');
+  assert(!termografiaIsolada.includes('Indice MedFit global</div>'), 'Laudo isolado nao deve mostrar indice global vazio');
   assert(!termografiaIsolada.includes('Score 0-100 da posturografia'), 'Laudo isolado nao deve mostrar scores de modulos ausentes');
   assert(!termografiaIsolada.includes('Resumo da Avaliação'), 'Laudo isolado sem score nao deve gerar pagina de resumo');
   assert(termografiaIsolada.includes('10.1016/j.jtherbio.2017.07.006'), 'Laudo termografico sem referencia TISEM');
@@ -312,7 +312,7 @@ function main() {
   const dashboardClinico = checkTextFile('preview-dashboard-clinico.html', [
     'Edição rápida da avaliação',
     'Análises clínicas',
-    'Score global',
+    'Índice MedFit global',
     'Phantom',
     'Biomecânica da corrida',
     'Evolução dos scores',

@@ -171,6 +171,15 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     ]
   },
   {
+    "id": "grip-brazil",
+    "texto": "Schlussel MM et al. Reference values of handgrip dynamometry of healthy adults: a population-based study. Clin Nutr. 2008;27(4):601-607. doi:10.1016/j.clnu.2008.04.004.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/18547686/",
+    "modulos": [
+      "forca"
+    ],
+    "nota": "Valores populacionais brasileiros dependem de sexo, idade, mao, protocolo e dinamometro; o indice MedFit nao equivale aos percentis do estudo."
+  },
+  {
     "id": "rfd",
     "texto": "Maffiuletti NA et al. Rate of force development: physiological and methodological considerations. Eur J Appl Physiol. 2016;116:1091-1116. doi:10.1007/s00421-016-3346-6.",
     "url": "https://pubmed.ncbi.nlm.nih.gov/26941023/",
@@ -189,20 +198,30 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     "nota": "Testes funcionais em pessoas de 60 anos ou mais; nao extrapolar tabelas para jovens."
   },
   {
-    "id": "mcgill-3",
-    "texto": "McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation. 3rd ed. Human Kinetics; 2016.",
-    "url": "https://us.humankinetics.com/products/low-back-disorders-3rd-edition-online-ce-course-without-book",
-    "modulos": [
-      "rml"
-    ]
-  },
-  {
     "id": "tanaka",
     "texto": "Tanaka H, Monahan KD, Seals DR. Age-predicted maximal heart rate revisited. J Am Coll Cardiol. 2001;37(1):153-156.",
     "url": "https://pubmed.ncbi.nlm.nih.gov/11153730/",
     "modulos": [
       "cardiorrespiratorio"
     ]
+  },
+  {
+    "id": "cole-1999",
+    "texto": "Cole CR et al. Heart-rate recovery immediately after exercise as a predictor of mortality. N Engl J Med. 1999;341:1351-1357. doi:10.1056/NEJM199910283411804.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/10536127/",
+    "modulos": [
+      "cardiorrespiratorio"
+    ],
+    "nota": "O estudo expressa a queda como magnitude positiva. O app preserva a variacao assinada do equipamento: negativo indica queda e positivo indica subida. O corte depende do protocolo e nao deve ser generalizado."
+  },
+  {
+    "id": "friend-2018",
+    "texto": "de Souza e Silva CG et al. A reference equation for maximal aerobic power for treadmill and cycle ergometer exercise testing: Analysis from the FRIEND registry. Eur J Prev Cardiol. 2018;25(7):742-750. doi:10.1177/2047487318763958.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/29517365/",
+    "modulos": [
+      "cardiorrespiratorio"
+    ],
+    "nota": "A referencia prevista depende de idade, sexo, peso, estatura e modalidade; a classificacao operacional legada do app nao equivale a percentil FRIEND."
   },
   {
     "id": "novacheck",

@@ -145,8 +145,10 @@ export function calcularPlanoAlimentar(dados: DadosTmbPaciente, modelo: ModeloPl
   };
 }
 
-export const referenciasNutricionais = [
-  'Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO. A new predictive equation for resting energy expenditure in healthy individuals. Am J Clin Nutr. 1990.',
-  'Institute of Medicine. Dietary Reference Intakes for Energy, Carbohydrate, Fiber, Fat, Fatty Acids, Cholesterol, Protein, and Amino Acids. National Academies Press. 2005.',
-  'Institute of Medicine. Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate. National Academies Press. 2005.',
-];
+export const REFERENCIAS_NUTRICIONAIS = [
+  { id: 'mifflin-1990', texto: 'Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO. A new predictive equation for resting energy expenditure in healthy individuals. Am J Clin Nutr. 1990.' },
+  { id: 'iom-macros-2005', texto: 'Institute of Medicine. Dietary Reference Intakes for Energy, Carbohydrate, Fiber, Fat, Fatty Acids, Cholesterol, Protein, and Amino Acids. National Academies Press. 2005.' },
+  { id: 'iom-water-2005', texto: 'Institute of Medicine. Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate. National Academies Press. 2005.' },
+] as const;
+
+export const referenciasNutricionais = REFERENCIAS_NUTRICIONAIS.map(ref => ref.texto);

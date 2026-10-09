@@ -47,7 +47,7 @@ export default async function PacientesPage() {
             const ultima = avals[0];
             const totalFin = avals.filter((a: any) => a.status === 'finalizada').length;
             const score = Array.isArray(ultima?.scores) ? ultima.scores[0]?.global : ultima?.scores?.global;
-            const scoreColor = score == null ? '#94a3b8' : score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
+            const scoreColor = score == null ? '#94a3b8' : score > 70 ? '#10b981' : score > 40 ? '#f59e0b' : '#ef4444';
 
             return (
               <div key={p.id} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-brand-300 hover:shadow-sm transition">

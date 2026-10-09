@@ -17,6 +17,7 @@ import { isAnthropometryV2 } from '@/lib/anthropometry-record';
 import AnthropometryResults from '@/components/AnthropometryResults';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
+import { INDICE_MEDFIT_AVISO } from '@/lib/clinical/formulas';
 
 interface Props {
   paciente: { nome:string; sexo:'M'|'F'; data_nascimento:string; cpf?:string|null };
@@ -27,7 +28,7 @@ interface Props {
 
 /* helpers */
 function zCor(v:number|null){if(v==null)return'#94a3b8';if(v<=40)return'#ef4444';if(v<=70)return'#f59e0b';return'#10b981';}
-function zLabel(v:number|null){if(v==null)return'N/A';if(v<=40)return'Crítico';if(v<=70)return'Atenção';return'Ótimo';}
+function zLabel(v:number|null){if(v==null)return'N/A';if(v<=40)return'Faixa baixa';if(v<=70)return'Faixa intermediária';return'Faixa alta';}
 function dlt(a:any,b:any){const x=Number(a),y=Number(b);if(!isFinite(x)||!isFinite(y)||a==null||b==null)return null;return+(x-y).toFixed(1);}
 const MESES = ['janeiro','fevereiro','mar\u00e7o','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 function partesData(data?: string | null) {
@@ -872,7 +873,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       </div>
 
       {/* 2. RESULTADO GERAL */}
-      <Secao ordem={10} titulo="Seu resultado geral" sub="Score de 0 a 100 — todos os testes disponíveis">
+      <Secao ordem={10} titulo="Seu resultado geral" sub="Índices MedFit de 0 a 100 para acompanhamento longitudinal">
         {/* Painel premium claro com card global em destaque */}
         <div style={{background:'linear-gradient(180deg,#ffffff,#f8fafc)',borderRadius:24,padding:18,
           border:'1px solid #dbe7e2',boxShadow:'0 24px 60px rgba(15,23,42,0.10)'}}>
@@ -883,7 +884,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               background:'linear-gradient(180deg,#ffffff,#f8fafc)',color:'#0f172a',
               border:'1px solid #dbeafe',boxShadow:'0 18px 42px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.9)'}}>
               <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-                <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.4,color:'#64748b',marginBottom:2}}>Score global</div>
+                <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.4,color:'#64748b',marginBottom:2}}>Índice MedFit global</div>
                 <div style={{background:'linear-gradient(180deg,#fff,#f8fafc)',borderRadius:16,padding:'8px 8px 10px',width:'100%',
                   border:'1px solid #edf2f7',boxShadow:'inset 0 1px 0 rgba(255,255,255,.8), 0 12px 28px rgba(15,23,42,.08)'}}>
                   <GaugePremium value={sc.global??null} size={260}/>
@@ -938,13 +939,14 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           {/* Legenda */}
           <div style={{display:'flex',gap:10,marginTop:16,paddingTop:14,
             borderTop:'1px solid #e8eef3',justifyContent:'center',flexWrap:'wrap'}}>
-            {[['#ef4444','Crítico 0-40'],['#f59e0b','Atenção 41-70'],['#10b981','Ótimo 71-100']].map(([c,l])=>(
+            {[['#ef4444','Faixa baixa 0-40'],['#f59e0b','Faixa intermediária 41-70'],['#10b981','Faixa alta 71-100']].map(([c,l])=>(
               <div key={l} style={{display:'flex',alignItems:'center',gap:7,fontSize:11,color:'#64748b',fontWeight:700,
                 padding:'5px 10px',border:'1px solid #e2e8f0',borderRadius:999,background:'#fff'}}>
                 <div style={{width:8,height:8,borderRadius:'50%',background:c,flexShrink:0}}/>{l}
               </div>
             ))}
           </div>
+          <p style={{fontSize:10,color:'#64748b',lineHeight:1.45,margin:'12px 0 0',textAlign:'center'}}>{INDICE_MEDFIT_AVISO}</p>
         </div>
       </Secao>
 
@@ -1681,7 +1683,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
                   {[
                     {
-                      nome:'Score Global',
+                      nome:'Índice MedFit global',
                       pontos:hist.series.scoreGlobal,
                       cor:'#10b981',
                       escopo:'Integra os módulos disponíveis',
@@ -1692,14 +1694,14 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                       pontos:hist.series.scorePostura,
                       cor:'#60a5fa',
                       escopo:'Achados posturais e alinhamento',
-                      leitura:'Score postural 0-100 calculado a partir dos achados da posturografia.',
+                      leitura:'Indice operacional postural 0-100 calculado a partir dos achados da posturografia.',
                     },
                     {
                       nome:'Composição',
                       pontos:hist.series.scoreComposicao,
                       cor:'#f59e0b',
                       escopo:'Gordura, massa magra, IMC e RCQ',
-                      leitura:'Score composto 0-100; os valores brutos ficam em % gordura, kg e medidas corporais.',
+                      leitura:'Indice operacional composto 0-100; os valores brutos ficam em % gordura, kg e medidas corporais.',
                     },
                     {
                       nome:'Força',
@@ -1726,7 +1728,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                         <div style={{width:34,height:6,borderRadius:999,background:cor,boxShadow:`0 8px 18px ${cor}45`}}/>
                       </div>
                       <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10}}>
-                        <span style={{fontSize:10,fontWeight:600,color:'#334155',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Score 0-100</span>
+                        <span style={{fontSize:10,fontWeight:600,color:'#334155',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Índice MedFit 0-100</span>
                         <span style={{fontSize:10,fontWeight:700,color:'#64748b',background:'#ffffff',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Evolução longitudinal</span>
                       </div>
                       <div style={{fontSize:11,color:'#64748b',lineHeight:1.45,marginBottom:8}}>{leitura}</div>

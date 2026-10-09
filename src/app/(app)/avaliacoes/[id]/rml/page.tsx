@@ -197,7 +197,7 @@ export default function RMLPage(props: { params: Promise<{ id: string }> }) {
             {resultado.score > 0 && (
               <div className="flex flex-col items-center px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
                 <span className="text-2xl font-900 text-emerald-600">{resultado.score}</span>
-                <span className="text-xs text-emerald-600 font-600">Score RML</span>
+                <span className="text-xs text-emerald-600 font-600">Índice RML MedFit</span>
               </div>
             )}
           </div>

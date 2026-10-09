@@ -66,7 +66,9 @@ export function classificarComposicaoCorporal(opts: {
     else { nivel = 3; label = 'Obesidade'; cor = '#ef4444'; }
   }
 
-  if (imc != null) {
+  // IMC so determina a faixa visual quando nao ha percentual de gordura.
+  // Quando ha composicao medida/estimada, o IMC permanece um marcador separado.
+  if (imc != null && pct == null) {
     if (imc >= 35 && pct == null) {
       nivel = 3;
       label = 'Obesidade';

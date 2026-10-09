@@ -21,6 +21,7 @@ import { scoreGlobal } from '@/lib/scores';
 import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura } from '@/lib/bodyComposition';
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
+import { INDICE_MEDFIT_AVISO } from '@/lib/clinical/formulas';
 
 interface Props {
   paciente: { nome: string; sexo: 'M' | 'F'; data_nascimento: string; email?: string | null; cpf?: string | null };
@@ -40,9 +41,9 @@ function zoneColor(v: number | null) {
 }
 function zoneLabel(v: number | null) {
   if (v == null) return '—';
-  if (v <= 40) return 'Crítico';
-  if (v <= 70) return 'Atenção';
-  return 'Ótimo';
+  if (v <= 40) return 'Faixa baixa';
+  if (v <= 70) return 'Faixa intermediária';
+  return 'Faixa alta';
 }
 
 function dataCurtaBR(data?: string | null) {
@@ -438,14 +439,14 @@ function ComparativoPremium({ atual, anterior, gorduraAtual, gorduraAnterior }: 
   if (!atual) return null;
   const temAnterior = !!anterior;
   const metricas = [
-    { grupo: 'Resultado', label: 'Score global', atual: atual.scores?.global, anterior: anterior?.scores?.global, unidade: '', casas: 0, direcao: 'subir_bom' },
+    { grupo: 'Resultado', label: 'Índice MedFit global', atual: atual.scores?.global, anterior: anterior?.scores?.global, unidade: '', casas: 0, direcao: 'subir_bom' },
     { grupo: 'Composição', label: 'Gordura corporal', atual: gorduraAtual?.valor, anterior: gorduraAnterior?.valor, unidade: '%', casas: 1, direcao: 'descer_bom' },
     { grupo: 'Composição', label: 'Massa magra', atual: massaMagraAval(atual), anterior: massaMagraAval(anterior), unidade: 'kg', casas: 1, direcao: 'subir_bom' },
     { grupo: 'Composição', label: 'FFMI', atual: ffmiAval(atual), anterior: ffmiAval(anterior), unidade: '', casas: 1, direcao: 'subir_bom' },
     { grupo: 'Força', label: 'Score força', atual: atual.scores?.forca, anterior: anterior?.scores?.forca, unidade: '', casas: 0, direcao: 'subir_bom' },
     { grupo: 'Flexibilidade', label: 'Score flexibilidade', atual: atual.scores?.flexibilidade, anterior: anterior?.scores?.flexibilidade, unidade: '', casas: 0, direcao: 'subir_bom' },
     { grupo: 'Cardio', label: 'VO₂máx', atual: atual.cardiorrespiratorio?.vo2max, anterior: anterior?.cardiorrespiratorio?.vo2max, unidade: 'ml/kg/min', casas: 1, direcao: 'subir_bom' },
-    { grupo: 'RML', label: 'Score RML', atual: atual.scores?.rml, anterior: anterior?.scores?.rml, unidade: '', casas: 0, direcao: 'subir_bom' },
+    { grupo: 'RML', label: 'Índice RML MedFit', atual: atual.scores?.rml, anterior: anterior?.scores?.rml, unidade: '', casas: 0, direcao: 'subir_bom' },
   ];
 
   const fotoAtual = fotoPosturalPrincipal(atual);
@@ -511,7 +512,7 @@ function ComparativoPremium({ atual, anterior, gorduraAtual, gorduraAnterior }: 
         </>
       ) : (
         <div style={{border:'1px dashed #cbd5e1',background:'#f8fafc',borderRadius:16,padding:18,color:'#64748b',fontSize:13}}>
-          Quando houver uma reavaliação finalizada, este painel mostrará a evolução lado a lado, com score global, composição corporal, FFMI, força, flexibilidade, cardio, RML e fotos posturais.
+          Quando houver uma reavaliação finalizada, este painel mostrará a evolução lado a lado, com índice MedFit global, composição corporal, FFMI, força, flexibilidade, cardio, RML e fotos posturais.
         </div>
       )}
     </div>
@@ -1338,7 +1339,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div style={{ background: '#f8fafc', border: '1px solid #f1f5f9',
               borderRadius: 16, padding: '16px 20px', width: '100%', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: '#94a3b8',
-                textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Score Global</div>
+                textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Índice MedFit global</div>
               <GaugeSVG value={sc.global ?? null} label="" size="lg" />
               {anterior?.scores?.global != null && sc.global != null && (
                 <div style={{ marginTop: 4, fontSize: 11, color: '#64748b' }}>
@@ -1386,7 +1387,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         {/* Legenda */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 20,
           paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
-          {[['#ef4444','Crítico (0–40)'],['#f59e0b','Atenção (41–70)'],['#10b981','Ótimo (71–100)']].map(([c,l]) => (
+          {[['#ef4444','Faixa baixa (0–40)'],['#f59e0b','Faixa intermediária (41–70)'],['#10b981','Faixa alta (71–100)']].map(([c,l]) => (
             <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 6,
               fontSize: 11, color: '#64748b' }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />
@@ -1394,6 +1395,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             </div>
           ))}
         </div>
+        <p style={{ fontSize: 10, color: '#64748b', textAlign: 'center', marginTop: 10 }}>{INDICE_MEDFIT_AVISO}</p>
       </div>
 
       {/* ══ EVOLUÇÃO LONGITUDINAL ══ */}
@@ -1405,7 +1407,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {[
                 {
-                  nome: 'Score Global',
+                  nome: 'Índice MedFit global',
                   pontos: hist.series.scoreGlobal,
                   cor: '#10b981',
                   escopo: 'Integra os módulos disponíveis',
@@ -1416,14 +1418,14 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   pontos: hist.series.scorePostura,
                   cor: '#60a5fa',
                   escopo: 'Achados posturais e alinhamento',
-                  leitura: 'Score postural 0-100 calculado a partir dos achados da posturografia.',
+                  leitura: 'Indice operacional postural 0-100 calculado a partir dos achados da posturografia.',
                 },
                 {
                   nome: 'Composição',
                   pontos: hist.series.scoreComposicao,
                   cor: '#f59e0b',
                   escopo: 'Gordura, massa magra, IMC e RCQ',
-                  leitura: 'Score composto 0-100; os valores brutos ficam em % gordura, kg e medidas corporais.',
+                  leitura: 'Indice operacional composto 0-100; os valores brutos ficam em % gordura, kg e medidas corporais.',
                 },
                 {
                   nome: 'Força',
@@ -1451,7 +1453,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     <div style={{ width: 34, height: 6, borderRadius: 999, background: cor, boxShadow:`0 8px 18px ${cor}45` }} />
                   </div>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
-                    <span style={{ fontSize:10, fontWeight:600, color:'#334155', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:999, padding:'4px 8px' }}>Score 0-100</span>
+                    <span style={{ fontSize:10, fontWeight:600, color:'#334155', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:999, padding:'4px 8px' }}>Índice MedFit 0-100</span>
                     <span style={{ fontSize:10, fontWeight:700, color:'#64748b', background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:999, padding:'4px 8px' }}>Evolução longitudinal</span>
                   </div>
                   <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.45, marginBottom: 8 }}>{leitura}</div>
@@ -2647,7 +2649,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                     </span>
                   </div>
                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>
-                    {a.tipo} · Score global: <b style={{ color: '#0f172a' }}>{a.scores?.global ?? '—'}</b>
+                    {a.tipo} · Índice MedFit global: <b style={{ color: '#0f172a' }}>{a.scores?.global ?? '—'}</b>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>

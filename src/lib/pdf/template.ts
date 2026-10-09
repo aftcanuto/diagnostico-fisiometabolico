@@ -12,6 +12,7 @@ import { classificarComposicaoCorporal, resolverPercentualGordura } from '@/lib/
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 import { jumpReportHtml } from './jump-test';
 import { anthropometryReportHtml, anthropometrySummaryHtml, isAnthropometryV2 } from './anthropometry';
+import { INDICE_MEDFIT_AVISO } from '@/lib/clinical/formulas';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -78,9 +79,9 @@ function zoneColor(v: number | null) {
 }
 function zoneLabel(v: number | null) {
   if (v == null) return '—';
-  if (v <= 40)   return 'Crítico';
-  if (v <= 70)   return 'Atenção';
-  return 'Ótimo';
+  if (v <= 40)   return 'Faixa baixa';
+  if (v <= 70)   return 'Faixa intermediária';
+  return 'Faixa alta';
 }
 
 // ─── Gauge SVG — gradiente completo + triângulo indicador ─────────────────────
@@ -342,7 +343,7 @@ th { text-align: left; padding: 10px 14px; background: var(--pdf-panel); color: 
 td { padding: 10px 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
 tr { break-inside: avoid; page-break-inside: avoid; }
 tr:last-child td { border-bottom: none; }
-.ai-box { background: var(--pdf-highlight); border-left: 5px solid ${pri}; border-radius: 0 22px 22px 0; padding: 18px 22px; margin-top: 20px; break-inside: auto; page-break-inside: auto; }
+.ai-box { background: var(--pdf-highlight); border-left: 5px solid ${pri}; border-radius: 0 22px 22px 0; padding: 14px 22px; margin-top: 20px; break-inside: auto; page-break-inside: auto; }
 .ai-title { font-size: 11px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .ai-text { font-size: 13px; line-height: 1.7; color: #374151; }
 .dark-block { background: var(--pdf-panel); border:1px solid var(--pdf-line); border-radius: 22px; padding: 18px 22px; color: #111827; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
@@ -834,27 +835,27 @@ function pgResumo(d: LaudoData): string {
   const scoreInfo: Record<string, { escopo: string; leitura: string }> = {
     Postura: {
       escopo: 'Achados posturais e alinhamento',
-      leitura: 'Score 0-100 da posturografia.',
+      leitura: 'Indice operacional 0-100 da posturografia.',
     },
     'Composição': {
       escopo: 'Gordura, massa magra, IMC e RCQ',
-      leitura: 'Score composto; não é apenas % de gordura.',
+      leitura: 'Indice operacional composto; nao e apenas % de gordura.',
     },
     'Força': {
       escopo: 'Preensão, dinamometria e assimetria',
-      leitura: 'Score 0-100; kgf/kg ficam no módulo.',
+      leitura: 'Indice operacional; kgf/kg ficam no modulo.',
     },
     'Flexibilidade': {
       escopo: 'Banco de Wells e classificação',
-      leitura: 'Score 0-100 da mobilidade avaliada.',
+      leitura: 'Indice operacional da mobilidade avaliada.',
     },
     Cardio: {
       escopo: 'VO2máx, FC e zonas de treino',
-      leitura: 'Score 0-100; não é BPM isolado.',
+      leitura: 'Indice operacional; nao e BPM isolado.',
     },
     RML: {
       escopo: 'Resistencia muscular localizada',
-      leitura: 'Score 0-100 dos testes de resistencia.',
+      leitura: 'Indice operacional dos testes classificados.',
     },
   };
   const miniVelocimetro = (valor: number | null) => {
@@ -906,7 +907,7 @@ function pgResumo(d: LaudoData): string {
   <div style="display:grid;grid-template-columns:${temScoreGlobal ? '180px 1fr' : '1fr'};gap:20px;align-items:start">
     ${temScoreGlobal ? `<div style="display:flex;flex-direction:column;align-items:center;gap:12px">
       <div style="text-align:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px 20px;width:100%">
-        <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Score Global</div>
+        <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Indice MedFit global</div>
         ${gauge(d.scores.global, '', 'sm')}
       </div>
     </div>` : ''}
@@ -918,12 +919,12 @@ function pgResumo(d: LaudoData): string {
         const cor = zoneColor(sc);
         const lbl = zoneLabel(sc);
         const pct = sc != null ? sc : 0;
-        const info = scoreInfo[s.label] ?? { escopo: 'Domínio avaliado', leitura: 'Score 0-100.' };
+        const info = scoreInfo[s.label] ?? { escopo: 'Dominio avaliado', leitura: 'Indice operacional 0-100.' };
         return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px">
           <div style="flex-shrink:0;width:96px;height:82px;position:relative">${miniVelocimetro(sc)}</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:700;color:#0f172a">${s.label}</div><div style="font-size:10px;font-weight:600;padding:2px 10px;border-radius:100px;background:${cor}20;color:${cor}">${lbl}</div></div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"><span style="font-size:8px;font-weight:800;color:#334155;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">Score 0-100</span><span style="font-size:8px;font-weight:700;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">${x(info.escopo)}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"><span style="font-size:8px;font-weight:800;color:#334155;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">Indice MedFit 0-100</span><span style="font-size:8px;font-weight:700;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">${x(info.escopo)}</span></div>
             <div style="font-size:9px;color:#64748b;line-height:1.35;margin-bottom:7px">${x(info.leitura)}</div>
             <div style="background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cor}88,${cor});border-radius:999px"></div></div>
           </div>
@@ -934,8 +935,9 @@ function pgResumo(d: LaudoData): string {
   <div style="border:1px solid #e2e8f0;border-radius:16px;padding:22px;background:#f8fafc">
     <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:9px">${ativos.length === 1 ? 'Exame realizado' : 'Módulos realizados'}</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">${ativos.map(modulo => `<span style="padding:8px 14px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;font-size:12px;font-weight:750">${x(modulo.label)}</span>`).join('')}</div>
-    <p style="font-size:11px;line-height:1.55;color:#64748b;margin:14px 0 0">Este exame não utiliza score global. Os resultados, condições técnicas e interpretação profissional estão apresentados nas páginas específicas do laudo.</p>
+    <p style="font-size:11px;line-height:1.55;color:#64748b;margin:14px 0 0">Este exame nao utiliza indice MedFit global. Os resultados, condicoes tecnicas e interpretacao profissional estao apresentados nas paginas especificas do laudo.</p>
   </div>`}
+  ${temScoreGlobal || scoreItems.length ? `<p style="font-size:9px;line-height:1.45;color:#64748b;margin:12px 0 0;text-align:center">${x(INDICE_MEDFIT_AVISO)}</p>` : ''}
 
 </section>`;
 }
@@ -2038,7 +2040,7 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
     {label:'FFMI',texto:'Índice descritivo de massa livre de gordura por estatura; não estima potencial genético'},
     {label:'RML — Flexão de braço',texto:'Contagem de repetições conforme protocolo registrado'},
     {label:'RML — Abdominal 1 min',texto:'Contagem em um minuto conforme protocolo registrado'},
-    {label:'RML — Prancha ventral',texto:'Endurance de tronco; McGill, 3ª ed. (2016)'},
+    {label:'RML — Prancha ventral',texto:'Tempo bruto de endurance; sem faixa normativa etaria automatica'},
     {label:'RML — Agachamento 1 min',texto:'Contagem em um minuto conforme protocolo registrado'},
     {label:'RML — Sentar e Levantar 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
     {label:'RML — Arm Curl Test 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},

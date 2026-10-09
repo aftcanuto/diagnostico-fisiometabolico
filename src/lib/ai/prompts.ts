@@ -7,6 +7,7 @@ import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/l
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 import { jumpSchema, jumpSummary, jumpReference } from '@/lib/jump-test';
 import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-record';
+import { REGRAS_FORMULAS_IA } from '@/lib/clinical/formulas';
 
 export const ANTHROPOMETRY_AI_RULES = `Antropometria: use apenas resultados selecionados, disponiveis e calculados pelo motor versionado.
 Nao recalcule nem invente medidas, normas, coeficientes ou referencias. Ausente nao significa zero.
@@ -199,6 +200,8 @@ export function contextoAnamneseParaIA(dados: any) {
 
 const SISTEMA_BASE = (ctx: PacienteContexto) => `Você é especialista em avaliação fisiometabólica, performance humana e medicina do exercício, com formação em fisioterapia, nutrição e treinamento esportivo. Redige laudos clínicos em português brasileiro com linguagem técnica precisa mas acessível.
 
+${REGRAS_FORMULAS_IA}
+
 Paciente:
 - Nome: ${ctx.nome}
 - Sexo: ${ctx.sexo === 'M' ? 'Masculino' : 'Feminino'}
@@ -340,14 +343,14 @@ export function promptForca(ctx: PacienteContexto, dados: any) {
     : '';
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: FORÇA\n\nReferencias e limites obrigatorios:\n${referenciasModulo('forca')}\n\nPreensão palmar:\n- Direita: ${dados?.preensao_dir_kgf} kgf · Esquerda: ${dados?.preensao_esq_kgf} kgf\n- Força relativa: D ${dados?.forca_relativa_dir} / E ${dados?.forca_relativa_esq} kgf/kg\n- Assimetria: ${dados?.assimetria_percent}%\n- Testes: ${JSON.stringify(dados?.testes ?? [])}\n- Pop. referência: ${dados?.populacao_ref}${dinamTexto}${sptechTexto}${tracaoTexto}\n- Esporte/contexto: ${labelEsporteForca(dados?.esporte_contexto) || 'Nao informado'}\n- Finalidade do teste: ${labelFinalidadeForca(dados?.finalidade_teste) || 'Nao informada'}\n- Lado dominante: ${labelLadoDominante(dados?.lado_dominante) || 'Nao informado'}\n\nInterprete considerando faixa etaria, populacao, esporte/contexto, finalidade do teste e lado dominante. Discuta assimetria, RFD global, RFD 0-50/100/200ms, TPF, impulso, sustentacao >=80% FIM, 1RM estimado, forca relativa, LSI, fadiga, exigencias funcionais do esporte e impacto funcional. Para o WHC-06, considere que o hardware transmite apenas kgf em serie temporal; Newton, RFD, TPF, impulso, sustentacao, LSI, assimetria, fadiga, 1RM e relacoes musculares sao metricas calculadas pelo sistema. Se houver dinamometria de tracao, analise I/Q, Pull/Push, RE/RI de ombro, flexao/extensao de ombro e abducao/aducao de ombro quando disponiveis. Se houver dados de dinamometria isometrica, analise cada grupo muscular, identifique desequilibrios bilaterais e proponha intervencoes especificas. Mencione que preensao e preditor de longevidade.`
+    user: `Módulo: FORÇA\n\nReferencias e limites obrigatorios:\n${referenciasModulo('forca')}\n\nPreensão palmar:\n- Direita: ${dados?.preensao_dir_kgf} kgf · Esquerda: ${dados?.preensao_esq_kgf} kgf\n- Força relativa: D ${dados?.forca_relativa_dir} / E ${dados?.forca_relativa_esq} kgf/kg\n- Assimetria: ${dados?.assimetria_percent}%\n- Testes: ${JSON.stringify(dados?.testes ?? [])}\n- Pop. referência: ${dados?.populacao_ref}${dinamTexto}${sptechTexto}${tracaoTexto}\n- Esporte/contexto: ${labelEsporteForca(dados?.esporte_contexto) || 'Nao informado'}\n- Finalidade do teste: ${labelFinalidadeForca(dados?.finalidade_teste) || 'Nao informada'}\n- Lado dominante: ${labelLadoDominante(dados?.lado_dominante) || 'Nao informado'}\n\nInterprete considerando faixa etaria, populacao, esporte/contexto, finalidade do teste e lado dominante. Discuta assimetria, RFD global, RFD 0-50/100/200ms, TPF, impulso, sustentacao >=80% FIM, 1RM estimado, forca relativa, LSI, fadiga, exigencias funcionais do esporte e impacto funcional. Para o WHC-06, considere que o hardware transmite apenas kgf em serie temporal; Newton, RFD, TPF, impulso, sustentacao, LSI, assimetria, fadiga, 1RM e relacoes musculares sao metricas calculadas pelo sistema. Se houver dados de dinamometria de tracao, analise relacoes apenas quando protocolo, unidade e movimentos forem compativeis. Trate preensao como marcador associado a prognostico populacional, sem prever longevidade individual. Nao aplique limiar universal de assimetria.`
   };
 }
 
 export function promptFlexibilidade(ctx: PacienteContexto, dados: any) {
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: FLEXIBILIDADE (Banco de Wells / Sit and Reach)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('flexibilidade')}\n\nDados:\n- Tentativa 1: ${dados?.tentativa_1} cm · Tentativa 2: ${dados?.tentativa_2} cm · Tentativa 3: ${dados?.tentativa_3} cm\n- Melhor resultado: ${dados?.melhor_resultado} cm\n- Classificação: ${dados?.classificacao}\n- Observações: ${dados?.observacoes || '—'}\n\nInterprete o nível de flexibilidade considerando sexo e idade (tabela ACSM). Explique as implicações da flexibilidade posterior para saúde lombar, performance esportiva e prevenção de lesões. Recomende exercícios de alongamento específicos (estático, dinâmico, PNF) com frequência, duração e progressão. Relacione com achados posturais se disponível.`
+    user: `Módulo: FLEXIBILIDADE (Banco de Wells / Sit and Reach)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('flexibilidade')}\n\nDados:\n- Tentativa 1: ${dados?.tentativa_1} cm · Tentativa 2: ${dados?.tentativa_2} cm · Tentativa 3: ${dados?.tentativa_3} cm\n- Melhor resultado: ${dados?.melhor_resultado} cm\n- Classificação: ${dados?.classificacao}\n- Observações: ${dados?.observacoes || '—'}\n\nInterprete o nível de flexibilidade considerando sexo, idade e protocolo (tabela ACSM), sem converter a categoria em percentil. Descreva possíveis relações com função e performance sem afirmar prevenção de lesão ou causalidade. Recomende exercícios de alongamento específicos (estático, dinâmico, PNF) com frequência, duração e progressão. Relacione com achados posturais apenas como correlação.`
   };
 }
 
@@ -373,7 +376,7 @@ Dados principais:
 - Zonas por limiar: ${JSON.stringify(dados?.zonas_limiar ?? [])}
 - Velocidades de treino: ${JSON.stringify(dados?.velocidades_treino ?? [])}
 
-Interprete a capacidade CR considerando sexo/idade. Classifique o VO2max, recuperacao de FC, limiar e velocidades de treino. De uma semana tipica de treino com distribuicao Z1-Z5 alinhada ao objetivo. Nao crie zonas acima de Z5.`
+Interprete a capacidade CR considerando sexo, idade, protocolo e modalidade. Preserve a classificacao profissional informada; nao transforme o indice cardio MedFit em percentil ou norma. A recuperacao da FC e armazenada como variacao com sinal: valor negativo indica queda e valor positivo indica que a FC continuou subindo. Preserve o sinal e considere que qualquer corte depende do protocolo. Diferencie FCmax medida da prevista por Tanaka e zonas genericas por percentual de limiares medidos. Sugira uma semana tipica de treino com distribuicao Z1-Z5 alinhada ao objetivo, deixando claro que exige validacao profissional. Nao crie zonas acima de Z5.`
   };
 }
 
@@ -382,6 +385,8 @@ export function promptConclusao(ctx: PacienteContexto, modulos: {
 }) {
   return {
     system: `Você sintetiza diagnósticos fisiometabólicos em uma conclusão executiva. Linguagem técnica clara, tom profissional e motivador.
+
+${REGRAS_FORMULAS_IA}
 
 Paciente: ${ctx.nome}, ${ctx.sexo === 'M' ? 'masculino' : 'feminino'}, ${ctx.idade} anos.
 Objetivo: ${ctx.objetivo || 'não informado'}.
@@ -394,7 +399,7 @@ Retorne APENAS JSON:
   "prioridades": [{ "titulo": string, "acao": string, "prazo": string }],
   "mensagem_paciente": string
 }`,
-    user: `Referencias e limites obrigatorios:\n${referenciasParaIA(modulos.selecionados ?? {}, modulos.anthropometry)}\n\nScores:\n${JSON.stringify(modulos.scores, null, 2)}\n\nAnálises:\n${JSON.stringify(modulos.analises, null, 2)}\n\nSintetize o quadro global, aponte pontos fortes/críticos e indique 3 prioridades com prazo realista.`
+    user: `Referencias e limites obrigatorios:\n${referenciasParaIA(modulos.selecionados ?? {}, modulos.anthropometry)}\n\nIndices operacionais MedFit:\n${JSON.stringify(modulos.scores, null, 2)}\n\nAnálises:\n${JSON.stringify(modulos.analises, null, 2)}\n\nSintetize o quadro global sem tratar os indices como normas clinicas. Aponte recursos, pontos de atencao e indique 3 prioridades com prazo realista.`
   };
 }
 
@@ -444,7 +449,7 @@ export function promptRML(ctx: PacienteContexto, dados: any) {
 
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: RESISTÊNCIA MUSCULAR LOCALIZADA (RML)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('rml')}\n\nCategoria: ${cat}\nScore RML: ${dados?.score ?? '—'}/100\n\nTestes realizados:\n${testes || 'Nenhum teste registrado'}\n\nObservações: ${dados?.observacoes || '—'}\n\nAnalise a resistência muscular localizada por grupamento (MMSS, core, MMII). Identifique desequilíbrios entre grupamentos. Correlacione com o objetivo declarado e histórico. Proponha protocolo de treino específico para cada grupamento deficiente (séries, repetições, frequência, progressão). Mencione implicações funcionais e para qualidade de vida.`
+    user: `Módulo: RESISTÊNCIA MUSCULAR LOCALIZADA (RML)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('rml')}\n\nCategoria: ${cat}\nIndice RML MedFit: ${dados?.score ?? '—'}/100\n\nTestes realizados:\n${testes || 'Nenhum teste registrado'}\n\nObservações: ${dados?.observacoes || '—'}\n\nAnalise a resistência muscular localizada por grupamento (MMSS, core, MMII). Prancha, agachamento de 1 minuto e wall sit sao resultados descritivos quando nao houver classificacao salva; nao invente faixas. Correlacione com o objetivo declarado e histórico sem inferir causalidade. Proponha protocolo de treino específico com séries, repetições, frequência e progressão.`
   };
 }
 

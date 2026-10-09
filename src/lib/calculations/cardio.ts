@@ -21,7 +21,12 @@ export function zonasTreinamento(fcMax: number): ZonasTreino {
   };
 }
 
-/** Classifica VO2max (ml/kg/min) - Cooper/ACSM adult */
+/**
+ * Classificacao operacional historica de VO2max (ml/kg/min).
+ *
+ * Nao deve ser apresentada como percentil ou norma FRIEND: faltam peso,
+ * estatura e modalidade na assinatura para aplicar uma referencia moderna.
+ */
 export function classificaVO2(vo2: number, sexo: 'M' | 'F', idade: number): string {
   const ref = sexo === 'M'
     ? { 20: [35, 43, 50], 30: [33, 41, 48], 40: [31, 38, 45], 50: [28, 35, 42], 60: [25, 32, 39] }
@@ -34,7 +39,7 @@ export function classificaVO2(vo2: number, sexo: 'M' | 'F', idade: number): stri
   return 'Excelente';
 }
 
-/** Score VO2 normalizado 0-100 (relativo a faixa etária/sexo) */
+/** Indice operacional MedFit 0-100; nao e percentil nem norma populacional. */
 export function scoreVO2(vo2: number, sexo: 'M' | 'F', idade: number): number {
   const ref = sexo === 'M'
     ? { min: 25, max: 55 }

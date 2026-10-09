@@ -209,7 +209,7 @@ export function PacienteDocumentosCentral({
             <Linha
               key={avaliacao.id}
               titulo={`${dataCurta(avaliacao.data)} · ${avaliacao.tipo ?? 'Avaliação'}`}
-              descricao={`Score global: ${scoreGlobal(avaliacao) ?? '—'}`}
+              descricao={`Índice MedFit global: ${scoreGlobal(avaliacao) ?? '—'}`}
               status="Finalizada"
               acao={(
                 <a

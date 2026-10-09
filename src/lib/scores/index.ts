@@ -1,12 +1,15 @@
 import type { Sexo } from '@/types';
 import { scoreVO2 } from '../calculations/cardio';
 import { assimetria, type PopulacaoRef } from '../calculations/forca';
+import { INDICE_MEDFIT_AVISO } from '../clinical/formulas';
 
 type ScoreColor = 'bad' | 'mid' | 'good';
 export const scoreColor = (s: number | null | undefined): ScoreColor =>
   s == null ? 'bad' : s <= 40 ? 'bad' : s <= 70 ? 'mid' : 'good';
 export const scoreLabel = (s: number | null | undefined) =>
-  s == null ? '—' : s <= 40 ? 'Crítico' : s <= 70 ? 'Atenção' : 'Ótimo';
+  s == null ? '—' : s <= 40 ? 'Faixa baixa' : s <= 70 ? 'Faixa intermediária' : 'Faixa alta';
+
+export { INDICE_MEDFIT_AVISO };
 
 /**
  * Score composicao corporal (0-100) baseado nos marcadores disponiveis.

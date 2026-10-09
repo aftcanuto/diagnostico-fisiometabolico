@@ -1,6 +1,6 @@
 /**
  * RML — Tabelas de referência e cálculos de classificação
- * Fontes: ACSM, Pollock & Wilmore, Matsudo, Rikli & Jones, YMCA, McGill
+ * Fontes normativas configuradas: ACSM/Pollock e Rikli & Jones.
  */
 
 export type CategoriaRML = 'jovem_ativo' | 'idoso';
@@ -53,43 +53,6 @@ const ABDOMINAL_F: FaixaFlexao[] = [
   { faixa: [40, 49], excelente: 26, bom: 22, regular: 14, fraco:  9 },
   { faixa: [50, 59], excelente: 22, bom: 18, regular: 10, fraco:  5 },
   { faixa: [60, 99], excelente: 17, bom: 12, regular:  6, fraco:  2 },
-];
-
-// ── Prancha ventral — McGill (2007) / ACSM ────────────────────────────────────
-// Valores em segundos
-const PRANCHA_M: FaixaFlexao[] = [
-  { faixa: [18, 29], excelente: 180, bom: 120, regular: 60, fraco: 30 },
-  { faixa: [30, 39], excelente: 150, bom: 100, regular: 55, fraco: 25 },
-  { faixa: [40, 49], excelente: 120, bom:  90, regular: 45, fraco: 20 },
-  { faixa: [50, 59], excelente:  90, bom:  70, regular: 35, fraco: 15 },
-  { faixa: [60, 99], excelente:  75, bom:  55, regular: 25, fraco: 10 },
-];
-
-const PRANCHA_F: FaixaFlexao[] = [
-  { faixa: [18, 29], excelente: 150, bom: 100, regular: 50, fraco: 25 },
-  { faixa: [30, 39], excelente: 120, bom:  85, regular: 45, fraco: 20 },
-  { faixa: [40, 49], excelente: 100, bom:  70, regular: 35, fraco: 15 },
-  { faixa: [50, 59], excelente:  80, bom:  55, regular: 25, fraco: 10 },
-  { faixa: [60, 99], excelente:  60, bom:  40, regular: 20, fraco:  8 },
-];
-
-// ── Agachamento livre 1 minuto (ACSM / Matsudo) ───────────────────────────────
-const AGACHAMENTO_M: FaixaFlexao[] = [
-  { faixa: [15, 19], excelente: 50, bom: 42, regular: 35, fraco: 27 },
-  { faixa: [20, 29], excelente: 48, bom: 40, regular: 33, fraco: 25 },
-  { faixa: [30, 39], excelente: 42, bom: 34, regular: 28, fraco: 21 },
-  { faixa: [40, 49], excelente: 35, bom: 28, regular: 22, fraco: 15 },
-  { faixa: [50, 59], excelente: 28, bom: 22, regular: 17, fraco: 11 },
-  { faixa: [60, 99], excelente: 22, bom: 17, regular: 12, fraco:  8 },
-];
-
-const AGACHAMENTO_F: FaixaFlexao[] = [
-  { faixa: [15, 19], excelente: 45, bom: 37, regular: 30, fraco: 23 },
-  { faixa: [20, 29], excelente: 43, bom: 35, regular: 28, fraco: 21 },
-  { faixa: [30, 39], excelente: 37, bom: 29, regular: 23, fraco: 17 },
-  { faixa: [40, 49], excelente: 30, bom: 23, regular: 17, fraco: 11 },
-  { faixa: [50, 59], excelente: 24, bom: 18, regular: 13, fraco:  8 },
-  { faixa: [60, 99], excelente: 18, bom: 13, regular:  9, fraco:  5 },
 ];
 
 // ── Sentar e Levantar 30s — Rikli & Jones (2013) ─────────────────────────────
@@ -211,35 +174,9 @@ export function calcularRML(input: RMLInput): RMLResult {
         scores.push(scoreClasse(result.abd_1min_classificacao));
       }
     }
-    // Prancha
-    if (input.abd_prancha_seg != null) {
-      const tbl = sexo === 'M' ? PRANCHA_M : PRANCHA_F;
-      const f = getFaixa(tbl, idade);
-      if (f) {
-        result.abd_prancha_classificacao = classificar(input.abd_prancha_seg, f);
-        scores.push(scoreClasse(result.abd_prancha_classificacao));
-      }
-    }
-    // MMII agachamento
-    if (input.mmii_agach_reps != null) {
-      const tbl = sexo === 'M' ? AGACHAMENTO_M : AGACHAMENTO_F;
-      const f = getFaixa(tbl, idade);
-      if (f) {
-        result.mmii_agach_classificacao = classificar(input.mmii_agach_reps, f);
-        scores.push(scoreClasse(result.mmii_agach_classificacao));
-      }
-    }
-    // Wall sit — apenas para tempo (sem tabela normativa formal, usar referências empíricas)
-    if (input.mmii_wallsit_seg != null) {
-      const s = input.mmii_wallsit_seg;
-      const c: ClassificacaoRML =
-        s >= 120 ? 'Excelente' :
-        s >= 90  ? 'Bom' :
-        s >= 60  ? 'Regular' :
-        s >= 30  ? 'Fraco' : 'Muito fraco';
-      result.mmii_wallsit_classificacao = c;
-      scores.push(scoreClasse(c));
-    }
+    // Prancha, agachamento de 1 minuto e wall sit permanecem descritivos.
+    // O projeto nao possui tabela normativa rastreavel e compativel com todas
+    // as faixas etarias para sustentar classificacao automatica.
   } else {
     // Idoso
     if (input.idoso_sl_reps != null) {
@@ -286,10 +223,6 @@ export const REFERENCIAS_RML = {
   flexao_modificada_f:  FLEXAO_MODIFICADA_F,
   abdominal_m:          ABDOMINAL_M,
   abdominal_f:          ABDOMINAL_F,
-  prancha_m:            PRANCHA_M,
-  prancha_f:            PRANCHA_F,
-  agachamento_m:        AGACHAMENTO_M,
-  agachamento_f:        AGACHAMENTO_F,
   sentar_levantar_m:    SENTAR_LEVANTAR_M,
   sentar_levantar_f:    SENTAR_LEVANTAR_F,
   arm_curl_m:           ARM_CURL_M,
@@ -300,9 +233,6 @@ export const FONTES_RML = [
   'ACSM\'s Guidelines for Exercise Testing and Prescription, 11ª ed. (2022)',
   'Pollock ML, Wilmore JH. Exercise in Health and Disease, 2ª ed. (1990)',
   'Rikli RE, Jones CJ. Senior Fitness Test Manual, 2ª ed. (2013)',
-  'McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation, 2ª ed. (2007)',
-  'Matsudo SMM. Envelhecimento & Atividade Física. Midiograf (2001)',
-  'Matsudo VKR et al. Tabelas de referência para aptidão física. Rev Bras Ativ Fís Saúde (1997)',
 ];
 
 export const PROTOCOLOS_RML = {
@@ -322,19 +252,19 @@ export const PROTOCOLOS_RML = {
     fonte: 'Pollock & Wilmore (1990) / ACSM (2022)',
   },
   prancha_ventral: {
-    nome: 'Prancha ventral isométrica (McGill)',
+    nome: 'Prancha ventral isométrica',
     descricao: 'Posição de pranchas nos antebraços, corpo alinhado, quadril neutro. Manter posição o máximo de tempo possível. Registrar em segundos.',
-    fonte: 'McGill SM (2007)',
+    fonte: 'Procedimento descritivo; sem faixa normativa etaria configurada',
   },
   agachamento_1min: {
     nome: 'Agachamento livre em 1 minuto',
     descricao: 'Em pé, pés na largura dos ombros, descer até coxas paralelas ao solo. Sem carga. Contar repetições em 60 segundos mantendo técnica.',
-    fonte: 'Matsudo SMM (2001) / ACSM (2022)',
+    fonte: 'Procedimento descritivo; sem faixa normativa etaria configurada',
   },
   wall_sit: {
     nome: 'Wall sit (isometria de MMII)',
     descricao: 'Costas apoiadas na parede, joelhos a 90°, coxas paralelas ao solo, braços estendidos ao longo do corpo. Manter posição o máximo de tempo. Registrar em segundos.',
-    fonte: 'Protocolo empírico / literatura geral',
+    fonte: 'Procedimento descritivo; sem faixa normativa configurada',
   },
   sentar_levantar_30s: {
     nome: 'Teste de Sentar e Levantar em 30 segundos',

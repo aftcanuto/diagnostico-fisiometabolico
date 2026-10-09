@@ -6,6 +6,7 @@ import { classificarWells, scoreFlexibilidade } from '../src/lib/calculations/fl
 import { assimetria, forcaRelativa } from '../src/lib/calculations/forca';
 import { calcularRML } from '../src/lib/calculations/rml';
 import { scoreComposicaoCorporal } from '../src/lib/scores';
+import { classificarComposicaoCorporal } from '../src/lib/bodyComposition';
 
 assert.equal(imc(76, 170), 26.3);
 assert.deepEqual(mediaDobra(10, 10.4, null), { media: 10.2, precisaTerceira: false });
@@ -38,10 +39,9 @@ assert.deepEqual(zonasTreinamento(176), {
 });
 assert.equal(classificaVO2(42, 'M', 46), 'Bom');
 assert.equal(scoreVO2(42, 'M', 46), 78);
-
 assert.deepEqual(classificarWells(22, 'M', 46), {
   classificacao: 'Regular',
-  percentil: 'P30-P49',
+  percentil: 'Faixa ACSM',
 });
 assert.equal(scoreFlexibilidade(22, 'M', 46), 54);
 
@@ -63,11 +63,13 @@ const rml = calcularRML({
   mmii_agach_reps: 25,
   mmii_wallsit_seg: 45,
 });
-assert.equal(rml.score, 68);
+assert.equal(rml.score, 90);
 assert.equal(rml.mmss_classificacao, 'Bom');
 assert.equal(rml.abd_1min_classificacao, 'Excelente');
-assert.equal(rml.abd_prancha_classificacao, 'Regular');
-assert.equal(rml.mmii_agach_classificacao, 'Regular');
-assert.equal(rml.mmii_wallsit_classificacao, 'Fraco');
+assert.equal(rml.abd_prancha_classificacao, undefined);
+assert.equal(rml.mmii_agach_classificacao, undefined);
+assert.equal(rml.mmii_wallsit_classificacao, undefined);
+
+assert.equal(classificarComposicaoCorporal({ pctGordura:12, imc:28, sexo:'M' }).label, 'Atletico');
 
 console.log('OK: formulas clinicas principais validadas');

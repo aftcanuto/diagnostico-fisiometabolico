@@ -20,7 +20,10 @@ require.extensions['.tsx'] = load;
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const R = require('../src/lib/clinical/references.ts');
+const A = require('../src/lib/anthropometry/catalog.ts');
+const N = require('../src/lib/nutrition/planoAlimentar.ts');
 const P = require('../src/lib/ai/prompts.ts');
+const F = require('../src/lib/clinical/formulas.ts');
 const { PortalPaciente } = require('../src/components/PortalPaciente.tsx');
 const { renderLaudoHTML } = require('../src/lib/pdf/template.ts');
 const { renderEvolutionReportHTML } = require('../src/lib/pdf/evolution-template.ts');
@@ -30,6 +33,13 @@ const ids = html => [...html.matchAll(/data-reference-id="([^"]+)"/g)].map(m => 
 const keys = Object.keys(R.MODULOS_REFERENCIAS);
 assert.equal(new Set(R.REFERENCIAS.map(r => r.id)).size, R.REFERENCIAS.length);
 assert.equal(new Set(R.REFERENCIAS.map(r => r.url)).size, R.REFERENCIAS.length);
+assert.equal(new Set(F.FORMULAS_CLINICAS.map(f => f.id)).size, F.FORMULAS_CLINICAS.length);
+assert(F.FORMULAS_CLINICAS.some(f => f.tipo === 'indice_operacional'));
+assert(P.promptConclusao(paciente, { selecionados: {} }).system.includes(F.INDICE_MEDFIT_AVISO));
+const referenceIds = new Set([...R.REFERENCIAS.map(r => r.id), ...A.REFERENCES.map(r => r.id), ...N.REFERENCIAS_NUTRICIONAIS.map(r => r.id)]);
+for (const formula of F.FORMULAS_CLINICAS) for (const id of String(formula.referencia ?? '').split('|').filter(Boolean)) {
+  assert(referenceIds.has(id), `Formula ${formula.id} aponta para referencia inexistente: ${id}`);
+}
 assert.deepEqual(R.referenciasAvaliacao({ anamnese: true }), []);
 assert.equal(R.referenciasModulo('anamnese'), '');
 assert.deepEqual(R.modulosDaAvaliacao({ modulos_selecionados: {}, jump_test: {} }), {});

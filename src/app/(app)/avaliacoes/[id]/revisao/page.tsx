@@ -368,14 +368,14 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
             <div style={{ textAlign: 'center', padding: '20px 40px',
               background: '#f0fdf4', borderRadius: 16, border: '1px solid #bbf7d0' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b',
-                textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Score Global</div>
+                textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Índice MedFit global</div>
               <div style={{ fontSize: 56, fontWeight: 900, lineHeight: 1,
-                color: scores.global >= 70 ? '#10b981' : scores.global >= 40 ? '#f59e0b' : '#ef4444' }}>
+                color: scores.global > 70 ? '#10b981' : scores.global > 40 ? '#f59e0b' : '#ef4444' }}>
                 {scores.global ?? '—'}
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, marginTop: 6,
-                color: scores.global >= 70 ? '#10b981' : scores.global >= 40 ? '#f59e0b' : '#ef4444' }}>
-                {scores.global >= 70 ? 'Ótimo' : scores.global >= 40 ? 'Atenção' : 'Crítico'}
+                color: scores.global > 70 ? '#10b981' : scores.global > 40 ? '#f59e0b' : '#ef4444' }}>
+                {scores.global > 70 ? 'Faixa alta' : scores.global > 40 ? 'Faixa intermediária' : 'Faixa baixa'}
               </div>
             </div>
           </div>
@@ -400,6 +400,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
             </div>
           </div>
           {checklist.some(item => item.modulo === 'composicao_parcial') && <p className="mt-3 text-center text-xs text-amber-800">* Score quantificado apenas com os marcadores disponíveis. Consulte o alerta de composição parcial abaixo.</p>}
+          <p className="mt-3 text-center text-xs text-slate-500">Índices operacionais internos para acompanhamento longitudinal; não equivalem a percentis, normas populacionais ou diagnóstico.</p>
         </CardBody>
       </Card>
 

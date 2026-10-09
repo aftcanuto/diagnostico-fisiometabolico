@@ -1453,3 +1453,20 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Validacao visual local aprovada em 1440x1000 e 390x844 com as imagens publicas atuais: tres cards e tres expansores renderizados, detalhes ocultos no estado fechado, expansao funcional, focos `42% 45%`, `35% 50%` e `72% 40%` respeitados, `Sob consulta` exibido e nenhum overflow horizontal.
 - Validacoes aprovadas: teste dedicado da vitrine, auditoria das 74 migrations, TypeScript, lint, build e `npm run predeploy` completo. O PDF geral manteve 34 paginas sem cortes ou overflow; permanece apenas a diferenca geometrica conhecida de 7 px na pagina de forca.
 - Advisors executados apos a migration sem alerta novo relacionado a vitrine; permanecem somente os avisos preexistentes de seguranca e desempenho ja documentados. Publicacao concluida conforme a entrada de 2026-10-05.
+
+## 2026-10-09 - Auditoria sistematica de formulas clinicas
+
+- Criado inventario central em `src/lib/clinical/formulas.ts` e matriz detalhada em `docs/AUDITORIA_FORMULAS.md`, separando equacoes publicadas, tabelas normativas, metricas descritivas, valores de equipamento e indices operacionais MedFit.
+- IA, PDF, portal, painel e revisao passaram a identificar os scores de 0 a 100 como `Indice MedFit`, destinado a acompanhamento longitudinal e sem equivalencia com percentis, normas populacionais, diagnostico ou risco.
+- Recuperacao da FC preserva a variacao assinada do equipamento: valores negativos indicam queda e valores positivos indicam que a FC continuou subindo. Modulo, portal, PDF e IA usam a mesma convencao; nenhum valor e convertido para modulo absoluto.
+- Novas avaliacoes nao recebem mais classificacao automatica de VO2 por uma tabela operacional sem os insumos exigidos pela referencia; classificacoes profissionais e registros antigos sao preservados.
+- Adicionadas ao registro unico as fontes Cole 1999, FRIEND 2018 e Schlussel 2008, propagadas automaticamente para IA, PDF, portal e relatorio evolutivo quando o modulo correspondente estiver ativo.
+- Banco de Wells deixou de exibir percentis inferidos a partir das categorias.
+- Removidas tabelas artificiais e nao utilizadas de preensao para populacoes ativa e atleta.
+- Prancha, agachamento de 1 minuto e wall sit continuam registrando os valores brutos, mas novas coletas nao recebem classificacao normativa automatica sem tabela rastreavel e compativel. Avaliacoes antigas permanecem preservadas.
+- IMC deixou de sobrescrever a faixa visual derivada do percentual de gordura quando este estiver disponivel.
+- Prompts de IA receberam regras compartilhadas para nao transformar ausencia em zero, indice interno em norma, associacao em causalidade ou metrica descritiva em diagnostico.
+- Parametros de plano alimentar foram explicitados como editaveis e dependentes de validacao profissional.
+- Validacoes aprovadas: calculos, paridade de referencias, smoke test completo, banco, backup, nutricao, relatorio evolutivo, Jump Test, antropometria, consentimento, vitrine, TypeScript, lint e build de producao.
+- PDF completo com 37 paginas aprovado: nenhuma imagem quebrada, pagina vazia, card cortado ou conteudo sobre o rodape. As tres paginas de tracao mantem diferenca interna de altura de 6 px, sem extrapolacao visual ou invasao do rodape.
+- Sem migration nova e sem alteracao de dados persistidos.

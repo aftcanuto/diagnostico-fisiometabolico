@@ -138,6 +138,7 @@ function PlanoAcaoModelosPanel({ clinicaId }: { clinicaId: string }) {
             <Field label="Metas de 60 dias"><Textarea value={selecionado.metas_60_dias ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, metas_60_dias: e.target.value }))} /></Field>
             <Field label="Metas de 90 dias"><Textarea value={selecionado.metas_90_dias ?? ''} onChange={e => setSelecionado((s: any) => ({ ...s, metas_90_dias: e.target.value }))} /></Field>
           </div>
+          <p className="text-xs text-slate-500">Fator de atividade, ajuste, macronutrientes, água e fibras são parâmetros editáveis do template e exigem validação profissional; não são uma prescrição universal.</p>
           <div className="grid gap-3 md:grid-cols-2">
             {AREAS.map(([key, label]) => (
               <Field key={key} label={label}>

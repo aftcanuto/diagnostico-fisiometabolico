@@ -40,13 +40,14 @@ export function classificarWells(cm: number, sexo: Sexo, idade: number): Classif
   const faixa = faixaEtaria(idade);
   const tab = sexo === 'M' ? TABELA_M[faixa] : TABELA_F[faixa];
 
-  if (cm >= tab.excelente) return { classificacao: 'Excelente', percentil: '≥ P90' };
-  if (cm >= tab.bom)       return { classificacao: 'Bom', percentil: 'P70-P89' };
-  if (cm >= tab.medio)     return { classificacao: 'Médio', percentil: 'P50-P69' };
-  if (cm >= tab.regular)   return { classificacao: 'Regular', percentil: 'P30-P49' };
-  return { classificacao: 'Fraco', percentil: '< P30' };
+  if (cm >= tab.excelente) return { classificacao: 'Excelente', percentil: 'Faixa ACSM' };
+  if (cm >= tab.bom)       return { classificacao: 'Bom', percentil: 'Faixa ACSM' };
+  if (cm >= tab.medio)     return { classificacao: 'Médio', percentil: 'Faixa ACSM' };
+  if (cm >= tab.regular)   return { classificacao: 'Regular', percentil: 'Faixa ACSM' };
+  return { classificacao: 'Fraco', percentil: 'Faixa ACSM' };
 }
 
+/** Indice operacional MedFit 0-100; nao e percentil populacional. */
 export function scoreFlexibilidade(cm: number | null, sexo: Sexo, idade: number): number | null {
   if (cm == null) return null;
   const faixa = faixaEtaria(idade);

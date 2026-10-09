@@ -8,7 +8,7 @@ import { SaveIndicator } from '@/components/ui/SaveIndicator';
 import { buscarModulo, upsertModulo } from '@/lib/modulos';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
-import { fcMaxTanaka, zonasTreinamento, classificaVO2 } from '@/lib/calculations/cardio';
+import { fcMaxTanaka, zonasTreinamento } from '@/lib/calculations/cardio';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { Plus, Trash2 } from 'lucide-react';
 import { buildSteps } from '@/lib/steps';
@@ -100,13 +100,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   const num = (v: string) => v !== '' ? parseFloat(v) : null;
   const fcMaxUsada = Number(form.fc_max) || (idade ? fcMaxTanaka(idade) : null);
   const zonasCalc = useMemo(() => fcMaxUsada ? zonasTreinamento(fcMaxUsada) : null, [fcMaxUsada]);
-  const classificacao = useMemo(() => {
-    const v = Number(form.vo2max); const pac = aval?.pacientes;
-    if (!v || !pac) return '';
-    return classificaVO2(v, pac.sexo, calcIdade(pac.data_nascimento));
-  }, [form.vo2max, aval]);
-
-  const autoSaveValue = { form, recFC, zonasPct, velTreino, zonasLimiar, zonasCalc, classificacao };
+  const autoSaveValue = { form, recFC, zonasPct, velTreino, zonasLimiar, zonasCalc };
 
   const salvar = async (v = autoSaveValue) => {
     const zonas_percentual = INTENSIDADES.filter(i => v.zonasPct[i]).map(i => ({ pct: i, bpm: num(v.zonasPct[i]) }));
@@ -128,7 +122,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
       fc_limiar: num(v.form.fc_limiar), carga_limiar: num(v.form.carga_limiar),
       carga_max: num(v.form.carga_max), ve_max: num(v.form.ve_max),
       ponto_limiar_tempo: v.form.ponto_limiar_tempo || null,
-      classificacao_vo2: v.form.classificacao_vo2 || v.classificacao || null,
+      classificacao_vo2: v.form.classificacao_vo2 || null,
       zonas, rec_fc, zonas_percentual, velocidades_treino, zonas_limiar,
     });
   };
@@ -192,7 +186,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
                 <Input type="text" placeholder="06:25" value={form.ponto_limiar_tempo} onChange={upd('ponto_limiar_tempo')} />
               </Field>
               <Field label="Classificação VO₂">
-                <Input type="text" placeholder={classificacao || 'ex: Razoável'} value={form.classificacao_vo2} onChange={upd('classificacao_vo2')} />
+                <Input type="text" placeholder="Preencher conforme protocolo e referência adotados" value={form.classificacao_vo2} onChange={upd('classificacao_vo2')} />
               </Field>
             </div>
           </CardBody>
@@ -202,7 +196,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
         <Card>
           <CardHeader><CardTitle>Recuperação da frequência cardíaca</CardTitle></CardHeader>
           <CardBody>
-            <p className="text-xs text-slate-500 mb-3">Queda em bpm após o fim do esforço (valores negativos)</p>
+            <p className="text-xs text-slate-500 mb-3">Variação em bpm após o fim do esforço: queda negativa e subida positiva. A interpretação depende do protocolo de recuperação.</p>
             <div className="overflow-x-auto">
               <table className="text-sm w-full">
                 <thead>
@@ -226,7 +220,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
             </div>
             {recFC[60] && (
               <div className={`mt-3 text-sm font-medium ${Number(recFC[60]) <= -20 ? 'text-emerald-600' : Number(recFC[60]) <= -12 ? 'text-amber-600' : 'text-red-600'}`}>
-                Rec. 60s: {recFC[60]} bpm — {Number(recFC[60]) <= -20 ? '✅ Boa recuperação' : Number(recFC[60]) <= -12 ? '⚠️ Recuperação mediana' : '⚠️ Recuperação ruim'}
+                Rec. 60s: {recFC[60]} bpm — {Number(recFC[60]) <= -20 ? 'Boa recuperação' : Number(recFC[60]) <= -12 ? 'Recuperação mediana' : Number(recFC[60]) < 0 ? 'Redução pequena' : 'FC ainda em elevação'}
               </div>
             )}
           </CardBody>
