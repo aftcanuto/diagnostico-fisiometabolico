@@ -91,6 +91,15 @@ async function main() {
     assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /84 kg/);
     assert.match(await page.$eval('[data-anthropometry-v2]', element => element.textContent ?? ''), /25 medidas com pendencias; 1 confirmada/);
     assert.match(await page.$eval('[data-measurement-id="abdomen"]', element => element.textContent ?? ''), /Nao aplicavel/);
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Resultados'))?.click());
+    const fatMethodsText = await page.$eval('[data-fat-methods]', element => element.textContent ?? '');
+    assert.match(fatMethodsText, /Durnin-Womersley\/Rahaman \+ Siri/);
+    assert.match(fatMethodsText, /Petroski/);
+    assert.match(fatMethodsText, /Jackson, Pollock e Ward/);
+    await page.click('[aria-label="Selecionar Durnin-Womersley/Rahaman + Siri"]');
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Salvar rascunho'))?.click());
+    await page.waitForFunction(() => document.body.innerText.includes('Revisao 2 salva'));
+    assert.equal(revision, 2);
     await page.screenshot({ path:path.join(dir,'form-desktop.png'), fullPage:true });
     for (const width of [320,390,768]) {
       await page.setViewport({ width, height:844 });

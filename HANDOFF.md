@@ -1470,3 +1470,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Validacoes aprovadas: calculos, paridade de referencias, smoke test completo, banco, backup, nutricao, relatorio evolutivo, Jump Test, antropometria, consentimento, vitrine, TypeScript, lint e build de producao.
 - PDF completo com 37 paginas aprovado: nenhuma imagem quebrada, pagina vazia, card cortado ou conteudo sobre o rodape. As tres paginas de tracao mantem diferenca interna de altura de 6 px, sem extrapolacao visual ou invasao do rodape.
 - Sem migration nova e sem alteracao de dados persistidos.
+
+## 2026-10-09 - Selecao de percentual de gordura e falha de conexao
+
+- A tela de resultados da antropometria passou a apresentar uma secao propria para percentual de gordura, com a opcao unica e completa `Durnin-Womersley/Rahaman + Siri`; a interface seleciona e remove conjuntamente a equacao de densidade e a conversao de Siri.
+- Petroski e Jackson, Pollock e Ward continuam preservados no catalogo e no motor, mas aparecem como indisponiveis no conjunto estrito de 26 medidas, com explicacao dos locais anatomicos ausentes e sem substituicao indevida por crista iliaca, supraespinal ou dobra abdominal.
+- Erros de rede ou DNS agora informam que a requisicao nao chegou ao servidor, preservam os campos e orientam reabrir pelo dominio oficial. O `POST` nao e repetido automaticamente, evitando duplicidade ou falso conflito quando a resposta se perde depois de uma gravacao valida.
+- Nenhuma formula, resultado previamente salvo, schema ou migration foi alterado.

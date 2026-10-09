@@ -17,6 +17,8 @@ export type AnthropometryStoredRow = { registro_v2: unknown; resultados_v2: Anth
 const statusLabels = { available: 'Consolidada', missing: 'Faltam leituras', review: 'Revisar', invalid: 'Invalida' };
 const consolidationLabels = { none: 'Sem valor', single: 'Leitura unica', mean: 'Media', median: 'Mediana' };
 const groupLabels = { basic: 'Medidas basicas', skinfold: 'Dobras cutaneas', girth: 'Perimetros', breadth: 'Diametros osseos' };
+const fatMethodIds = new Set(['durninWomersley1974', 'siri1961', 'petroski1995', 'jackson1980']);
+const otherMethods = METHODS.filter(method => !fatMethodIds.has(method.id));
 
 function DecimalInput({ value, onChange, onInvalid, label, ...props }: {
   value: number | null; onChange: (value: number | null) => void; onInvalid: (invalid: boolean) => void; label: string;
@@ -128,7 +130,12 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
       setRevision(row.revision_v2); setStoredResults(row.resultados_v2); setInput(persisted); setNeedsRecalculation(false); setDirty(false); setMessage('Antropometria salva.');
       return true;
     } catch (error) {
-      setSaveError(error instanceof Error && error.name === 'AbortError' ? 'Tempo de resposta excedido. O salvamento nao foi confirmado; confira a avaliacao antes de repetir.' : error instanceof Error ? error.message : 'Falha ao salvar. Seus campos foram preservados.');
+      const networkFailure = error instanceof TypeError && /fetch|network|load/i.test(error.message);
+      setSaveError(error instanceof Error && error.name === 'AbortError'
+        ? 'Tempo de resposta excedido. O salvamento nao foi confirmado; confira a avaliacao antes de repetir.'
+        : networkFailure
+          ? 'Falha de conexao ou DNS antes de chegar ao servidor. Seus campos foram preservados. Confira a internet, recarregue a pagina pelo dominio avaliacao.medfit.med.br e tente salvar novamente.'
+          : error instanceof Error ? error.message : 'Falha ao salvar. Seus campos foram preservados.');
       return false;
     } finally { clearTimeout(timeout); saveLock.current = false; setSaving(false); }
   }
@@ -189,7 +196,20 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
         })}</div></section>)}
       </div>
       <div role="tabpanel" id="anthropometry-panel-results" aria-labelledby="anthropometry-tab-results" hidden={tab !== 'results'} className="space-y-5">
-        <section className="space-y-3"><h2 className="text-lg font-semibold">Metodos selecionados</h2><div className="grid gap-3 sm:grid-cols-2">{METHODS.map(method => <label key={method.id} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" aria-label={`Selecionar ${method.label}`} checked={input.methods.includes(method.id)} onChange={event => change({ methods: event.target.checked ? [...input.methods, method.id] : input.methods.filter(id => id !== method.id) })} /><span>{method.label}</span></label>)}</div></section>
+        <section className="space-y-3" data-fat-methods>
+          <h2 className="text-lg font-semibold">Percentual de gordura</h2>
+          <label className="flex items-start gap-3 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
+            <input type="checkbox" className="mt-1" aria-label="Selecionar Durnin-Womersley/Rahaman + Siri" checked={input.methods.includes('siri1961')} onChange={event => change({ methods: event.target.checked
+              ? [...new Set([...input.methods.filter(id => id !== 'durninWomersley1974' && id !== 'siri1961'), 'durninWomersley1974', 'siri1961'])]
+              : input.methods.filter(id => id !== 'durninWomersley1974' && id !== 'siri1961') })} />
+            <span><strong>Durnin-Womersley/Rahaman + Siri</strong><span className="mt-1 block text-xs text-gray-600">Calcula a densidade com biceps, triceps, subescapular e crista iliaca e a converte em percentual de gordura. A faixa etaria define automaticamente Durnin-Rahaman ou Durnin-Womersley.</span></span>
+          </label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded border bg-gray-50 p-3 text-sm text-gray-600"><strong className="text-gray-800">Petroski</strong><span className="mt-1 block text-xs">Indisponivel neste conjunto de 26 medidas: exige local supra-iliaco especifico da equacao, que nao pode ser substituido por crista iliaca, supraespinal ou dobra abdominal.</span></div>
+            <div className="rounded border bg-gray-50 p-3 text-sm text-gray-600"><strong className="text-gray-800">Jackson, Pollock e Ward</strong><span className="mt-1 block text-xs">Indisponivel neste conjunto de 26 medidas: os locais exatos exigidos pela equacao nao foram coletados. A dobra abdominal isolada nao completa o protocolo.</span></div>
+          </div>
+        </section>
+        <section className="space-y-3"><h2 className="text-lg font-semibold">Outros metodos e resultados</h2><div className="grid gap-3 sm:grid-cols-2">{otherMethods.map(method => <label key={method.id} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" aria-label={`Selecionar ${method.label}`} checked={input.methods.includes(method.id)} onChange={event => change({ methods: event.target.checked ? [...input.methods, method.id] : input.methods.filter(id => id !== method.id) })} /><span>{method.label}</span></label>)}</div></section>
         <Field label="Categoria populacional utilizada por Lee"><Select aria-label="Categoria populacional Lee" value={input.populationCategory ?? ''} onChange={event => change({ populationCategory: (event.target.value || null) as InputData['populationCategory'] })}><option value="">Nao informada</option><option value="asian">Asiatica (categoria historica do modelo)</option><option value="africanAmerican">Afro-americana (categoria historica do modelo)</option><option value="whiteHispanic">Branca / hispanica (categoria historica do modelo)</option></Select></Field>
         <p className="text-xs text-gray-600">Categorias historicas definem coeficientes metodologicos, nao caracteristicas deterministas da pessoa.</p>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedOnly} onChange={event => setSelectedOnly(event.target.checked)} />Mostrar apenas metodos selecionados</label>
