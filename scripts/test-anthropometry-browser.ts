@@ -141,6 +141,18 @@ async function main() {
     const calculated = calculateAnthropometry(input, { date:'2026-09-28', birthDate:'1990-01-01', sex:'M' });
     const results = { ...structuredClone(calculated), professional:{ name:'Andre Felipe Teixeira Canuto', qualification:{status:'pending',level:1} } };
     const html = `<!doctype html><meta charset="utf-8"><style>@page{size:A4;margin:0}body{margin:0;background:#ddd;font-family:Arial}.page{box-sizing:border-box;width:794px;min-height:1123px;margin:0 auto 12px;background:white;padding:42px;overflow:hidden}.mod-head{border-bottom:1px solid #ddd;margin-bottom:12px}.mod-title{font-size:22px;font-weight:700;padding-bottom:8px}table{break-inside:avoid}h3{break-after:avoid}</style>${anthropometryReportHtml({registro_v2:input,resultados_v2:results,revision_v2:1})}`;
+    assert.match(html, /Medidas coletadas/);
+    assert.match(html, /Resultado consolidado/);
+    for (const technicalLabel of [
+      />1 \/ 2 \/ 3</i,
+      />Qualidade</i,
+      /Ressalvas dos resultados/i,
+      /Metodo \/ versao/i,
+      /strict26-v1/i,
+      />Revisao</i,
+      /Catalogo medfit/i,
+      /Motor anthropometry/i,
+    ]) assert.doesNotMatch(html, technicalLabel);
     const reportPath = path.join(dir,'report.html'); fs.writeFileSync(reportPath, html);
     await page.setViewport({ width:900, height:900 });
     await page.goto(`file:///${reportPath.replace(/\\/g,'/')}`, { waitUntil:'networkidle0' });
@@ -159,7 +171,8 @@ async function main() {
     const pageLoads = await page.$$eval('.page', pages => pages.map(item => [...item.children].filter(child => !child.classList.contains('mod-head') && !child.classList.contains('pdf-footer')).length));
     const reportText = await page.$eval('body', element => element.innerText);
     assert.match(reportText, /Diametro bimaleolar/);
-    assert.match(reportText, /MARTIN_OSSEO_1991/);
+    assert.match(reportText, /Massa ossea estimada - Martin, 1991/);
+    assert.doesNotMatch(reportText, /MARTIN_OSSEO_1991|strict26-v1|Ressalvas dos resultados|Metodo \/ versao/);
     assert.match(reportText, /Perimetros corrigidos/);
     assert.match(reportText, /Braco relaxado corrigido/);
     const renderedPages = await page.$$('.page');

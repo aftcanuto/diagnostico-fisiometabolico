@@ -59,7 +59,7 @@ const tipos = [
 ];
 
 const nomesRelatorio = {
-  anamnese: 'Dados Vitais e Corporais',
+  anamnese: 'Anamnese',
   sinais_vitais: 'Sinais Vitais',
   posturografia: 'Posturografia',
   termografia: 'Termografia funcional',
@@ -318,9 +318,45 @@ function main() {
     'Evolução dos scores',
   ]);
 
-  const aiBlockCount = (laudo.match(/Análise clínica/g) ?? []).length;
-  assert(aiBlockCount >= 8, `Laudo deveria ter análises clínicas nos módulos preenchidos; encontrou ${aiBlockCount}`);
+  const modulosComAnalise = tipos.filter(tipo => !['conclusao_global', 'evolucao'].includes(tipo));
+  const aiBlockCount = (laudo.match(/data-analysis-block="true"/g) ?? []).length;
+  assert(aiBlockCount === modulosComAnalise.length,
+    `Laudo deveria ter exatamente uma analise por modulo; esperadas ${modulosComAnalise.length}, encontrou ${aiBlockCount}`);
+  for (const tipo of modulosComAnalise) {
+    const texto = `Analise em versao PDF/paciente simulada para ${tipo}.`;
+    const ocorrencias = laudo.split(texto).length - 1;
+    assert(ocorrencias === 1, `${tipo}: analise deveria aparecer uma unica vez; encontrou ${ocorrencias}`);
+  }
+  assert(laudo.indexOf('Analise em versao PDF/paciente simulada para antropometria.') > laudo.indexOf('Conclusao profissional'),
+    'Antropometria: analise deve aparecer depois de todos os resultados e da conclusao profissional');
+  assert(laudo.indexOf('Analise em versao PDF/paciente simulada para biomecanica_corrida.') > laudo.indexOf('Gráficos cinemáticos'),
+    'Biomecanica: analise deve aparecer depois da ultima pagina de resultados do modulo');
   assert(laudo.includes('Conclusão global') || laudo.includes('Conclusao global'), 'Laudo deveria incluir a conclusão global revisada');
+  assert(laudo.indexOf('Conclusao global em versao PDF/paciente simulada para teste completo.') < laudo.indexOf('Referências bibliográficas'),
+    'Conclusao global deve aparecer antes das referencias bibliograficas');
+  const inicioProtocolos = laudo.indexOf('Protocolos utilizados');
+  const inicioReferencias = laudo.indexOf('Referências bibliográficas');
+  const protocolos = laudo.slice(inicioProtocolos, inicioReferencias);
+  const ordemProtocolos = [
+    'Sinais vitais', 'Bioimpedância', 'Posturografia', 'Termografia funcional',
+    'Antropometria', 'Jump Test', 'Flexibilidade', 'Dinamometria isométrica',
+    'Resistência muscular localizada', 'Cardiorrespiratório', 'Biomecânica da corrida',
+  ];
+  for (let i = 1; i < ordemProtocolos.length; i++) {
+    assert(protocolos.indexOf(ordemProtocolos[i - 1]) < protocolos.indexOf(ordemProtocolos[i]),
+      `Protocolos fora da ordem de execução: ${ordemProtocolos[i - 1]} / ${ordemProtocolos[i]}`);
+  }
+  assert(protocolos.includes('Protocolo ISAK.'), 'Antropometria deve citar apenas o protocolo ISAK');
+  assert(protocolos.includes('VJ, SJ e CMJ.'), 'Jump Test deve citar VJ, SJ e CMJ');
+  assert(protocolos.includes('Joe Friel'), 'Cardiorrespiratório deve citar zonas de Joe Friel');
+  assert(protocolos.includes('Análise cinemática 2D da corrida.'), 'Biomecânica deve citar análise cinemática');
+  assert(!/Tanaka|protocolo interno|tentativas|RML —|Durnin|Jackson|Siri|Heath-Carter/.test(protocolos),
+    'Protocolos não devem expor referências ou detalhes operacionais removidos');
+  assert(/>42\s*<span[^>]*>kgf<\/span>/.test(laudo) && />39\s*<span[^>]*>kgf<\/span>/.test(laudo),
+    'Laudo deveria exibir a forca em kgf informada na dinamometria');
+  for (const technicalLabel of ['strict26-v1', 'Metodo / versao', 'Ressalvas dos resultados', 'Antropometria V2']) {
+    assert(!laudo.includes(technicalLabel), `Laudo nao deveria expor o identificador tecnico "${technicalLabel}"`);
+  }
 
   assertCodigoContem('src/app/api/anamnese-links/route.ts', [
     'templateAnamneseAtivoDaClinica',

@@ -1,8 +1,5 @@
 import type { ZonasTreino } from '@/types';
 
-/** FCmáx prevista — Tanaka (208 − 0.7 × idade) */
-export const fcMaxTanaka = (idade: number) => Math.round(208 - 0.7 * idade);
-
 /**
  * Zonas de treinamento Z1-Z5 por % FCmáx.
  * Z1 50-60 | Z2 60-70 | Z3 70-80 | Z4 80-90 | Z5 90-100

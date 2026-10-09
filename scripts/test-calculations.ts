@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { calcFFMI, imc, massaMagra, mediaDobra, percentualGorduraJP7, rcq } from '../src/lib/calculations/antropometria';
-import { classificaVO2, fcMaxTanaka, scoreVO2, zonasTreinamento } from '../src/lib/calculations/cardio';
+import { classificaVO2, scoreVO2, zonasTreinamento } from '../src/lib/calculations/cardio';
 import { classificarWells, scoreFlexibilidade } from '../src/lib/calculations/flexibilidade';
 import { assimetria, forcaRelativa } from '../src/lib/calculations/forca';
 import { calcularRML } from '../src/lib/calculations/rml';
@@ -29,7 +29,6 @@ assert.ok(ffmi);
 assert.equal(ffmi?.ffmi, 22.5);
 assert.match(ffmi?.classificacao ?? '', /descritivo/i);
 
-assert.equal(fcMaxTanaka(46), 176);
 assert.deepEqual(zonasTreinamento(176), {
   z1: { min: 88, max: 106 },
   z2: { min: 106, max: 123 },

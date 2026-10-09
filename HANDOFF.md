@@ -4,6 +4,15 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-09 - Protocolos e referencias clinicas revisados
+
+- `Protocolos utilizados` passou a seguir a ordem de execucao/apresentacao dos modulos no laudo: sinais vitais, bioimpedancia, posturografia, termografia, antropometria, Jump Test, flexibilidade, dinamometria isometrica, RML, cardiorrespiratorio e biomecanica.
+- Antropometria agora cita somente o protocolo ISAK nessa secao; Jump Test cita somente VJ, SJ e CMJ; RML nao lista exercicios; biomecanica foi descrita como analise cinematica 2D.
+- A dinamometria deixou de ser apresentada como protocolo interno ou protocolo Medeor e recebeu referencias de validade/confiabilidade da dinamometria isometrica.
+- O modulo cardiorrespiratorio deixou de atribuir automaticamente a FC maxima ausente a Tanaka. O protocolo registra teste de VO2max, limiares e zonas por FC de limiar segundo Joe Friel; a IA recebeu a mesma distincao metodologica.
+- A bibliografia compartilhada entre PDF, portal e IA recebeu referencias para dinamometria isometrica, confiabilidade de testes de campo em RML, teste cardiopulmonar e zonas de Friel. A referencia ISAK permanece sempre presente nas avaliacoes antropometricas atuais.
+- Sem migration: alteracoes apenas de apresentacao, referencias, calculo auxiliar e prompts.
+
 ### 2026-10-09 - Perimetros corrigidos e mensuracoes derivadas visiveis
 
 - Confirmado o conjunto estrito de 26 medidas diretas: quatro basicas, oito dobras cutaneas, dez perimetros e quatro diametros osseos.
@@ -1484,3 +1493,27 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - A categoria populacional de Lee foi movida para junto das equacoes de massa muscular.
 - Selecoes antigas de Petroski ou Jackson, Pollock e Ward aparecem identificadas e podem ser removidas, mas nao podem ser novamente ativadas no conjunto estrito de 26 medidas.
 - A organizacao e apenas de interface; formulas, snapshots historicos, schema e banco permanecem inalterados. Sem migration nova.
+
+## 2026-10-09 - Laudo antropometrico simplificado e dinamometria
+
+- O laudo de antropometria passou a exibir somente o valor consolidado de cada medida: leitura unica quando houver uma coleta, media com duas e mediana com tres, conforme o valor ja persistido pelo motor.
+- Removidos do laudo os campos de qualidade, leituras brutas, situacao, ressalvas operacionais, motor, catalogo, revisao e identificadores internos como `strict26-v1`.
+- Resultados sem valor numerico deixaram de ocupar o laudo; tabelas de resultados, perimetros corrigidos e Phantom nao exibem status de revisao.
+- A evolucao antropometrica continua verificando compatibilidade internamente, mas nao publica versoes, revisoes ou diagnosticos tecnicos do sistema.
+- Corrigido o espacamento superior da grade de Flexibilidade para que os cards nao encostem na linha do cabecalho.
+- A dinamometria Medeor/SPTech agora publica a forca em `kgf`, alem de torque e 1RM quando informados, e nao cria cards vazios para metricas ausentes.
+- `Protocolos utilizados` identifica apenas `Antropometria`, sem sufixo de versao ou texto de snapshot. Trechos antigos de analise que exponham `status de revisao` da antropometria sao omitidos da apresentacao ao paciente.
+- Validacoes aprovadas: teste antropometrico no navegador em cinco paginas, smoke test completo, auditoria visual do laudo completo em 34 paginas, TypeScript, lint e build de producao. O PDF nao apresentou imagem quebrada, pagina vazia, card cortado ou invasao do rodape; portal clinico e portal do paciente nao apresentaram overflow entre 320 e 1280 px.
+- Gerado `output/pdf/relatorio-teste-completo-medfit.pdf` para conferencia visual desta entrega.
+- Sem migration nova e sem alteracao das formulas ou dos dados persistidos.
+
+## 2026-10-09 - Ordem das analises por modulo e conclusao global
+
+- A anamnese passou a integrar o laudo quando selecionada, respeitando os campos autorizados para o relatorio e exibindo sua analise clinica ao final.
+- A analise da Antropometria atual foi conectada ao ultimo bloco do modulo; anteriormente o caminho V2 encerrava o relatorio antropometrico sem publicar a IA aprovada.
+- A analise da Biomecanica da corrida foi movida da primeira pagina para depois da regua angular, achados, recomendacoes e graficos cinematicos.
+- Os demais modulos foram auditados e mantem uma unica analise no encerramento: sinais vitais, bioimpedancia, posturografia, termografia, Jump Test completo, flexibilidade, forca, RML e cardiorrespiratorio.
+- Plano de acao e orientacao nutricional antecedem a conclusao global. `Conclusao clinica` encerra o conteudo clinico e vem antes de evolucao, protocolos e referencias bibliograficas.
+- O smoke test exige exatamente uma analise para cada um dos 12 modulos selecionados, verifica ausencia de duplicacoes e confirma especificamente o posicionamento final de antropometria, biomecanica e da conclusao antes das referencias.
+- Auditoria visual aprovada em 36 paginas: nenhuma imagem quebrada, pagina vazia, card cortado, overflow ou invasao de rodape. Portais clinico e do paciente continuam sem overflow entre 320 e 1280 px.
+- PDF de conferencia atualizado em `output/pdf/relatorio-teste-completo-medfit.pdf`. Sem migration nova.

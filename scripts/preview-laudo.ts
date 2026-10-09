@@ -104,6 +104,7 @@ export const dados: LaudoData = {
   dados: {
     anamnese: {
       respostas: {
+        __campos_publicos_relatorio: ['objetivo', 'sono', 'historico'],
         objetivo: 'Reduzir gordura corporal, melhorar condicionamento e prevenir dores lombares.',
         sono: '6 a 7 horas por noite',
         historico: 'Sem lesões recentes. Relata desconforto lombar após longos períodos sentada.',

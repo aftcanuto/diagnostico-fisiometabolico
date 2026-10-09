@@ -8,8 +8,7 @@ import { SaveIndicator } from '@/components/ui/SaveIndicator';
 import { buscarModulo, upsertModulo } from '@/lib/modulos';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
-import { fcMaxTanaka, zonasTreinamento } from '@/lib/calculations/cardio';
-import { calcIdade } from '@/lib/calculations/antropometria';
+import { zonasTreinamento } from '@/lib/calculations/cardio';
 import { Plus, Trash2 } from 'lucide-react';
 import { buildSteps } from '@/lib/steps';
 
@@ -17,19 +16,44 @@ const INTENSIDADES = [60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115];
 const INTENS_VEL   = [60, 65, 70, 75, 80, 85, 90, 95, 100];
 const REC_SEGUNDOS = [10, 30, 60];
 
-const ZONAS_LIMIAR_DEFAULT = [
-  { nome: 'Saúde Cardiovascular', pct_min: 50,  pct_max: 72,  bpm_min: '', bpm_max: '' },
-  { nome: 'Emagrecimento',        pct_min: 72,  pct_max: 99,  bpm_min: '', bpm_max: '' },
-  { nome: 'Performance',          pct_min: 100, pct_max: 110, bpm_min: '', bpm_max: '' },
-  { nome: 'Esforço máximo',       pct_min: 110, pct_max: 120, bpm_min: '', bpm_max: '' },
+const FAIXAS_FRIEL_CORRIDA = [
+  { nome: 'Z1', pct_min: 0, pct_max: 85 },
+  { nome: 'Z2', pct_min: 85, pct_max: 90 },
+  { nome: 'Z3', pct_min: 90, pct_max: 95 },
+  { nome: 'Z4', pct_min: 95, pct_max: 100 },
+  { nome: 'Z5a', pct_min: 100, pct_max: 103 },
+  { nome: 'Z5b', pct_min: 103, pct_max: 107 },
+  { nome: 'Z5c', pct_min: 107, pct_max: 0 },
 ];
+
+const FAIXAS_FRIEL_BIKE = [
+  { nome: 'Z1', pct_min: 0, pct_max: 81 },
+  { nome: 'Z2', pct_min: 81, pct_max: 90 },
+  { nome: 'Z3', pct_min: 90, pct_max: 94 },
+  { nome: 'Z4', pct_min: 94, pct_max: 100 },
+  { nome: 'Z5a', pct_min: 100, pct_max: 103 },
+  { nome: 'Z5b', pct_min: 103, pct_max: 107 },
+  { nome: 'Z5c', pct_min: 107, pct_max: 0 },
+];
+
+function zonasFriel(fcLimiar: number, protocolo: string) {
+  const faixas = protocolo === 'Bike' ? FAIXAS_FRIEL_BIKE : FAIXAS_FRIEL_CORRIDA;
+  return faixas.map(faixa => ({
+    ...faixa,
+    bpm_min: faixa.pct_min === 0 ? '' : String(Math.ceil(fcLimiar * faixa.pct_min / 100)),
+    bpm_max: faixa.pct_max === 0 ? '' : String(Math.ceil(fcLimiar * faixa.pct_max / 100) - 1),
+  }));
+}
+
+const ZONAS_LIMIAR_DEFAULT = zonasFriel(0, 'Esteira').map(zona => ({
+  ...zona, bpm_min: '', bpm_max: '',
+}));
 
 export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);
-  const [idade, setIdade] = useState<number | null>(null);
 
   // Campos básicos
   const [form, setForm] = useState({
@@ -53,7 +77,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
     Object.fromEntries(INTENS_VEL.map(i => [i, { velocidade: '', pace: '' }]))
   );
 
-  // Zonas por limiar (FitCheck)
+  // Zonas por FC de limiar segundo Joe Friel.
   const [zonasLimiar, setZonasLimiar] = useState(ZONAS_LIMIAR_DEFAULT);
 
   const upd = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -61,8 +85,6 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   useEffect(() => { (async () => {
     const { data: av } = await supabase.from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();
     setAval(av);
-    setIdade(calcIdade(av.pacientes.data_nascimento));
-
     const d = await buscarModulo('cardiorrespiratorio', params.id);
     if (d) {
       setForm(f => ({
@@ -98,7 +120,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   })(); }, [params.id, supabase]);
 
   const num = (v: string) => v !== '' ? parseFloat(v) : null;
-  const fcMaxUsada = Number(form.fc_max) || (idade ? fcMaxTanaka(idade) : null);
+  const fcMaxUsada = Number(form.fc_max) || null;
   const zonasCalc = useMemo(() => fcMaxUsada ? zonasTreinamento(fcMaxUsada) : null, [fcMaxUsada]);
   const autoSaveValue = { form, recFC, zonasPct, velTreino, zonasLimiar, zonasCalc };
 
@@ -123,6 +145,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
       carga_max: num(v.form.carga_max), ve_max: num(v.form.ve_max),
       ponto_limiar_tempo: v.form.ponto_limiar_tempo || null,
       classificacao_vo2: v.form.classificacao_vo2 || null,
+      metodo_zonas_limiar: 'Joe Friel',
       zonas, rec_fc, zonas_percentual, velocidades_treino, zonas_limiar,
     });
   };
@@ -161,7 +184,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
               </Field>
               <Field label="FC Máx (bpm)">
                 <Input type="number" value={form.fc_max}
-                  placeholder={fcMaxUsada ? `Tanaka: ${fcMaxUsada}` : ''}
+                  placeholder="Valor medido no teste"
                   onChange={upd('fc_max')} />
               </Field>
               <Field label="FC Repouso (bpm)">
@@ -254,7 +277,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
               </table>
             </div>
             {zonasCalc && !Object.values(zonasPct).some(v => v) && (
-              <p className="text-xs text-slate-400 mt-2">Calculado automaticamente pela FCmáx. Preencha manualmente se tiver os valores do teste.</p>
+              <p className="text-xs text-slate-400 mt-2">Calculado somente a partir da FCmáx medida e registrada no teste.</p>
             )}
           </CardBody>
         </Card>
@@ -298,11 +321,17 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
           </CardBody>
         </Card>
 
-        {/* Zonas por limiar FitCheck */}
+        {/* Zonas por FC de limiar */}
         <Card>
-          <CardHeader><CardTitle>Zonas por ponto de limiar</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Zonas de Joe Friel por FC de limiar</CardTitle></CardHeader>
           <CardBody className="space-y-2">
-            <p className="text-xs text-slate-500 mb-3">Zonas em função do limiar ventilatório (não do FCmáx)</p>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <p className="text-xs text-slate-500">Faixas calculadas pela FC de limiar, específicas para corrida/esteira ou ciclismo, sem estimativa pela idade.</p>
+              <Button size="sm" variant="secondary" disabled={!Number(form.fc_limiar)}
+                onClick={() => setZonasLimiar(zonasFriel(Number(form.fc_limiar), form.protocolo))}>
+                Aplicar Friel
+              </Button>
+            </div>
             {zonasLimiar.map((z, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 items-end p-3 rounded-lg bg-slate-50">
                 <div className="col-span-5">

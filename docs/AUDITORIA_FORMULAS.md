@@ -21,7 +21,7 @@ compartilhado por IA, portal, painel e PDF em `src/lib/clinical/formulas.ts`.
 | --- | --- | --- | --- |
 | Antropometria | IMC, Durnin-Rahaman/Womersley + Siri, Martin, Lee, Kerr, Rocha, Heath-Carter, Phantom, Mirwald e Du Bois | Motor V2 versionado, referencias por resultado selecionado e estados disponivel/revisar/invalido | Modulo, IA, PDF e portal |
 | Antropometria legada | Jackson-Pollock 7 dobras | Mantido para registros antigos; exige sete sitios e idade compativel | Compatibilidade historica |
-| Cardio | FCmax = 208 - 0,7 x idade | Equacao publicada de Tanaka; estimativa separada da FC medida | Modulo, PDF, portal e IA |
+| Cardio | Zonas pela FC de limiar | Metodo de Joe Friel, com faixas especificas para corrida e ciclismo; nao usa FCmax prevista pela idade | Modulo, PDF, portal e IA |
 | Cardio | Zonas por percentual da FCmax | Faixas genericas descritivas; nao substituem limiares medidos | Modulo, PDF, portal e IA |
 | Cardio | Recuperacao da FC | Variacao assinada preservada: queda negativa e subida positiva | Modulo, PDF, portal e IA |
 | Cardio | Classificacao e indice de VO2 | Novas classificacoes sao profissionais e dependem do protocolo; classificacoes historicas e o indice MedFit nao sao percentis FRIEND | Modulo, score, PDF, portal e IA |

@@ -376,7 +376,7 @@ Dados principais:
 - Zonas por limiar: ${JSON.stringify(dados?.zonas_limiar ?? [])}
 - Velocidades de treino: ${JSON.stringify(dados?.velocidades_treino ?? [])}
 
-Interprete a capacidade CR considerando sexo, idade, protocolo e modalidade. Preserve a classificacao profissional informada; nao transforme o indice cardio MedFit em percentil ou norma. A recuperacao da FC e armazenada como variacao com sinal: valor negativo indica queda e valor positivo indica que a FC continuou subindo. Preserve o sinal e considere que qualquer corte depende do protocolo. Diferencie FCmax medida da prevista por Tanaka e zonas genericas por percentual de limiares medidos. Sugira uma semana tipica de treino com distribuicao Z1-Z5 alinhada ao objetivo, deixando claro que exige validacao profissional. Nao crie zonas acima de Z5.`
+Interprete a capacidade CR considerando sexo, idade, protocolo e modalidade. Preserve a classificacao profissional informada; nao transforme o indice cardio MedFit em percentil ou norma. A recuperacao da FC e armazenada como variacao com sinal: valor negativo indica queda e valor positivo indica que a FC continuou subindo. Preserve o sinal e considere que qualquer corte depende do protocolo. Trate FCmax, VO2max e limiares como valores medidos quando registrados. Diferencie zonas genericas por percentual da FCmax das zonas de Joe Friel baseadas na frequencia cardiaca de limiar e respeite as faixas especificas da modalidade. Sugira uma semana tipica de treino alinhada ao objetivo, deixando claro que exige validacao profissional. Nao invente zonas nem extrapole valores ausentes.`
   };
 }
 

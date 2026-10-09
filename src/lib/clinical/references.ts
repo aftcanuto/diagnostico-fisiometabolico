@@ -189,6 +189,24 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     "nota": "RFD exige controle de amostragem e processamento; nao valida automaticamente o hardware utilizado."
   },
   {
+    "id": "isometric-strength-validity",
+    "texto": "Drake D et al. The validity and responsiveness of isometric lower body multi-joint tests of muscular strength: a systematic review. Sports Med Open. 2017;3:23. doi:10.1186/s40798-017-0091-2.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/28631257/",
+    "modulos": [
+      "forca"
+    ],
+    "nota": "A validade e a confiabilidade dependem da posicao, da estabilizacao, do grupo muscular e da padronizacao do teste."
+  },
+  {
+    "id": "isometric-strength-reliability",
+    "texto": "Grgic J et al. Test-retest reliability of isometric mid-thigh pull maximum strength assessment: a systematic review. Biol Sport. 2022;39(2):407-414. doi:10.5114/biolsport.2022.106149.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/35309521/",
+    "modulos": [
+      "forca"
+    ],
+    "nota": "Referencia metodologica para dinamometria isometrica; nao constitui protocolo proprietario do equipamento."
+  },
+  {
     "id": "senior-fitness",
     "texto": "Rikli RE, Jones CJ. Senior Fitness Test Manual. 2nd ed. Human Kinetics; 2013.",
     "url": "https://us.humankinetics.com/products/senior-fitness-test-manual-2nd-edition",
@@ -198,12 +216,31 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     "nota": "Testes funcionais em pessoas de 60 anos ou mais; nao extrapolar tabelas para jovens."
   },
   {
-    "id": "tanaka",
-    "texto": "Tanaka H, Monahan KD, Seals DR. Age-predicted maximal heart rate revisited. J Am Coll Cardiol. 2001;37(1):153-156.",
-    "url": "https://pubmed.ncbi.nlm.nih.gov/11153730/",
+    "id": "field-fitness-reliability",
+    "texto": "Cuenca-Garcia M et al. Reliability of Field-Based Fitness Tests in Adults: A Systematic Review. Sports Med. 2022;52(8):1961-1979. doi:10.1007/s40279-021-01635-2.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/35064915/",
+    "modulos": [
+      "rml"
+    ],
+    "nota": "A confiabilidade varia conforme o teste e a populacao; a interpretacao deve preservar o protocolo efetivamente executado."
+  },
+  {
+    "id": "ats-accp-cpet",
+    "texto": "American Thoracic Society; American College of Chest Physicians. ATS/ACCP Statement on cardiopulmonary exercise testing. Am J Respir Crit Care Med. 2003;167(2):211-277. doi:10.1164/rccm.167.2.211.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/12524257/",
     "modulos": [
       "cardiorrespiratorio"
-    ]
+    ],
+    "nota": "Referencia para teste cardiopulmonar, VO2 e identificacao de respostas e limiares; interpretar conforme o protocolo realizado."
+  },
+  {
+    "id": "friel-zones",
+    "texto": "Friel J. Joe Friel's Quick Guide to Setting Zones. TrainingPeaks; atualizado em 2026.",
+    "url": "https://www.trainingpeaks.com/learn/articles/joe-friel-s-quick-guide-to-setting-zones/",
+    "modulos": [
+      "cardiorrespiratorio"
+    ],
+    "nota": "Zonas de frequencia cardiaca baseadas na FC de limiar, com faixas especificas para corrida e ciclismo; nao usa FCmax prevista pela idade."
   },
   {
     "id": "cole-1999",
@@ -254,7 +291,7 @@ export function referenciasAvaliacao(modulos: SelecaoModulos = {}, anthropometry
   const rows = (Array.isArray(anthropometry) ? anthropometry : [anthropometry]).filter(Boolean);
   const onlyV2 = rows.length > 0 && rows.every(row => row.registro_v2?.version === 2);
   const refs = REFERENCIAS.filter(ref => ref.modulos.some(modulo => modulos[modulo] === true
-    && !(modulo === 'antropometria' && onlyV2)));
+    && !(modulo === 'antropometria' && onlyV2 && ref.id !== 'isak-2019')));
   if (modulos.antropometria === true) for (const row of rows) {
     if (row.registro_v2?.version !== 2) continue;
     const snapshot = row.resultados_v2;
@@ -267,7 +304,16 @@ export function referenciasAvaliacao(modulos: SelecaoModulos = {}, anthropometry
       }
     }
   }
-  return refs;
+  const ordemModulos: readonly ModuloReferencia[] = [
+    'sinais_vitais', 'bioimpedancia', 'posturografia', 'termografia',
+    'antropometria', 'jump_test', 'flexibilidade', 'forca', 'rml',
+    'cardiorrespiratorio', 'biomecanica_corrida',
+  ];
+  const posicao = (ref: ReferenciaClinica) => Math.min(...ref.modulos
+    .filter(modulo => modulos[modulo] === true)
+    .map(modulo => ordemModulos.indexOf(modulo))
+    .filter(indice => indice >= 0));
+  return refs.sort((a, b) => posicao(a) - posicao(b));
 }
 
 export function textoReferencia(ref: ReferenciaClinica): string {
