@@ -11,7 +11,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - Cada uma das 26 medidas antropometricas ganhou a confirmacao `Nao se aplica a esta avaliacao` e motivo opcional. Ao confirmar, as leituras sao limpas e bloqueadas, a medida deixa de contar como pendencia e permanece ausente nos calculos dependentes.
 - Medidas vazias sem confirmacao continuam gerando alerta no formulario e no checklist de revisao. A IA foi instruida a diferenciar ausencia pendente de exclusao deliberada e a nunca inventar substitutos.
 - O estado e armazenado dentro de `registro_v2.measurements` em JSONB, preservando compatibilidade com coletas anteriores por defaults do schema; nao requer migration.
-- Validacoes aprovadas: calculos clinicos, suite completa de Antropometria, TypeScript e navegador com Abdomen nao aplicavel, salvamento, mobile 320/390/768 e PDF de 8 paginas sem overflow. Alteracao ainda nao publicada.
+- Validacoes aprovadas: calculos clinicos, suite completa de Antropometria, TypeScript e navegador com Abdomen nao aplicavel, salvamento, mobile 320/390/768 e PDF de 8 paginas sem overflow.
+- Publicado no commit `3d6ddcc`, deployment `dpl_2n6juhwzsGDDheZd6FgZNEyHVPia`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
 
 ### 2026-10-09 - Vertical Jump separado do CMJ
 
