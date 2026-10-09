@@ -96,6 +96,10 @@ async function main() {
     assert.match(fatMethodsText, /Durnin-Womersley\/Rahaman \+ Siri/);
     assert.match(fatMethodsText, /Petroski/);
     assert.match(fatMethodsText, /Jackson, Pollock e Ward/);
+    for (const group of ['muscle','adipose','bone','shape','general','maturity','energy']) assert.equal(await page.$$eval(`[data-method-group="${group}"]`, nodes => nodes.length), 1, `grupo ${group} ausente`);
+    const groupedMethodsText = await page.$eval('[data-method-groups]', element => element.textContent ?? '');
+    for (const heading of ['Massa muscular','Massa adiposa anatomica','Massa ossea estimada','Somatotipo e proporcionalidade','Medidas e indices gerais','Maturacao','Energia e cenarios profissionais']) assert.match(groupedMethodsText, new RegExp(heading));
+    assert.doesNotMatch(groupedMethodsText, /Outros metodos e resultados/);
     await page.click('[aria-label="Selecionar Durnin-Womersley/Rahaman + Siri"]');
     await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Salvar rascunho'))?.click());
     await page.waitForFunction(() => document.body.innerText.includes('Revisao 2 salva'));

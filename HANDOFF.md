@@ -1477,3 +1477,10 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Petroski e Jackson, Pollock e Ward continuam preservados no catalogo e no motor, mas aparecem como indisponiveis no conjunto estrito de 26 medidas, com explicacao dos locais anatomicos ausentes e sem substituicao indevida por crista iliaca, supraespinal ou dobra abdominal.
 - Erros de rede ou DNS agora informam que a requisicao nao chegou ao servidor, preservam os campos e orientam reabrir pelo dominio oficial. O `POST` nao e repetido automaticamente, evitando duplicidade ou falso conflito quando a resposta se perde depois de uma gravacao valida.
 - Nenhuma formula, resultado previamente salvo, schema ou migration foi alterado.
+
+## 2026-10-09 - Equacoes antropometricas agrupadas por resultado
+
+- Substituido o bloco generico de metodos por grupos separados: percentual de gordura, massa muscular, massa adiposa anatomica, massa ossea estimada, somatotipo e proporcionalidade, medidas e indices gerais, maturacao e energia/cenarios profissionais.
+- A categoria populacional de Lee foi movida para junto das equacoes de massa muscular.
+- Selecoes antigas de Petroski ou Jackson, Pollock e Ward aparecem identificadas e podem ser removidas, mas nao podem ser novamente ativadas no conjunto estrito de 26 medidas.
+- A organizacao e apenas de interface; formulas, snapshots historicos, schema e banco permanecem inalterados. Sem migration nova.
