@@ -67,6 +67,8 @@ const projection = legacyProjection(input, result);
 assert.equal(projection.percentual_gordura, null);
 assert.equal(projection.massa_magra, null);
 assert.equal(projection.diametros.bimalleolar, result.measurements.bimalleolar.value);
+assert.equal('rcq' in projection, false);
+assert.equal('observacoes' in projection, false);
 assert.equal(projection.massa_ossea, null, 'dois metodos osseos selecionados nao podem virar um unico valor legado');
 const singleBoneInput = structuredClone(input);
 singleBoneInput.methods = singleBoneInput.methods.filter(method => method !== 'rocha1975');

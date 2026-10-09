@@ -42,9 +42,16 @@ export async function saveAnthropometryV2(avaliacaoId: string, payload: any) {
       : sb.from('antropometria').update(data).eq('avaliacao_id', avaliacaoId).eq('revision_v2', current.revision_v2)
     : sb.from('antropometria').insert(data);
   const saved = await operation.select('*').maybeSingle();
-  if (saved.error) return NextResponse.json({ error: saved.error.code === '23505'
-    ? 'Outra sessao ja iniciou esta coleta. Recarregue a pagina.'
-    : 'Falha ao salvar. Confira a migration e suas permissoes.' }, { status: saved.error.code === '23505' ? 409 : 500 });
+  if (saved.error) {
+    console.error('[Antropometria] Falha ao salvar coleta V2', saved.error);
+    const conflict = saved.error.code === '23505';
+    const schemaMismatch = saved.error.code === 'PGRST204';
+    return NextResponse.json({ error: conflict
+      ? 'Outra sessao ja iniciou esta coleta. Recarregue a pagina.'
+      : schemaMismatch
+        ? 'A estrutura da antropometria esta incompativel com o banco. Atualize o sistema antes de tentar novamente.'
+        : 'Falha ao salvar a antropometria. Tente novamente; se persistir, informe o suporte.' }, { status: conflict ? 409 : 500 });
+  }
   if (!saved.data) return NextResponse.json({ error: 'Coleta alterada ou sem permissao de edicao. Recarregue.' }, { status: 409 });
   return NextResponse.json({ ok: true, data: saved.data });
 }

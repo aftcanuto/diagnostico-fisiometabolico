@@ -63,8 +63,14 @@ async function main() {
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const port = (server.address() as any).port;
-  const executablePath = ['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(fs.existsSync);
-  const browser = await puppeteer.launch({ headless:true, executablePath });
+  const browserPaths = ['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].filter(fs.existsSync);
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+  const launchErrors:string[] = [];
+  for (const executablePath of browserPaths) {
+    try { browser = await puppeteer.launch({ headless:true, executablePath }); break; }
+    catch (error) { launchErrors.push(`${path.basename(executablePath)}: ${error instanceof Error ? error.message : String(error)}`); }
+  }
+  if (!browser) throw new Error(`Nenhum navegador disponivel para o teste. ${launchErrors.join(' | ')}`);
   try {
     const page = await browser.newPage(); const errors:string[] = [];
     page.setDefaultTimeout(15000);
@@ -74,11 +80,13 @@ async function main() {
     await page.waitForSelector('[data-anthropometry-v2]');
     assert.equal(await page.$$eval('[data-measurement-id]', nodes => nodes.length), 26);
     for (const id of ['forearm','chest','bimalleolar']) assert.equal(await page.$$eval(`[data-measurement-id="${id}"]`, nodes => nodes.length), 1);
-    await page.type('[data-reading="bimalleolar-1"]', '7,2');
-    await page.type('[data-reading="bimalleolar-2"]', '7,2');
+    await page.type('[data-reading="mass-1"]', '84');
     await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Salvar rascunho'))?.click());
     await page.waitForFunction(() => document.body.innerText.includes('Antropometria salva.'));
     assert.equal(revision, 1);
+    assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /Leitura unica/);
+    assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /84 kg/);
+    assert.match(await page.$eval('[data-anthropometry-v2]', element => element.textContent ?? ''), /26 medidas com pendencias/);
     await page.screenshot({ path:path.join(dir,'form-desktop.png'), fullPage:true });
     for (const width of [320,390,768]) {
       await page.setViewport({ width, height:844 });

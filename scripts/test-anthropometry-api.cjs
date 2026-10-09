@@ -56,7 +56,16 @@ async function main() {
   reset(); row = { dobras: { triceps: { m1: null, m2: null, m3: null, media: null } }, circunferencias: {}, diametros: {} };
   assert.equal((await send()).status, 200); assert.equal(row.registro_v2.version, 2); assert.equal(row.revision_v2, 1);
   reset(); assert.equal((await send({ expected_revision: undefined })).status, 400);
-  reset(); assert.equal((await send()).status, 200); assert.equal(row.revision_v2, 1);
+  reset();
+  const partial = newAnthropometry();
+  partial.measurements.mass.readings = [84, null, null];
+  assert.equal((await saveAnthropometryV2('test', { registro_v2: partial, expected_revision: null })).status, 200);
+  assert.equal(row.revision_v2, 1);
+  assert.deepEqual(row.registro_v2.measurements.mass.readings, [84, null, null]);
+  assert.equal(row.resultados_v2.measurements.mass.consolidation, 'single');
+  assert.equal(row.resultados_v2.measurements.height.status, 'missing');
+  assert.equal('rcq' in row, false);
+  assert.equal('observacoes' in row, false);
   assert.equal(row.resultados_v2.professional.qualification.status, 'pending');
   assert.equal((await send()).status, 409);
   assert.equal((await send({ expected_revision: 1 })).status, 200); assert.equal(row.revision_v2, 2);

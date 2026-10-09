@@ -40,7 +40,6 @@ export function legacyProjection(input: AnthropometryInput, snapshot: Anthropome
     percentual_gordura: publishable(result('fatPercent')) ? result('fatPercent')!.value : null,
     massa_magra: publishable(result('fatFreeMass')) ? result('fatFreeMass')!.value : null,
     massa_ossea: oneSelected(['martinBone1991', 'rocha1975']),
-    rcq: publishable(result('waistHipRatio')) ? result('waistHipRatio')!.value : null,
     dobras: Object.fromEntries(['triceps','subscapular','biceps','iliacCrest','supraspinale','abdominal','thighSkinfold','calfSkinfold']
       .map(id => [id, snapshot.measurements[id as keyof typeof snapshot.measurements]?.value ?? null])),
     circunferencias: Object.fromEntries(['armRelaxed','armFlexed','forearm','chest','waist','abdomen','hip','thighMax','thighMid','calf']
@@ -53,7 +52,6 @@ export function legacyProjection(input: AnthropometryInput, snapshot: Anthropome
       ectomorfia: snapshot.somatotype.ectomorphy,
       classificacao: snapshot.somatotype.classification,
     } : null,
-    observacoes: input.notes || null,
   };
 }
 

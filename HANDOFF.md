@@ -4,6 +4,16 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-09 - Rascunho parcial da antropometria
+
+- Corrigido o erro ao salvar a primeira coleta V2 com uma unica leitura ou medidas ausentes.
+- A validacao ja permitia rascunhos parciais; a falha real era `PGRST204` no Supabase porque a projecao legada enviava `rcq` e `observacoes`, colunas inexistentes em `public.antropometria`.
+- `rcq`, notas e demais detalhes continuam preservados integralmente em `registro_v2` e `resultados_v2`; apenas deixaram de ser duplicados em colunas legadas inexistentes.
+- O alerta de pendencias permanece informativo e nao bloqueia `Salvar rascunho` nem `Salvar e continuar`.
+- O servidor agora registra o objeto completo do erro do Supabase e retorna mensagem especifica para incompatibilidade de schema.
+- Validacoes aprovadas: suite de Antropometria, TypeScript e navegador com apenas a primeira leitura de massa (`84 kg`), demais medidas ausentes, alerta mantido, salvamento confirmado, mobile 320/390/768 e PDF de 8 paginas sem overflow.
+- Nao requer migration nem altera registros clinicos existentes. Alteracao ainda nao publicada.
+
 ### 2026-10-05 - Contatos do rodape em uma linha no mobile
 
 - Os cinco contatos do rodape agora permanecem em uma unica linha no celular, com icones de 10 px, botoes de 28 px e tipografia compacta.
