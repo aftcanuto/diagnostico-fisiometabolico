@@ -43,7 +43,11 @@ async function main() {
     await page.goto(address, { waitUntil: 'networkidle0' });
     await page.waitForSelector('h1');
     await page.evaluate(() => { const label = [...document.querySelectorAll('label')].find(l => l.textContent === 'Countermovement Jump (CMJ)'); label.querySelector('input').click(); });
+    await page.evaluate(() => { const label = [...document.querySelectorAll('label')].find(l => l.textContent === 'Vertical Jump (VJ)'); label.querySelector('input').click(); });
     assert.equal(await page.$$eval('select[aria-label^="Status cmj"]', els => els.length), 3);
+    assert.equal(await page.$$eval('select[aria-label^="Status vj"]', els => els.length), 3);
+    assert.equal(await page.$eval('input[disabled][value*="VJ na cintura"]', el => el.value), 'Definida por protocolo: VJ na cintura; CMJ livres');
+    assert.match(await page.$eval('body', el => el.innerText), /ciclo alongamento-encurtamento/);
     await page.type('[aria-label="cmj salto 1 altura_cm"]', '242');
     await page.select('[aria-label="Status cmj salto 1"]', 'valida');
     assert.match(await page.$eval('body', el => el.innerText), /muito elevados/);
@@ -74,8 +78,8 @@ async function main() {
     assert.ok(await page.$$eval('.jump-trials', blocks => blocks.length >= 6));
     await page.goto(`file:///${path.join(dir, 'compact.html').replace(/\\/g, '/')}`, { waitUntil: 'networkidle0' });
     await pagination.exports.prepararPaginacaoLaudo(page);
-    const compactPages = await page.$$eval('.page.module', pages => pages.filter(p => p.querySelector('.mod-title')?.textContent.trim() === 'Jump Test').length);
-    assert.equal(compactPages, 1, 'SJ, CMJ e DJ devem caber juntos em uma pagina');
+    const compactLayout = await page.$$eval('.jump-trials', blocks => ({ count: blocks.length, pages: new Set(blocks.map(block => [...document.querySelectorAll('.page')].indexOf(block.closest('.page')))).size }));
+    assert.deepEqual(compactLayout, { count: 4, pages: 1 }, 'SJ, VJ, CMJ e DJ devem caber juntos em uma pagina');
     const compactSection = await page.$('.jump-trials');
     const compactPage = await compactSection.evaluateHandle(el => el.closest('.page'));
     await compactPage.asElement().screenshot({ path: path.join(dir, 'compact.png') });

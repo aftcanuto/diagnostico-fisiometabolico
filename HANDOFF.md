@@ -4,6 +4,18 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-09 - Vertical Jump separado do CMJ
+
+- Acrescentado `Vertical Jump (VJ)` ao modulo Jump Test, com tres tentativas e os mesmos campos de altura, voo e potencia exportados pelo equipamento.
+- Tecnica separada por protocolo: VJ com contramovimento e maos na cintura; CMJ com contramovimento e bracos livres.
+- Novas tentativas registram a tecnica dos bracos no proprio JSON; coletas antigas sem esse campo continuam usando a posicao global previamente salva.
+- EUR passa a usar VJ/SJ nas coletas atuais; CMJ/SJ permanece apenas como compatibilidade para registros legados sem VJ.
+- Modulo, painel/portal, PDF, evolucao e prompts de IA distinguem VJ e CMJ. A referencia de CMJ sem bracos deixa explicita a correspondencia tecnica com o VJ do equipamento e nao com o CMJ de bracos livres.
+- PDF compactado sem remover dados clinicos: notas repetidas de altura informada pelo equipamento foram omitidas; estimativas, alertas e justificativas permanecem visiveis. SJ, VJ, CMJ e DJ com tres tentativas cabem na mesma pagina.
+- Relatorios originais revisados: `vj.pdf`, `cmj.pdf`, `SJ.pdf` e `cdrop.pdf`. O reel informado nao ficou acessivel por consulta automatizada; a implementacao usa a descricao aprovada pelo usuario e os relatorios do equipamento.
+- Nao requer migration: `protocolos` e `tentativas` ja sao JSONB. Avaliacoes existentes permanecem validas.
+- Validacoes aprovadas: suite de Jump Test, paridade de referencias, TypeScript, build de producao e navegador/PDF em 320/390/768/1280 px. Alteracao ainda nao publicada.
+
 ### 2026-10-09 - Rascunho parcial da antropometria
 
 - Corrigido o erro ao salvar a primeira coleta V2 com uma unica leitura ou medidas ausentes.

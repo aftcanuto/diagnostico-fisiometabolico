@@ -1,10 +1,13 @@
 import { z } from 'zod';
 
-export const JUMP_PROTOCOLS = { sj: 'Squat Jump (SJ)', cmj: 'Countermovement Jump (CMJ)', dj: 'Drop Jump (DJ)', unilateral_d: 'CMJ unilateral direito', unilateral_e: 'CMJ unilateral esquerdo', repetidos: 'Saltos repetidos - 15 s' } as const;
+export const JUMP_PROTOCOLS = { sj: 'Squat Jump (SJ)', vj: 'Vertical Jump (VJ)', cmj: 'Countermovement Jump (CMJ)', dj: 'Drop Jump (DJ)', unilateral_d: 'CMJ unilateral direito', unilateral_e: 'CMJ unilateral esquerdo', repetidos: 'Saltos repetidos - 15 s' } as const;
 export type JumpProtocol = keyof typeof JUMP_PROTOCOLS;
+export type JumpArmPosition = 'cintura' | 'livres';
+const JUMP_PROTOCOL_IDS = ['sj', 'vj', 'cmj', 'dj', 'unilateral_d', 'unilateral_e', 'repetidos'] as const;
 const number = (max: number) => z.number().finite().positive().max(max).nullable();
 export const jumpTrialSchema = z.object({
-  id: z.string().min(1).max(80), protocolo: z.enum(['sj', 'cmj', 'dj', 'unilateral_d', 'unilateral_e', 'repetidos']),
+  id: z.string().min(1).max(80), protocolo: z.enum(JUMP_PROTOCOL_IDS),
+  tecnica_bracos: z.enum(['cintura', 'livres']).optional(),
   altura_cm: number(500), voo_ms: number(5000), contato_ms: number(10000), potencia_w: number(100000),
   status: z.enum(['pendente', 'valida', 'excluida']), justificativa: z.string().max(1500),
 });
@@ -14,7 +17,7 @@ export const jumpSchema = z.object({
   altura_queda_cm: z.number().finite().min(5).max(100), duracao_s: z.literal(15),
   bracos: z.enum(['cintura', 'livres']), descanso_s: z.number().int().min(0).max(600),
   familiarizacao: z.boolean(), apto: z.boolean(), repetidos_serie_completa: z.boolean(),
-  protocolos: z.array(z.enum(['sj', 'cmj', 'dj', 'unilateral_d', 'unilateral_e', 'repetidos'])).max(6),
+  protocolos: z.array(z.enum(JUMP_PROTOCOL_IDS)).max(7),
   tentativas: z.array(jumpTrialSchema).max(150),
   observacoes: z.string().max(4000), conclusao: z.string().max(8000),
   referencia: z.enum(['nenhuma', 'futebol_cadete', 'futebol_juvenil']),
@@ -37,7 +40,8 @@ export function jumpAnalysisUsable(analysis: any, jump: any) {
   return source ? source === jump.updated_at : Date.parse(analysis?.gerado_em ?? '') >= Date.parse(jump.updated_at);
 }
 export function newJumpTrial(protocolo: JumpProtocol, id: string): JumpTrial {
-  return { id, protocolo, altura_cm: null, voo_ms: null, contato_ms: null, potencia_w: null, status: 'pendente', justificativa: '' };
+  const tecnica_bracos = protocolo === 'vj' ? 'cintura' : protocolo === 'cmj' ? 'livres' : undefined;
+  return { id, protocolo, tecnica_bracos, altura_cm: null, voo_ms: null, contato_ms: null, potencia_w: null, status: 'pendente', justificativa: '' };
 }
 export function newJumpData(): JumpData {
   return { versao: 1, peso_kg: null, esporte: '', nivel: '', equipamento: 'JumpTest - 2 placas', software: '', metodo_potencia: 'Pico de potencia informado pelo equipamento; algoritmo do fabricante', altura_queda_cm: 30, duracao_s: 15, bracos: 'cintura', descanso_s: 60, familiarizacao: false, apto: false, repetidos_serie_completa: false, protocolos: [], tentativas: [], observacoes: '', conclusao: '', referencia: 'nenhuma', referencia_justificativa: '', documento_path: null };
@@ -66,6 +70,20 @@ export function mean(values: (number | null)[]) {
   const valid = values.filter((v): v is number => v != null && Number.isFinite(v));
   return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
 }
+export function jumpProtocolArmPosition(d: JumpData, protocolo: JumpProtocol): JumpArmPosition | 'mista' {
+  const explicit = d.tentativas.filter(t => t.protocolo === protocolo && t.tecnica_bracos).map(t => t.tecnica_bracos!);
+  if (!explicit.length) return d.bracos;
+  return explicit.every(value => value === explicit[0]) ? explicit[0] : 'mista';
+}
+export function jumpProtocolTechnique(d: JumpData, protocolo: JumpProtocol) {
+  const arms = jumpProtocolArmPosition(d, protocolo);
+  const armsLabel = arms === 'cintura' ? 'maos na cintura' : arms === 'livres' ? 'bracos livres' : 'tecnica de bracos mista';
+  const explicit = d.tentativas.some(t => t.protocolo === protocolo && t.tecnica_bracos);
+  if (protocolo === 'sj') return `sem contramovimento; ${armsLabel}${explicit ? '' : ' (registro geral/legado)'}`;
+  if (protocolo === 'vj') return `com contramovimento (ciclo alongamento-encurtamento); ${armsLabel}`;
+  if (protocolo === 'cmj') return `com contramovimento; ${armsLabel}${explicit ? '' : ' (registro geral/legado)'}`;
+  return `${armsLabel}${explicit ? '' : ' (registro geral/legado)'}`;
+}
 export function validateEnteredJump(t: JumpTrial): JumpTrial {
   if (t.status === 'excluida') return t;
   const candidate: JumpTrial = { ...t, status: 'valida' };
@@ -90,7 +108,8 @@ export function jumpSummary(d: JumpData) {
       primeira_altura_cm: alturas[0] ?? null, ultima_altura_cm: alturas.at(-1) ?? null };
   });
   const by = (p: JumpProtocol) => groups.find(g => g.protocolo === p && g.completo);
-  const sj = by('sj'), cmj = by('cmj'), right = by('unilateral_d')?.media_cm, left = by('unilateral_e')?.media_cm;
+  const sj = by('sj'), vj = by('vj'), cmj = by('cmj'), eccentric = vj ?? cmj;
+  const right = by('unilateral_d')?.media_cm, left = by('unilateral_e')?.media_cm;
   const issues: string[] = [];
   if (!d.apto) issues.push('Aptidao para os protocolos nao confirmada pelo avaliador.');
   if (!d.familiarizacao) issues.push('Familiarizacao nao confirmada.');
@@ -104,8 +123,9 @@ export function jumpSummary(d: JumpData) {
     if (t.status === 'valida' && trialWarnings(t).length && !t.justificativa.trim()) issues.push(`${JUMP_PROTOCOLS[t.protocolo]}: confira e justifique a tentativa sinalizada.`);
   }
   return { grupos: groups, pendencias: issues, pronto: !issues.length,
-    eur_altura: sj?.media_cm && cmj?.media_cm ? cmj.media_cm / sj.media_cm : null,
-    eur_potencia: sj?.potencia_media_w && cmj?.potencia_media_w ? cmj.potencia_media_w / sj.potencia_media_w : null,
+    eur_altura: sj?.media_cm && eccentric?.media_cm ? eccentric.media_cm / sj.media_cm : null,
+    eur_potencia: sj?.potencia_media_w && eccentric?.potencia_media_w ? eccentric.potencia_media_w / sj.potencia_media_w : null,
+    eur_protocolo: vj ? 'vj' as const : cmj ? 'cmj' as const : null,
     assimetria_altura_percent: right && left ? Math.abs(right - left) / Math.max(right, left) * 100 : null,
     lado_maior_altura: right && left ? right === left ? 'iguais' : right > left ? 'direito' : 'esquerdo' : null };
 }
@@ -119,12 +139,12 @@ export function jumpClinicalContext(d: JumpData) {
   if (jumpIsSimulated(d)) return { simulado: true, limitacao: 'Dados simulados para teste de software. Resultados omitidos: nao permitem conclusao clinica ou evolucao real.' };
   const summary = jumpSummary(d);
   return summary.pronto
-    ? { resultados: summary, observacoes: d.observacoes, conclusao_profissional: d.conclusao, metodo_potencia: d.metodo_potencia }
+    ? { resultados: summary, tecnicas: Object.fromEntries(d.protocolos.map(protocolo => [protocolo, jumpProtocolTechnique(d, protocolo)])), observacoes: d.observacoes, conclusao_profissional: d.conclusao, metodo_potencia: d.metodo_potencia }
     : { limitacao: 'Jump Test pendente de revisao; nao interpretar resultados', pendencias: summary.pendencias };
 }
 
 export function jumpComparable(a: JumpData, b: JumpData, protocolo: JumpProtocol) {
-  return a.versao === b.versao && a.equipamento === b.equipamento && a.software === b.software && a.bracos === b.bracos && a.descanso_s === b.descanso_s &&
+  return a.versao === b.versao && a.equipamento === b.equipamento && a.software === b.software && jumpProtocolArmPosition(a, protocolo) === jumpProtocolArmPosition(b, protocolo) && a.descanso_s === b.descanso_s &&
     a.protocolos.includes(protocolo) && b.protocolos.includes(protocolo) &&
     (protocolo !== 'dj' || a.altura_queda_cm === b.altura_queda_cm) && (protocolo !== 'repetidos' || a.duracao_s === b.duracao_s);
 }
@@ -136,7 +156,7 @@ export const JUMP_REFERENCE_URL = 'https://www.apunts.org/en-analisis-del-rendim
 export function jumpReference(d: JumpData) {
   if (d.referencia === 'nenhuma') return null;
   return { ...JUMP_REFERENCES[d.referencia], fonte: 'Garcia-Pinillos et al., 2014. doi:10.1016/j.apunts.2014.05.002', url: JUMP_REFERENCE_URL,
-    protocolo: 'CMJ sem bracos; media de 3; FreePower Jump Sensorize; intervalo 30 s',
+    protocolo: 'CMJ sem bracos na fonte; tecnicamente correspondente ao VJ com maos na cintura deste equipamento; media de 3; FreePower Jump Sensorize; intervalo 30 s',
     limitacao: 'Referencia descritiva de coorte, nao norma universal. Equipamento e descanso podem diferir. Sem percentis ou classificacao automatica.',
     justificativa: d.referencia_justificativa };
 }

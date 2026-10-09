@@ -6,7 +6,7 @@ import { Field, Input, Select, Textarea } from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
 import { buscarModulo, upsertModulo } from '@/lib/modulos';
 import { buildSteps } from '@/lib/steps';
-import { JUMP_PROTOCOLS, JUMP_REFERENCES, newJumpData, newJumpTrial, trialMetrics, trialWarnings, jumpSchema, type JumpData, type JumpProtocol } from '@/lib/jump-test';
+import { JUMP_PROTOCOLS, JUMP_REFERENCES, jumpProtocolTechnique, newJumpData, newJumpTrial, trialMetrics, trialWarnings, jumpSchema, type JumpData, type JumpProtocol } from '@/lib/jump-test';
 import { JumpTestSummary, jumpFormat } from '@/components/JumpTestSummary';
 import { validateEnteredJump } from '@/lib/jump-test';
 
@@ -62,7 +62,7 @@ export default function JumpTestPage({ params }: { params: Promise<{ id: string 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Massa corporal (kg)"><Input type="number" min="1" step="0.1" value={form.peso_kg ?? ''} onChange={e => change({ peso_kg: e.target.value === '' ? null : Number(e.target.value) })}/></Field>
           {(['esporte', 'nivel', 'equipamento', 'software', 'metodo_potencia'] as const).map((k, i) => <Field key={k} label={['Esporte', 'Nivel de pratica', 'Equipamento', 'Software / versao', 'Metodo da potencia'][i]}><Input value={form[k]} onChange={e => change({ [k]: e.target.value })}/></Field>)}
-          <Field label="Posicao dos bracos"><Select value={form.bracos} onChange={e => change({ bracos: e.target.value as JumpData['bracos'] })}><option value="cintura">Maos na cintura</option><option value="livres">Bracos livres (protocolo adaptado)</option></Select></Field>
+          <div className="sm:col-span-2"><Field label="Tecnica dos bracos"><Input value="Definida por protocolo: VJ na cintura; CMJ livres" disabled/></Field></div>
           <Field label="Descanso entre tentativas (s)"><Input type="number" min="0" max="600" value={form.descanso_s} onChange={e => change({ descanso_s: Number(e.target.value) })}/></Field>
           <Field label="Altura de queda DJ (cm)"><Input type="number" min="5" max="100" step="1" value={form.altura_queda_cm} onChange={e => change({ altura_queda_cm: Number(e.target.value) })}/></Field>
           <Field label="Serie de saltos repetidos"><Input value="15 segundos" disabled/></Field>
@@ -71,7 +71,7 @@ export default function JumpTestPage({ params }: { params: Promise<{ id: string 
         <Field label="Condicoes, dor atual, limitacoes e observacoes"><Textarea value={form.observacoes} onChange={e => change({ observacoes: e.target.value })}/></Field>
       </section>
       <section className="space-y-3"><h2 className="font-semibold">Protocolos</h2><div className="grid gap-3 sm:grid-cols-2">{Object.entries(JUMP_PROTOCOLS).map(([key, name]) => <label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.protocolos.includes(key as JumpProtocol)} onChange={e => selectProtocol(key as JumpProtocol, e.target.checked)}/>{name}</label>)}</div></section>
-      {form.protocolos.map(p => <section key={p} className="space-y-3 border-t pt-5"><h2 className="font-semibold">{JUMP_PROTOCOLS[p]}</h2>
+      {form.protocolos.map(p => <section key={p} className="space-y-3 border-t pt-5"><div><h2 className="font-semibold">{JUMP_PROTOCOLS[p]}</h2><p className="text-sm text-gray-600">Tecnica: {jumpProtocolTechnique(form, p)}.</p></div>
         {p === 'repetidos' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.repetidos_serie_completa} onChange={e => change({ repetidos_serie_completa: e.target.checked })}/>Serie continua de 15 s concluida e integralmente transcrita</label>}
         <div className="space-y-3">{form.tentativas.filter(t => t.protocolo === p).map((t, index) => {
           const update = (patch: Partial<typeof t>) => change({ tentativas: form.tentativas.map(row => row.id === t.id ? { ...row, ...patch } : row) });

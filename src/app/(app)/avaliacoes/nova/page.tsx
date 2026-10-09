@@ -14,7 +14,7 @@ const modulosMeta = [
   { k: 'posturografia',      label: 'Posturografia',        desc: '4 fotos + análise de alinhamentos' },
   { k: 'termografia',        label: 'Termografia funcional', desc: '4 termogramas, protocolo, ROIs e assimetrias' },
   { k: 'antropometria',      label: 'Antropometria (ISAK)', desc: 'Dobras, circunferências, somatotipo' },
-  { k: 'jump_test', label: 'Jump Test', desc: 'SJ, CMJ, DJ, unilateral e repetidos de 15 s' },
+  { k: 'jump_test', label: 'Jump Test', desc: 'SJ, VJ, CMJ, DJ, unilateral e repetidos de 15 s' },
   { k: 'flexibilidade',      label: 'Flexibilidade',        desc: 'Banco de Wells (sit and reach)' },
   { k: 'forca',              label: 'Força',                desc: 'Preensão palmar + dinamometria isométrica' },
   { k: 'rml',                label: 'Resistência Muscular (RML)', desc: 'Flexão braço, abdominal, prancha, agachamento — ou Senior Fitness Test' },

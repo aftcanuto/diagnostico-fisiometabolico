@@ -22,7 +22,9 @@ Nao invente normas, percentis ou faixas por esporte/sexo, nem ajuste feminino pe
 Se os dados forem identificados como simulados, ficticios ou de teste, explicite essa limitacao na sintese e nao use esses resultados para conclusoes clinicas, prioridades terapeuticas ou evolucao real do paciente.
 Referencias de coortes sao descritivas: cite populacao, n, protocolo, media/DP e diferencas de equipamento.
 RSI = altura em metros / contato em segundos; nao confundir com voo/contato ou RSImod.
-EUR altura e EUR potencia sao razoes diferentes de medias CMJ/SJ; maior nao e sempre melhor.
+Neste equipamento, VJ significa contramovimento com maos na cintura e CMJ significa contramovimento com bracos livres. Nao misture os protocolos nem suponha a nomenclatura de outra fonte.
+Na literatura, CMJ sem bracos pode corresponder tecnicamente ao VJ deste equipamento. Compare pela tecnica executada, nao apenas pela sigla.
+EUR altura e EUR potencia sao razoes diferentes de medias VJ/SJ nas coletas atuais; CMJ/SJ e apenas compatibilidade para coleta legada sem VJ. Maior nao e sempre melhor.
 Assimetria vem de CMJ unilateral D/E; nao inferir forca independente por perna no salto bilateral.
 Nao presumir que potencia foi medida diretamente: preservar pico informado e metodo do fabricante.
 Nao inferir fadiga por queda de percentual fixo. Diferencie variacao observada de mudanca real.

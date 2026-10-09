@@ -1,4 +1,4 @@
-import { JUMP_PROTOCOLS, jumpSchema, jumpSummary, jumpReference, jumpComparable } from '@/lib/jump-test';
+import { JUMP_PROTOCOLS, jumpSchema, jumpSummary, jumpReference, jumpComparable, jumpProtocolTechnique } from '@/lib/jump-test';
 
 export const jumpFormat = (n: number | null | undefined, digits = 2) => n == null ? '-' : n.toLocaleString('pt-BR', { maximumFractionDigits: digits });
 
@@ -10,6 +10,7 @@ export function JumpTestSummary({ data, previous, previousDate }: { data: unknow
   return <section aria-label="Resultados Jump Test" className="space-y-3 py-4" style={{ minWidth: 0 }}>
     <h3 className="text-lg font-semibold">Jump Test</h3>
     <p className="text-sm">{d.equipamento} · {d.peso_kg ? `${jumpFormat(d.peso_kg)} kg` : 'Peso nao informado'} · DJ {d.altura_queda_cm} cm · Repetidos {d.duracao_s} s</p>
+    {(d.protocolos.includes('vj') || d.protocolos.includes('cmj')) && <p className="text-xs text-gray-600">{d.protocolos.filter(p => p === 'vj' || p === 'cmj').map(p => `${JUMP_PROTOCOLS[p]}: ${jumpProtocolTechnique(d, p)}`).join(' · ')}</p>}
     {!s.pronto && <p role="status" className="text-sm text-amber-800">Resultados parciais: {s.pendencias.join(' ')}</p>}
     <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 480 }}>
       <thead><tr>{['Protocolo', 'Validos', 'Media (cm)', 'Melhor (cm)', 'CV (%)', 'Pico medio (W)', 'RSI (m/s)'].map(h => <th key={h} className="border-b p-2 text-left">{h}</th>)}</tr></thead>
@@ -39,8 +40,8 @@ export function JumpTestSummary({ data, previous, previousDate }: { data: unknow
         </div>
       ))}
     </div>
-    <p className="text-sm">EUR altura: {jumpFormat(s.eur_altura)} · EUR potencia: {jumpFormat(s.eur_potencia)} · Assimetria de altura: {jumpFormat(s.assimetria_altura_percent)}% · Maior media: {s.lado_maior_altura ?? '-'}</p>
-    <p className="text-xs text-gray-600">EUR: CMJ/SJ, medias de 3 validas. Assimetria: |D-E|/maior(D,E) x 100, CMJ unilateral. Sem classificacao de lesao. Potencia preservada do equipamento.</p>
+    <p className="text-sm">EUR altura {s.eur_protocolo ? `(${s.eur_protocolo.toUpperCase()}/SJ)` : ''}: {jumpFormat(s.eur_altura)} · EUR potencia: {jumpFormat(s.eur_potencia)} · Assimetria de altura: {jumpFormat(s.assimetria_altura_percent)}% · Maior media: {s.lado_maior_altura ?? '-'}</p>
+    <p className="text-xs text-gray-600">EUR: VJ/SJ nas coletas atuais; CMJ/SJ apenas em coleta legada sem VJ. Medias de 3 validas. Assimetria: |D-E|/maior(D,E) x 100, CMJ unilateral. Sem classificacao de lesao. Potencia preservada do equipamento.</p>
     {ref && <p className="text-sm"><a className="underline" href={ref.url} target="_blank" rel="noreferrer">{ref.fonte}</a>: {ref.label}, n={ref.n}, CMJ {ref.media_cm} ± {ref.dp_cm} cm (media ± DP). {ref.protocolo}. {ref.limitacao}</p>}
     {old.success && before && <div className="text-sm"><h4 className="font-semibold">Comparacao com {previousDate ?? 'avaliacao anterior'}</h4>{s.grupos.map(g => {
       const b = before.grupos.find(x => x.protocolo === g.protocolo);

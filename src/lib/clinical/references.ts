@@ -67,7 +67,7 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     "modulos": [
       "jump_test"
     ],
-    "nota": "Somente o salto: coortes masculinas de futebol juvenil subelite, CMJ sem bracos, media de tres. Nao extrapolar normas."
+    "nota": "Somente o salto: coortes masculinas de futebol juvenil subelite, CMJ sem bracos, media de tres. Pela tecnica, corresponde ao VJ com maos na cintura adotado no equipamento; nao comparar ao CMJ com bracos livres nem extrapolar normas."
   },
   {
     "id": "jump-rsi",

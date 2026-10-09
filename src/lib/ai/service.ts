@@ -6,7 +6,7 @@ import { modulosDaAvaliacao } from '@/lib/clinical/references';
 import { llmCall, parseJSON } from './client';
 import * as P from './prompts';
 import type { PacienteContexto } from './prompts';
-import { jumpSchema, jumpSummary, jumpComparable, jumpIsSimulated, jumpClinicalContext } from '@/lib/jump-test';
+import { jumpSchema, jumpSummary, jumpComparable, jumpIsSimulated, jumpClinicalContext, jumpProtocolTechnique } from '@/lib/jump-test';
 import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-record';
 
 async function stampAnthropometry(sb: any, avaliacaoId: string, row: any, content: any) {
@@ -293,7 +293,7 @@ export async function gerarAnaliseEvolucao(avaliacaoAtualId: string) {
       if (!row.success) return null;
       if (jumpIsSimulated(row.data)) return jumpClinicalContext(row.data);
       const result = jumpSummary(row.data);
-      return result.pronto ? { resultados: result, observacoes: row.data.observacoes, conclusao_profissional: row.data.conclusao, protocolo: { altura_queda_cm: row.data.altura_queda_cm, duracao_s: row.data.duracao_s, equipamento: row.data.equipamento, software: row.data.software, bracos: row.data.bracos, descanso_s: row.data.descanso_s, metodo_potencia: row.data.metodo_potencia } } : { pendencias: result.pendencias };
+      return result.pronto ? { resultados: result, observacoes: row.data.observacoes, conclusao_profissional: row.data.conclusao, protocolo: { altura_queda_cm: row.data.altura_queda_cm, duracao_s: row.data.duracao_s, equipamento: row.data.equipamento, software: row.data.software, tecnicas: Object.fromEntries(row.data.protocolos.map(protocolo => [protocolo, jumpProtocolTechnique(row.data, protocolo)])), descanso_s: row.data.descanso_s, metodo_potencia: row.data.metodo_potencia } } : { pendencias: result.pendencias };
     })(),
     forca: Array.isArray(a.forca) ? a.forca[0] : a.forca,
     cardio: Array.isArray(a.cardiorrespiratorio) ? a.cardiorrespiratorio[0] : a.cardiorrespiratorio,

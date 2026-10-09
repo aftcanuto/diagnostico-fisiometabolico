@@ -38,15 +38,15 @@ function flightMs(heightCm: number) {
 }
 
 export function completeJumpTest(scale = 1): JumpData {
-  const protocols: JumpProtocol[] = ['sj','cmj','dj','unilateral_d','unilateral_e','repetidos'];
+  const protocols: JumpProtocol[] = ['sj','vj','cmj','dj','unilateral_d','unilateral_e','repetidos'];
   const base: Record<JumpProtocol, number[]> = {
-    sj:[28,29,29.5], cmj:[31,32,31.5], dj:[27,28,28.5],
+    sj:[28,29,29.5], vj:[31,32,31.5], cmj:[34,35,34.5], dj:[27,28,28.5],
     unilateral_d:[20,21,20.5], unilateral_e:[19,19.5,20], repetidos:[28,27.5,27,26.5,26,25.5],
   };
   const trials: JumpTrial[] = protocols.flatMap(protocol => base[protocol].map((raw, index) => {
     const height = +(raw * scale).toFixed(1);
     return {
-      id:`${protocol}-${index + 1}`, protocolo:protocol, altura_cm:height, voo_ms:flightMs(height),
+      id:`${protocol}-${index + 1}`, protocolo:protocol, tecnica_bracos:protocol === 'vj' ? 'cintura' : protocol === 'cmj' ? 'livres' : undefined, altura_cm:height, voo_ms:flightMs(height),
       contato_ms:protocol === 'dj' ? 205 + index * 6 : protocol === 'repetidos' ? 220 + index * 5 : 310 + index * 4,
       potencia_w:Math.round((protocol.startsWith('unilateral') ? 1650 : 2850) * scale + index * 24), status:'valida' as const, justificativa:'',
     };
@@ -56,7 +56,7 @@ export function completeJumpTest(scale = 1): JumpData {
     software:'JumpTest Desktop 2026', metodo_potencia:'Pico de potencia informado pelo equipamento; algoritmo do fabricante',
     altura_queda_cm:30, duracao_s:15, bracos:'cintura', descanso_s:60, familiarizacao:true, apto:true,
     repetidos_serie_completa:true, protocolos:protocols, tentativas:trials, observacoes:'Coleta completa para auditoria visual do software.',
-    conclusao:'Desempenho consistente entre tentativas, com pequena assimetria entre membros e RSI registrado no Drop Jump.',
+    conclusao:'Desempenho consistente entre tentativas, com VJ na cintura, CMJ com bracos livres, pequena assimetria entre membros e RSI registrado no Drop Jump.',
     referencia:'nenhuma', referencia_justificativa:'', documento_path:null,
   };
 }
