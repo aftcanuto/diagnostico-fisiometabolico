@@ -24,14 +24,14 @@ interface PdfConfig {
 const DEFAULTS: Omit<PdfConfig, 'clinica_id'> = {
   protocolos: [
     { id: 'antropometria', label: 'Antropometria', texto: 'Padrão ISAK' },
-    { id: 'gordura', label: '% Gordura', texto: 'Jackson & Pollock 7 dobras + Siri' },
+    { id: 'gordura', label: '% Gordura', texto: 'Durnin-Womersley + Siri (V2); Jackson-Pollock 7 dobras + Siri apenas em avaliações históricas completas' },
     { id: 'ossea', label: 'Massa óssea', texto: 'Von Döbeln (Rocha, 1974)' },
     { id: 'somatotipo', label: 'Somatotipo', texto: 'Heath-Carter' },
     { id: 'preensao', label: 'Preensão palmar', texto: 'Dinamômetro Medeor (Massy-Westropp, 2011)' },
     { id: 'dinamometria', label: 'Dinamometria isométrica', texto: 'SP Tech / Medeor (protocolo interno)' },
     { id: 'flexibilidade', label: 'Flexibilidade', texto: 'Banco de Wells (ACSM)' },
     { id: 'aerobico', label: 'Aeróbico', texto: 'Zonas % FCmáx (Tanaka, 2001)' },
-    { id: 'ffmi', label: 'FFMI', texto: 'Schutz 2002; limite: Berkhan/McDonald' },
+    { id: 'ffmi', label: 'FFMI', texto: 'Índice descritivo de massa livre de gordura por estatura; não estima potencial genético' },
     { id: 'termografia', label: 'Termografia funcional', texto: 'Protocolo TISEM; emissividade cutânea 0,98; análise comparativa por ROIs' },
   ],
   referencias: [],
@@ -40,12 +40,17 @@ const DEFAULTS: Omit<PdfConfig, 'clinica_id'> = {
 };
 
 function uid() { return Math.random().toString(36).slice(2, 8); }
+function protocoloSeguro(protocolo: Protocolo): Protocolo {
+  return /ffmi/i.test(protocolo.label) && /berkhan|mcdonald|limite|potencial/i.test(protocolo.texto)
+    ? { ...protocolo, texto: 'Índice descritivo de massa livre de gordura por estatura; não estima potencial genético' }
+    : protocolo;
+}
 
 export function PdfConfigForm({ clinicaId, config }: { clinicaId: string; config: PdfConfig | null }) {
   const supabase = createClient();
   const base = config ?? { ...DEFAULTS, clinica_id: clinicaId };
 
-  const [protocolos, setProtocolos] = useState<Protocolo[]>(base.protocolos ?? DEFAULTS.protocolos);
+  const [protocolos, setProtocolos] = useState<Protocolo[]>(() => (base.protocolos ?? DEFAULTS.protocolos).map(protocoloSeguro));
   const referencias = base.referencias ?? DEFAULTS.referencias;
   const [textoLegal, setTextoLegal] = useState(base.texto_legal ?? DEFAULTS.texto_legal);
   const [notaEquip, setNotaEquip] = useState(base.nota_equipamentos ?? '');

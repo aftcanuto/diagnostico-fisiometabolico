@@ -1,16 +1,11 @@
 import assert from 'node:assert/strict';
 
-import { calcFFMI, imc, massaMagra, mediaDobra, rcq } from '../src/lib/calculations/antropometria';
+import { calcFFMI, imc, massaMagra, mediaDobra, percentualGorduraJP7, rcq } from '../src/lib/calculations/antropometria';
 import { classificaVO2, fcMaxTanaka, scoreVO2, zonasTreinamento } from '../src/lib/calculations/cardio';
 import { classificarWells, scoreFlexibilidade } from '../src/lib/calculations/flexibilidade';
 import { assimetria, forcaRelativa } from '../src/lib/calculations/forca';
-import { calcLimiteNatural } from '../src/lib/calculations/limiteNatural';
 import { calcularRML } from '../src/lib/calculations/rml';
 import { scoreComposicaoCorporal } from '../src/lib/scores';
-
-function quaseIgual(valor: number, esperado: number, margem = 0.01) {
-  assert.ok(Math.abs(valor - esperado) <= margem, `Esperado ${esperado}, recebido ${valor}`);
-}
 
 assert.equal(imc(76, 170), 26.3);
 assert.deepEqual(mediaDobra(10, 10.4, null), { media: 10.2, precisaTerceira: false });
@@ -18,10 +13,20 @@ assert.deepEqual(mediaDobra(10, 12, null), { media: null, precisaTerceira: true 
 assert.equal(massaMagra(76, 14.32), 65.12);
 assert.equal(rcq(72, 92), 0.783);
 
+const seteDobras = {
+  peitoral: { media: 10 }, axilar_media: { media: 12 }, triceps: { media: 14 },
+  subescapular: { media: 16 }, abdominal: { media: 18 }, supra_iliaca: { media: 20 },
+  coxa: { media: 22 },
+} as any;
+assert.equal(percentualGorduraJP7(seteDobras, 'M', 35), 16.94);
+assert.equal(percentualGorduraJP7(seteDobras, 'F', 35), 22.81);
+assert.equal(percentualGorduraJP7({ ...seteDobras, abdominal: { media: null } }, 'M', 35), null);
+assert.equal(percentualGorduraJP7(seteDobras, 'M', 17), null);
+
 const ffmi = calcFFMI(76, 170, 14.32);
 assert.ok(ffmi);
 assert.equal(ffmi?.ffmi, 22.5);
-assert.equal(ffmi?.classificacao, 'Alto');
+assert.match(ffmi?.classificacao ?? '', /descritivo/i);
 
 assert.equal(fcMaxTanaka(46), 176);
 assert.deepEqual(zonasTreinamento(176), {
@@ -64,15 +69,5 @@ assert.equal(rml.abd_1min_classificacao, 'Excelente');
 assert.equal(rml.abd_prancha_classificacao, 'Regular');
 assert.equal(rml.mmii_agach_classificacao, 'Regular');
 assert.equal(rml.mmii_wallsit_classificacao, 'Fraco');
-
-const limite = calcLimiteNatural({
-  massaMagra: 65.12,
-  estaturaCm: 170,
-  sexo: 'M',
-  massaOssea: 9.77,
-});
-assert.equal(limite.ffmi, 22.5);
-quaseIgual(limite.pctDoLimite, 93);
-assert.equal(limite.osseaStatus, 'Adequada');
 
 console.log('OK: formulas clinicas principais validadas');

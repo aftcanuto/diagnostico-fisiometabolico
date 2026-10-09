@@ -10,7 +10,7 @@ export function leeMuscle(p:{height:number;arm:number;thigh:number;calf:number;a
 export function kerrComponent(p:{height:number;sum:number;component:'muscle'|'adipose'}):number {
   const scale = 170.18/p.height;
   const z = p.component === 'muscle' ? (p.sum*scale-207.21)/13.74 : (p.sum*scale-116.41)/34.79;
-  return p.component === 'muscle' ? (24.5+5.4*z)/scale**3 : (25.6+5.85*z)/scale**3;
+  return p.component === 'muscle' ? (24.5+4.4*z)/scale**3 : (25.6+5.85*z)/scale**3;
 }
 export function martinBone(p:{height:number;humerus:number;femur:number;wrist:number;bimalleolar:number}):number {
   return .6*p.height*(p.humerus+p.femur+p.wrist+p.bimalleolar)**2*.0001;
@@ -52,8 +52,45 @@ export function petroskiDensity(p:{sum4:number;age:number;sex:'M'|'F';mass:numbe
 export function jacksonDensity(p:{sum3:number;age:number}):number {
   return 1.0994921-.0009929*p.sum3+.0000023*p.sum3**2-.0001392*p.age;
 }
+export function jacksonPollock7Density(p:{sum7:number;age:number;sex:'M'|'F'}):number|null {
+  if (!Number.isFinite(p.sum7) || p.sum7 <= 0 || !Number.isFinite(p.age)) return null;
+  const density = p.sex === 'M'
+    ? 1.112-.00043499*p.sum7+.00000055*p.sum7**2-.00028826*p.age
+    : 1.097-.00046971*p.sum7+.00000056*p.sum7**2-.00012828*p.age;
+  return Number.isFinite(density) && density > 0 ? density : null;
+}
 export function siriFatPercent(density:number):number|null {
   if (!Number.isFinite(density) || density <= 0) return null;
   const percent = 495/density-450;
   return Number.isFinite(percent) && percent >= 0 && percent <= 100 ? percent : null;
+}
+
+const durninWomersleyCoefficients = {
+  M: [
+    // Durnin-Rahaman (1967), adolescent boys; retained only for age 16 here.
+    {min:16,max:16,a:1.1533,b:.0643},
+    {min:17,max:19,a:1.1620,b:.0630},
+    {min:20,max:29,a:1.1631,b:.0632},
+    {min:30,max:39,a:1.1422,b:.0544},
+    {min:40,max:49,a:1.1620,b:.0700},
+    {min:50,max:72,a:1.1715,b:.0779},
+  ],
+  F: [
+    // Durnin-Rahaman (1967), adolescent girls; retained only for age 16 here.
+    {min:16,max:16,a:1.1369,b:.0598},
+    {min:17,max:19,a:1.1549,b:.0678},
+    {min:20,max:29,a:1.1599,b:.0717},
+    {min:30,max:39,a:1.1423,b:.0632},
+    {min:40,max:49,a:1.1333,b:.0612},
+    {min:50,max:72,a:1.1339,b:.0645},
+  ],
+} as const;
+
+export function durninWomersleyDensity(p:{sum4:number;age:number;sex:'M'|'F'}):number|null {
+  if (!Number.isFinite(p.sum4) || p.sum4 <= 0 || !Number.isFinite(p.age)) return null;
+  const age = Math.floor(p.age);
+  const band = durninWomersleyCoefficients[p.sex].find(item => age >= item.min && age <= item.max);
+  if (!band) return null;
+  const density = band.a-band.b*Math.log10(p.sum4);
+  return Number.isFinite(density) && density > 0 ? density : null;
 }

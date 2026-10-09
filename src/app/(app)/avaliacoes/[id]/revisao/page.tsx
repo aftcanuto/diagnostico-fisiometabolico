@@ -11,7 +11,6 @@ import { isAnthropometryV2 } from '@/lib/anthropometry-record';
 import { createClient } from '@/lib/supabase/client';
 import { calcIdade } from '@/lib/calculations/antropometria';
 import { scoreFlexibilidade } from '@/lib/calculations/flexibilidade';
-import { calcLimiteNatural } from '@/lib/calculations/limiteNatural';
 import {
   scoreComposicaoCorporal, scoreCardio,
   scorePostura, scoreGlobal
@@ -133,15 +132,15 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       console.error('[Revisao] Nao foi possivel persistir scores', error);
     }
 
-    // Limite natural muscular
+    // FFMI historico, mantido apenas como indice descritivo.
     if (!isAnthropometryV2(antData) && antData?.massa_magra && antData?.estatura) {
-      const ln = calcLimiteNatural({
-        massaMagra: Number(antData.massa_magra),
-        estaturaCm: Number(antData.estatura),
-        sexo,
-        massaOssea: antData.massa_ossea ? Number(antData.massa_ossea) : null,
+      const massaMagraAtual = Number(antData.massa_magra);
+      const estaturaM = Number(antData.estatura) / 100;
+      setLimiteNatural({
+        ffmi: +(massaMagraAtual / estaturaM ** 2).toFixed(1),
+        massaMagraAtual,
+        massaOsseaAtual: antData.massa_ossea ? Number(antData.massa_ossea) : null,
       });
-      setLimiteNatural(ln);
     }
 
     setState('ready');
@@ -407,34 +406,15 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       {limiteNatural && (
         <Card>
           <CardHeader>
-            <CardTitle><Dumbbell className="inline w-4 h-4 mr-1" /> Potencial genético muscular</CardTitle>
+            <CardTitle><Dumbbell className="inline w-4 h-4 mr-1" /> FFMI</CardTitle>
           </CardHeader>
           <CardBody>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <Stat label="FFMI" value={limiteNatural.ffmi} sub={limiteNatural.ffmiClassificacao} />
-              <Stat label="Limite FFMI" value={limiteNatural.ffmiLimite} sub={`natural ${aval.pacientes.sexo === 'M' ? 'masculino' : 'feminino'}`} />
-              <Stat label="% do potencial" value={`${limiteNatural.pctDoLimite}%`}
-                    sub={limiteNatural.pctDoLimite >= 90 ? 'Próximo do limite!' : 'Margem de ganho'} />
-              <Stat label="Potencial de ganho" value={`${limiteNatural.potencialGanhoKg} kg`} sub="massa magra" />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+              <Stat label="FFMI" value={limiteNatural.ffmi} sub="Índice descritivo" />
+              <Stat label="Massa magra" value={`${limiteNatural.massaMagraAtual} kg`} />
+              {limiteNatural.massaOsseaAtual != null && <Stat label="Massa óssea estimada" value={`${limiteNatural.massaOsseaAtual} kg`} />}
             </div>
-            <div className="mb-3">
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                <span>Massa magra atual: {limiteNatural.massaMagraAtual} kg</span>
-                <span>Máx. estimado: {limiteNatural.massaMagraMaxEstimada} kg</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-3">
-                <div className="bg-brand-600 h-3 rounded-full transition-all" style={{ width: `${Math.min(100, limiteNatural.pctDoLimite)}%` }} />
-              </div>
-            </div>
-            {limiteNatural.massaOsseaAtual != null && (
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                <Stat label="Massa óssea atual" value={`${limiteNatural.massaOsseaAtual} kg`} />
-                <Stat label="Massa óssea ideal" value={`${limiteNatural.massaOsseaIdeal} kg`} />
-                <Stat label="Status" value={limiteNatural.osseaStatus}
-                      sub={limiteNatural.osseaStatus === 'Adequada' ? '✅' : '⚠️'} />
-              </div>
-            )}
-            <p className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3">{limiteNatural.resumo}</p>
+            <p className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3">O FFMI relaciona massa livre de gordura e estatura. Isoladamente, não estima potencial genético, limite natural ou uso de substâncias. Massa óssea antropométrica não equivale a densidade mineral por DXA.</p>
           </CardBody>
         </Card>
       )}

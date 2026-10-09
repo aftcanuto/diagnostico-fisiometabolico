@@ -43,8 +43,11 @@ Dates strictly YYYY-MM-DD; age elapsed UTC calendar days /365.2425.
 Quality and applicability warnings propagate to downstream results.
 No rounding internally. Models and references are snapshot-versioned.
 
-Petroski/JP3/Siri and fat-target scenarios unavailable with strict26. Never
-substitute suprailiac sites or map Kerr adipose to chemical fat or fat-free mass.
+Durnin-Rahaman at age 16 and Durnin-Womersley from 17 through 72 use biceps,
+triceps, subscapular and ISAK iliac crest (the suprailiac site described by those
+methods), followed by Siri. The result remains available without abdominal
+skinfold or abdominal girth. Petroski and Jackson-Pollock remain unavailable:
+never substitute their distinct suprailiac sites or map Kerr adipose to chemical fat.
 Martin bone source verification pending; Lee protocol adaptation flagged review;
 Phantom supplied table attribution pending; no claim of universal validation.
 selectedReferences returns only references for selected finite results from

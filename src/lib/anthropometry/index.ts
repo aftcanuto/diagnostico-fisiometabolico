@@ -1,4 +1,4 @@
-export { CATALOG_VERSION, ENGINE_VERSION, MEASUREMENTS, METHODS, PHANTOM, REFERENCES } from './catalog';
+export { CATALOG_VERSION, CORRECTED_GIRTH_RESULT_IDS, ENGINE_VERSION, MEASUREMENTS, METHODS, PHANTOM, REFERENCES } from './catalog';
 export type { MeasurementId, Method, Reference } from './catalog';
 export { anthropometrySchema, newAnthropometry } from './schema';
 export type { AnthropometryInput, MeasurementInput } from './schema';

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { calculateAnthropometry } from '@/lib/anthropometry';
+import { CORRECTED_GIRTH_RESULT_IDS, type calculateAnthropometry } from '@/lib/anthropometry';
 
 export type AnthropometryResult = ReturnType<typeof calculateAnthropometry>;
 export type AnthropometryHistoryEntry = { id: string; date: string; results: AnthropometryResult };
@@ -100,15 +100,23 @@ function ResultsTable({ rows, snapshot }: { rows: ResultRow[]; snapshot: Anthrop
 
 export function AnthropometryResults({ results, history = [], selectedOnly = true }: { results: AnthropometryResult; history?: AnthropometryHistoryEntry[]; selectedOnly?: boolean }) {
   const rows = results.results.filter(row => !selectedOnly || row.selected);
+  const correctedIds = new Set<string>(CORRECTED_GIRTH_RESULT_IDS);
+  const correctedGirths = rows.filter(row => correctedIds.has(row.id));
+  const remainingRows = rows.filter(row => !correctedIds.has(row.id));
   const phantom = results.phantom.filter(row => !selectedOnly || row.selected);
   const usedIds = new Set([...rows, ...phantom].flatMap(row => row.referenceIds));
   const references = results.references.filter(reference => usedIds.has(reference.id));
   const showSomato = !selectedOnly || rows.some(row => /heath|somato/i.test(row.methodId));
   return <div aria-label="Resultados de Antropometria" style={{ width: '100%', maxWidth: '100%', minWidth: 0, overflow: 'hidden', color: '#1f2937', letterSpacing: 0 }}>
+    {correctedGirths.length > 0 && <section data-anthropometry-section="corrected-girths" style={section}>
+      <h2 style={heading}>Perimetros corrigidos</h2>
+      <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Valores derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas permanecem preservadas; o antebraco nao recebe correcao por nao haver dobra correspondente no protocolo.</p>
+      <ResultsTable rows={correctedGirths} snapshot={results} />
+    </section>}
     <section data-anthropometry-section="results" style={section}>
       <h2 style={heading}>Resultados de Antropometria</h2>
       <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Motor {results.engineVersion}; catalogo {results.catalogVersion}. {selectedOnly ? 'Metodos selecionados.' : 'Revisao de todos os metodos.'}</p>
-      {rows.length ? <ResultsTable rows={rows} snapshot={results} /> : <p>Nenhum metodo selecionado.</p>}
+      {remainingRows.length ? <ResultsTable rows={remainingRows} snapshot={results} /> : <p>Nenhum outro resultado selecionado.</p>}
     </section>
     {showSomato && <section data-anthropometry-section="somatotype" style={section}><h2 style={heading}>Somatotipo e somatocarta</h2><p style={{ fontSize: 13 }}>Endomorfia: {anthropometryFormat(results.somatotype.endomorphy)}; mesomorfia: {anthropometryFormat(results.somatotype.mesomorphy)}; ectomorfia: {anthropometryFormat(results.somatotype.ectomorphy)}.</p><Somatochart somatotype={results.somatotype} /><p style={{ fontSize: 12 }}>{results.somatotype.reason}</p></section>}
     {phantom.length > 0 && <section data-anthropometry-section="phantom" style={section}><h2 style={heading}>Proporcionalidade Phantom</h2><PhantomChart rows={phantom} /><ResultsTable rows={phantom} snapshot={results} /></section>}

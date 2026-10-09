@@ -18,7 +18,11 @@ const shape = Object.fromEntries(MEASUREMENTS.map(m => [m.id,readingSchema.defau
 export const anthropometrySchema = z.object({
   version: z.literal(2),
   measurements: z.object(shape).strict().default({}),
-  methods: z.array(z.string().refine(id => METHODS.some(m => m.id === id), 'Metodo desconhecido')).transform(ids => [...new Set(ids)]).default([]),
+  methods: z.array(z.string().refine(id => METHODS.some(m => m.id === id), 'Metodo desconhecido')).transform(ids => {
+    const selected = new Set(ids);
+    if (selected.has('siri1961')) selected.add('durninWomersley1974');
+    return [...selected];
+  }).default([]),
   instruments: z.array(z.object({name:z.string().max(300),resolution:nullableNumberSchema.refine(n => n === null || n > 0,'Resolucao deve ser positiva').default(null),unit:z.string().max(30)}).strict()).max(30).default([]),
   conditions: z.string().max(10000).default(''),
   collectionProtocol: z.string().max(2000).default('ISAK - conjunto estrito de 26 medidas'),

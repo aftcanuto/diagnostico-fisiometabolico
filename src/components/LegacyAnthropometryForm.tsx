@@ -96,7 +96,9 @@ export default function LegacyAnthropometryForm(props: { params: Promise<{ id: s
     const imcVal = imc(peso, est);
     const pctG = percentualGorduraJP7(dobrasCalc, pac.sexo, idade);
     const mm = pctG != null ? massaMagra(peso, pctG) : null;
-    const mo = massaOsseaVonDobeln(est, form.diametros?.umero, form.diametros?.femur);
+    // Preserve an already-issued historical result. Rocha requires wrist and femur,
+    // so the old humerus field must never be silently substituted for wrist breadth.
+    const mo = form.massa_ossea ?? massaOsseaVonDobeln(est, form.diametros?.punho, form.diametros?.femur);
     const rcqVal = rcq(form.circunferencias?.cintura, form.circunferencias?.quadril);
     const mediaDisponivel = (...vals: any[]) => {
       const nums = vals.map(Number).filter(v => Number.isFinite(v) && v > 0);

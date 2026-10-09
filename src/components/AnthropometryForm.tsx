@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, Input, Select, Textarea } from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
 import { buildSteps } from '@/lib/steps';
-import { MEASUREMENTS, METHODS, newAnthropometry, anthropometrySchema, calculateAnthropometry } from '@/lib/anthropometry';
+import { ENGINE_VERSION, MEASUREMENTS, METHODS, newAnthropometry, anthropometrySchema, calculateAnthropometry } from '@/lib/anthropometry';
 import AnthropometryResults, { anthropometryFormat, anthropometryDate, type AnthropometryResult, type AnthropometryHistoryEntry } from './AnthropometryResults';
 
 type InputData = ReturnType<typeof newAnthropometry>;
@@ -42,6 +42,7 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
   const [modules, setModules] = useState<any>({});
   const [revision, setRevision] = useState<number | null>(initialRow?.revision_v2 ?? null);
   const [storedResults, setStoredResults] = useState<AnthropometryResult | null>(null);
+  const [needsRecalculation, setNeedsRecalculation] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [historyError, setHistoryError] = useState('');
@@ -69,9 +70,10 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
         const patient = Array.isArray(av.pacientes) ? av.pacientes[0] : av.pacientes;
         if (!patient?.data_nascimento || !['M', 'F'].includes(patient.sexo) || !av.data) throw new Error('Confira data da avaliacao, nascimento e sexo no cadastro. Os dados nao serao inferidos.');
         if (!active) return;
+        const staleSnapshot = !!initialRow?.resultados_v2 && initialRow.resultados_v2.engineVersion !== ENGINE_VERSION;
         setInput(parsed); setContext({ date: av.data, birthDate: patient.data_nascimento, sex: patient.sexo as 'M' | 'F' });
         setModules(av.modulos_selecionados ?? {});
-        setStoredResults(initialRow?.resultados_v2 ?? null); setDirty(false); setLoading(false);
+        setStoredResults(initialRow?.resultados_v2 ?? null); setNeedsRecalculation(staleSnapshot); setDirty(staleSnapshot); setLoading(false);
         const { data: past, error: pastError } = await sb.from('avaliacoes').select('id,data,antropometria(*)').eq('paciente_id', av.paciente_id).order('data');
         if (!active) return;
         if (pastError) { setHistoryError('Nao foi possivel carregar o historico. A coleta atual permanece disponivel.'); return; }
@@ -97,9 +99,9 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
 
   const calculated = useMemo(() => {
     if (!context || loading || loadError) return { result: null, error: '' };
-    try { return { result: !dirty && storedResults ? storedResults : calculateAnthropometry(input, context), error: '' }; }
+    try { return { result: !dirty && !needsRecalculation && storedResults ? storedResults : calculateAnthropometry(input, context), error: '' }; }
     catch (error) { return { result: null, error: error instanceof Error ? error.message : 'Nao foi possivel calcular os resultados.' }; }
-  }, [input, context, dirty, storedResults, loading, loadError]);
+  }, [input, context, dirty, needsRecalculation, storedResults, loading, loadError]);
 
   function change(patch: Partial<InputData>) { setInput(current => ({ ...current, ...patch })); setDirty(true); setMessage(''); setSaveError(''); }
   function markInvalid(key: string, invalid: boolean) { setInvalidFields(current => ({ ...current, [key]: invalid })); setDirty(true); setMessage(''); }
@@ -123,7 +125,7 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
       if (body?.ok !== true || !row || !Number.isInteger(row.revision_v2) || row.revision_v2 <= (revision ?? 0) || row.resultados_v2?.version !== 2 || !Array.isArray(row.resultados_v2.results)) throw new Error('A API nao confirmou o registro e sua revisao. Confira a avaliacao antes de tentar novamente.');
       const persisted = anthropometrySchema.parse(row.registro_v2);
       if (JSON.stringify(persisted) !== JSON.stringify(snapshot)) throw new Error('A API retornou uma coleta diferente da enviada. Nenhuma confirmacao de sucesso foi aplicada. Recarregue para conferir.');
-      setRevision(row.revision_v2); setStoredResults(row.resultados_v2); setInput(persisted); setDirty(false); setMessage('Antropometria salva.');
+      setRevision(row.revision_v2); setStoredResults(row.resultados_v2); setInput(persisted); setNeedsRecalculation(false); setDirty(false); setMessage('Antropometria salva.');
       return true;
     } catch (error) {
       setSaveError(error instanceof Error && error.name === 'AbortError' ? 'Tempo de resposta excedido. O salvamento nao foi confirmado; confira a avaliacao antes de repetir.' : error instanceof Error ? error.message : 'Falha ao salvar. Seus campos foram preservados.');
@@ -148,6 +150,7 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
     <header className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-semibold">Antropometria</h1><p className="mt-1 text-sm text-gray-600">{context && anthropometryDate(context.date)} · 26 medidas · {revision == null ? 'Nova coleta' : `Revisao ${revision}`}</p></div><Button onClick={save} disabled={saving || invalidNumber}><Save size={16} />{saving ? 'Salvando...' : 'Salvar rascunho'}</Button></header>
     {message && <p role="status" className="border-l-4 border-emerald-600 bg-emerald-50 p-3 text-sm text-emerald-900">{message}</p>}
     {saveError && <p role="alert" className="border-l-4 border-red-600 bg-red-50 p-3 text-sm text-red-900">{saveError}</p>}
+    {needsRecalculation && <p role="status" className="border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-950">Os resultados foram atualizados pelo motor antropometrico atual. Salve a coleta para atualizar revisao, painel, portal e PDF.</p>}
     {calculated.error && <p role="alert" className="text-sm text-red-800">{calculated.error}</p>}
     {invalidNumber && <p role="alert" className="text-sm text-red-800">Formato numerico invalido. Use virgula ou ponto decimal, sem separador de milhar.</p>}
     <div className="flex flex-wrap gap-1 border-b" role="tablist" aria-label="Antropometria">{([['collection', 'Coleta'], ['results', 'Resultados'], ['interpretation', 'Interpretacao']] as const).map(([key, label]) => <button key={key} type="button" role="tab" id={`anthropometry-tab-${key}`} aria-controls={`anthropometry-panel-${key}`} aria-selected={tab === key} onClick={() => setTab(key)} className={`px-4 py-3 text-sm border-b-2 ${tab === key ? 'border-teal-700 text-teal-800 font-semibold' : 'border-transparent text-gray-600'}`}>{label}</button>)}</div>

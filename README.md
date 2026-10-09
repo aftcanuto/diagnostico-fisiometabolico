@@ -10,7 +10,7 @@ do paciente, evolução longitudinal e **laudo PDF premium personalizado por mar
 
 ### Núcleo clínico
 - **6 módulos**: anamnese, sinais vitais, posturografia (4 fotos), antropometria ISAK, força (preensão obrigatória), cardiorrespiratório
-- **Cálculos validados**: Jackson-Pollock 7 dobras + Siri, Von Döbeln (massa óssea), Heath-Carter (somatotipo), Tanaka (FCmáx), zonas Z1–Z5
+- **Cálculos antropométricos rastreáveis**: Durnin-Womersley + Siri na coleta V2; Jackson-Pollock 7 dobras + Siri somente no legado com sete pontos completos; Rocha, Martin, Lee, Kerr, Heath-Carter e Phantom com método, versão e limitações registrados
 - **Motor de score 0–100** ponderado (postura, composição, força, cardio + global) — penaliza só módulos avaliados
 
 ### IA integrada 🤖

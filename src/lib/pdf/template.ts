@@ -1288,9 +1288,6 @@ function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any)
   const rot:Record<string,string>={triceps:'Tríceps',subescapular:'Subescapular',peitoral:'Peitoral',axilar_media:'Axilar média',supra_iliaca:'Supra-ilíaca',abdominal:'Abdominal',coxa:'Coxa'};
   const estM=a.estatura?a.estatura/100:null;
   const ffmi=a.massa_magra&&estM?+(a.massa_magra/(estM*estM)).toFixed(1):null;
-  const sexo=a._sexo??'M';
-  const limMax=a.estatura?(sexo==='M'?a.estatura-100:(a.estatura-100)*0.85):null;
-  const pctPot=a.massa_magra&&limMax?+((a.massa_magra/limMax)*100).toFixed(1):null;
   const pctGorduraRelatorio = (!gorduraRelatorio?.fonteDefinida || gorduraRelatorio.fonte === 'antropometria') ? a.percentual_gordura : null;
   const dobraValidada = (v:any) => v?.media ?? v?.média ?? v?.['média'] ?? v?.validada ?? v?.validado ?? v?.valor ?? v?.resultado ?? v?.m3 ?? v?.m2 ?? v?.m1 ?? v;
   const numeroDobra = (v:any): number | null => {
@@ -1335,12 +1332,9 @@ function pgAntro(a: any, score: number | null, ia?: any, gorduraRelatorio?: any)
   const conteudoPrincipal = `
   ${cardsPrincipais ? `<div class="data-grid">${cardsPrincipais}</div>` : ''}
   ${ffmi!=null?`<div class="dark-block">
-    <div class="dark-label">Potencial genético muscular</div>
-    <div style="display:flex;align-items:center;gap:20px">
-      <div><div style="font-size:28px;font-weight:800;color:#16a34a;line-height:1">${ffmi}</div><div style="font-size:9px;color:#6b7280;margin-top:3px">FFMI</div></div>
-      <div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:9px;color:#6b7280;margin-bottom:5px"><span>${a.massa_magra} kg atual</span><span>${pctPot}% do potencial</span>${limMax?`<span>${limMax.toFixed(1)} kg máx.</span>`:''}</div>
-      <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(100,pctPot??0)}%"></div></div></div>
-    </div>
+    <div class="dark-label">Índice de massa livre de gordura</div>
+    <div style="font-size:28px;font-weight:800;color:#16a34a;line-height:1">${ffmi}</div>
+    <div style="font-size:9px;color:#6b7280;margin-top:5px">FFMI descritivo; não estima potencial genético ou limite natural.</div>
   </div>`:''}
   ${dobrasValidas.length?`<div class="sec-sub">Dobras cutâneas (mm)</div>
   <table><thead><tr><th>Dobra</th><th>Medida validada</th></tr></thead><tbody>
@@ -2032,23 +2026,28 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
   );
 
   // Protocolos — usar config do banco se disponível, senão fallback
-  const protos: any[] = [...(cfg?.protocolos ?? [
+  const protos: any[] = (cfg?.protocolos ?? [
     {label:'Antropometria',texto:'Padrão ISAK'},
-    {label:'% Gordura',texto:'Jackson & Pollock 7 dobras + Siri'},
+    {label:'% Gordura',texto:'Durnin-Womersley + Siri (V2); Jackson-Pollock 7 dobras + Siri apenas em avaliações históricas completas'},
     {label:'Massa óssea',texto:'Von Döbeln (Rocha, 1974)'},
     {label:'Somatotipo',texto:'Heath-Carter'},
     {label:'Preensão palmar',texto:'Dinamômetro Medeor (Massy-Westropp, 2011)'},
     {label:'Dinamometria isométrica',texto:'SP Tech (protocolo interno)'},
     {label:'Flexibilidade',texto:'Banco de Wells (ACSM)'},
     {label:'Aeróbico',texto:'Zonas % FCmáx (Tanaka, 2001)'},
-    {label:'FFMI',texto:'Schutz 2002; limite: Berkhan/McDonald'},
+    {label:'FFMI',texto:'Índice descritivo de massa livre de gordura por estatura; não estima potencial genético'},
     {label:'RML — Flexão de braço',texto:'Contagem de repetições conforme protocolo registrado'},
     {label:'RML — Abdominal 1 min',texto:'Contagem em um minuto conforme protocolo registrado'},
     {label:'RML — Prancha ventral',texto:'Endurance de tronco; McGill, 3ª ed. (2016)'},
     {label:'RML — Agachamento 1 min',texto:'Contagem em um minuto conforme protocolo registrado'},
     {label:'RML — Sentar e Levantar 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
     {label:'RML — Arm Curl Test 30s',texto:'Rikli & Jones. Senior Fitness Test, 2ª ed. (2013)'},
-  ])];
+  ]).map((protocolo: any) => ({ ...protocolo }));
+  for (const protocolo of protos) {
+    if (/ffmi/i.test(protocolo.label) && /berkhan|mcdonald|limite|potencial/i.test(protocolo.texto)) {
+      protocolo.texto = 'Índice descritivo de massa livre de gordura por estatura; não estima potencial genético';
+    }
+  }
   if (d.modulos.termografia && !protos.some((p: any) => /termograf/i.test(`${p.label} ${p.texto}`))) {
     protos.push({ label:'Termografia funcional', texto:'Protocolo TISEM; emissividade cutânea 0,98; análise comparativa por ROIs.' });
   }

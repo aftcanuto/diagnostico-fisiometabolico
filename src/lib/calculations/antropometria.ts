@@ -1,4 +1,5 @@
 import type { Dobras, Circunferencias, Diametros, Sexo, Somatotipo } from '@/types';
+import { jacksonPollock7Density, siriFatPercent } from '@/lib/anthropometry/formulas';
 
 /** Idade em anos a partir de ISO date */
 export function calcIdade(dataNascimento: string, ref = new Date()): number {
@@ -35,25 +36,17 @@ export function mediaDobra(m1: number | null, m2: number | null, m3: number | nu
  * Densidade corporal → Siri (1961).
  */
 export function percentualGorduraJP7(dobras: Dobras, sexo: Sexo, idade: number): number | null {
-  const soma =
-    (dobras.peitoral.media ?? 0) +
-    (dobras.axilar_media.media ?? 0) +
-    (dobras.triceps.media ?? 0) +
-    (dobras.subescapular.media ?? 0) +
-    (dobras.abdominal.media ?? 0) +
-    (dobras.supra_iliaca.media ?? 0) +
-    (dobras.coxa.media ?? 0);
-
-  if (!soma || soma <= 0) return null;
-
-  let dens: number;
-  if (sexo === 'M') {
-    dens = 1.112 - 0.00043499 * soma + 0.00000055 * soma * soma - 0.00028826 * idade;
-  } else {
-    dens = 1.097 - 0.00046971 * soma + 0.00000056 * soma * soma - 0.00012828 * idade;
-  }
-  const pctG = (4.95 / dens - 4.5) * 100; // Siri
-  return +pctG.toFixed(2);
+  const values = [
+    dobras.peitoral?.media, dobras.axilar_media?.media, dobras.triceps?.media,
+    dobras.subescapular?.media, dobras.abdominal?.media,
+    dobras.supra_iliaca?.media, dobras.coxa?.media,
+  ];
+  if (!values.every(value => typeof value === 'number' && Number.isFinite(value) && value > 0)) return null;
+  if (sexo === 'M' ? idade < 18 || idade > 61 : idade < 18 || idade > 55) return null;
+  const validatedValues = values as number[];
+  const density = jacksonPollock7Density({ sum7: validatedValues.reduce((sum, value) => sum + value, 0), age: idade, sex: sexo });
+  const percent = density === null ? null : siriFatPercent(density);
+  return percent === null ? null : +percent.toFixed(2);
 }
 
 /** Massa magra (kg) */
@@ -67,10 +60,10 @@ export const massaMagra = (pesoKg: number, pctGordura: number) =>
  *   df = diâmetro fêmur (m)
  *   du = diâmetro úmero (m)
  */
-export function massaOsseaVonDobeln(estaturaCm: number, diametroUmeroCm?: number, diametroFemurCm?: number) {
-  if (!diametroUmeroCm || !diametroFemurCm) return null;
+export function massaOsseaVonDobeln(estaturaCm: number, diametroPunhoCm?: number, diametroFemurCm?: number) {
+  if (!diametroPunhoCm || !diametroFemurCm) return null;
   const h = estaturaCm / 100;
-  const du = diametroUmeroCm / 100;
+  const du = diametroPunhoCm / 100;
   const df = diametroFemurCm / 100;
   const mo = 3.02 * Math.pow(h * h * df * du * 400, 0.712);
   return +mo.toFixed(2);
@@ -134,12 +127,10 @@ export const rcq = (cinturaCm?: number, quadrilCm?: number) =>
   cinturaCm && quadrilCm ? +(cinturaCm / quadrilCm).toFixed(3) : null;
 
 /* ── FFMI — Fat-Free Mass Index ─────────────────────────────
-   Referência: Schutz 2002; limite natural: Berkhan/McDonald
+   Índice descritivo de massa livre de gordura por estatura.
    FFMI = massa_magra_kg / (altura_m²)
    FFMI normalizado = FFMI + 6.1 * (1.8 - altura_m)
-   Classificação masculina: <17 baixo, 17-18 médio, 18-20 bom,
-   20-22 ótimo, >22 alto (possível uso de recursos)
-   Classificação feminina: limites ~2 pontos abaixo              */
+   Não estima limite genético, potencial de ganho ou uso de substâncias. */
 export function calcFFMI(pesoKg: number, alturaCm: number, pctGordura: number): {
   ffmi: number; ffmiNorm: number; classificacao: string;
 } | null {
@@ -148,11 +139,6 @@ export function calcFFMI(pesoKg: number, alturaCm: number, pctGordura: number): 
   const mm = pesoKg * (1 - pctGordura / 100);
   const ffmi = +(mm / (altM * altM)).toFixed(1);
   const ffmiNorm = +(ffmi + 6.1 * (1.8 - altM)).toFixed(1);
-  const classificacao =
-    ffmiNorm < 17 ? 'Abaixo da média' :
-    ffmiNorm < 18 ? 'Médio' :
-    ffmiNorm < 20 ? 'Bom' :
-    ffmiNorm < 22 ? 'Ótimo' :
-    ffmiNorm < 25 ? 'Alto' : 'Muito alto';
+  const classificacao = 'Índice descritivo; interpretar conforme população e método';
   return { ffmi, ffmiNorm, classificacao };
 }

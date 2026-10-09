@@ -325,14 +325,11 @@ function ModuleScoreBadge({ score }: { score: any }) {
 
 function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|null; massaMagra:number|null; massaOssea:number|null; peso:number|null; altura:number|null; sexo:'M'|'F'}) {
   if(ffmi==null&&massaMagra==null)return null;
-  const alturaM=altura?altura/100:null;
-  const limiteFfmi=sexo==='M'?25:20.3;
-  const massaMax=alturaM?+(limiteFfmi*alturaM*alturaM).toFixed(1):null;
-  const pct=massaMagra!=null&&massaMax?Math.max(0,Math.min(100,+((massaMagra/massaMax)*100).toFixed(1))):null;
+  void sexo;
   return (
     <div style={{background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
-      <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>FFMI e potencial muscular</div>
-      <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Índice de massa livre de gordura e limite natural estimado</div>
+      <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>FFMI</div>
+      <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Índice descritivo de massa livre de gordura por estatura</div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:20,alignItems:'center'}}>
         <div style={{padding:'18px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
           <div style={{fontSize:10,fontWeight:700,letterSpacing:'1.2px',textTransform:'uppercase',color:'#94a3b8',marginBottom:8}}>FFMI</div>
@@ -346,22 +343,8 @@ function FfmiCard({ffmi,massaMagra,massaOssea,peso,altura,sexo}:{ffmi:number|nul
             {peso!=null&&<MetricLine label="Peso corporal" value={peso} unit="kg"/>}
             {altura!=null&&<MetricLine label="Estatura" value={altura} unit="cm"/>}
           </div>
-          <div style={{padding:'14px 16px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
-            <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'baseline',marginBottom:10}}>
-              <div>
-                <div style={{fontSize:10,fontWeight:700,letterSpacing:'.7px',textTransform:'uppercase',color:'#94a3b8'}}>Potencial muscular natural</div>
-                <div style={{fontSize:13,fontWeight:600,color:'#0f172a',marginTop:2}}>Massa magra atual vs limite estimado</div>
-              </div>
-              {pct!=null&&<div style={{fontSize:18,fontWeight:700,color:'#10b981'}}>{pct}%</div>}
-            </div>
-            <div style={{position:'relative',height:14,borderRadius:99,background:'#e2e8f0',overflow:'hidden'}}>
-              <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#06b6d4,#10b981,#f59e0b)',opacity:.22}}/>
-              {pct!=null&&<div style={{width:`${pct}%`,height:'100%',borderRadius:99,background:'linear-gradient(90deg,#06b6d4,#10b981)',boxShadow:'0 8px 18px rgba(16,185,129,.28)'}}/>}
-            </div>
-            <div style={{display:'flex',justifyContent:'space-between',gap:12,marginTop:8,fontSize:11,color:'#64748b',fontWeight:700}}>
-              <span>{massaMagra!=null?`${massaMagra} kg atual`:'Atual não informado'}</span>
-              <span>{massaMax!=null?`${massaMax} kg limite estimado`:'Limite depende da estatura'}</span>
-            </div>
+          <div style={{padding:'14px 16px',borderRadius:14,background:'#f8fafc',border:'1px solid #e2e8f0',fontSize:12,lineHeight:1.55,color:'#64748b'}}>
+            O FFMI é descritivo e não determina potencial genético, limite natural ou uso de substâncias.
           </div>
         </div>
       </div>

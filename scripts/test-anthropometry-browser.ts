@@ -109,7 +109,7 @@ async function main() {
       const value = values[measurement.id];
       input.measurements[measurement.id].readings = [value, +(value * 1.002).toFixed(2), null];
     }
-    input.methods = ['direct','indices','martin1990','lee2000','kerrMuscle1988','kerrAdipose1988','martinBone1991','rocha1975','heathCarter','phantom','bmiWHO','dubois1916','harrisBenedict1919','scenarios'];
+    input.methods = ['direct','indices','martin1990','lee2000','kerrMuscle1988','kerrAdipose1988','martinBone1991','rocha1975','heathCarter','phantom','durninWomersley1974','siri1961','bmiWHO','dubois1916','harrisBenedict1919','scenarios'];
     input.manualEdition = 'International Standards for Anthropometric Assessment, ISAK 2019';
     input.collectionProtocol = 'ISAK - conjunto estrito de 26 medidas';
     input.conditions = 'Sala reservada, temperatura controlada e avaliacao no periodo da manha.';
@@ -144,8 +144,11 @@ async function main() {
       title:page.querySelector('.mod-title')?.textContent })).filter(item => item.bottom > 1066));
     assert.deepEqual(overflows, []);
     const pageLoads = await page.$$eval('.page', pages => pages.map(item => [...item.children].filter(child => !child.classList.contains('mod-head') && !child.classList.contains('pdf-footer')).length));
-    assert.match(await page.$eval('body', element => element.innerText), /Diametro bimaleolar/);
-    assert.match(await page.$eval('body', element => element.innerText), /MARTIN_OSSEO_1991/);
+    const reportText = await page.$eval('body', element => element.innerText);
+    assert.match(reportText, /Diametro bimaleolar/);
+    assert.match(reportText, /MARTIN_OSSEO_1991/);
+    assert.match(reportText, /Perimetros corrigidos/);
+    assert.match(reportText, /Braco relaxado corrigido/);
     const renderedPages = await page.$$('.page');
     for (let index = 0; index < renderedPages.length; index++) {
       await renderedPages[index].screenshot({ path:path.join(dir, `report-page-${String(index + 1).padStart(2, '0')}.png`) });
@@ -180,6 +183,9 @@ async function main() {
       await page.screenshot({path:path.join(dir,`panel-${width}.png`),fullPage:true});
       const anthropometry = await page.$('[aria-label="Resultados de Antropometria"]');
       assert.ok(anthropometry,`resultados antropometricos ausentes em ${width}px`);
+      const anthropometryText = await anthropometry!.evaluate(element => element.textContent ?? '');
+      assert.match(anthropometryText, /Perimetros corrigidos/);
+      assert.match(anthropometryText, /Panturrilha maxima corrigida/);
       await anthropometry!.screenshot({path:path.join(dir,`panel-anthropometry-${width}.png`)});
       if (width === 320) {
         const box = await anthropometry!.boundingBox();

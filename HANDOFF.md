@@ -4,6 +4,37 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-09 - Perimetros corrigidos e mensuracoes derivadas visiveis
+
+- Confirmado o conjunto estrito de 26 medidas diretas: quatro basicas, oito dobras cutaneas, dez perimetros e quatro diametros osseos.
+- Confirmados cinco perimetros corrigidos no motor: braco relaxado por triceps, torax por subescapular, coxa maxima e coxa media por coxa anterior, e panturrilha por panturrilha medial, todos pela expressao `perimetro - pi x dobra/10`.
+- O antebraco permanece sem correcao porque o protocolo nao possui dobra correspondente. Para Heath-Carter, braco flexionado e panturrilha usam a correcao especifica do somatotipo, `perimetro - dobra/10`, sem pi.
+- Modulo, painel do avaliador e portal do paciente agora apresentam um bloco explicito de `Perimetros corrigidos`; o PDF integrado apresenta a mesma secao quando o metodo de indices estiver selecionado.
+- Medidas brutas permanecem preservadas e separadas dos derivados. Dependencias ausentes continuam como ausentes, nunca como zero.
+- Nao requer migration.
+
+### 2026-10-09 - Auditoria integral das equacoes antropometricas
+
+- Reauditados os kernels de Durnin-Rahaman/Womersley, Jackson-Pollock/Ward, Siri, Martin, Lee, Kerr, Rocha, Heath-Carter, Phantom, Mirwald, Du Bois e os indices geometricos, com testes numericos independentes para coeficientes, unidades e dependencias.
+- Jackson-Pollock 7 dobras no formulario historico agora exige peitoral, axilar media, triceps, subescapular, abdominal, suprailiaca e coxa completas; medida ausente nao e mais somada como zero. Mantidas as faixas originais de 18-61 anos para homens e 18-55 para mulheres.
+- O conjunto V2 nao calcula Jackson-Pollock nem Petroski porque nao coleta peitoral, axilar media ou seus locais suprailiacos especificos. As oito dobras ISAK nao sao substituidas silenciosamente por pontos de outro protocolo.
+- Corrigida a atribuicao da faixa de 16 anos: coeficientes juvenis agora citam Durnin-Rahaman 1967; Durnin-Womersley permanece dos 17 aos 72 anos. Ambos usam biceps, triceps, subescapular e crista iliaca, seguidos por Siri.
+- Avaliacoes historicas deixam de recalcular massa ossea com diametro do umero no lugar do punho. Resultado ja emitido e preservado; Rocha V2 continua usando punho e femur, e Martin usa umero, femur, punho e bimaleolar.
+- Removidas das telas, PDF e IA as alegacoes de `potencial genetico`, `limite natural`, suspeita de substancias e `massa ossea ideal`, que vinham de heuristicas Berkhan/McDonald e percentuais fixos sem validacao equivalente. O FFMI historico permanece apenas como indice descritivo e a massa ossea antropometrica nao e tratada como DXA.
+- Textos padrao de configuracao, PDF, README e IA foram alinhados ao metodo realmente utilizado em cada versao da avaliacao.
+- Validacoes aprovadas: testes numericos das equacoes, suite de Antropometria, calculos clinicos, paridade de referencias, TypeScript, build de producao e navegador/PDF em 320/390/768 px com oito paginas sem overflow.
+- Motor atualizado para `anthropometry-2.2.0` e catalogo para `medfit-strict26-2026-10-09.3`. Sem migration.
+
+### 2026-10-09 - Percentual de gordura sem medida abdominal
+
+- Corrigida a premissa anatomica que bloqueava o percentual de gordura na Antropometria V2: a dobra da crista iliaca ISAK e equivalente a suprailiaca descrita por Durnin-Womersley, embora continue nao intercambiavel com os pontos especificos de Petroski/Jackson.
+- Adicionada a densidade corporal de Durnin-Womersley 1974 por sexo e faixa etaria (16-72 anos), usando biceps, triceps, subescapular e crista iliaca; o percentual e convertido pela equacao de Siri.
+- A dobra abdominal e o perimetro abdominal nao participam desse calculo. Se estiverem ausentes ou marcados como nao aplicaveis, o percentual permanece disponivel quando as quatro dobras exigidas, idade e sexo estiverem validos.
+- Kerr continua separado: estima massa adiposa anatomica e depende da dobra abdominal; nao e usado como substituto do percentual de gordura quimica.
+- Auditoria das dependencias confirmou que o perimetro abdominal nao alimenta Durnin-Womersley, Siri ou Kerr adiposo. Corrigido tambem o coeficiente da massa muscular de Kerr de `5.4 x Z` para `4.4 x Z`, conforme a equacao publicada.
+- Motor atualizado para `anthropometry-2.1.0` e catalogo para `medfit-strict26-2026-10-09.2`; snapshots anteriores sao preservados e precisam ser salvos novamente para receber o novo calculo.
+- Referencias e regras da IA atualizadas para identificar o metodo efetivamente utilizado. Nao requer migration.
+
 ### 2026-10-09 - Composicao corporal parcial e medidas nao aplicaveis
 
 - O score de composicao corporal agora usa os marcadores disponiveis: mantem os pesos de 65% para percentual de gordura e 35% para IMC quando ambos existem, e normaliza pelo marcador remanescente quando apenas um foi coletado. Sem ambos, o score continua ausente.

@@ -1,7 +1,7 @@
 import { CATALOG_VERSION, ENGINE_VERSION, MEASUREMENTS, METHODS, PHANTOM, REFERENCES, deepFreeze, type MeasurementId } from './catalog';
 import { anthropometrySchema, type AnthropometryInput } from './schema';
 import { consolidateMeasurement, decimalAge } from './quality';
-import { classifySomatotype, correctedGirth, ectomorphy, kerrComponent, leeMuscle, martinBone, martinMuscle, mirwaldOffset, phantomZ, rochaBone, somatotypeGirth } from './formulas';
+import { classifySomatotype, correctedGirth, durninWomersleyDensity, ectomorphy, kerrComponent, leeMuscle, martinBone, martinMuscle, mirwaldOffset, phantomZ, rochaBone, siriFatPercent, somatotypeGirth } from './formulas';
 import type { AnthropometryResults, CalculationContext, MeasurementQuality, Result, Status } from './types';
 
 type Options = {review?:string;block?:{status:Status;reason:string};allowNegative?:boolean;allowZero?:boolean;extra?:Result['inputs'];references?:string[]};
@@ -61,8 +61,14 @@ export function calculateAnthropometry(raw:AnthropometryInput, context:Calculati
     ['sum2Lower','Somatorio de 2 dobras de membros inferiores',['thighSkinfold','calfSkinfold']],
   ];
   for (const [id,label,deps] of sums) add(id,label,'mm','indices',deps,v => deps.reduce((sum,key) => sum+v[key],0));
-  const corrections:Array<[MeasurementId,MeasurementId]> = [['armRelaxed','triceps'],['chest','subscapular'],['thighMax','thighSkinfold'],['thighMid','thighSkinfold'],['calf','calfSkinfold']];
-  for (const [girth,fold] of corrections) add(`${girth}Corrected`,`${measurements[girth].label} corrigido`,'cm','indices',[girth,fold],v => correctedGirth(v[girth],v[fold]));
+  const corrections:Array<[MeasurementId,MeasurementId,string]> = [
+    ['armRelaxed','triceps','Braco relaxado corrigido'],
+    ['chest','subscapular','Torax corrigido'],
+    ['thighMax','thighSkinfold','Coxa maxima corrigida'],
+    ['thighMid','thighSkinfold','Coxa media corrigida'],
+    ['calf','calfSkinfold','Panturrilha maxima corrigida'],
+  ];
+  for (const [girth,fold,label] of corrections) add(`${girth}Corrected`,label,'cm','indices',[girth,fold],v => correctedGirth(v[girth],v[fold]));
   const girths = ['armRelaxedCorrected','forearm','chestCorrected','thighMidCorrected','calfCorrected'];
   add('correctedGirthSum5','Somatorio de cinco perimetros (quatro corrigidos)','cm','indices',girths,v => girths.reduce((s,key) => s+v[key],0));
   add('bmi','IMC','kg/m2','indices',['mass','height'],v => v.mass/(v.height/100)**2);
@@ -123,9 +129,12 @@ export function calculateAnthropometry(raw:AnthropometryInput, context:Calculati
     const row = add(`phantom_${id}`,`Phantom - ${measurements[id].label}`,'Z','phantom',[id,'height'],v => phantomZ({value:v[id],height:v.height,mean:p,sd:s,dimension:d}),{allowNegative:true,allowZero:true,review:'Modelo de proporcionalidade, nao percentil ou ideal; tabela fornecida na especificacao, verificacao integral da fonte primaria pendente',extra:{P:p,S:s,dimension:d,referenceHeight:170.18,tableVersion:CATALOG_VERSION},references:id === 'sittingHeight' || id === 'armSpan' ? ['MILLER_1980']:[]});
     rows.pop(); phantom.push(row);
   }
+  const durninAgeBlock = ageBlock ?? (age! < 16 || age! >= 73 ? {status:'missing' as const,reason:'Durnin-Womersley exige idade entre 16 e 72 anos'} : undefined);
+  const durninJuvenile = age !== null && Math.floor(age) === 16;
+  add('durninWomersleyDensity',durninJuvenile ? 'Densidade corporal - Durnin-Rahaman' : 'Densidade corporal - Durnin-Womersley','g/cm3','durninWomersley1974',['biceps','triceps','subscapular','iliacCrest'],v => durninWomersleyDensity({sum4:v.biceps+v.triceps+v.subscapular+v.iliacCrest,age:age!,sex:context.sex})!,{block:sexBlock ?? durninAgeBlock,extra:{age,sex:context.sex,siteEquivalence:'Crista iliaca ISAK = suprailiaca do metodo'},references:durninJuvenile ? ['DURNIN_RAHAMAN_1967'] : []});
   add('petroskiDensity','Densidade - Petroski M7/F9','g/cm3','petroski1995',[],() => null,{block:{status:'missing',reason:missingSite},extra:{age,sex:context.sex}});
   add('jacksonDensity','Densidade - Jackson, Pollock e Ward','g/cm3','jackson1980',[],() => null,{block:{status:'missing',reason:missingSite+(context.sex === 'M' ? ' Equacao desenvolvida para mulheres.' : '')},extra:{age,sex:context.sex}});
-  add('fatPercent','Gordura quimica - Siri','%','siri1961',[],() => null,{block:{status:'missing',reason:'Sem metodo de densidade com landmarks compativeis no conjunto estrito de 26 medidas; Kerr nao fornece gordura quimica'}});
+  add('fatPercent',`Gordura corporal estimada - ${durninJuvenile ? 'Durnin-Rahaman' : 'Durnin-Womersley'} + Siri`,'%','siri1961',['durninWomersleyDensity'],v => siriFatPercent(v.durninWomersleyDensity));
   add('fatMass','Massa de gordura quimica','kg','siri1961',['mass','fatPercent'],v => v.mass*v.fatPercent/100,{allowZero:true});
   add('fatFreeMass','Massa livre de gordura quimica','kg','siri1961',['mass','fatMass'],v => v.mass-v.fatMass);
   add('fatFreePercent','Massa livre de gordura quimica','%','siri1961',['fatPercent'],v => 100-v.fatPercent,{allowZero:true});

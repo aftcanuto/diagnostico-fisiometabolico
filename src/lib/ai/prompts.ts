@@ -11,6 +11,7 @@ import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-reco
 export const ANTHROPOMETRY_AI_RULES = `Antropometria: use apenas resultados selecionados, disponiveis e calculados pelo motor versionado.
 Nao recalcule nem invente medidas, normas, coeficientes ou referencias. Ausente nao significa zero.
 Diferencie gordura quimica, tecido adiposo, massa livre de gordura e musculo esqueletico. Nao combine equacoes nem trate estimativa ossea como DXA ou densidade mineral.
+Quando disponivel, o percentual antropometrico usa densidade de Durnin-Rahaman aos 16 anos ou Durnin-Womersley dos 17 aos 72 anos (biceps, triceps, subescapular e crista iliaca ISAK), convertida por Siri; nao atribua a dobra abdominal ou qualquer perimetro a esse calculo.
 Phantom descreve proporcionalidade, nao diagnostica risco, doenca ou potencial genetico. Somatotipo nao determina destino biologico.
 ISAK padroniza a coleta, nao certifica o software nem valida universalmente todas as equacoes.
 Estados de revisao/invalidos nao sustentam conclusoes clinicas. Informe populacao e limitacoes do metodo.
@@ -320,11 +321,9 @@ export function promptAntropometria(ctx: PacienteContexto, dados: any) {
   };
   const estM = dados?.estatura ? dados.estatura / 100 : 1.75;
   const ffmi = dados?.massa_magra ? +(dados.massa_magra / (estM * estM)).toFixed(1) : null;
-  const limiteMax = ctx.sexo === 'M' ? (dados?.estatura ?? 175) - 100 : ((dados?.estatura ?? 165) - 100) * 0.85;
-  const pctPotencial = dados?.massa_magra ? +((dados.massa_magra / limiteMax) * 100).toFixed(1) : null;
   return {
     system: SISTEMA_BASE(ctx),
-    user: `Módulo: ANTROPOMETRIA (ISAK)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('antropometria')}\n\nDados:\n- Peso: ${dados?.peso} kg · Estatura: ${dados?.estatura} cm · IMC: ${dados?.imc}\n- % Gordura: ${dados?.percentual_gordura}% · Massa magra: ${dados?.massa_magra} kg · Massa óssea: ${dados?.massa_ossea} kg\n- Somatotipo: ${JSON.stringify(dados?.somatotipo)}\n- Circunferências: ${JSON.stringify(dados?.circunferencias)}\n- FFMI (Fat-Free Mass Index): ${ffmi}\n- Potencial genético atingido (Berkhan): ${pctPotencial}% (limite estimado: ${limiteMax.toFixed(1)} kg de massa magra)\n\nInterprete a composição corporal considerando sexo e idade. Avalie o FFMI e informe ao paciente quão próximo está do limite natural muscular. Comente sobre a massa óssea em relação ao esperado. Dê recomendações nutricionais gerais (macros, sem prescrever dieta) e de treinamento alinhadas ao objetivo.`
+    user: `Módulo: ANTROPOMETRIA (ISAK)\n\nReferencias e limites obrigatorios:\n${referenciasModulo('antropometria')}\n\nDados:\n- Peso: ${dados?.peso} kg · Estatura: ${dados?.estatura} cm · IMC: ${dados?.imc}\n- % Gordura: ${dados?.percentual_gordura}% · Massa magra: ${dados?.massa_magra} kg · Massa óssea: ${dados?.massa_ossea} kg\n- Somatotipo: ${JSON.stringify(dados?.somatotipo)}\n- Circunferências: ${JSON.stringify(dados?.circunferencias)}\n- FFMI (Fat-Free Mass Index): ${ffmi}\n\nInterprete a composição corporal considerando sexo, idade, método e limitações. Trate o FFMI apenas como índice descritivo e não estime limite genético, potencial de ganho ou uso de substâncias. Não classifique massa óssea antropométrica como ideal, adequada ou equivalente a DXA. Dê recomendações gerais, sem prescrever dieta.`
   };
 }
 

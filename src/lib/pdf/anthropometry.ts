@@ -1,5 +1,5 @@
 import { qualificationLabel } from '@/lib/isak-qualification';
-import { compareAnthropometry, MEASUREMENTS, type AnthropometryInput, type AnthropometryResults, type Result } from '@/lib/anthropometry';
+import { compareAnthropometry, CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, type AnthropometryInput, type AnthropometryResults, type Result } from '@/lib/anthropometry';
 
 // Read persisted snapshots only. No anthropometric calculation belongs in a report.
 type Snapshot = AnthropometryResults & { professional?: { name?: string; qualification?: unknown } };
@@ -56,10 +56,17 @@ export function anthropometryReportHtml(row: Row): string {
       ...measures.filter(m => m.exception).map(m => textBlocks(`${m.label} - excecao`, m.exception)));
   }
   if (enabled(row, 'results')) {
+    const correctedIds = new Set<string>(CORRECTED_GIRTH_RESULT_IDS);
+    const correctedGirths = selected(s).filter(result => correctedIds.has(result.id));
     const rows = selected(s).filter(result =>
+      !correctedIds.has(result.id)
+      &&
       !(enabled(row, 'measurements') && result.methodId === 'direct')
       && !(enabled(row, 'somatotype') && result.methodId === 'heathCarter'));
-    const resultBlocks = chunks(rows, 10).map((group, index) => block(`Resultados selecionados${index ? ' (continuacao)' : ''}`, table(
+    if (correctedGirths.length) sections.push(block('Perimetros corrigidos',
+      '<p style="font-size:10px">Derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas preservadas; antebraco sem correcao por nao haver dobra correspondente.</p>' +
+      table(['Resultado', 'Valor', 'Situacao'], correctedGirths.map(result => [result.label, `${fmt(result.value)} ${result.unit}`, `${status(result.status)}${result.reason ? `; ${result.reason}` : ''}`]))));
+    const resultBlocks = chunks(rows, 9).map((group, index) => block(`Resultados selecionados${index ? ' (continuacao)' : ''}`, table(
       ['Resultado', 'Valor', 'Metodo / versao', 'Situacao'],
       group.map(r => [r.label, `${fmt(r.value)} ${r.unit}`, `${s.methodMeta.find(m => m.id === r.methodId)?.label ?? r.methodId} / ${r.methodVersion}`,
         `${status(r.status)}${r.classification ? `; ${r.classification}` : ''}`]),
@@ -70,7 +77,7 @@ export function anthropometryReportHtml(row: Row): string {
       table(['Resultado', 'Situacao e ressalva'], group.map(result => [result.label, `${status(result.status)}: ${result.reason}`])))));
     const selectedMethods = [...new Set(rows.map(result => result.methodId))]
       .map(id => s.methodMeta.find(method => method.id === id)).filter(Boolean);
-    if (selectedMethods.length) sections.push(...chunks(selectedMethods, 6).map((group, index) => block(`Metodos e rastreabilidade${index ? ' (continuacao)' : ''}`,
+    if (selectedMethods.length) sections.push(...chunks(selectedMethods, 5).map((group, index) => block(`Metodos e rastreabilidade${index ? ' (continuacao)' : ''}`,
       table(['Metodo / versao', 'Populacao e limitacoes', 'Referencias'], group.map(method => [
         `${method!.label} / ${method!.version}`, `${method!.population}; ${method!.limitations}`,
         method!.referenceIds.join(', ') || '-',
