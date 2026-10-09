@@ -14,7 +14,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - PDF compactado sem remover dados clinicos: notas repetidas de altura informada pelo equipamento foram omitidas; estimativas, alertas e justificativas permanecem visiveis. SJ, VJ, CMJ e DJ com tres tentativas cabem na mesma pagina.
 - Relatorios originais revisados: `vj.pdf`, `cmj.pdf`, `SJ.pdf` e `cdrop.pdf`. O reel informado nao ficou acessivel por consulta automatizada; a implementacao usa a descricao aprovada pelo usuario e os relatorios do equipamento.
 - Nao requer migration: `protocolos` e `tentativas` ja sao JSONB. Avaliacoes existentes permanecem validas.
-- Validacoes aprovadas: suite de Jump Test, paridade de referencias, TypeScript, build de producao e navegador/PDF em 320/390/768/1280 px. Alteracao ainda nao publicada.
+- Validacoes aprovadas: suite de Jump Test, paridade de referencias, TypeScript, build de producao e navegador/PDF em 320/390/768/1280 px.
+- Publicado no commit `9b9b983`, deployment `dpl_Fp6vNjqpmMVadvEkvtYZn3o6VVQ3`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
 
 ### 2026-10-09 - Rascunho parcial da antropometria
 
