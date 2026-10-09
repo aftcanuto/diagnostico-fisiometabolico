@@ -81,12 +81,16 @@ async function main() {
     assert.equal(await page.$$eval('[data-measurement-id]', nodes => nodes.length), 26);
     for (const id of ['forearm','chest','bimalleolar']) assert.equal(await page.$$eval(`[data-measurement-id="${id}"]`, nodes => nodes.length), 1);
     await page.type('[data-reading="mass-1"]', '84');
+    await page.click('[aria-label="Abdomen nao aplicavel"]');
+    await page.type('[aria-label="Abdomen motivo nao aplicavel"]', 'Nao relevante para esta avaliacao');
+    assert.equal(await page.$eval('[data-reading="abdomen-1"]', element => (element as HTMLInputElement).disabled), true);
     await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Salvar rascunho'))?.click());
     await page.waitForFunction(() => document.body.innerText.includes('Antropometria salva.'));
     assert.equal(revision, 1);
     assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /Leitura unica/);
     assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /84 kg/);
-    assert.match(await page.$eval('[data-anthropometry-v2]', element => element.textContent ?? ''), /26 medidas com pendencias/);
+    assert.match(await page.$eval('[data-anthropometry-v2]', element => element.textContent ?? ''), /25 medidas com pendencias; 1 confirmada/);
+    assert.match(await page.$eval('[data-measurement-id="abdomen"]', element => element.textContent ?? ''), /Nao aplicavel/);
     await page.screenshot({ path:path.join(dir,'form-desktop.png'), fullPage:true });
     for (const width of [320,390,768]) {
       await page.setViewport({ width, height:844 });

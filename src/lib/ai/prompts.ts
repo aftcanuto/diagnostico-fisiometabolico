@@ -14,6 +14,7 @@ Diferencie gordura quimica, tecido adiposo, massa livre de gordura e musculo esq
 Phantom descreve proporcionalidade, nao diagnostica risco, doenca ou potencial genetico. Somatotipo nao determina destino biologico.
 ISAK padroniza a coleta, nao certifica o software nem valida universalmente todas as equacoes.
 Estados de revisao/invalidos nao sustentam conclusoes clinicas. Informe populacao e limitacoes do metodo.
+Medidas com notApplicable=true foram deliberadamente excluidas daquela avaliacao: nao as trate como zero, erro ou pendencia e nao invente substitutos. Medidas apenas vazias continuam ausentes e exigem ressalva.
 Compare evolucao somente entre locais anatomicos, metodos, unidades e versoes compativeis; nao compare automaticamente legado com V2.
 Nao inferir doenca atual de antecedente familiar nem uso atual de medicamento passado.`;
 

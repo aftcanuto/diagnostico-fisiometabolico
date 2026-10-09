@@ -9,7 +9,7 @@ export const scoreLabel = (s: number | null | undefined) =>
   s == null ? '—' : s <= 40 ? 'Crítico' : s <= 70 ? 'Atenção' : 'Ótimo';
 
 /**
- * Score composicao corporal (0-100) baseado em %G e IMC.
+ * Score composicao corporal (0-100) baseado nos marcadores disponiveis.
  *
  * A faixa ideal continua privilegiando composicao corporal saudavel, mas
  * evita classificar sobrepeso moderado como criticidade extrema quando os
@@ -21,22 +21,19 @@ export function scoreComposicaoCorporal(opts: {
   sexo: Sexo;
 }): number | null {
   const { pctGordura, imc, sexo } = opts;
-  if (pctGordura == null || imc == null) return null;
+  if (pctGordura == null && imc == null) return null;
 
   const gordura = sexo === 'M'
     ? { idealMin: 10, idealMax: 18, absMin: 5, absMax: 35 }
     : { idealMin: 18, idealMax: 25, absMin: 10, absMax: 42 };
-  const gScore = faixaScore(
-    pctGordura,
-    gordura.idealMin,
-    gordura.idealMax,
-    gordura.absMin,
-    gordura.absMax,
-  );
-
-  const imcScore = faixaScore(imc, 18.5, 25, 15, 40);
-
-  return Math.round(gScore * 0.65 + imcScore * 0.35);
+  const marcadores: Array<{ score: number; peso: number }> = [];
+  if (pctGordura != null) marcadores.push({
+    score: faixaScore(pctGordura, gordura.idealMin, gordura.idealMax, gordura.absMin, gordura.absMax),
+    peso: 0.65,
+  });
+  if (imc != null) marcadores.push({ score: faixaScore(imc, 18.5, 25, 15, 40), peso: 0.35 });
+  const pesoDisponivel = marcadores.reduce((total, marcador) => total + marcador.peso, 0);
+  return Math.round(marcadores.reduce((total, marcador) => total + marcador.score * marcador.peso, 0) / pesoDisponivel);
 }
 
 type SexoNormalizado = 'M' | 'F';

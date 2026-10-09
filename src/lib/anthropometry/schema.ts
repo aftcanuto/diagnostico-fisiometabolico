@@ -11,6 +11,8 @@ const readingSchema = z.object({
   readings: z.tuple([nullableNumberSchema, nullableNumberSchema, nullableNumberSchema]).default([null,null,null]),
   side: z.enum(['D','E']).default('D'),
   exception: z.string().max(4000).default(''),
+  notApplicable: z.boolean().default(false),
+  notApplicableReason: z.string().max(4000).default(''),
 }).strict();
 const shape = Object.fromEntries(MEASUREMENTS.map(m => [m.id,readingSchema.default({})])) as Record<MeasurementId,z.ZodDefault<typeof readingSchema>>;
 export const anthropometrySchema = z.object({

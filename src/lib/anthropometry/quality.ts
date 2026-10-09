@@ -18,6 +18,7 @@ export function consolidateMeasurement(id:MeasurementId, input:MeasurementInput)
   const base:MeasurementQuality = {id,label:meta.label,unit:meta.unit,...input,readings,
     value:null,status:'missing',reason:'Sem leituras',count:values.length,discrepancyPercent:null,
     requiresThird:false,consolidation:'none'};
+  if (input.notApplicable) return {...base,reason:`Medida nao aplicavel nesta avaliacao${input.notApplicableReason.trim() ? `: ${input.notApplicableReason.trim()}` : ''}`};
   if (!values.length) return base;
   if (values.some(v => !Number.isFinite(v) || v <= 0)) return {...base,status:'invalid',reason:'Leituras devem ser positivas e finitas'};
   const [a,b] = readings;

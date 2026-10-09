@@ -139,7 +139,8 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
   const previous = steps.slice(0, currentStep).reverse().find(step => step.enabled);
   const next = steps.slice(currentStep + 1).find(step => step.enabled);
   const groups = [...new Set(MEASUREMENTS.map(measurement => measurement.group))];
-  const pending = result ? Object.values(result.measurements).filter(measurement => measurement.status !== 'available').length : 26;
+  const pending = result ? Object.values(result.measurements).filter(measurement => measurement.status !== 'available' && !input.measurements[measurement.id].notApplicable).length : 26;
+  const ignored = Object.values(input.measurements).filter(measurement => measurement.notApplicable).length;
   const invalidNumber = Object.values(invalidFields).some(Boolean);
   const chosenHistory = history.filter(item => selectedHistory.includes(item.id));
 
@@ -165,19 +166,21 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
             <Button variant="ghost" title="Remover instrumento" aria-label={`Remover instrumento ${index + 1}`} onClick={() => { change({ instruments: input.instruments.filter((_, position) => position !== index) }); setInvalidFields(current => Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith('resolution-')))); }}><Trash2 size={16} /></Button>
           </div>)}</div><Button variant="secondary" onClick={() => change({ instruments: [...input.instruments, { name: '', resolution: null, unit: '' }] })}><Plus size={16} />Adicionar instrumento</Button>
         </section>
-        <div className="flex items-center gap-2 text-sm text-amber-900"><AlertTriangle size={16} className="shrink-0" /><span>{pending} medidas com pendencias. Rascunhos parciais sao permitidos. Lado direito do avaliado; excecoes justificadas.</span></div>
+        <div className="flex items-center gap-2 text-sm text-amber-900"><AlertTriangle size={16} className="shrink-0" /><span>{pending} medidas com pendencias{ignored ? `; ${ignored} confirmada(s) como nao aplicavel(is)` : ''}. Rascunhos parciais sao permitidos. Lado direito do avaliado; excecoes justificadas.</span></div>
         {groups.map(group => <section key={group} className="space-y-3"><h2 className="text-lg font-semibold">{groupLabels[group]}</h2><div className="divide-y border-y">{MEASUREMENTS.filter(measurement => measurement.group === group).map(measurement => {
           const id = measurement.id as MeasurementId;
           const reading = input.measurements[id];
           const quality = result?.measurements[id];
           return <div key={id} data-measurement-id={id} className="py-4 space-y-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-medium text-sm">{measurement.label} <span className="text-gray-500">({measurement.unit})</span></h3><span className={`text-xs ${quality?.status === 'invalid' ? 'text-red-700' : quality?.status === 'available' ? 'text-emerald-800' : 'text-amber-800'}`}>{quality ? statusLabels[quality.status] : 'Pendente'}</span></div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-medium text-sm">{measurement.label} <span className="text-gray-500">({measurement.unit})</span></h3><span className={`text-xs ${reading.notApplicable ? 'text-gray-600' : quality?.status === 'invalid' ? 'text-red-700' : quality?.status === 'available' ? 'text-emerald-800' : 'text-amber-800'}`}>{reading.notApplicable ? 'Nao aplicavel' : quality ? statusLabels[quality.status] : 'Pendente'}</span></div>
             <div className="grid grid-cols-3 sm:grid-cols-[1fr_1fr_1fr_1.2fr] gap-2">
-              {[0, 1, 2].map(index => <Field key={index} label={`${index + 1}a leitura`}><DecimalInput label={`${measurement.label} leitura ${index + 1}`} data-reading={`${id}-${index + 1}`} value={reading.readings[index]} onInvalid={invalid => markInvalid(`${id}-${index}`, invalid)} onChange={value => { const readings = [...reading.readings] as typeof reading.readings; readings[index] = value; updateMeasurement(id, { readings }); }} /></Field>)}
+              {[0, 1, 2].map(index => <Field key={index} label={`${index + 1}a leitura`}><DecimalInput disabled={reading.notApplicable} label={`${measurement.label} leitura ${index + 1}`} data-reading={`${id}-${index + 1}`} value={reading.readings[index]} onInvalid={invalid => markInvalid(`${id}-${index}`, invalid)} onChange={value => { const readings = [...reading.readings] as typeof reading.readings; readings[index] = value; updateMeasurement(id, { readings }); }} /></Field>)}
               <div className="col-span-3 sm:col-span-1 bg-gray-50 px-3 py-2"><div className="text-xs text-gray-500">{quality ? consolidationLabels[quality.consolidation] : 'Consolidado'}</div><output className="font-semibold text-sm" aria-label={`${measurement.label} consolidado`}>{anthropometryFormat(quality?.value)}{quality?.value != null ? ` ${measurement.unit}` : ''}</output></div>
             </div>
             {quality?.requiresThird && <p className="text-xs text-amber-800">Terceira leitura necessaria. Discrepancia: {anthropometryFormat(quality.discrepancyPercent)}%.</p>}
             {quality?.reason && <p className="text-xs text-gray-600">{quality.reason}</p>}
+            <label className="flex items-center gap-2 text-sm"><input aria-label={`${measurement.label} nao aplicavel`} type="checkbox" checked={reading.notApplicable} onChange={event => updateMeasurement(id, event.target.checked ? { notApplicable: true, readings: [null, null, null] } : { notApplicable: false })} />Nao se aplica a esta avaliacao</label>
+            {reading.notApplicable && <Field label="Motivo opcional"><Input aria-label={`${measurement.label} motivo nao aplicavel`} value={reading.notApplicableReason} onChange={event => updateMeasurement(id, { notApplicableReason: event.target.value })} /></Field>}
             <details><summary className="text-xs text-sky-800 cursor-pointer">Local anatomico e lado</summary><p className="text-xs text-gray-600 mt-2">{measurement.landmark}</p><div className="mt-2 grid gap-3 sm:grid-cols-[180px_1fr]"><Field label="Lado"><Select aria-label={`${measurement.label} lado`} value={reading.side} onChange={event => updateMeasurement(id, { side: event.target.value as 'D' | 'E' })}><option value="D">Direito</option><option value="E">Esquerdo (excecao)</option></Select></Field><Field label="Justificativa / observacoes"><Input aria-label={`${measurement.label} excecao`} value={reading.exception} onChange={event => updateMeasurement(id, { exception: event.target.value })} /></Field></div></details>
           </div>;
         })}</div></section>)}

@@ -87,9 +87,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     setGorduraRelatorio(gorduraEscolhida);
     const pctGordura = gorduraEscolhida.valor;
     const imc = antData?.imc ?? bioData?.imc ?? null;
-    const composicao = pctGordura != null && imc != null
-      ? scoreComposicaoCorporal({ pctGordura, imc, sexo })
-      : null;
+    const composicao = scoreComposicaoCorporal({ pctGordura, imc, sexo });
     const forca = calcularScoreForca(foData, sexo, idade);
     const cardio = crData ? scoreCardio({ vo2max: crData.vo2max, sexo, idade }) : null;
     const postura = pgData ? scorePostura(pgData.alinhamentos) : null;
@@ -116,6 +114,9 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
       biomecanica_corrida: biomecData,
     }, result, analisesData.data ?? [], gorduraEscolhida, {
       forcaCalculadaPorPreensao: forca != null && foiCalculadaPorPreensao(foData) && !temDinamometriaEspecifica(foData),
+      composicaoParcial: composicao != null && (pctGordura == null || imc == null)
+        ? { pctGorduraAusente: pctGordura == null, imcAusente: imc == null }
+        : undefined,
     });
     setChecklist(checklistGerado);
 
@@ -281,7 +282,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
     setSalvandoFonteGordura(true);
     setMessage(null);
     try {
-      const composicaoAtualizada = contextoScores?.imc != null && contextoScores?.sexo
+      const composicaoAtualizada = contextoScores?.sexo
         ? scoreComposicaoCorporal({ pctGordura: valor, imc: contextoScores.imc, sexo: contextoScores.sexo })
         : scores?.composicao_corporal ?? null;
       const scoresAtualizados = {
@@ -385,7 +386,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
               <Gauge value={scores.postura} label="Postura" size={110} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Gauge value={scores.composicao_corporal} label="Composição" size={110} />
+              <Gauge value={scores.composicao_corporal} label={checklist.some(item => item.modulo === 'composicao_parcial') ? 'Composição*' : 'Composição'} size={110} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <Gauge value={scores.forca} label="Força" size={110} />
@@ -399,6 +400,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
               <Gauge value={scores.cardiorrespiratorio} label="Cardio" size={110} />
             </div>
           </div>
+          {checklist.some(item => item.modulo === 'composicao_parcial') && <p className="mt-3 text-center text-xs text-amber-800">* Score quantificado apenas com os marcadores disponíveis. Consulte o alerta de composição parcial abaixo.</p>}
         </CardBody>
       </Card>
 
@@ -756,7 +758,10 @@ function montarChecklist(
   scores: any,
   analises: any[],
   gorduraRelatorio?: any,
-  contexto?: { forcaCalculadaPorPreensao?: boolean }
+  contexto?: {
+    forcaCalculadaPorPreensao?: boolean;
+    composicaoParcial?: { pctGorduraAusente: boolean; imcAusente: boolean };
+  }
 ) {
   const itens: any[] = [];
   const mods = aval?.modulos_selecionados ?? {};
@@ -784,6 +789,19 @@ function montarChecklist(
     });
   }
 
+  if (contexto?.composicaoParcial) {
+    const ausentes = [
+      contexto.composicaoParcial.pctGorduraAusente ? 'percentual de gordura' : '',
+      contexto.composicaoParcial.imcAusente ? 'IMC' : '',
+    ].filter(Boolean);
+    itens.push({
+      nivel: 'alerta',
+      modulo: 'composicao_parcial',
+      titulo: 'Score de composicao com marcadores parciais',
+      descricao: `O score foi quantificado com os marcadores disponiveis. Ausente: ${ausentes.join(' e ')}. O valor nao substitui a avaliacao dos marcadores nao coletados.`,
+    });
+  }
+
   Object.entries(mods).forEach(([modulo, ativo]) => {
     if (!ativo || modulo === 'revisao') return;
     const dados = modulosDados[modulo];
@@ -796,6 +814,19 @@ function montarChecklist(
       });
     }
   });
+
+  const registroAntropometria = modulosDados.antropometria?.registro_v2;
+  if (mods.antropometria && registroAntropometria?.version === 2) {
+    const pendentes = Object.values(registroAntropometria.measurements ?? {}).filter((measurement: any) =>
+      !measurement?.notApplicable && !(measurement?.readings ?? []).some((value: unknown) => typeof value === 'number' && Number.isFinite(value)),
+    ).length;
+    if (pendentes) itens.push({
+      nivel: 'alerta',
+      modulo: 'antropometria_parcial',
+      titulo: 'Medidas antropometricas pendentes',
+      descricao: `${pendentes} medida(s) permanecem sem leitura e sem confirmacao de que nao se aplicam a esta avaliacao.`,
+    });
+  }
 
   if (mods.posturografia && modulosDados.posturografia) {
     const fotos = [

@@ -46,6 +46,18 @@ assert.ok((result.results.find(item => item.id === 'martinBone1991')?.value ?? 0
 assert.equal(result.results.find(item => item.id === 'martinBone1991')?.status, 'review');
 assert.ok(selectedReferences(result).some(reference => reference.id === 'MARTIN_OSSEO_1991'));
 
+const partial = newAnthropometry();
+partial.measurements.mass.readings = [76, null, null];
+partial.measurements.height.readings = [178, null, null];
+partial.measurements.abdomen.notApplicable = true;
+partial.measurements.abdomen.notApplicableReason = 'Sem relevancia para o objetivo desta avaliacao';
+partial.methods = ['direct','indices'];
+const partialResult = calculateAnthropometry(partial, context);
+assert.equal(partialResult.measurements.abdomen.value, null);
+assert.equal(partialResult.measurements.abdomen.status, 'missing');
+assert.match(partialResult.measurements.abdomen.reason, /nao aplicavel/i);
+assert.ok((partialResult.results.find(item => item.id === 'bmi')?.value ?? 0) > 0, 'IMC deve continuar calculado sem perimetro abdominal');
+
 const third = structuredClone(input);
 third.measurements.triceps.readings = [10, 12, null];
 let revised = calculateAnthropometry(third, context);

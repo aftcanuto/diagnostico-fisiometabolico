@@ -6,6 +6,7 @@ import { classificarWells, scoreFlexibilidade } from '../src/lib/calculations/fl
 import { assimetria, forcaRelativa } from '../src/lib/calculations/forca';
 import { calcLimiteNatural } from '../src/lib/calculations/limiteNatural';
 import { calcularRML } from '../src/lib/calculations/rml';
+import { scoreComposicaoCorporal } from '../src/lib/scores';
 
 function quaseIgual(valor: number, esperado: number, margem = 0.01) {
   assert.ok(Math.abs(valor - esperado) <= margem, `Esperado ${esperado}, recebido ${valor}`);
@@ -41,6 +42,11 @@ assert.equal(scoreFlexibilidade(22, 'M', 46), 54);
 
 assert.equal(forcaRelativa(38, 76), 0.5);
 assert.equal(assimetria(38, 35), 7.89);
+
+assert.equal(scoreComposicaoCorporal({ pctGordura:null, imc:null, sexo:'M' }), null);
+assert.equal(scoreComposicaoCorporal({ pctGordura:null, imc:23, sexo:'M' }), 100);
+assert.equal(scoreComposicaoCorporal({ pctGordura:20, imc:null, sexo:'M' }), 88);
+assert.equal(scoreComposicaoCorporal({ pctGordura:20, imc:23, sexo:'M' }), 92);
 
 const rml = calcularRML({
   categoria: 'jovem_ativo',
