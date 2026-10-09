@@ -12,7 +12,8 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 - O alerta de pendencias permanece informativo e nao bloqueia `Salvar rascunho` nem `Salvar e continuar`.
 - O servidor agora registra o objeto completo do erro do Supabase e retorna mensagem especifica para incompatibilidade de schema.
 - Validacoes aprovadas: suite de Antropometria, TypeScript e navegador com apenas a primeira leitura de massa (`84 kg`), demais medidas ausentes, alerta mantido, salvamento confirmado, mobile 320/390/768 e PDF de 8 paginas sem overflow.
-- Nao requer migration nem altera registros clinicos existentes. Alteracao ainda nao publicada.
+- Nao requer migration nem altera registros clinicos existentes.
+- Publicado no commit `8ab8801`, deployment `dpl_A5yBoZhaCCyk9dVWhN2MTQfeWDwX`, estado `READY`, com alias `https://avaliacao.medfit.med.br` atualizado.
 
 ### 2026-10-05 - Contatos do rodape em uma linha no mobile
 
