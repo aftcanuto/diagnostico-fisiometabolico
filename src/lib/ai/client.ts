@@ -92,37 +92,36 @@ const ANALISE_JSON_TOOL = {
 
 const CONCLUSAO_GLOBAL_JSON_TOOL = {
   name: 'emitir_conclusao_global_json',
-  description: 'Retorna a conclusao clinica global integrada em JSON estruturado para o sistema.',
+  description: 'Retorna os campos estruturados de apoio a conclusao clinica global.',
   input_schema: {
     type: 'object',
     additionalProperties: false,
     required: [
-      'relatorio_global',
+      'mensagem_paciente',
       'resumo_executivo',
       'pontos_fortes',
       'pontos_criticos',
       'prioridades',
-      'mensagem_paciente',
     ],
     properties: {
-      relatorio_global: { type: 'string', minLength: 200 },
-      resumo_executivo: { type: 'string', minLength: 40 },
-      pontos_fortes: { type: 'array', items: { type: 'string' } },
-      pontos_criticos: { type: 'array', items: { type: 'string' } },
+      mensagem_paciente: { type: 'string', maxLength: 600 },
+      resumo_executivo: { type: 'string', minLength: 40, maxLength: 700 },
+      pontos_fortes: { type: 'array', maxItems: 4, items: { type: 'string', maxLength: 240 } },
+      pontos_criticos: { type: 'array', maxItems: 4, items: { type: 'string', maxLength: 240 } },
       prioridades: {
         type: 'array',
+        maxItems: 4,
         items: {
           type: 'object',
           additionalProperties: false,
           required: ['titulo', 'acao', 'prazo'],
           properties: {
-            titulo: { type: 'string' },
-            acao: { type: 'string' },
-            prazo: { type: 'string' },
+            titulo: { type: 'string', maxLength: 100 },
+            acao: { type: 'string', maxLength: 300 },
+            prazo: { type: 'string', maxLength: 80 },
           },
         },
       },
-      mensagem_paciente: { type: 'string' },
     },
   },
 };

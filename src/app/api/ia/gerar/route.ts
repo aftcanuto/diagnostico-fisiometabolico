@@ -4,7 +4,7 @@ import { usuarioPodeAcessarAvaliacao } from '@/lib/api/permissions';
 import { gerarAnaliseModulo, gerarConclusaoGlobal, gerarAnaliseEvolucao, type TipoAnalise } from '@/lib/ai/service';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 const TIPOS_IA = new Set([
   'anamnese',

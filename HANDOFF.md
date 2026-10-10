@@ -1590,10 +1590,12 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 
 - A auditoria do registro de producao confirmou que a ultima geracao da conclusao global foi salva apenas com o marcador interno de revisao antropometrica, sem `relatorio_global` ou demais campos clinicos.
 - A causa era o schema generico da ferramenta de IA, que permitia ao Claude responder com um objeto vazio mesmo quando o prompt solicitava uma conclusao completa.
+- O teste real revelou uma segunda causa: o Claude produzia quase 8 mil caracteres apenas em `relatorio_global`, esgotava os tokens e interrompia a ferramenta antes de resumo, prioridades e demais campos. O relatorio passou a ter faixa explicita de 2.500 a 4.000 caracteres e limite de resposta reservado para toda a estrutura.
+- Como o provedor nao respeitou de forma consistente o limite textual dentro da ferramenta, a geracao foi separada em duas etapas: primeiro os campos estruturados e concisos; depois o relatorio integrado em texto corrido. A rota recebeu duracao maxima de 180 segundos para acomodar as duas chamadas sem interrupcao.
 - A conclusao global passou a usar um schema proprio e estrito, com relatorio integrado, resumo executivo, pontos fortes, pontos criticos, prioridades e mensagem ao paciente obrigatorios.
 - O limite de resposta foi ampliado para comportar os quatro a sete paragrafos solicitados e uma segunda tentativa automatica e feita se o provedor ainda devolver conteudo incompleto.
 - O sistema valida a resposta antes de persistir. Uma conclusao vazia nao substitui mais conteudo anterior nem e marcada como gerada.
 - Painel de IA e checklist de revisao agora identificam registros antigos incompletos e mantem a conclusao global como pendente ate existir texto utilizavel.
 - Validacoes aprovadas: contrato estruturado do Claude sem dados de paciente, validador de conteudo, smoke test completo, TypeScript, lint e build de producao.
-- A geracao real para Alfredo nao foi executada pelo Codex porque a autorizacao de privacidade anterior abrangia outra avaliacao. O registro vazio permanece pendente para regeneracao autorizada no app.
+- Depois de autorizacao explicita, a conclusao de Alfredo foi regenerada e persistida com os sete campos esperados, cinco paragrafos aproximados, quatro prioridades e sem o rotulo proprietario removido.
 - Sem migration nova. Registros vazios existentes devem ser regenerados depois da publicacao.

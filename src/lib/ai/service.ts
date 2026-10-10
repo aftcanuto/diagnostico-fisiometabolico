@@ -10,7 +10,7 @@ import { jumpSchema, jumpSummary, jumpComparable, jumpIsSimulated, jumpClinicalC
 import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-record';
 import { friendComparisonFromAssessment } from '@/lib/calculations/friend';
 import { composicaoOficialParaIA } from '@/lib/bodyComposition';
-import { isGlobalConclusionComplete } from './global-conclusion';
+import { globalConclusionDiagnostics, isGlobalConclusionComplete, isGlobalConclusionSupportComplete } from './global-conclusion';
 
 async function stampAnthropometry(sb: any, avaliacaoId: string, row: any, content: any) {
   if (!isAnthropometryV2(row)) return;
@@ -288,35 +288,53 @@ export async function gerarConclusaoGlobal(avaliacaoId: string) {
     scores, analises: analisesOrdenadas, selecionados, anthropometry,
     bodyComposition: composicaoOficialParaIA(anthropometry, bioimpedance),
   });
-  const system = `${prompt.system}\n${P.JUMP_AI_RULES}\n${P.ANTHROPOMETRY_AI_RULES}`, user = prompt.user;
-  let resp = await llmCall({
-    system,
+  const regrasClinicas = `${P.JUMP_AI_RULES}\n${P.ANTHROPOMETRY_AI_RULES}`;
+  const system = `${prompt.system}\n${regrasClinicas}`, user = prompt.user;
+  const reportSystem = `${prompt.system.split('Retorne APENAS JSON:')[0].trim()}\n${regrasClinicas}`;
+  let suporteResp = await llmCall({
+    system: `${system}\n\nNesta primeira etapa, preencha somente os campos estruturados permitidos pela ferramenta. Seja conciso e nao tente incluir relatorio_global.`,
     user,
     json: true,
     jsonSchema: 'conclusao_global',
-    temperature: 0.5,
-    maxTokens: 2600,
+    temperature: 0.4,
+    maxTokens: 3200,
   });
-  let conteudo = parseJSON(resp.text);
-  if (!isGlobalConclusionComplete(conteudo)) {
-    await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', resp);
-    resp = await llmCall({
-      system: `${system}\n\nA tentativa anterior veio incompleta. Preencha obrigatoriamente todos os campos do schema e entregue o relatorio global integrado completo.`,
+  let conteudo = parseJSON(suporteResp.text);
+  if (!isGlobalConclusionSupportComplete(conteudo)) {
+    console.warn('[IA] Estrutura da conclusao global incompleta na primeira tentativa', globalConclusionDiagnostics(conteudo));
+    await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', suporteResp);
+    suporteResp = await llmCall({
+      system: `${system}\n\nNesta primeira etapa, preencha somente os campos estruturados permitidos pela ferramenta. A tentativa anterior veio incompleta; seja conciso e preencha todos os campos obrigatorios.`,
       user,
       json: true,
       jsonSchema: 'conclusao_global',
       temperature: 0.3,
-      maxTokens: 2600,
+      maxTokens: 3200,
     });
-    conteudo = parseJSON(resp.text);
-    if (!isGlobalConclusionComplete(conteudo)) {
-      await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', resp);
-      throw new Error('A IA devolveu uma conclusao global incompleta em duas tentativas. Nenhum conteudo vazio foi salvo.');
+    conteudo = parseJSON(suporteResp.text);
+    if (!isGlobalConclusionSupportComplete(conteudo)) {
+      console.warn('[IA] Estrutura da conclusao global incompleta na segunda tentativa', globalConclusionDiagnostics(conteudo));
+      await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', suporteResp);
+      throw new Error('A IA devolveu a estrutura da conclusao global incompleta em duas tentativas. Nenhum conteudo vazio foi salvo.');
     }
   }
+  await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', suporteResp);
+
+  const relatorioResp = await llmCall({
+    system: `${reportSystem}\n\nResponda somente com o texto corrido do relatorio_global, sem JSON, sem titulo, sem listas e sem markdown. Produza de 4 a 7 paragrafos e entre 2500 e 4000 caracteres.`,
+    user,
+    temperature: 0.35,
+    maxTokens: 1600,
+  });
+  conteudo.relatorio_global = relatorioResp.text.trim();
+  if (!isGlobalConclusionComplete(conteudo)) {
+    console.warn('[IA] Relatorio global final incompleto', globalConclusionDiagnostics(conteudo));
+    await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', relatorioResp);
+    throw new Error('A IA nao concluiu o relatorio global no tamanho esperado. Nenhum conteudo incompleto foi salvo.');
+  }
   await stampAnthropometry(sb, avaliacaoId, anthropometry, conteudo);
-  await persistir(avaliacaoId, 'conclusao_global', conteudo, resp.modelo);
-  await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', resp);
+  await persistir(avaliacaoId, 'conclusao_global', conteudo, relatorioResp.modelo);
+  await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', relatorioResp);
   return conteudo;
 }
 

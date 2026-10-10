@@ -417,13 +417,15 @@ Objetivo: ${ctx.objetivo || 'não informado'}.
 
 Retorne APENAS JSON:
 {
-  "relatorio_global": string,
+  "mensagem_paciente": string,
   "resumo_executivo": string,
   "pontos_fortes": string[],
   "pontos_criticos": string[],
   "prioridades": [{ "titulo": string, "acao": string, "prazo": string }],
-  "mensagem_paciente": string
-}`,
+  "relatorio_global": string
+}
+
+O campo relatorio_global deve ter de 4 a 7 paragrafos e obrigatoriamente entre 2500 e 4000 caracteres. Seja sintetico para reservar a resposta aos demais campos obrigatorios do JSON.`,
     user: `Referencias e limites obrigatorios:\n${referenciasParaIA(modulos.selecionados ?? {}, modulos.anthropometry)}\n\nComposicao corporal oficial para esta sintese:\n${JSON.stringify(modulos.bodyComposition ?? { percentual_gordura: null, fonte: 'indisponivel' }, null, 2)}\nRegra de precedencia: para percentual de gordura global, este bloco prevalece sobre qualquer valor ou texto divergente existente nas analises dos modulos.\n\nPontuacoes internas para priorizacao, sem citar nome ou escala no texto:\n${JSON.stringify(modulos.scores, null, 2)}\n\nEvidencias provenientes dos modulos, fornecidas apenas como materia-prima para integracao:\n${JSON.stringify(modulos.analises, null, 2)}\n\nEscreva relatorio_global em 4 a 7 paragrafos corridos, como uma avaliacao global da saude do paciente. Integre os dominios entre si e com o objetivo informado: estado fisiometabolico e composicao corporal; capacidade cardiorrespiratoria; funcao neuromuscular, forca e potencia; mobilidade, postura e biomecanica; fatores de protecao, pontos de atencao e repercussao funcional. Relacione achados convergentes ou discordantes e explique seu significado conjunto. Nao crie uma secao, paragrafo, lista ou frase para cada modulo. Nao use nomes de modulos como subtitulos e nao repita todos os numeros ja mostrados no laudo. Nao mencione pontuacoes internas nem escala de 0 a 100. Nao diagnostique doenca ou lesao. O resumo_executivo deve condensar a conclusao integrada em um unico paragrafo. Pontos fortes, pontos criticos e prioridades devem ser transversais, limitados aos aspectos realmente decisivos, sem inventario por exame.`
   };
 }
