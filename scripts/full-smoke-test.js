@@ -40,15 +40,16 @@ const { renderLaudoHTML } = require('../src/lib/pdf/template.ts');
 const P = require('../src/lib/ai/prompts.ts');
 const { parseJSON } = require('../src/lib/ai/client.ts');
 const { REFERENCIAS_BIOMECANICA, normalizarReferenciasBiomecanica } = require('../src/lib/biomecanica/referencias.ts');
+const { resumoInterpretativoBioimpedancia } = require('../src/lib/clinical/bioimpedance.ts');
 
 const tipos = [
   'anamnese',
   'sinais_vitais',
+  'bioimpedancia',
   'posturografia',
   'termografia',
-  'jump_test',
-  'bioimpedancia',
   'antropometria',
+  'jump_test',
   'flexibilidade',
   'forca',
   'rml',
@@ -96,6 +97,7 @@ const iaMock = tipo => ({
 const analisesIA = Object.fromEntries(
   tipos.map(tipo => [tipo, tipo === 'conclusao_global'
     ? {
+        relatorio_global: 'A avaliação integrada indica condição funcional global favorável, com relação coerente entre capacidade cardiorrespiratória, força e composição corporal. Os achados devem ser acompanhados em conjunto, considerando o objetivo e a evolução clínica, sem interpretação isolada por exame.',
         resumo_executivo: 'Conclusão global simulada para teste completo.',
         pontos_fortes: ['Boa aderência geral'],
         pontos_criticos: ['Monitorar assimetrias e composição corporal'],
@@ -140,20 +142,25 @@ function checkTextFile(file, required) {
 
 function testarPrompts() {
   const dados = dadosLaudo.dados;
+  const bioDadosIA = { ...dados.bioimpedancia, percentual_gordura: 31.7, _composicao_oficial: {
+    percentual_gordura: 18.4,
+    fonte: 'antropometria',
+    regra: 'O percentual de gordura global da IA vem exclusivamente da antropometria. Nao substituir pela bioimpedancia.',
+  } };
   const tests = [
     ['anamnese', P.promptAnamnese(ctx, dados.anamnese)],
     ['sinais_vitais', P.promptSinaisVitais(ctx, dados.sinais_vitais)],
     ['posturografia', P.promptPosturografia(ctx, dados.posturografia)],
     ['termografia', P.promptTermografia(ctx, dados.termografia ?? { rois: [] })],
     ['jump_test', P.promptJumpTest(ctx, dados.jump_test)],
-    ['bioimpedancia', P.promptBioimpedancia(ctx, dados.bioimpedancia)],
+    ['bioimpedancia', P.promptBioimpedancia(ctx, bioDadosIA)],
     ['antropometria', P.promptAntropometria(ctx, dados.antropometria)],
     ['flexibilidade', P.promptFlexibilidade(ctx, dados.flexibilidade)],
     ['forca', P.promptForca(ctx, dados.forca)],
     ['rml', P.promptRML(ctx, dados.rml)],
     ['cardiorrespiratorio', P.promptCardio(ctx, dados.cardiorrespiratorio)],
     ['biomecanica_corrida', P.promptBiomecanica(ctx, dados.biomecanica_corrida)],
-    ['conclusao_global', P.promptConclusao(ctx, { scores: dadosLaudo.scores, analises: analisesIA })],
+    ['conclusao_global', P.promptConclusao(ctx, { scores: dadosLaudo.scores, analises: analisesIA, bodyComposition: bioDadosIA._composicao_oficial })],
     ['evolucao', P.promptEvolucao(ctx, [{ data: '2026-02-20' }, { data: '2026-04-27' }])],
   ];
 
@@ -161,7 +168,27 @@ function testarPrompts() {
     assert(prompt.system.length > 100, `${tipo}: system prompt muito curto`);
     assert(prompt.user.length > 100, `${tipo}: user prompt muito curto`);
     assert(/Referências|Referencias|referências|referencias/.test(prompt.user + prompt.system), `${tipo}: sem referências clínicas`);
+    assert(prompt.system.includes('Nao transforme a analise em inventario de numeros'), `${tipo}: sem regra de interpretacao clinica`);
   }
+
+  const bioPrompt = P.promptBioimpedancia(ctx, bioDadosIA);
+  assert(bioPrompt.user.includes('Prioridade obrigatoria da analise'), 'Bioimpedancia sem prioridades interpretativas');
+  assert(bioPrompt.user.includes('Assimetrias'), 'Bioimpedancia sem analise de assimetrias');
+  assert(bioPrompt.user.includes('18.4%'), 'Bioimpedancia nao recebeu percentual oficial da antropometria');
+  assert(!bioPrompt.user.includes('31.7%'), 'Bioimpedancia enviou percentual global do equipamento para a IA');
+  const conclusaoPrompt = P.promptConclusao(ctx, { scores: dadosLaudo.scores, analises: analisesIA, bodyComposition: bioDadosIA._composicao_oficial });
+  assert(conclusaoPrompt.user.includes('4 a 7 paragrafos corridos'), 'Conclusao sem formato de relatorio global em prosa');
+  assert(conclusaoPrompt.user.includes('Nao crie uma secao, paragrafo, lista ou frase para cada modulo'), 'Conclusao permite inventario por modulo');
+
+  const resumoBio = resumoInterpretativoBioimpedancia({
+    peso_kg: 80,
+    agua_corporal_kg: 48,
+    segmentar_magra: { braco_dir: { kg: 4 }, braco_esq: { kg: 3.6 } },
+    segmentar_gordura: { perna_dir: { kg: 5 }, perna_esq: { kg: 4.5 } },
+  });
+  assert(resumoBio.agua_corporal_percentual_peso === 60, 'Proporcao de agua corporal incorreta');
+  assert(resumoBio.assimetrias.find(item => item.componente === 'Massa magra')?.assimetria_percentual === 10,
+    'Assimetria segmentar de massa magra incorreta');
 
   const anamneseTemporal = {
     respostas: {
@@ -286,7 +313,7 @@ function main() {
   });
   fs.writeFileSync(path.resolve('preview-laudo-termografia-isolada.html'), termografiaIsolada, 'utf8');
   assert(termografiaIsolada.includes('Tipo</div><div class="chip-val"') && termografiaIsolada.includes('Termografia funcional'), 'Capa isolada deveria identificar Termografia funcional');
-  assert(!termografiaIsolada.includes('Indice MedFit global</div>'), 'Laudo isolado nao deve mostrar indice global vazio');
+  assert(!termografiaIsolada.includes('Resultado global</div>'), 'Laudo isolado nao deve mostrar resultado global vazio');
   assert(!termografiaIsolada.includes('Score 0-100 da posturografia'), 'Laudo isolado nao deve mostrar scores de modulos ausentes');
   assert(!termografiaIsolada.includes('Resumo da Avaliação'), 'Laudo isolado sem score nao deve gerar pagina de resumo');
   assert(termografiaIsolada.includes('10.1016/j.jtherbio.2017.07.006'), 'Laudo termografico sem referencia TISEM');
@@ -297,6 +324,7 @@ function main() {
     'Análise clínica',
     'Ver vídeo',
     'Evolução longitudinal',
+    'A avaliação integrada indica condição funcional global favorável',
   ]);
   const dashboardCliente = checkTextFile('preview-dashboard-cliente.html', [
     'Seu resultado geral',
@@ -312,11 +340,14 @@ function main() {
   const dashboardClinico = checkTextFile('preview-dashboard-clinico.html', [
     'Edição rápida da avaliação',
     'Análises clínicas',
-    'Índice MedFit global',
+    'Resultado global',
     'Phantom',
     'Biomecânica da corrida',
     'Evolução dos scores',
   ]);
+  assert(!laudo.includes('Indice MedFit 0-100'), 'Laudo nao deve publicar rotulo proprietario 0-100');
+  assert(!dashboardCliente.includes('Índice MedFit'), 'Portal do paciente nao deve publicar rotulo Indice MedFit');
+  assert(!dashboardClinico.includes('Índice MedFit'), 'Painel clinico nao deve publicar rotulo Indice MedFit');
 
   const modulosComAnalise = tipos.filter(tipo => !['conclusao_global', 'evolucao'].includes(tipo));
   const aiBlockCount = (laudo.match(/data-analysis-block="true"/g) ?? []).length;
@@ -331,9 +362,9 @@ function main() {
     'Antropometria: analise deve aparecer depois de todos os resultados e da conclusao profissional');
   assert(laudo.indexOf('Analise em versao PDF/paciente simulada para biomecanica_corrida.') > laudo.indexOf('Gráficos cinemáticos'),
     'Biomecanica: analise deve aparecer depois da ultima pagina de resultados do modulo');
-  assert(laudo.includes('Conclusão global') || laudo.includes('Conclusao global'), 'Laudo deveria incluir a conclusão global revisada');
-  assert(laudo.indexOf('Conclusao global em versao PDF/paciente simulada para teste completo.') < laudo.indexOf('Referências bibliográficas'),
-    'Conclusao global deve aparecer antes das referencias bibliograficas');
+  assert(laudo.includes('Conclusão clínica') || laudo.includes('Conclusao clinica'), 'Laudo deveria incluir a conclusão clínica integrada');
+  assert(laudo.indexOf('A avaliação integrada indica condição funcional global favorável') < laudo.indexOf('Referências bibliográficas'),
+    'Conclusao integrada deve aparecer antes das referencias bibliograficas');
   const inicioProtocolos = laudo.indexOf('Protocolos utilizados');
   const inicioReferencias = laudo.indexOf('Referências bibliográficas');
   const protocolos = laudo.slice(inicioProtocolos, inicioReferencias);
@@ -434,6 +465,22 @@ function main() {
   assertCodigoContem('src/lib/ai/service.ts', [
     'carregarAnamnese',
     'Falha ao salvar análise de IA',
+    'friendComparisonFromAssessment',
+  ]);
+  assertCodigoContem('src/lib/ai/prompts.ts', [
+    'percentual do previsto nao e percentil populacional',
+  ]);
+  assertCodigoContem('src/components/PatientDashboard.tsx', [
+    'VO2 previsto FRIEND',
+    'Percentual do previsto',
+  ]);
+  assertCodigoContem('src/components/PortalPaciente.tsx', [
+    'VO2 previsto FRIEND',
+    'Percentual do previsto',
+  ]);
+  assertCodigoContem('src/lib/pdf/template.ts', [
+    'COMPARACAO FRIEND 2018',
+    'referencia_friend: friend',
   ]);
   assertCodigoContem('src/components/PatientDashboard.tsx', [
     'atual.analises_ia?.termografia',

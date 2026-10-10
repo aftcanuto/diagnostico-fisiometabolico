@@ -24,6 +24,7 @@ compartilhado por IA, portal, painel e PDF em `src/lib/clinical/formulas.ts`.
 | Cardio | Zonas pela FC de limiar | Metodo de Joe Friel, com faixas especificas para corrida e ciclismo; nao usa FCmax prevista pela idade | Modulo, PDF, portal e IA |
 | Cardio | Zonas por percentual da FCmax | Faixas genericas descritivas; nao substituem limiares medidos | Modulo, PDF, portal e IA |
 | Cardio | Recuperacao da FC | Variacao assinada preservada: queda negativa e subida positiva | Modulo, PDF, portal e IA |
+| Cardio | VO2max previsto FRIEND 2018 | Equacao aplicada dos 20 aos 85 anos com idade, sexo, peso, estatura e modalidade; fornece percentual do previsto, nao percentil | Modulo, PDF, portal, painel e IA |
 | Cardio | Classificacao e indice de VO2 | Novas classificacoes sao profissionais e dependem do protocolo; classificacoes historicas e o indice MedFit nao sao percentis FRIEND | Modulo, score, PDF, portal e IA |
 | Flexibilidade | Banco de Wells | Tabela por sexo/idade; removidos rotulos de percentil nao demonstrados | Modulo, score, PDF, portal e IA |
 | Forca | kgf para N, forca relativa, LSI, assimetria, RFD, fadiga e relacoes | Metricas descritivas; RFD depende de amostragem e processamento | Modulo, PDF, portal e IA |
@@ -48,19 +49,25 @@ compartilhado por IA, portal, painel e PDF em `src/lib/clinical/formulas.ts`.
 - Banco de Wells deixou de exibir percentis inferidos a partir de categorias.
 - O app deixou de preencher automaticamente uma classificacao de VO2 sem os
   insumos de uma referencia compativel; classificacoes antigas foram preservadas.
+- A equacao FRIEND 2018 passou a cruzar os dados ja existentes da avaliacao e
+  publicar VO2 previsto, percentual do previsto e faixa aproximada pelo erro-padrao.
+  O sistema nao rotula esse percentual como percentil populacional.
 - Removidas tabelas artificiais de preensao para populacao ativa e atleta.
 - Prancha, agachamento de 1 minuto e wall sit deixaram de receber classificacao
   normativa sem fonte compativel; os valores brutos continuam disponiveis.
 - IMC deixou de substituir a leitura de composicao quando ha percentual de
   gordura medido ou estimado.
+- Para a IA, o percentual de gordura global vem exclusivamente da antropometria;
+  a bioimpedancia permanece como fonte de agua corporal, distribuicao segmentar,
+  assimetrias e indicadores proprios do equipamento.
 - Prompts de IA agora recebem regra unica para nao converter indices internos,
   ausencias ou metricas descritivas em normas, diagnosticos ou causalidade.
 
 ## Pendencias deliberadas
 
-- O indice cardio historico ainda e preservado como indice operacional. Uma
-  futura versao pode solicitar peso, estatura e modalidade e implementar a
-  equacao FRIEND ou percentis especificos.
+- O indice cardio historico continua preservado como indice operacional e nao
+  foi substituido pela equacao FRIEND. Percentis populacionais exigem tabelas
+  normativas especificas e permanecem separados do percentual do previsto.
 - As classificacoes de flexao e abdominal devem ser conferidas contra a edicao
   licenciada efetivamente adotada antes de qualquer alteracao de limites.
 - Relacoes de forca e assimetria nao possuem corte universal. O sistema deve

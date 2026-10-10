@@ -4,6 +4,25 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-09 - Cintura minima e relacao cintura/estatura
+
+- Confirmado que o conjunto estrito coleta `Cintura minima` segundo o ponto anatomico ISAK e que essa medida alimenta matematicamente a relacao cintura/estatura.
+- O resultado foi renomeado para `Relacao cintura minima/estatura` e permanece descritivo, com rastreio explicito do ponto anatomico utilizado.
+- Removido o resultado vazio `Classificacao de cintura - OMS`: os cortes absolutos da OMS exigem cintura medida no ponto medio entre a ultima costela e a crista iliaca e nao foram aplicados a cintura minima ISAK.
+- O metodo OMS legado permanece apenas no catalogo para leitura de registros antigos, mas nao aparece mais entre as novas opcoes do formulario. IA, painel, portal e PDF recebem o resultado corrigido pelo snapshot antropometrico compartilhado.
+- Motor atualizado para `anthropometry-2.2.1` e catalogo para `medfit-strict26-2026-10-09.4`. Avaliacoes antigas permanecem preservadas; salvar novamente atualiza o snapshot. Sem migration.
+
+### 2026-10-09 - IA interpretativa, bioimpedancia e paridade com o portal
+
+- Os prompts dos modulos, da conclusao global, da evolucao e da biomecanica passaram a exigir interpretacao do significado funcional, classificacao somente com referencia compativel e identificacao da fonte aplicada; a IA nao deve apenas repetir valores das tabelas.
+- O JSON estruturado das analises agora aceita `classificacoes` com indicador, classificacao, significado e base. Painel clinico e PDF sabem apresentar esse bloco, e a `versao_paciente` deve conter a mesma interpretacao em linguagem clara.
+- A bioimpedancia passou a priorizar agua corporal e assimetrias segmentares. O sistema calcula a proporcao de agua em relacao ao peso e diferencas D/E de massa magra e gordura, sem criar corte universal, diagnosticar hidratacao ou inferir lesao.
+- Painel clinico, PDF e portal do paciente exibem o resumo de agua e assimetrias com as mesmas ressalvas metodologicas. O portal lista as analises na ordem da avaliacao e oferece, em cada modulo, links para as respectivas bases cientificas.
+- A conclusao global recebe os modulos na ordem de avaliacao: anamnese, sinais vitais, bioimpedancia, posturografia, termografia, antropometria, Jump Test, flexibilidade, forca, RML, cardiorrespiratorio e biomecanica.
+- Incluida a revisao de principios e metodos de Kyle et al. (2004) nas referencias de bioimpedancia, compartilhada por IA, PDF e portal.
+- O PDF passou a distribuir no maximo oito referencias por pagina para preservar o rodape. Teste visual aprovado com 37 paginas, sem overflow, cards cortados, imagens invalidas ou paginas vazias.
+- Analises ja salvas nao sao reescritas automaticamente: precisam ser geradas novamente para receber a nova estrutura interpretativa. Sem migration.
+
 ### 2026-10-09 - Protocolos e referencias clinicas revisados
 
 - `Protocolos utilizados` passou a seguir a ordem de execucao/apresentacao dos modulos no laudo: sinais vitais, bioimpedancia, posturografia, termografia, antropometria, Jump Test, flexibilidade, dinamometria isometrica, RML, cardiorrespiratorio e biomecanica.
@@ -1517,3 +1536,40 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O smoke test exige exatamente uma analise para cada um dos 12 modulos selecionados, verifica ausencia de duplicacoes e confirma especificamente o posicionamento final de antropometria, biomecanica e da conclusao antes das referencias.
 - Auditoria visual aprovada em 36 paginas: nenhuma imagem quebrada, pagina vazia, card cortado, overflow ou invasao de rodape. Portais clinico e do paciente continuam sem overflow entre 320 e 1280 px.
 - PDF de conferencia atualizado em `output/pdf/relatorio-teste-completo-medfit.pdf`. Sem migration nova.
+
+## 2026-10-09 - Comparacao cardiorrespiratoria FRIEND 2018
+
+- Implementada a equacao FRIEND 2018 para estimar o VO2max esperado em adultos de 20 a 85 anos a partir de idade, sexo, peso, estatura e modalidade.
+- A modalidade e normalizada exclusivamente para esteira ou cicloergometro; remo e outros protocolos nao sao extrapolados.
+- Peso e estatura sao obtidos prioritariamente da antropometria da mesma avaliacao, inclusive do registro V2, com fallback para a bioimpedancia.
+- O sistema apresenta VO2 previsto, percentual do previsto, diferenca para o previsto e faixa aproximada de uma unidade do erro-padrao de 6,6 ml/kg/min.
+- Corrigida a terminologia em toda a aplicacao: percentual do previsto nao e percentil populacional e nao deve ser apresentado como diagnostico ou categoria normativa.
+- O mesmo calculo centralizado foi conectado ao formulario cardiorrespiratorio, painel clinico, portal do paciente, PDF e prompt da analise de IA.
+- A IA recebe os valores calculados pelo motor, deve interpretar a relacao entre medido e previsto com a incerteza do modelo e nao pode recalcular, inventar percentis nem transformar o Indice MedFit em norma.
+- A referencia bibliografica FRIEND foi atualizada para explicitar entradas, resultado e limite metodologico.
+- Adicionados testes para conversao de modalidade, equacao, percentual do previsto, faixa etaria, integracao com antropometria e paridade entre as superficies.
+- Validacoes aprovadas: calculos clinicos, smoke test completo, paridade de referencias, TypeScript, lint, build de producao e auditoria visual do PDF em 37 paginas sem imagens quebradas, cards cortados, overflow ou paginas vazias.
+- Sem migration nova e sem alteracao dos dados historicos; a comparacao e derivada dinamicamente dos dados ja persistidos.
+
+## 2026-10-09 - Percentual de gordura oficial para a IA
+
+- Corrigida a origem do percentual de gordura entregue a IA: o valor global agora vem exclusivamente da antropometria da mesma avaliacao.
+- O extrator aceita tanto a projecao legada `percentual_gordura` quanto o resultado V2 `fatPercent`, desde que esteja selecionado, disponivel e numerico.
+- A analise de bioimpedancia nao recebe mais o percentual global nem a massa de gordura do equipamento como substitutos da antropometria. O modulo continua usando agua corporal, massa livre de gordura, gordura visceral, distribuicao segmentar e assimetrias.
+- Quando a antropometria nao produz percentual valido, a IA recebe o resultado como indisponivel; nao existe fallback silencioso para o percentual da bioimpedancia.
+- A conclusao global recebe um bloco explicito de composicao oficial, com precedencia sobre textos antigos ou divergentes presentes nas analises dos modulos.
+- Analises ja persistidas devem ser regeneradas para refletir a nova regra; nenhum texto clinico antigo foi alterado automaticamente.
+- Teste de regressao confirma que um percentual divergente da bioimpedancia nao aparece no prompt e que o valor antropometrico e preservado.
+- Sem migration nova e sem alteracao dos valores armazenados.
+
+## 2026-10-09 - Resultado sem rotulo proprietario e conclusao integrada
+
+- Removida das superficies visiveis a nomenclatura `Indice MedFit 0-100`, incluindo resumo do PDF, painel clinico, portal do paciente, evolucao, revisao, central de documentos, lista de avaliacoes e prontuario.
+- As pontuacoes historicas continuam preservadas internamente para compatibilidade, ordenacao visual e acompanhamento longitudinal, sem exposicao do nome proprietario ou da escala nos textos.
+- O titulo visivel do consolidado passou a ser `Resultado global`; os cards descrevem o dominio avaliado e sua classificacao sem apresenta-lo como indice.
+- Os prompts de IA foram orientados a nao citar pontuacoes internas, nome proprietario ou escala de 0 a 100 no texto clinico ou na versao para o paciente.
+- A conclusao global passou a exigir `relatorio_global` em quatro a sete paragrafos corridos, integrando estado fisiometabolico, composicao corporal, capacidade cardiorrespiratoria, funcao neuromuscular, mobilidade, postura, biomecanica, fatores de protecao e prioridades.
+- O prompt proibe conclusao organizada como inventario por modulo, repeticao de todos os numeros ou subtitulos com nomes de exames. Achados convergentes e discordantes devem ser relacionados ao objetivo e ao significado funcional conjunto.
+- PDF, portal, painel e editor agora priorizam `relatorio_global`; conclusoes antigas continuam compativeis por fallback para os campos anteriores.
+- Testes de regressao verificam ausencia da nomenclatura removida nas superficies renderizadas, presenca do relatorio integrado e posicionamento da conclusao antes das referencias.
+- Sem migration nova. Conclusoes ja salvas precisam ser geradas novamente para adotar o formato integrado.

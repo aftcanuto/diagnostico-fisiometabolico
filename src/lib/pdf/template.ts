@@ -12,7 +12,8 @@ import { classificarComposicaoCorporal, resolverPercentualGordura } from '@/lib/
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 import { jumpReportHtml } from './jump-test';
 import { anthropometryReportHtml, anthropometrySummaryHtml, isAnthropometryV2 } from './anthropometry';
-import { INDICE_MEDFIT_AVISO } from '@/lib/clinical/formulas';
+import { resumoInterpretativoBioimpedancia } from '@/lib/clinical/bioimpedance';
+import { friendComparisonFromAssessment, friendInterpretationLabel } from '@/lib/calculations/friend';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -22,7 +23,7 @@ export interface ClinicaBranding {
 }
 export interface AnaliseIA {
   achados?: string[]; interpretacao?: string; riscos?: string[];
-  beneficios?: string[]; recomendacoes?: string[]; alertas?: string[]; resumo_executivo?: string;
+  beneficios?: string[]; recomendacoes?: string[]; alertas?: string[]; relatorio_global?: string; resumo_executivo?: string;
   pontos_fortes?: string[]; pontos_criticos?: string[];
   prioridades?: { titulo: string; acao: string; prazo: string }[];
   mensagem_paciente?: string; tendencias?: string[]; progressos?: string[];
@@ -465,6 +466,8 @@ function textoAnalisePdf(a: (AnaliseIA & {texto_editado?:string|null}) | undefin
     a.texto_paciente_editado,
     (a as any).texto_pdf_editado,
     (a as any).texto_pdf,
+    (a as any).relatorio_global,
+    (a as any).sintese_integrada,
     (a as any).versao_pdf,
     (a as any).versao_paciente,
     a.mensagem_paciente,
@@ -532,9 +535,17 @@ function renderTextoEstruturado(c: any): string {
   if (typeof c === 'string') return c.trim();
   const partes: string[] = [];
   if (c.texto) partes.push(String(c.texto));
+  if (c.relatorio_global) partes.push(String(c.relatorio_global));
+  if (c.sintese_integrada) partes.push(String(c.sintese_integrada));
   if (c.resumo) partes.push(`RESUMO:\n${c.resumo}`);
   if (c.resumo_executivo) partes.push(`RESUMO:\n${c.resumo_executivo}`);
   if (c.resumo_clinico) partes.push(`RESUMO CLINICO:\n${c.resumo_clinico}`);
+  if (Array.isArray(c.classificacoes) && c.classificacoes.length) {
+    partes.push(`CLASSIFICAÇÕES:\n${c.classificacoes.map((item: any) => {
+      const base = item.base ? ` (Base: ${item.base})` : '';
+      return `- ${item.indicador ?? 'Indicador'}: ${item.classificacao ?? 'descritivo'} — ${item.significado ?? ''}${base}`;
+    }).join('\n')}`);
+  }
   if (c.prioridades_clinicas) partes.push(`PRIORIDADES CLÍNICAS:\n${Array.isArray(c.prioridades_clinicas) ? c.prioridades_clinicas.map((x: any) => `- ${x}`).join('\n') : c.prioridades_clinicas}`);
   if (c.metas_30_dias || c.meta_30_dias) partes.push(`META 30 DIAS:\n${c.metas_30_dias ?? c.meta_30_dias}`);
   if (c.metas_60_dias || c.meta_60_dias) partes.push(`META 60 DIAS:\n${c.metas_60_dias ?? c.meta_60_dias}`);
@@ -848,27 +859,27 @@ function pgResumo(d: LaudoData): string {
   const scoreInfo: Record<string, { escopo: string; leitura: string }> = {
     Postura: {
       escopo: 'Achados posturais e alinhamento',
-      leitura: 'Indice operacional 0-100 da posturografia.',
+      leitura: 'Sintese dos achados registrados na posturografia.',
     },
     'Composição': {
       escopo: 'Gordura, massa magra, IMC e RCQ',
-      leitura: 'Indice operacional composto; nao e apenas % de gordura.',
+      leitura: 'Sintese conjunta dos marcadores de composicao corporal.',
     },
     'Força': {
       escopo: 'Preensão, dinamometria e assimetria',
-      leitura: 'Indice operacional; kgf/kg ficam no modulo.',
+      leitura: 'Sintese da capacidade de forca; os valores medidos ficam no modulo.',
     },
     'Flexibilidade': {
       escopo: 'Banco de Wells e classificação',
-      leitura: 'Indice operacional da mobilidade avaliada.',
+      leitura: 'Sintese do resultado de mobilidade avaliado.',
     },
     Cardio: {
       escopo: 'VO2máx, FC e zonas de treino',
-      leitura: 'Indice operacional; nao e BPM isolado.',
+      leitura: 'Sintese da capacidade cardiorrespiratoria avaliada.',
     },
     RML: {
       escopo: 'Resistencia muscular localizada',
-      leitura: 'Indice operacional dos testes classificados.',
+      leitura: 'Sintese dos testes de resistencia muscular realizados.',
     },
   };
   const miniVelocimetro = (valor: number | null) => {
@@ -920,7 +931,7 @@ function pgResumo(d: LaudoData): string {
   <div style="display:grid;grid-template-columns:${temScoreGlobal ? '180px 1fr' : '1fr'};gap:20px;align-items:start">
     ${temScoreGlobal ? `<div style="display:flex;flex-direction:column;align-items:center;gap:12px">
       <div style="text-align:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px 20px;width:100%">
-        <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Indice MedFit global</div>
+        <div style="font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Resultado global</div>
         ${gauge(d.scores.global, '', 'sm')}
       </div>
     </div>` : ''}
@@ -932,12 +943,12 @@ function pgResumo(d: LaudoData): string {
         const cor = zoneColor(sc);
         const lbl = zoneLabel(sc);
         const pct = sc != null ? sc : 0;
-        const info = scoreInfo[s.label] ?? { escopo: 'Dominio avaliado', leitura: 'Indice operacional 0-100.' };
+        const info = scoreInfo[s.label] ?? { escopo: 'Dominio avaliado', leitura: 'Sintese do dominio avaliado.' };
         return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px">
           <div style="flex-shrink:0;width:96px;height:82px;position:relative">${miniVelocimetro(sc)}</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:700;color:#0f172a">${s.label}</div><div style="font-size:10px;font-weight:600;padding:2px 10px;border-radius:100px;background:${cor}20;color:${cor}">${lbl}</div></div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"><span style="font-size:8px;font-weight:800;color:#334155;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">Indice MedFit 0-100</span><span style="font-size:8px;font-weight:700;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">${x(info.escopo)}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"><span style="font-size:8px;font-weight:700;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;border-radius:999px;padding:2px 7px">${x(info.escopo)}</span></div>
             <div style="font-size:9px;color:#64748b;line-height:1.35;margin-bottom:7px">${x(info.leitura)}</div>
             <div style="background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cor}88,${cor});border-radius:999px"></div></div>
           </div>
@@ -948,9 +959,8 @@ function pgResumo(d: LaudoData): string {
   <div style="border:1px solid #e2e8f0;border-radius:16px;padding:22px;background:#f8fafc">
     <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:9px">${ativos.length === 1 ? 'Exame realizado' : 'Módulos realizados'}</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">${ativos.map(modulo => `<span style="padding:8px 14px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;font-size:12px;font-weight:750">${x(modulo.label)}</span>`).join('')}</div>
-    <p style="font-size:11px;line-height:1.55;color:#64748b;margin:14px 0 0">Este exame nao utiliza indice MedFit global. Os resultados, condicoes tecnicas e interpretacao profissional estao apresentados nas paginas especificas do laudo.</p>
+    <p style="font-size:11px;line-height:1.55;color:#64748b;margin:14px 0 0">Os resultados, condicoes tecnicas e interpretacao profissional estao apresentados nas paginas especificas do laudo.</p>
   </div>`}
-  ${temScoreGlobal || scoreItems.length ? `<p style="font-size:9px;line-height:1.45;color:#64748b;margin:12px 0 0;text-align:center">${x(INDICE_MEDFIT_AVISO)}</p>` : ''}
 
 </section>`;
 }
@@ -1266,6 +1276,7 @@ function pgTermografia(t: any, ia: any, pri = '#059669'): string {
 
 function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
   if (!b) return '';
+  const resumo = resumoInterpretativoBioimpedancia(b);
   const sm=b.segmentar_magra??{}, sg=b.segmentar_gordura??{};
   const segs=[{k:'braco_dir',l:'Braço D',c:'bd'},{k:'braco_esq',l:'Braço E',c:'be'},{k:'tronco',l:'Tronco',c:'tr'},{k:'perna_dir',l:'Perna D',c:'pd'},{k:'perna_esq',l:'Perna E',c:'pe'}];
   const temSeg=Object.keys(sm).length>0;
@@ -1287,6 +1298,10 @@ function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
     ${b.idade_metabolica!=null?kpi('Idade metabólica',b.idade_metabolica,'anos'):''}
     ${b.gordura_visceral_nivel!=null?kpi('Gordura visceral',b.gordura_visceral_nivel,'nível'):''}
   </div>
+  ${(resumo.agua_corporal_kg!=null||resumo.agua_corporal_percentual_peso!=null||resumo.assimetrias.length>0)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px">
+    ${(resumo.agua_corporal_kg!=null||resumo.agua_corporal_percentual_peso!=null)?`<div style="padding:10px;border:1px solid #bae6fd;border-radius:8px;background:#f0f9ff"><div class="kpi-label">Água corporal</div><div style="font-size:16px;font-weight:800;color:#0284c7">${[resumo.agua_corporal_kg!=null?`${x(resumo.agua_corporal_kg)} kg`:null,resumo.agua_corporal_percentual_peso!=null?`${x(resumo.agua_corporal_percentual_peso)}% do peso`:null].filter(Boolean).join(' · ')}</div><div style="font-size:8px;line-height:1.4;color:#64748b;margin-top:4px">A interpretação depende do aparelho, preparo e equilíbrio de fluidos; não diagnostica hidratação isoladamente.</div></div>`:''}
+    ${resumo.assimetrias.length?`<div style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc"><div class="kpi-label">Assimetrias segmentares</div>${resumo.assimetrias.map(item=>`<div style="font-size:8.5px;line-height:1.45;color:#334155">${x(item.componente)} · ${x(item.segmento)}: <b>${x(item.assimetria_percentual)}%</b> (${x(item.maior_lado)})</div>`).join('')}<div style="font-size:8px;line-height:1.4;color:#64748b;margin-top:4px">Comparação descritiva, sem corte universal ou inferência isolada de lesão.</div></div>`:''}
+  </div>`:''}
   ${temSeg?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
     <div><div class="sec-sub">Massa magra por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sm[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sm[s.k]?.kg??'—'}</td><td>${sm[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
     <div><div class="sec-sub">Gordura por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sg[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sg[s.k]?.kg??'—'}</td><td>${sg[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
@@ -1661,6 +1676,7 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
   const rec60=recFC['60'];
   const recCor=rec60!=null?(rec60<=-20?'#10b981':rec60<=-12?'#f59e0b':'#ef4444'):'#6b7280';
   const limCores:Record<string,string>={'Saúde Cardiovascular':'#3b82f6','Emagrecimento':'#f59e0b','Performance':'#10b981','Esforço máximo':'#ef4444'};
+  const friend = c.referencia_friend;
   return pgModulo('Cardiorrespiratório', score, `
   <div class="dark-block">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
@@ -1675,6 +1691,15 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
     </div>
     ${c.classificacao_vo2?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2937;font-size:10px;color:#6b7280">Classificação: <b style="color:#16a34a">${x(c.classificacao_vo2)}</b>${c.protocolo?` · ${x(c.protocolo)}`:''}${c.ponto_limiar_tempo?` · Limiar em ${x(c.ponto_limiar_tempo)}`:''}</div>`:''}
   </div>
+  ${friend?`<div style="margin:12px 0 16px;padding:12px 14px;border:1px solid #a7f3d0;border-radius:10px;background:#ecfdf5;page-break-inside:avoid">
+    <div style="font-size:10px;font-weight:800;color:#065f46;margin-bottom:8px">COMPARACAO FRIEND 2018</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div><div style="font-size:8px;color:#047857">VO2 previsto</div><b style="font-size:13px;color:#0f172a">${friend.predictedVo2} ml/kg/min</b></div>
+      <div><div style="font-size:8px;color:#047857">Percentual do previsto</div><b style="font-size:13px;color:#0f172a">${friend.percentPredicted??'—'}%</b></div>
+      <div><div style="font-size:8px;color:#047857">Faixa aproximada</div><b style="font-size:13px;color:#0f172a">${friend.approximateBand.min}-${friend.approximateBand.max}</b></div>
+    </div>
+    <div style="font-size:9px;color:#065f46;margin-top:8px">${x(friendInterpretationLabel(friend.interpretation)??'Referencia calculada')} · percentual do previsto nao e percentil populacional · erro-padrao 6,6 ml/kg/min.</div>
+  </div>`:''}
   ${Object.keys(recFC).length?`<div class="sec-sub">Recuperação da FC</div>
   <table><thead><tr><th>Segundos</th>${[10,30,60].map(s=>`<th style="text-align:center">${s}s</th>`).join('')}</tr></thead>
   <tbody><tr><td style="font-weight:600">Î” bpm</td>${[10,30,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:600;color:${cor}">${v??'—'}</td>`;}).join('')}</tr></tbody></table>
@@ -2068,10 +2093,7 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
     protocolo?.label && protocolo?.texto && !padroesConhecidos.test(`${protocolo.label} ${protocolo.texto}`)));
   const refs = referenciasAvaliacao(d.modulos, d.dados.antropometria);
   const gruposRefs = [];
-  for (let i = 0; i < refs.length; i += 9) gruposRefs.push(refs.slice(i, i + 9));
-  if (gruposRefs.length > 1 && gruposRefs.at(-1)!.length <= 2) {
-    gruposRefs.at(-2)!.push(...gruposRefs.pop()!);
-  }
+  for (let i = 0; i < refs.length; i += 8) gruposRefs.push(refs.slice(i, i + 8));
   const paginasRefs = [];
   let inicioRef = 1;
   for (const grupoRefs of gruposRefs) {
@@ -2110,6 +2132,13 @@ export function renderLaudoHTML(d: LaudoData): string {
     d = { ...d, scores: { ...d.scores, forca: forcaPreensao } };
   }
   const gorduraRelatorio = resolverPercentualGordura(d.avaliacao, d.dados.antropometria, d.dados.bioimpedancia);
+  const friend = friendComparisonFromAssessment({
+    cardio: d.dados.cardiorrespiratorio,
+    anthropometry: d.dados.antropometria,
+    bioimpedance: d.dados.bioimpedancia,
+    age: d.paciente.idade,
+    sex: d.paciente.sexo,
+  });
   const pri = d.clinica?.cor_primaria ?? '#059669';
   const footerLeft = d.clinica?.nome || 'Diagnóstico Fisiometabólico';
   const footerCenter = [d.avaliador.nome, d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
@@ -2145,7 +2174,7 @@ export function renderLaudoHTML(d: LaudoData): string {
       : '',
     m.forca               ? pgForca(d.dados.forca, d.scores.forca, ia.forca) : '',
     m.rml                 ? pgRML(d.dados.rml, d.scores.rml??null, d.paciente.sexo, d.paciente.idade, ia.rml, pri) : '',
-    m.cardiorrespiratorio ? pgCardio(d.dados.cardiorrespiratorio, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio) : '',
+    m.cardiorrespiratorio ? pgCardio({ ...d.dados.cardiorrespiratorio, referencia_friend: friend }, d.scores.cardiorrespiratorio, ia.cardiorrespiratorio) : '',
     m.biomecanica_corrida ? pgBiomecanica(d.dados.biomecanica_corrida, ia.biomecanica_corrida, pri) : '',
     ia.conclusao_global ? pgPlanoAcao(d, pri) : '',
     d.dados.plano_alimentar ? pgPlanoAlimentar(d, pri) : '',

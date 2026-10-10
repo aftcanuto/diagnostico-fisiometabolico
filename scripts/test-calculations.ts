@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 
 import { calcFFMI, imc, massaMagra, mediaDobra, percentualGorduraJP7, rcq } from '../src/lib/calculations/antropometria';
 import { classificaVO2, scoreVO2, zonasTreinamento } from '../src/lib/calculations/cardio';
+import { calculateFriendComparison, friendComparisonFromAssessment, normalizeFriendModality } from '../src/lib/calculations/friend';
 import { classificarWells, scoreFlexibilidade } from '../src/lib/calculations/flexibilidade';
 import { assimetria, forcaRelativa } from '../src/lib/calculations/forca';
 import { calcularRML } from '../src/lib/calculations/rml';
 import { scoreComposicaoCorporal } from '../src/lib/scores';
-import { classificarComposicaoCorporal } from '../src/lib/bodyComposition';
+import { classificarComposicaoCorporal, composicaoOficialParaIA, percentualGorduraAntropometria } from '../src/lib/bodyComposition';
 
 assert.equal(imc(76, 170), 26.3);
 assert.deepEqual(mediaDobra(10, 10.4, null), { media: 10.2, precisaTerceira: false });
@@ -38,6 +39,22 @@ assert.deepEqual(zonasTreinamento(176), {
 });
 assert.equal(classificaVO2(42, 'M', 46), 'Bom');
 assert.equal(scoreVO2(42, 'M', 46), 78);
+assert.equal(normalizeFriendModality('Esteira'), 'treadmill');
+assert.equal(normalizeFriendModality('Bike'), 'cycle');
+assert.equal(normalizeFriendModality('Remo'), null);
+const friend = calculateFriendComparison({ measuredVo2: 44, age: 40, sex: 'M', weightKg: 80, heightCm: 180, modality: 'treadmill' });
+assert.ok(friend);
+assert.equal(friend?.predictedVo2, 41.6);
+assert.equal(friend?.percentPredicted, 105.8);
+assert.equal(friend?.interpretation, 'within_estimate');
+assert.equal(calculateFriendComparison({ measuredVo2: 40, age: 19, sex: 'M', weightKg: 80, heightCm: 180, modality: 'treadmill' }), null);
+assert.equal(friendComparisonFromAssessment({
+  cardio: { protocolo: 'Bike', vo2max: 32 },
+  anthropometry: { peso: 70, estatura: 170 },
+  bioimpedance: null,
+  age: 50,
+  sex: 'F',
+})?.modality, 'cycle');
 assert.deepEqual(classificarWells(22, 'M', 46), {
   classificacao: 'Regular',
   percentil: 'Faixa ACSM',
@@ -70,5 +87,19 @@ assert.equal(rml.mmii_agach_classificacao, undefined);
 assert.equal(rml.mmii_wallsit_classificacao, undefined);
 
 assert.equal(classificarComposicaoCorporal({ pctGordura:12, imc:28, sexo:'M' }).label, 'Atletico');
+
+const antroV2 = {
+  registro_v2: { version: 2 },
+  resultados_v2: { results: [{ id: 'fatPercent', selected: true, status: 'available', value: 18.4, label: 'Durnin-Womersley + Siri' }] },
+};
+assert.equal(percentualGorduraAntropometria(antroV2), 18.4);
+assert.deepEqual(composicaoOficialParaIA(antroV2, { percentual_gordura: 27.9 }), {
+  percentual_gordura: 18.4,
+  fonte: 'antropometria',
+  metodo: 'Durnin-Womersley + Siri',
+  percentual_bioimpedancia_excluido: true,
+  regra: 'O percentual de gordura global da IA vem exclusivamente da antropometria. Nao substituir pela bioimpedancia.',
+});
+assert.equal(composicaoOficialParaIA(null, { percentual_gordura: 27.9 }).percentual_gordura, null);
 
 console.log('OK: formulas clinicas principais validadas');

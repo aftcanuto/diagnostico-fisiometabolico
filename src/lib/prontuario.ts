@@ -88,7 +88,7 @@ export async function registrarEventoProntuarioAvaliacao(admin: SupabaseAdmin, a
 
   const resumo = [
     `Avaliação ${avaliacao.tipo ?? 'personalizada'} finalizada em ${avaliacao.data}.`,
-    scores?.global != null ? `Indice MedFit global: ${scores.global}.` : null,
+    scores?.global != null ? `Resultado global: ${scores.global}.` : null,
     conclusao ? 'Conclusão global registrada.' : 'Conclusão global ainda não registrada.',
   ].filter(Boolean).join(' ');
 

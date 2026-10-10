@@ -47,6 +47,12 @@ assert.equal(result.results.find(item => item.id === 'petroskiDensity')?.status,
 assert.ok((result.results.find(item => item.id === 'durninWomersleyDensity')?.value ?? 0) > 1);
 assert.ok((result.results.find(item => item.id === 'fatPercent')?.value ?? 0) > 0);
 assert.equal(result.results.find(item => item.id === 'fatPercent')?.status, 'available');
+const waistHeightRatio = result.results.find(item => item.id === 'waistHeightRatio');
+assert.equal(waistHeightRatio?.label, 'Relacao cintura minima/estatura');
+assert.ok(Math.abs(waistHeightRatio!.value! - result.measurements.waist.value! / result.measurements.height.value!) < 1e-12);
+assert.equal(waistHeightRatio?.status, 'available');
+assert.match(String(waistHeightRatio?.inputs.measurementSite), /cintura minima ISAK/i);
+assert.equal(result.results.some(item => item.id === 'waistClassification'), false, 'Nao deve publicar classificacao OMS com cintura minima ISAK');
 assert.ok((result.results.find(item => item.id === 'martin1990')?.value ?? 0) > 0);
 assert.ok((result.results.find(item => item.id === 'martinBone1991')?.value ?? 0) > 0);
 assert.equal(result.results.find(item => item.id === 'martinBone1991')?.status, 'review');

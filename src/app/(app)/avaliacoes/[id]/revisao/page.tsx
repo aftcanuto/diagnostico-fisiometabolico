@@ -368,7 +368,7 @@ export default function RevisaoPage(props: { params: Promise<{ id: string }> }) 
             <div style={{ textAlign: 'center', padding: '20px 40px',
               background: '#f0fdf4', borderRadius: 16, border: '1px solid #bbf7d0' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b',
-                textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Índice MedFit global</div>
+                textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Resultado global</div>
               <div style={{ fontSize: 56, fontWeight: 900, lineHeight: 1,
                 color: scores.global > 70 ? '#10b981' : scores.global > 40 ? '#f59e0b' : '#ef4444' }}>
                 {scores.global ?? '—'}

@@ -23,7 +23,7 @@ const methodGroups = [
   { id: 'adipose', title: 'Massa adiposa anatomica', description: 'Componente anatomico de Kerr; nao equivale ao percentual de gordura quimica.', methods: ['kerrAdipose1988'] },
   { id: 'bone', title: 'Massa ossea estimada', description: 'Estimativas antropometricas; nao equivalem a densitometria ou conteudo mineral por DXA.', methods: ['martinBone1991', 'rocha1975'] },
   { id: 'shape', title: 'Somatotipo e proporcionalidade', description: 'Descricao morfologica e proporcional; nao representa diagnostico ou ideal corporal.', methods: ['heathCarter', 'phantom'] },
-  { id: 'general', title: 'Medidas e indices gerais', description: 'Medidas consolidadas, indices geometricos e classificacoes dependentes de aplicabilidade.', methods: ['direct', 'indices', 'bmiWHO', 'waistWHO', 'dubois1916'] },
+  { id: 'general', title: 'Medidas e indices gerais', description: 'Medidas consolidadas, indices geometricos e classificacoes dependentes de aplicabilidade.', methods: ['direct', 'indices', 'bmiWHO', 'dubois1916'] },
   { id: 'maturity', title: 'Maturacao', description: 'Estimativa aplicavel somente a faixa etaria e contexto previstos pelo metodo.', methods: ['mirwald2002'] },
   { id: 'energy', title: 'Energia e cenarios profissionais', description: 'Estimativa energetica historica e cenarios opcionais definidos pelo avaliador.', methods: ['harrisBenedict1919', 'scenarios'] },
 ] as const;

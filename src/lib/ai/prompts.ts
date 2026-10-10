@@ -8,6 +8,17 @@ import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias'
 import { jumpSchema, jumpSummary, jumpReference } from '@/lib/jump-test';
 import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-record';
 import { REGRAS_FORMULAS_IA } from '@/lib/clinical/formulas';
+import { resumoInterpretativoBioimpedancia } from '@/lib/clinical/bioimpedance';
+
+export const REGRAS_INTERPRETACAO_IA = `Regras obrigatorias de interpretacao:
+- Nao transforme a analise em inventario de numeros. Use cada medida apenas como evidencia para explicar o que o resultado representa para funcao, saude ou desempenho.
+- Para cada resultado principal, informe: classificacao (bom, adequado, esperado, intermediario, baixo, elevado ou alterado), significado pratico e base usada.
+- Classifique somente quando existir categoria profissional salva ou referencia compativel com sexo, idade, populacao, protocolo, unidade e equipamento. Sem compatibilidade, descreva o resultado sem chama-lo de normal ou anormal e declare a limitacao.
+- As pontuacoes internas servem apenas para priorizar a sintese. Nao mencione nome proprietario, escala de 0 a 100, percentil, norma clinica ou diagnostico no texto gerado.
+- Para percentual de gordura global, use exclusivamente o valor oficial vindo da antropometria. Nao substitua por percentual de gordura da bioimpedancia; quando a antropometria nao fornecer o resultado, declare-o indisponivel. A bioimpedancia permanece valida para agua corporal, distribuicao segmentar e assimetrias.
+- Em achados, priorize conclusoes interpretadas. Evite repetir valores que ja aparecem nas tabelas, salvo quando o numero for necessario para sustentar a conclusao.
+- Cite no texto o autor, diretriz, estudo ou tabela fornecida que sustentou uma classificacao. Nao invente citacoes, cortes ou URLs. As referencias completas e seus links serao exibidos pelo sistema.
+- A versao_paciente deve conter a classificacao e o significado dos principais resultados em linguagem clara; nao pode ser apenas uma repeticao abreviada dos numeros.`;
 
 export const ANTHROPOMETRY_AI_RULES = `Antropometria: use apenas resultados selecionados, disponiveis e calculados pelo motor versionado.
 Nao recalcule nem invente medidas, normas, coeficientes ou referencias. Ausente nao significa zero.
@@ -15,6 +26,7 @@ Diferencie gordura quimica, tecido adiposo, massa livre de gordura e musculo esq
 Quando disponivel, o percentual antropometrico usa densidade de Durnin-Rahaman aos 16 anos ou Durnin-Womersley dos 17 aos 72 anos (biceps, triceps, subescapular e crista iliaca ISAK), convertida por Siri; nao atribua a dobra abdominal ou qualquer perimetro a esse calculo.
 Phantom descreve proporcionalidade, nao diagnostica risco, doenca ou potencial genetico. Somatotipo nao determina destino biologico.
 ISAK padroniza a coleta, nao certifica o software nem valida universalmente todas as equacoes.
+O resultado waistHeightRatio usa a cintura minima ISAK dividida pela estatura. Trate-o como razao descritiva e nao aplique os cortes absolutos de cintura da OMS, que exigem medida no ponto medio entre a ultima costela e a crista iliaca.
 Estados de revisao/invalidos nao sustentam conclusoes clinicas. Informe populacao e limitacoes do metodo.
 Medidas com notApplicable=true foram deliberadamente excluidas daquela avaliacao: nao as trate como zero, erro ou pendencia e nao invente substitutos. Medidas apenas vazias continuam ausentes e exigem ressalva.
 Compare evolucao somente entre locais anatomicos, metodos, unidades e versoes compativeis; nao compare automaticamente legado com V2.
@@ -201,6 +213,7 @@ export function contextoAnamneseParaIA(dados: any) {
 const SISTEMA_BASE = (ctx: PacienteContexto) => `Você é especialista em avaliação fisiometabólica, performance humana e medicina do exercício, com formação em fisioterapia, nutrição e treinamento esportivo. Redige laudos clínicos em português brasileiro com linguagem técnica precisa mas acessível.
 
 ${REGRAS_FORMULAS_IA}
+${REGRAS_INTERPRETACAO_IA}
 
 Paciente:
 - Nome: ${ctx.nome}
@@ -216,6 +229,7 @@ Retorne APENAS JSON válido com este schema:
   "resumo_clinico": string,
   "achados": string[],
   "principais_achados": string[],
+  "classificacoes": [{ "indicador": string, "classificacao": string, "significado": string, "base": string }],
   "interpretacao": string,
   "riscos": string[],
   "riscos_atencoes": string[],
@@ -228,7 +242,7 @@ Retorne APENAS JSON válido com este schema:
   "alertas": string[]
 }
 
-Não inclua perguntas para próxima consulta. Não inclua lista de referências na resposta. A versão_paciente deve ser curta, clara, sem tom alarmista e segura para ser exibida ao paciente.`;
+Não inclua perguntas para próxima consulta nem uma bibliografia separada. Cite no corpo apenas as fontes fornecidas que forem efetivamente aplicadas. A versão_paciente deve ser curta, clara, interpretativa, sem tom alarmista e segura para ser exibida ao paciente.`;
 
 export function promptAnamnese(ctx: PacienteContexto, dados: any) {
   const dadosRotulados = prepararAnamneseParaIA(dados);
@@ -355,6 +369,10 @@ export function promptFlexibilidade(ctx: PacienteContexto, dados: any) {
 }
 
 export function promptCardio(ctx: PacienteContexto, dados: any) {
+  const friend = dados?.referencia_friend;
+  const friendText = friend
+    ? `- Referencia FRIEND 2018: VO2 previsto ${friend.predictedVo2} ml/kg/min | percentual do previsto ${friend.percentPredicted ?? '-'}% | diferenca ${friend.difference ?? '-'} ml/kg/min | faixa aproximada ${friend.approximateBand?.min}-${friend.approximateBand?.max} ml/kg/min | modalidade ${friend.modality}\n- Nota FRIEND: percentual do previsto nao e percentil populacional; erro-padrao da estimativa 6,6 ml/kg/min.`
+    : '- Referencia FRIEND 2018: indisponivel (exige idade entre 20 e 85 anos, sexo, peso, estatura e teste em esteira ou cicloergometro).';
   return {
     system: SISTEMA_BASE(ctx),
     user: `Modulo: CARDIORRESPIRATORIO
@@ -375,31 +393,35 @@ Dados principais:
 - Zonas por FCmax (Z1-Z5): ${JSON.stringify(dados?.zonas ?? {})}
 - Zonas por limiar: ${JSON.stringify(dados?.zonas_limiar ?? [])}
 - Velocidades de treino: ${JSON.stringify(dados?.velocidades_treino ?? [])}
+- Comparacao normativa:
+${friendText}
 
-Interprete a capacidade CR considerando sexo, idade, protocolo e modalidade. Preserve a classificacao profissional informada; nao transforme o indice cardio MedFit em percentil ou norma. A recuperacao da FC e armazenada como variacao com sinal: valor negativo indica queda e valor positivo indica que a FC continuou subindo. Preserve o sinal e considere que qualquer corte depende do protocolo. Trate FCmax, VO2max e limiares como valores medidos quando registrados. Diferencie zonas genericas por percentual da FCmax das zonas de Joe Friel baseadas na frequencia cardiaca de limiar e respeite as faixas especificas da modalidade. Sugira uma semana tipica de treino alinhada ao objetivo, deixando claro que exige validacao profissional. Nao invente zonas nem extrapole valores ausentes.`
+Interprete a capacidade CR considerando sexo, idade, protocolo e modalidade. Quando a referencia FRIEND estiver disponivel, interprete o VO2 medido em relacao ao previsto e ao percentual do previsto, considerando a incerteza do modelo; nunca chame esse percentual de percentil. Preserve a classificacao profissional informada e nao transforme o indice cardio MedFit em percentil ou norma. A recuperacao da FC e armazenada como variacao com sinal: valor negativo indica queda e valor positivo indica que a FC continuou subindo. Preserve o sinal e considere que qualquer corte depende do protocolo. Trate FCmax, VO2max e limiares como valores medidos quando registrados. Diferencie zonas genericas por percentual da FCmax das zonas de Joe Friel baseadas na frequencia cardiaca de limiar e respeite as faixas especificas da modalidade. Sugira uma semana tipica de treino alinhada ao objetivo, deixando claro que exige validacao profissional. Nao invente zonas nem extrapole valores ausentes.`
   };
 }
 
 export function promptConclusao(ctx: PacienteContexto, modulos: {
-  scores?: any; analises?: Record<string, any>; selecionados?: SelecaoModulos; anthropometry?: any;
+  scores?: any; analises?: Record<string, any>; selecionados?: SelecaoModulos; anthropometry?: any; bodyComposition?: any;
 }) {
   return {
-    system: `Você sintetiza diagnósticos fisiometabólicos em uma conclusão executiva. Linguagem técnica clara, tom profissional e motivador.
+    system: `Você redige um relatorio global integrado da saude funcional e fisiometabolica do paciente. Linguagem tecnica clara, tom profissional, prudente e acolhedor.
 
 ${REGRAS_FORMULAS_IA}
+${REGRAS_INTERPRETACAO_IA}
 
 Paciente: ${ctx.nome}, ${ctx.sexo === 'M' ? 'masculino' : 'feminino'}, ${ctx.idade} anos.
 Objetivo: ${ctx.objetivo || 'não informado'}.
 
 Retorne APENAS JSON:
 {
+  "relatorio_global": string,
   "resumo_executivo": string,
   "pontos_fortes": string[],
   "pontos_criticos": string[],
   "prioridades": [{ "titulo": string, "acao": string, "prazo": string }],
   "mensagem_paciente": string
 }`,
-    user: `Referencias e limites obrigatorios:\n${referenciasParaIA(modulos.selecionados ?? {}, modulos.anthropometry)}\n\nIndices operacionais MedFit:\n${JSON.stringify(modulos.scores, null, 2)}\n\nAnálises:\n${JSON.stringify(modulos.analises, null, 2)}\n\nSintetize o quadro global sem tratar os indices como normas clinicas. Aponte recursos, pontos de atencao e indique 3 prioridades com prazo realista.`
+    user: `Referencias e limites obrigatorios:\n${referenciasParaIA(modulos.selecionados ?? {}, modulos.anthropometry)}\n\nComposicao corporal oficial para esta sintese:\n${JSON.stringify(modulos.bodyComposition ?? { percentual_gordura: null, fonte: 'indisponivel' }, null, 2)}\nRegra de precedencia: para percentual de gordura global, este bloco prevalece sobre qualquer valor ou texto divergente existente nas analises dos modulos.\n\nPontuacoes internas para priorizacao, sem citar nome ou escala no texto:\n${JSON.stringify(modulos.scores, null, 2)}\n\nEvidencias provenientes dos modulos, fornecidas apenas como materia-prima para integracao:\n${JSON.stringify(modulos.analises, null, 2)}\n\nEscreva relatorio_global em 4 a 7 paragrafos corridos, como uma avaliacao global da saude do paciente. Integre os dominios entre si e com o objetivo informado: estado fisiometabolico e composicao corporal; capacidade cardiorrespiratoria; funcao neuromuscular, forca e potencia; mobilidade, postura e biomecanica; fatores de protecao, pontos de atencao e repercussao funcional. Relacione achados convergentes ou discordantes e explique seu significado conjunto. Nao crie uma secao, paragrafo, lista ou frase para cada modulo. Nao use nomes de modulos como subtitulos e nao repita todos os numeros ja mostrados no laudo. Nao mencione pontuacoes internas nem escala de 0 a 100. Nao diagnostique doenca ou lesao. O resumo_executivo deve condensar a conclusao integrada em um unico paragrafo. Pontos fortes, pontos criticos e prioridades devem ser transversais, limitados aos aspectos realmente decisivos, sem inventario por exame.`
   };
 }
 
@@ -413,6 +435,11 @@ export function promptBioimpedancia(ctx: PacienteContexto, dados: any) {
         `- ${lb[k]}: Massa magra ${sm[k]?.kg ?? '—'} kg (${sm[k]?.pct ?? '—'}%) · Gordura ${sg[k]?.kg ?? '—'} kg (${sg[k]?.pct ?? '—'}%)`
       ).join('\n')
     : '';
+  const resumo = resumoInterpretativoBioimpedancia(dados);
+  const aguaProporcao = resumo.agua_corporal_percentual_peso == null
+    ? 'proporcao indisponivel'
+    : `${resumo.agua_corporal_percentual_peso}% do peso`;
+  const composicao = dados?._composicao_oficial ?? { percentual_gordura: null, fonte: 'indisponivel' };
   return {
     system: SISTEMA_BASE(ctx),
     user: `Módulo: BIOIMPEDÂNCIA — ${dados?.aparelho ?? 'Avabio 380'}
@@ -421,15 +448,23 @@ Referencias e limites obrigatorios:
 ${referenciasModulo('bioimpedancia')}
 
 Análise global:
-- Peso: ${dados?.peso_kg} kg · % Gordura: ${dados?.percentual_gordura}% · Massa de Gordura: ${dados?.massa_gordura_kg} kg
-- Massa Livre de Gordura (MLG): ${dados?.massa_livre_gordura_kg} kg · Água Corporal: ${dados?.agua_corporal_kg} kg · IMC: ${dados?.imc}
+- Peso: ${dados?.peso_kg} kg · Percentual de gordura oficial da antropometria: ${composicao.percentual_gordura ?? 'indisponivel'}%
+- Massa Livre de Gordura (MLG): ${dados?.massa_livre_gordura_kg} kg · Água Corporal: ${dados?.agua_corporal_kg ?? 'nao informada'} kg (${aguaProporcao}) · IMC: ${dados?.imc}
+- Regra da composicao: ${composicao.regra ?? 'Nao usar o percentual de gordura da bioimpedancia como percentual global.'}
 
 Dados adicionais:
 - TMB: ${dados?.taxa_metabolica_basal_kcal} kcal · Índice Apendicular: ${dados?.indice_apendicular} · Idade Metabólica: ${dados?.idade_metabolica} anos
 - Gordura Visceral (nível): ${dados?.gordura_visceral_nivel}
 ${segTexto}
+Resumo calculado para interpretacao:
+${JSON.stringify(resumo, null, 2)}
 
-Analise criticamente a composição corporal considerando sexo e idade. Interprete o índice apendicular (ASMI — massa muscular apendicular/estatura²) como marcador de sarcopenia. Avalie gordura visceral e riscos metabólicos. Analise assimetrias D/E e desequilíbrio tronco/membros na distribuição segmentar. Dê recomendações de treinamento e nutrição baseadas nos dados.`
+Prioridade obrigatoria da analise:
+1. Agua corporal: interprete quantidade e proporcao do peso, mas nao diagnostique desidratacao, hiper-hidratacao ou edema sem faixa validada do aparelho, preparo padronizado e, quando aplicavel, compartimentos intra/extra-celulares.
+2. Assimetrias: interprete separadamente bracos e pernas, massa magra e gordura. Use as diferencas calculadas como descricao, sem criar corte universal ou inferir lesao.
+3. Depois, contextualize o percentual de gordura antropometrico, gordura visceral, massa livre de gordura e demais indicadores. O percentual global e a massa de gordura derivados pela bioimpedancia nao substituem a antropometria.
+
+O ASMI e a massa muscular sao marcadores complementares: nao diagnostique sarcopenia por bioimpedancia isolada; relacione com forca e desempenho quando disponiveis. Explique o que esta adequado, baixo, elevado ou apenas descritivo e indique explicitamente a referencia ou tabela compativel usada. Dê recomendações gerais de treinamento e nutrição, sem prescricao individual.`
   };
 }
 
@@ -457,6 +492,8 @@ export function promptEvolucao(ctx: PacienteContexto, historico: any[], anthropo
   return {
     system: `Você analisa EVOLUÇÃO LONGITUDINAL. Identifica tendências, progressos, regressões e emite alertas.
 
+${REGRAS_INTERPRETACAO_IA}
+
 Paciente: ${ctx.nome}, ${ctx.sexo === 'M' ? 'masculino' : 'feminino'}, ${ctx.idade} anos.
 
 Referencias e limites obrigatorios:
@@ -471,7 +508,7 @@ Retorne APENAS JSON:
   "interpretacao": string,
   "proximos_passos": string[]
 }`,
-    user: `Histórico (ordem cronológica antigo→recente):\n${JSON.stringify(historico, null, 2)}\n\nAnalise a evolução.`
+    user: `Histórico (ordem cronológica antigo→recente):\n${JSON.stringify(historico, null, 2)}\n\nAnalise a evolução. Diferencie variacao numerica de mudanca clinicamente interpretavel e cite a base fornecida quando aplicar classificacao ou relevancia.`
   };
 }
 
@@ -494,16 +531,20 @@ export function promptBiomecanica(ctx: PacienteContexto, dados: any) {
 Paciente: ${ctx.nome}, ${ctx.sexo === 'M' ? 'masculino' : 'feminino'}, ${ctx.idade} anos.
 Velocidade de corrida: ${dados.velocidade_kmh ?? '-'} km/h.
 
+${REGRAS_INTERPRETACAO_IA}
+
 Use exclusivamente as faixas ideal_min/ideal_max recebidas em cada angulo. Nao invente nem substitua referencias numericas.
 
 Retorne APENAS JSON valido:
 {
   "achados": string[],
+  "classificacoes": [{ "indicador": string, "classificacao": string, "significado": string, "base": string }],
   "interpretacao": string,
   "riscos": string[],
   "beneficios": string[],
   "recomendacoes": string[],
-  "alertas": string[]
+  "alertas": string[],
+  "versao_paciente": string
 }` ,
     user: `Referencias e limites obrigatorios:
 ${referenciasModulo('biomecanica_corrida')}
@@ -523,6 +564,6 @@ ${achados.deslocamento_cg ? 'Deslocamento do centro de gravidade' : ''}
 ${achados.ineficiencia_propulsiva ? 'Ineficiencia propulsiva' : ''}
 ${achados.observacoes ? 'Observacoes: ' + achados.observacoes : ''}
 
-Emita analise clinica detalhada.`
+Emita analise clinica detalhada. Classifique somente os angulos com faixa compativel recebida, explique o significado funcional e produza versao_paciente interpretativa.`
   };
 }

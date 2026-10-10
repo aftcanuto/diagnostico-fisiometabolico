@@ -235,7 +235,7 @@ export default async function PacienteDashboardPage(props: { params: Promise<{ i
                   <div className="font-medium text-slate-800">
                     {dataLongaBR(a.data)}
                   </div>
-                  <div className="text-xs text-slate-400 mt-0.5">{a.tipo} · Índice MedFit global: {a.scores?.[0]?.global ?? '—'}</div>
+                  <div className="text-xs text-slate-400 mt-0.5">{a.tipo} · Resultado global: {a.scores?.[0]?.global ?? '—'}</div>
                 </div>
                 <form action={`/api/avaliacoes/${a.id}/reabrir`} method="POST">
                   <button type="submit" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition">

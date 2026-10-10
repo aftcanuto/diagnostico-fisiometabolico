@@ -52,6 +52,7 @@ const ANALISE_JSON_TOOL = {
     additionalProperties: true,
     properties: {
       resumo_clinico: { type: 'string' },
+      relatorio_global: { type: 'string' },
       resumo_executivo: { type: 'string' },
       interpretacao: { type: 'string' },
       achados: { type: 'array', items: { type: 'string' } },

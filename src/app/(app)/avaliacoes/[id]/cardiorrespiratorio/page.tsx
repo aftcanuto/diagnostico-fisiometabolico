@@ -9,6 +9,8 @@ import { buscarModulo, upsertModulo } from '@/lib/modulos';
 import { useAutoSave } from '@/lib/useAutoSave';
 import { createClient } from '@/lib/supabase/client';
 import { zonasTreinamento } from '@/lib/calculations/cardio';
+import { calcIdade } from '@/lib/calculations/antropometria';
+import { friendComparisonFromAssessment, friendInterpretationLabel, normalizeFriendModality } from '@/lib/calculations/friend';
 import { Plus, Trash2 } from 'lucide-react';
 import { buildSteps } from '@/lib/steps';
 
@@ -54,6 +56,7 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const supabase = createClient();
   const [aval, setAval] = useState<any>(null);
+  const [bodyContext, setBodyContext] = useState<{ anthropometry: any; bioimpedance: any }>({ anthropometry: null, bioimpedance: null });
 
   // Campos básicos
   const [form, setForm] = useState({
@@ -83,8 +86,13 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   const upd = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   useEffect(() => { (async () => {
-    const { data: av } = await supabase.from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single();
+    const [{ data: av }, { data: anthropometry }, { data: bioimpedance }] = await Promise.all([
+      supabase.from('avaliacoes').select('*, pacientes(*)').eq('id', params.id).single(),
+      supabase.from('antropometria').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+      supabase.from('bioimpedancia').select('*').eq('avaliacao_id', params.id).maybeSingle(),
+    ]);
     setAval(av);
+    setBodyContext({ anthropometry, bioimpedance });
     const d = await buscarModulo('cardiorrespiratorio', params.id);
     if (d) {
       setForm(f => ({
@@ -122,6 +130,16 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
   const num = (v: string) => v !== '' ? parseFloat(v) : null;
   const fcMaxUsada = Number(form.fc_max) || null;
   const zonasCalc = useMemo(() => fcMaxUsada ? zonasTreinamento(fcMaxUsada) : null, [fcMaxUsada]);
+  const friend = useMemo(() => {
+    if (!aval?.pacientes?.data_nascimento || !aval?.pacientes?.sexo) return null;
+    return friendComparisonFromAssessment({
+      cardio: { protocolo: form.protocolo, vo2max: num(form.vo2max) },
+      anthropometry: bodyContext.anthropometry,
+      bioimpedance: bodyContext.bioimpedance,
+      age: calcIdade(aval.pacientes.data_nascimento, new Date(`${aval.data}T12:00:00`)),
+      sex: aval.pacientes.sexo,
+    });
+  }, [aval, bodyContext, form.protocolo, form.vo2max]);
   const autoSaveValue = { form, recFC, zonasPct, velTreino, zonasLimiar, zonasCalc };
 
   const salvar = async (v = autoSaveValue) => {
@@ -212,6 +230,25 @@ export default function CardioPage(props: { params: Promise<{ id: string }> }) {
                 <Input type="text" placeholder="Preencher conforme protocolo e referência adotados" value={form.classificacao_vo2} onChange={upd('classificacao_vo2')} />
               </Field>
             </div>
+            {friend && (
+              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                <div className="text-sm font-semibold text-emerald-900">Comparacao FRIEND 2018</div>
+                <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <div><div className="text-xs text-emerald-700">VO2 previsto</div><div className="font-bold text-slate-900">{friend.predictedVo2} ml/kg/min</div></div>
+                  <div><div className="text-xs text-emerald-700">Percentual do previsto</div><div className="font-bold text-slate-900">{friend.percentPredicted != null ? `${friend.percentPredicted}%` : '-'}</div></div>
+                  <div><div className="text-xs text-emerald-700">Faixa aproximada</div><div className="font-bold text-slate-900">{friend.approximateBand.min}-{friend.approximateBand.max}</div></div>
+                  <div><div className="text-xs text-emerald-700">Modalidade</div><div className="font-bold text-slate-900">{friend.modality === 'treadmill' ? 'Esteira' : 'Cicloergometro'}</div></div>
+                </div>
+                {friendInterpretationLabel(friend.interpretation) && <p className="mt-3 text-xs font-medium text-emerald-900">{friendInterpretationLabel(friend.interpretation)}</p>}
+                <p className="mt-2 text-xs text-emerald-800">Percentual do previsto nao e percentil populacional. Equacao valida para 20-85 anos; erro-padrao da estimativa: 6,6 ml/kg/min.</p>
+              </div>
+            )}
+            {!friend && normalizeFriendModality(form.protocolo) && (
+              <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">A comparacao FRIEND exige idade entre 20 e 85 anos, sexo, peso e estatura registrados na antropometria ou bioimpedancia.</p>
+            )}
+            {!normalizeFriendModality(form.protocolo) && (
+              <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">A equacao FRIEND 2018 disponivel e especifica para esteira e cicloergometro; nao sera extrapolada para este protocolo.</p>
+            )}
           </CardBody>
         </Card>
 

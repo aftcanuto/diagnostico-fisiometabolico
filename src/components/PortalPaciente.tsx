@@ -17,7 +17,8 @@ import { isAnthropometryV2 } from '@/lib/anthropometry-record';
 import AnthropometryResults from '@/components/AnthropometryResults';
 import { labelEsporteForca, labelFinalidadeForca, labelLadoDominante } from '@/lib/forcaContext';
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
-import { INDICE_MEDFIT_AVISO } from '@/lib/clinical/formulas';
+import { resumoInterpretativoBioimpedancia } from '@/lib/clinical/bioimpedance';
+import { friendComparisonFromAssessment, friendInterpretationLabel } from '@/lib/calculations/friend';
 
 interface Props {
   paciente: { nome:string; sexo:'M'|'F'; data_nascimento:string; cpf?:string|null };
@@ -356,6 +357,8 @@ function textoAnalise(v:any): string {
     v.texto_paciente_editado,
     v.texto_pdf_editado,
     v.texto_pdf,
+    v.relatorio_global,
+    v.sintese_integrada,
     v.versao_pdf,
     v.versao_paciente,
     v.mensagem_paciente,
@@ -370,7 +373,7 @@ function textoAnalise(v:any): string {
   }
   const conteudo=v.conteudo;
   if(conteudo&&typeof conteudo==='object'){
-    const texto = [conteudo.versao_pdf, conteudo.versao_paciente, conteudo.mensagem_paciente]
+    const texto = [conteudo.relatorio_global, conteudo.sintese_integrada, conteudo.versao_pdf, conteudo.versao_paciente, conteudo.mensagem_paciente]
       .find((item:any)=>typeof item==='string'&&item.trim());
     if(texto)return String(texto).trim();
   }
@@ -630,9 +633,17 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const ffmiFallback=mlg&&alturaCalculada?+(Number(mlg)/((Number(alturaCalculada)/100)**2)).toFixed(1):null;
   const ffmiValor=typeof ffmiRaw==='number'?ffmiRaw:(ffmiRaw?.ffmiNorm??ffmiRaw?.ffmi??ffmiFallback);
   const vo2=atual.cardiorrespiratorio?.vo2max;
+  const friend=friendComparisonFromAssessment({
+    cardio:atual.cardiorrespiratorio,
+    anthropometry:atual.antropometria,
+    bioimpedance:(atual as any).bioimpedancia,
+    age:calcIdade(paciente.data_nascimento,new Date(`${atual.data}T12:00:00`)),
+    sex:paciente.sexo,
+  });
   const sv=atual.sinais_vitais as any;
   const anamnese=(atual as any).anamnese as any;
   const bioImp=(atual as any).bioimpedancia as any;
+  const resumoBio = resumoInterpretativoBioimpedancia(bioImp);
   const flex=atual.flexibilidade as any;
   const post=atual.posturografia as any;
   const idadePaciente=calcIdade(paciente.data_nascimento);
@@ -760,19 +771,22 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const anamneseFull=anamneseItems.filter(i=>anamneseFullLabels.includes(i.label));
   const anamneseRest=anamneseItems.filter(i=>!anamneseTopLabels.includes(i.label)&&!anamneseFullLabels.includes(i.label));
   const modulosAnalise=[
-    ['anamnese','Anamnese'],['sinais_vitais','Sinais vitais'],['posturografia','Posturografia'],
-    ['termografia','Termografia funcional'],
-    ['jump_test','Jump Test'],
-    ['bioimpedancia','Bioimpedância'],['antropometria','Antropometria'],['flexibilidade','Flexibilidade'],
+    ['anamnese','Anamnese'],['sinais_vitais','Sinais vitais'],['bioimpedancia','Bioimpedância'],
+    ['posturografia','Posturografia'],['termografia','Termografia funcional'],
+    ['antropometria','Antropometria'],['jump_test','Jump Test'],['flexibilidade','Flexibilidade'],
     ['forca','Força'],['rml','RML'],['cardiorrespiratorio','Cardiorrespiratório'],
     ['biomecanica_corrida','Biomecânica da corrida'],['conclusao_global','Conclusão global'],
   ] as const;
-  const analisesPaciente=modulosAnalise
-    .map(([k,label])=>({k,label,texto:textoAnalise((atual as any).analises_ia?.[k])}))
-    .filter(i=>i.texto);
-  const planoAcaoPaciente=textoPlanoAcao((atual as any).analises_ia?.conclusao_global);
   const modulosReferencias = modulosDaAvaliacao(atual);
   const referencias = referenciasAvaliacao(modulosReferencias, atual.antropometria);
+  const analisesPaciente=modulosAnalise
+    .map(([k,label])=>({
+      k,label,
+      texto:textoAnalise((atual as any).analises_ia?.[k]),
+      referencias:k==='conclusao_global'?[]:referencias.filter(ref=>ref.modulos.includes(k as any)),
+    }))
+    .filter(i=>i.texto);
+  const planoAcaoPaciente=textoPlanoAcao((atual as any).analises_ia?.conclusao_global);
   const segs=[
     {k:'braco_dir',l:'Braço direito'},
     {k:'braco_esq',l:'Braço esquerdo'},
@@ -873,7 +887,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       </div>
 
       {/* 2. RESULTADO GERAL */}
-      <Secao ordem={10} titulo="Seu resultado geral" sub="Índices MedFit de 0 a 100 para acompanhamento longitudinal">
+      <Secao ordem={10} titulo="Seu resultado geral" sub="Síntese das capacidades avaliadas e acompanhamento longitudinal">
         {/* Painel premium claro com card global em destaque */}
         <div style={{background:'linear-gradient(180deg,#ffffff,#f8fafc)',borderRadius:24,padding:18,
           border:'1px solid #dbe7e2',boxShadow:'0 24px 60px rgba(15,23,42,0.10)'}}>
@@ -884,7 +898,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               background:'linear-gradient(180deg,#ffffff,#f8fafc)',color:'#0f172a',
               border:'1px solid #dbeafe',boxShadow:'0 18px 42px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.9)'}}>
               <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-                <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.4,color:'#64748b',marginBottom:2}}>Índice MedFit global</div>
+                <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.4,color:'#64748b',marginBottom:2}}>Resultado global</div>
                 <div style={{background:'linear-gradient(180deg,#fff,#f8fafc)',borderRadius:16,padding:'8px 8px 10px',width:'100%',
                   border:'1px solid #edf2f7',boxShadow:'inset 0 1px 0 rgba(255,255,255,.8), 0 12px 28px rgba(15,23,42,.08)'}}>
                   <GaugePremium value={sc.global??null} size={260}/>
@@ -946,7 +960,6 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               </div>
             ))}
           </div>
-          <p style={{fontSize:10,color:'#64748b',lineHeight:1.45,margin:'12px 0 0',textAlign:'center'}}>{INDICE_MEDFIT_AVISO}</p>
         </div>
       </Secao>
 
@@ -1145,6 +1158,26 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 3b. BIOIMPEDÂNCIA DETALHADA */}
       {bioImp&&(
         <Secao ordem={25} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar" score={sc.composicao_corporal}>
+          {(resumoBio.agua_corporal_kg!=null||resumoBio.agua_corporal_percentual_peso!=null||resumoBio.assimetrias.length>0)&&(
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,280px),1fr))',gap:14,marginBottom:14}}>
+              {(resumoBio.agua_corporal_kg!=null||resumoBio.agua_corporal_percentual_peso!=null)&&<Card>
+                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 10px'}}>Água corporal</h3>
+                <div style={{display:'flex',alignItems:'baseline',gap:8}}>
+                  {resumoBio.agua_corporal_kg!=null&&<strong style={{fontSize:24,color:'#0284c7'}}>{resumoBio.agua_corporal_kg} kg</strong>}
+                  {resumoBio.agua_corporal_percentual_peso!=null&&<span style={{fontSize:13,color:'#475569'}}>{resumoBio.agua_corporal_kg!=null?'(':''}{resumoBio.agua_corporal_percentual_peso}% do peso{resumoBio.agua_corporal_kg!=null?')':''}</span>}
+                </div>
+                <p style={{fontSize:11,lineHeight:1.55,color:'#64748b',margin:'10px 0 0'}}>A interpretação depende da faixa do equipamento, do preparo e do equilíbrio de fluidos. Este valor isolado não diagnostica hidratação.</p>
+              </Card>}
+              {resumoBio.assimetrias.length>0&&<Card>
+                <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 10px'}}>Assimetrias segmentares</h3>
+                <div style={{display:'grid',gap:7}}>{resumoBio.assimetrias.map(item=><div key={`${item.componente}-${item.segmento}`} style={{fontSize:11,lineHeight:1.45,color:'#334155',display:'flex',justifyContent:'space-between',gap:12}}>
+                  <span>{item.componente} · {item.segmento}</span>
+                  <strong style={{whiteSpace:'nowrap'}}>{item.assimetria_percentual}% · {item.maior_lado}</strong>
+                </div>)}</div>
+                <p style={{fontSize:11,lineHeight:1.55,color:'#64748b',margin:'10px 0 0'}}>Comparação descritiva entre lados; não há corte universal nem inferência isolada de lesão.</p>
+              </Card>}
+            </div>
+          )}
           <Card style={{marginBottom:14}}>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,118px),1fr))',gap:8}}>
               {bioImp.aparelho&&<Metrica label="Aparelho" valor={bioImp.aparelho}/>}
@@ -1267,6 +1300,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,230px),1fr))',gap:8}}>
                 {vo2!=null&&<MetricaHorizontal label="VO2máx" valor={vo2} un="ml/kg/min" cor="#10b981"
                   d={dlt(vo2,ant?.cardiorrespiratorio?.vo2max)} dBoa="subir"/>}
+                {friend&&<MetricaHorizontal label="VO2 previsto FRIEND" valor={friend.predictedVo2} un="ml/kg/min" cor="#047857"/>}
+                {friend?.percentPredicted!=null&&<MetricaHorizontal label="Percentual do previsto" valor={friend.percentPredicted} un="%" cor="#047857"/>}
                 {atual.cardiorrespiratorio?.classificacao_vo2&&<MetricaHorizontal label="Classificação" valor={atual.cardiorrespiratorio.classificacao_vo2}/>}
                 {atual.cardiorrespiratorio?.fc_limiar!=null&&<MetricaHorizontal label="FC limiar" valor={atual.cardiorrespiratorio.fc_limiar} un="bpm" cor="#f59e0b"/>}
                 {atual.cardiorrespiratorio?.fc_max!=null&&<MetricaHorizontal label="FC máxima" valor={atual.cardiorrespiratorio.fc_max} un="bpm" cor="#f87171"/>}
@@ -1278,6 +1313,11 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 <div style={{marginTop:10,padding:'11px 13px',borderRadius:10,background:'#f8fafc',border:'1px solid #f1f5f9'}}>
                   <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Protocolo</div>
                   <div style={{fontSize:14,fontWeight:600,color:'#0f172a',lineHeight:1.35}}>{atual.cardiorrespiratorio.protocolo}</div>
+                </div>
+              )}
+              {friend&&(
+                <div style={{marginTop:10,padding:'11px 13px',borderRadius:10,background:'#ecfdf5',border:'1px solid #a7f3d0',fontSize:11,color:'#065f46',lineHeight:1.5}}>
+                  {friendInterpretationLabel(friend.interpretation)??'Referência FRIEND calculada'} · faixa aproximada {friend.approximateBand.min}-{friend.approximateBand.max} ml/kg/min. Percentual do previsto não é percentil populacional.
                 </div>
               )}
             </Card>
@@ -1683,7 +1723,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
                   {[
                     {
-                      nome:'Índice MedFit global',
+                      nome:'Resultado global',
                       pontos:hist.series.scoreGlobal,
                       cor:'#10b981',
                       escopo:'Integra os módulos disponíveis',
@@ -1694,28 +1734,28 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                       pontos:hist.series.scorePostura,
                       cor:'#60a5fa',
                       escopo:'Achados posturais e alinhamento',
-                      leitura:'Indice operacional postural 0-100 calculado a partir dos achados da posturografia.',
+                      leitura:'Sintese dos achados registrados na posturografia.',
                     },
                     {
                       nome:'Composição',
                       pontos:hist.series.scoreComposicao,
                       cor:'#f59e0b',
                       escopo:'Gordura, massa magra, IMC e RCQ',
-                      leitura:'Indice operacional composto 0-100; os valores brutos ficam em % gordura, kg e medidas corporais.',
+                      leitura:'Sintese conjunta; os valores brutos ficam em % gordura, kg e medidas corporais.',
                     },
                     {
                       nome:'Força',
                       pontos:hist.series.scoreForca,
                       cor:'#8b5cf6',
                       escopo:'Preensão, dinamometria e assimetria',
-                      leitura:'Score de força 0-100; não representa kgf ou kg isoladamente.',
+                      leitura:'Sintese da capacidade de força; não representa kgf ou kg isoladamente.',
                     },
                     {
                       nome:'Cardio',
                       pontos:hist.series.scoreCardio,
                       cor:'#ef4444',
                       escopo:'VO2máx, FC e zonas de treino',
-                      leitura:'Score cardiorrespiratório 0-100; BPM e VO2máx aparecem nos blocos específicos.',
+                      leitura:'Sintese cardiorrespiratória; BPM e VO2máx aparecem nos blocos específicos.',
                     },
                   ].map(({nome,pontos,cor,escopo,leitura})=>(
                     <div key={nome} style={{background:'linear-gradient(180deg,#ffffff,#f8fafc)',borderRadius:16,
@@ -1728,7 +1768,6 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
                         <div style={{width:34,height:6,borderRadius:999,background:cor,boxShadow:`0 8px 18px ${cor}45`}}/>
                       </div>
                       <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10}}>
-                        <span style={{fontSize:10,fontWeight:600,color:'#334155',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Índice MedFit 0-100</span>
                         <span style={{fontSize:10,fontWeight:700,color:'#64748b',background:'#ffffff',border:'1px solid #e2e8f0',borderRadius:999,padding:'4px 8px'}}>Evolução longitudinal</span>
                       </div>
                       <div style={{fontSize:11,color:'#64748b',lineHeight:1.45,marginBottom:8}}>{leitura}</div>
@@ -1835,9 +1874,14 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
           <Card>
             <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8}}>
               {analisesPaciente.map(a=>(
-                <div key={a.k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
+                <div key={a.k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,flexWrap:'wrap',
                   padding:'11px 13px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{a.label}</div>
+                  <div style={{minWidth:150}}>
+                    <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{a.label}</div>
+                    {a.referencias.length>0&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4}}>
+                      {a.referencias.map((ref,index)=><a key={ref.id} href={ref.url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:'#047857',textDecoration:'underline'}}>Base {index+1}</a>)}
+                    </div>}
+                  </div>
                   <div style={{display:'flex',alignItems:'center',gap:8,minWidth:0,flex:1,justifyContent:'flex-end'}}>
                     <span style={{fontSize:12,color:'#64748b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(520px,60vw)'}}>
                       {a.texto}

@@ -73,7 +73,8 @@ export function calculateAnthropometry(raw:AnthropometryInput, context:Calculati
   add('correctedGirthSum5','Somatorio de cinco perimetros (quatro corrigidos)','cm','indices',girths,v => girths.reduce((s,key) => s+v[key],0));
   add('bmi','IMC','kg/m2','indices',['mass','height'],v => v.mass/(v.height/100)**2);
   add('waistHipRatio','Relacao cintura/quadril','razao','indices',['waist','hip'],v => v.waist/v.hip);
-  add('waistHeightRatio','Relacao cintura/estatura','razao','indices',['waist','height'],v => v.waist/v.height);
+  add('waistHeightRatio','Relacao cintura minima/estatura','razao','indices',['waist','height'],v => v.waist/v.height,
+    {extra:{measurementSite:'Cintura minima ISAK; razao descritiva, sem cortes absolutos de cintura da OMS'}});
   add('cormicIndex','Indice cormico','%','indices',['sittingHeight','height'],v => 100*v.sittingHeight/v.height);
   add('armSpanHeightRatio','Relacao envergadura/estatura','razao','indices',['armSpan','height'],v => v.armSpan/v.height);
   add('hwr','Indice ponderal HWR','cm/kg^(1/3)','indices',['height','mass'],v => v.height/Math.cbrt(v.mass));
@@ -151,7 +152,6 @@ export function calculateAnthropometry(raw:AnthropometryInput, context:Calculati
     const bmi = bmiClass.value;
     bmiClass.classification = bmi < 18.5 ? 'Baixo peso' : bmi < 25 ? 'Faixa de referencia' : bmi < 30 ? 'Sobrepeso' : bmi < 35 ? 'Obesidade I' : bmi < 40 ? 'Obesidade II' : 'Obesidade III';
   }
-  add('waistClassification','Classificacao de cintura - OMS','cm','waistWHO',[],() => null,{block:{status:'missing',reason:'Cintura minima ISAK nao corresponde ao ponto medio costela-crista da OMS; sem medida complementar no strict26'}});
   add('basalEnergy','Metabolismo basal estimado - Harris-Benedict','kcal/dia','harrisBenedict1919',['mass','height'],v => context.sex === 'M' ? 66.473+13.7516*v.mass+5.0033*v.height-6.755*age! : 655.0955+9.5634*v.mass+1.8496*v.height-4.6756*age!,{review:'Modelo historico: revisar aplicabilidade individual; nao calorimetria'+(age !== null && age < 18 ? '; menor de idade fora da aplicacao adulta habitual' : ''),block:sexBlock ?? ageBlock,extra:{age,sex:context.sex}});
   add('totalEnergy','Cenario de gasto energetico total','kcal/dia','harrisBenedict1919',['basalEnergy'],v => v.basalEnergy*input.activityFactor!,{block:input.activityFactor === null ? {status:'missing',reason:'Fator de atividade nao informado'} : input.activityFactor <= 0 ? {status:'invalid',reason:'Fator de atividade deve ser positivo'} : !input.activityJustification.trim() ? {status:'missing',reason:'Registrar justificativa do fator de atividade'} : undefined,extra:{activityFactor:input.activityFactor,activityJustification:input.activityJustification}});
   const goalBlock = (goal:number|null,percent=false) => goal === null ? {status:'missing' as const,reason:'Meta nao definida pelo profissional'} : goal <= 0 || percent && goal >= 100 ? {status:'invalid' as const,reason:'Meta fora do dominio permitido'} : undefined;

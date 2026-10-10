@@ -3,8 +3,31 @@ import { numeroClinico } from '@/lib/forcaPreensao';
 
 export type FonteGorduraRelatorio = 'antropometria' | 'bioimpedancia' | 'maior' | 'menor' | 'manual';
 
+export function percentualGorduraAntropometria(antropometria: any): number | null {
+  const projetado = numeroClinico(antropometria?.percentual_gordura);
+  if (projetado != null) return projetado;
+  if (antropometria?.registro_v2?.version !== 2) return null;
+  const resultado = antropometria?.resultados_v2?.results?.find((item: any) =>
+    item?.id === 'fatPercent' && item?.selected === true && item?.status === 'available'
+  );
+  return numeroClinico(resultado?.value);
+}
+
+export function composicaoOficialParaIA(antropometria: any, bioimpedancia?: any) {
+  const percentual = percentualGorduraAntropometria(antropometria);
+  return {
+    percentual_gordura: percentual,
+    fonte: percentual != null ? 'antropometria' as const : 'indisponivel' as const,
+    metodo: antropometria?.resultados_v2?.results?.find((item: any) =>
+      item?.id === 'fatPercent' && item?.selected === true && item?.status === 'available'
+    )?.label ?? null,
+    percentual_bioimpedancia_excluido: numeroClinico(bioimpedancia?.percentual_gordura) != null,
+    regra: 'O percentual de gordura global da IA vem exclusivamente da antropometria. Nao substituir pela bioimpedancia.',
+  };
+}
+
 export function resolverPercentualGordura(avaliacao: any, antropometria: any, bioimpedancia: any) {
-  const ant = numeroClinico(antropometria?.percentual_gordura);
+  const ant = percentualGorduraAntropometria(antropometria);
   const bio = numeroClinico(bioimpedancia?.percentual_gordura);
   if (antropometria?.registro_v2?.version === 2) return {
     valor: ant, fonte: 'antropometria' as const, fonteDefinida: true,

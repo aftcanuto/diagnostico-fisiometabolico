@@ -203,6 +203,9 @@ function AnaliseConteudo({ a }: { a: any }) {
   const c = a.conteudo || {};
   return (
     <div className="mt-3 space-y-2 text-sm">
+      {c.relatorio_global && (
+        <div className="rounded bg-brand-50 p-3 text-slate-700 whitespace-pre-wrap"><b>Relatório global:</b> {'\n'}{c.relatorio_global}</div>
+      )}
       {c.resumo_executivo && (
         <div className="rounded bg-brand-50 p-2 text-slate-700"><b>Resumo:</b> {c.resumo_executivo}</div>
       )}
@@ -308,6 +311,8 @@ function renderizarTextoBase(c: any): string {
   if (!c) return '';
   if (typeof c === 'string') return c;
   if (c.texto) return c.texto;
+  if (c.relatorio_global) return c.relatorio_global;
+  if (c.sintese_integrada) return c.sintese_integrada;
   const partes: string[] = [];
   if (c.resumo_executivo) partes.push('RESUMO:\n' + c.resumo_executivo);
   if (c.resumo_clinico) partes.push('RESUMO CLÍNICO:\n' + c.resumo_clinico);

@@ -5,8 +5,8 @@ export function deepFreeze<T>(value: T): T {
   }
   return value;
 }
-export const ENGINE_VERSION = 'anthropometry-2.2.0' as const;
-export const CATALOG_VERSION = 'medfit-strict26-2026-10-09.3' as const;
+export const ENGINE_VERSION = 'anthropometry-2.2.1' as const;
+export const CATALOG_VERSION = 'medfit-strict26-2026-10-09.4' as const;
 const definitions = [
   ['mass','Massa corporal','kg','basic','Balanca calibrada; vestimenta minima'],
   ['height','Estatura','cm','basic','Vertex ao solo; plano de Frankfurt'],
@@ -97,7 +97,7 @@ export const METHODS: readonly Method[] = deepFreeze([
   method('siri1961','Gordura quimica - Siri, 1961',['SIRI_1961'],['density','mass'],'%=495/DC-450; gordura=M*%/100; MLG=M-gordura','Modelo bicompartimental densitometrico','Depende de densidade estimada por equacao compativel; nao equivale a DXA'),
   method('mirwald2002','Maturacao estimada - Mirwald, 2002',['MIRWALD_2002','KOZIEL_MALINA_2018'],['height','sittingHeight','mass','age','sex'],'CMI=H-AS;R=100*M/H; M:-9.236+.0002708*CMI*AS-.001663*idade*CMI+.007216*idade*AS+.02292*R; F:-9.376+.0001882*CMI*AS+.0022*idade*CMI+.005841*idade*AS-.002658*idade*M+.07693*R','8-16 anos','Limitacoes individuais mesmo dentro da faixa; nao idade ossea'),
   method('bmiWHO','Classificacao IMC - OMS, 2000',['OMS_2000'],['bmi','age','pregnant'],'<18.5 baixo;<25 referencia;<30 sobrepeso;<35 I;<40 II;>=40 III','Adultos nao gestantes','Nao aplicar limites adultos a criancas'),
-  method('waistWHO','Cintura - OMS, 2011',['OMS_CINTURA_2011'],['cintura ponto medio ausente'],'M 94/102 cm; F 80/88 cm','Adultos europideos; referencia escolhida','Cintura minima nao substitui cintura no ponto medio'),
+  method('waistWHO','Cintura absoluta - OMS, 2011 (legado incompativel)',['OMS_CINTURA_2011'],['cintura no ponto medio ausente'],'M 94/102 cm; F 80/88 cm','Adultos europideos; referencia escolhida','Metodo preservado apenas para ler selecoes antigas; a cintura minima ISAK nao recebe estes cortes'),
   method('dubois1916','Superficie corporal - Du Bois, 1916',['DUBOIS_1916'],['mass','height'],'.007184*M_kg^.425*H_cm^.725','Modelo empirico historico','Estimativa de superficie'),
   method('harrisBenedict1919','Energia - Harris-Benedict original, 1919',['HARRIS_BENEDICT_1919'],['mass','height','age','sex'],'M:66.473+13.7516*M+5.0033*H-6.755*idade; F:655.0955+9.5634*M+1.8496*H-4.6756*idade; GET=TMB*FA','Modelo historico','Revisar aplicabilidade; nao calorimetria'),
   method('scenarios','Cenarios definidos pelo profissional',[],['metas e par de metodos explicitos'],'M_alvo=MLG/(1-%alvo/100); musculo_alvo=IMO_alvo*osso; M_alvo_IMC=IMC_alvo*H_m^2','Identidades algebricas','Nao previsao de resposta; nao peso ideal'),

@@ -97,6 +97,15 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     "nota": "Exemplo de saltos repetidos de 15 segundos, nao tabela normativa nem validacao do algoritmo de potencia do equipamento."
   },
   {
+    "id": "kyle-bia-principles",
+    "texto": "Kyle UG et al. Bioelectrical impedance analysis-part I: review of principles and methods. Clin Nutr. 2004;23(5):1226-1243. doi:10.1016/j.clnu.2004.06.004.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/15380917/",
+    "modulos": [
+      "bioimpedancia"
+    ],
+    "nota": "Fundamentos e limites metodologicos da bioimpedancia; a interpretacao depende de equacao validada, populacao e estado de hidratacao."
+  },
+  {
     "id": "kyle-bia",
     "texto": "Kyle UG et al. Bioelectrical impedance analysis-part II: utilization in clinical practice. Clin Nutr. 2004. doi:10.1016/j.clnu.2004.09.012.",
     "url": "https://pubmed.ncbi.nlm.nih.gov/15556267/",
@@ -258,7 +267,7 @@ export const REFERENCIAS: readonly ReferenciaClinica[] = [
     "modulos": [
       "cardiorrespiratorio"
     ],
-    "nota": "A referencia prevista depende de idade, sexo, peso, estatura e modalidade; a classificacao operacional legada do app nao equivale a percentil FRIEND."
+    "nota": "A equacao estima o VO2max esperado a partir de idade, sexo, peso, estatura e modalidade (esteira ou cicloergometro). A comparacao e expressa como percentual do previsto, nao como percentil populacional; erro-padrao da estimativa de 6,6 ml/kg/min."
   },
   {
     "id": "novacheck",

@@ -161,14 +161,14 @@ export function renderEvolutionReportHTML(data: EvolutionReportData) {
 
   const primary = data.clinica?.cor_primaria || '#059669';
   const metrics = [
-    { group: 'Resultado', label: 'Indice MedFit global', before: anterior.scores?.global, after: atual.scores?.global, digits: 0 },
+    { group: 'Resultado', label: 'Resultado global', before: anterior.scores?.global, after: atual.scores?.global, digits: 0 },
     { group: 'Composição', label: 'Peso corporal', before: peso(anterior), after: peso(atual), digits: 1, unit: 'kg', lowerIsBetter: false },
     { group: 'Composição', label: 'Gordura corporal', before: gordura(anterior), after: gordura(atual), digits: 1, unit: '%', lowerIsBetter: true },
     { group: 'Composição', label: 'Massa magra', before: massaMagra(anterior), after: massaMagra(atual), digits: 1, unit: 'kg' },
     { group: 'Composição', label: 'FFMI', before: ffmi(anterior), after: ffmi(atual), digits: 1 },
     { group: 'Capacidade', label: 'Score de força', before: anterior.scores?.forca, after: atual.scores?.forca, digits: 0 },
     { group: 'Capacidade', label: 'Flexibilidade', before: anterior.scores?.flexibilidade, after: atual.scores?.flexibilidade, digits: 0 },
-    { group: 'Capacidade', label: 'Indice RML MedFit', before: anterior.scores?.rml, after: atual.scores?.rml, digits: 0 },
+    { group: 'Capacidade', label: 'Resultado RML', before: anterior.scores?.rml, after: atual.scores?.rml, digits: 0 },
     { group: 'Cardio', label: 'Score cardiorrespiratório', before: anterior.scores?.cardiorrespiratorio, after: atual.scores?.cardiorrespiratorio, digits: 0 },
     { group: 'Cardio', label: 'VO₂máx', before: anterior.cardiorrespiratorio?.vo2max, after: atual.cardiorrespiratorio?.vo2max, digits: 1, unit: 'ml/kg/min' },
   ];

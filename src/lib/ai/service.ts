@@ -8,6 +8,8 @@ import * as P from './prompts';
 import type { PacienteContexto } from './prompts';
 import { jumpSchema, jumpSummary, jumpComparable, jumpIsSimulated, jumpClinicalContext, jumpProtocolTechnique } from '@/lib/jump-test';
 import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-record';
+import { friendComparisonFromAssessment } from '@/lib/calculations/friend';
+import { composicaoOficialParaIA } from '@/lib/bodyComposition';
 
 async function stampAnthropometry(sb: any, avaliacaoId: string, row: any, content: any) {
   if (!isAnthropometryV2(row)) return;
@@ -21,6 +23,12 @@ export type TipoAnalise =
   | 'antropometria' | 'bioimpedancia' | 'forca' | 'flexibilidade'
   | 'rml' | 'cardiorrespiratorio' | 'biomecanica_corrida'
   | 'conclusao_global' | 'evolucao';
+
+const ORDEM_AVALIACAO_IA = [
+  'anamnese', 'sinais_vitais', 'bioimpedancia', 'posturografia', 'termografia',
+  'antropometria', 'jump_test', 'flexibilidade', 'forca', 'rml',
+  'cardiorrespiratorio', 'biomecanica_corrida',
+] as const;
 
 async function carregarAnamnese(sb: any, avaliacaoId: string) {
   const { data, error } = await sb
@@ -192,6 +200,24 @@ export async function gerarAnaliseModulo(avaliacaoId: string, modulo: TipoAnalis
     if (!summary.pronto) throw new Error(`Revise o Jump Test antes da analise: ${summary.pendencias.join(' ')}`);
     dados = { ...jump, contexto_integrado: await carregarContextoJump(sb, avaliacaoId, jump) };
   }
+  if (modulo === 'cardiorrespiratorio') {
+    const [{ data: anthropometry }, { data: bioimpedance }] = await Promise.all([
+      sb.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+      sb.from('bioimpedancia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
+    ]);
+    dados = {
+      ...dados,
+      referencia_friend: friendComparisonFromAssessment({
+        cardio: dados, anthropometry, bioimpedance, age: ctx.idade, sex: ctx.sexo,
+      }),
+    };
+  }
+  if (modulo === 'bioimpedancia') {
+    const { data: anthropometry, error: anthropometryError } = await sb
+      .from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
+    if (anthropometryError) throw new Error('Falha ao carregar antropometria para a analise de bioimpedancia.');
+    dados = { ...dados, _composicao_oficial: composicaoOficialParaIA(anthropometry, dados) };
+  }
 
   const builders: Record<string, (ctx: PacienteContexto, dados: any) => { system: string; user: string }> = {
     anamnese: P.promptAnamnese,
@@ -251,8 +277,16 @@ export async function gerarConclusaoGlobal(avaliacaoId: string) {
   }
   const { data: anthropometry, error: anthropometryError } = await sb.from('antropometria').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
   if (anthropometryError) throw new Error('Falha ao carregar antropometria para conclusao.');
+  const { data: bioimpedance, error: bioimpedanceError } = await sb.from('bioimpedancia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle();
+  if (bioimpedanceError) throw new Error('Falha ao carregar bioimpedancia para conclusao.');
   if (selecionados.antropometria && isAnthropometryV2(anthropometry)) analisesMap.antropometria = anthropometryAIData(anthropometry);
-  const prompt = P.promptConclusao(ctx, { scores, analises: analisesMap, selecionados, anthropometry });
+  const analisesOrdenadas = Object.fromEntries(
+    ORDEM_AVALIACAO_IA.filter(tipo => analisesMap[tipo] != null).map(tipo => [tipo, analisesMap[tipo]])
+  );
+  const prompt = P.promptConclusao(ctx, {
+    scores, analises: analisesOrdenadas, selecionados, anthropometry,
+    bodyComposition: composicaoOficialParaIA(anthropometry, bioimpedance),
+  });
   const system = `${prompt.system}\n${P.JUMP_AI_RULES}\n${P.ANTHROPOMETRY_AI_RULES}`, user = prompt.user;
   const resp = await llmCall({ system, user, json: true, temperature: 0.5, maxTokens: 1800 });
   const conteudo = parseJSON(resp.text);
