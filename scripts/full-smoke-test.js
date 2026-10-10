@@ -383,6 +383,8 @@ function main() {
   assert(protocolos.includes('Análise cinemática 2D da corrida.'), 'Biomecânica deve citar análise cinemática');
   assert(!/Tanaka|protocolo interno|tentativas|RML —|Durnin|Jackson|Siri|Heath-Carter/.test(protocolos),
     'Protocolos não devem expor referências ou detalhes operacionais removidos');
+  assert(laudo.includes('data-body-silhouette="true"'), 'Laudo V2 deveria manter a representacao corporal no resumo');
+  assert(laudo.includes('Gordura corporal'), 'Laudo V2 deveria publicar o percentual antropometrico calculado');
   assert(/>42\s*<span[^>]*>kgf<\/span>/.test(laudo) && />39\s*<span[^>]*>kgf<\/span>/.test(laudo),
     'Laudo deveria exibir a forca em kgf informada na dinamometria');
   for (const technicalLabel of ['strict26-v1', 'Metodo / versao', 'Ressalvas dos resultados', 'Antropometria V2']) {

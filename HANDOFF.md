@@ -1573,3 +1573,15 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - PDF, portal, painel e editor agora priorizam `relatorio_global`; conclusoes antigas continuam compativeis por fallback para os campos anteriores.
 - Testes de regressao verificam ausencia da nomenclatura removida nas superficies renderizadas, presenca do relatorio integrado e posicionamento da conclusao antes das referencias.
 - Sem migration nova. Conclusoes ja salvas precisam ser geradas novamente para adotar o formato integrado.
+
+## 2026-10-10 - Antropometria parcial utilizavel pela IA e silhueta restaurada
+
+- Confirmado no registro de teste de Alfredo que o percentual antropometrico de `18,168%` estava calculado, selecionado e salvo no snapshot V2, mas com estado `review` devido a leituras unicas; o extrator da composicao e o contexto da IA aceitavam somente `available` e, por isso, informavam o valor como indisponivel.
+- Resultados numericos finitos em `review` agora sao tratados como estimativas utilizaveis com ressalva. Resultados ausentes ou invalidos continuam excluidos e nenhuma medida e inventada.
+- O contexto antropometrico enviado a IA foi reduzido aos valores efetivamente calculados e selecionados. Alertas repetidos por medida deixaram de ser enviados; a IA deve mencionar a limitacao da coleta no maximo uma vez e priorizar classificacao, significado e aplicacao pratica dos dados existentes.
+- A analise de bioimpedancia volta a receber o percentual oficial da antropometria mesmo quando ele deriva de coleta unica. O percentual global do equipamento continua excluido como substituto; agua corporal, distribuicao segmentar e assimetrias permanecem atribuidas a bioimpedancia.
+- A projecao V2 passou a preservar resultados numericos em revisao para painel, portal e relatorio, mantendo o aviso de cautela na interface.
+- O resumo corporal do PDF deixou de substituir a visualizacao V2 por uma frase e voltou a exibir silhueta, porte fisico e indicadores derivados diretamente do snapshot persistido.
+- A interface diferencia medidas ausentes/invalidas de medidas calculadas com leitura unica ou outra ressalva. Coletas parciais continuam salvaveis.
+- Validacoes aprovadas: testes de antropometria, IA antropometrica e formulas clinicas, smoke test completo, TypeScript, lint, build de producao e auditoria visual do PDF em 37 paginas sem imagens quebradas, cards cortados, overflow ou paginas vazias.
+- Sem migration nova e sem alteracao automatica das analises de IA ja persistidas. A analise do paciente precisa ser regenerada depois da publicacao para refletir as novas regras.

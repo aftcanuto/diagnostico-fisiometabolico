@@ -27,7 +27,10 @@ Quando disponivel, o percentual antropometrico usa densidade de Durnin-Rahaman a
 Phantom descreve proporcionalidade, nao diagnostica risco, doenca ou potencial genetico. Somatotipo nao determina destino biologico.
 ISAK padroniza a coleta, nao certifica o software nem valida universalmente todas as equacoes.
 O resultado waistHeightRatio usa a cintura minima ISAK dividida pela estatura. Trate-o como razao descritiva e nao aplique os cortes absolutos de cintura da OMS, que exigem medida no ponto medio entre a ultima costela e a crista iliaca.
-Estados de revisao/invalidos nao sustentam conclusoes clinicas. Informe populacao e limitacoes do metodo.
+Resultados numericos em revisao continuam utilizaveis como estimativas com ressalva; resultados ausentes ou invalidos nao sustentam conclusoes clinicas.
+Uma leitura unica e uma coleta parcial nao anulam os resultados que o motor conseguiu calcular. Analise esses resultados, reduza a certeza quando pertinente e concentre a limitacao metrologica em uma unica frase secundaria.
+Nao abra a analise com pendencias, nao repita alertas por medida e nao diga que todos os resultados estao em revisao. Priorize o significado dos valores calculados, suas classificacoes compativeis e a aplicacao pratica.
+Medidas, formulas ou resultados nao calculados devem ser simplesmente omitidos, salvo quando a ausencia impedir uma conclusao essencial solicitada. Informe populacao e limitacoes do metodo.
 Medidas com notApplicable=true foram deliberadamente excluidas daquela avaliacao: nao as trate como zero, erro ou pendencia e nao invente substitutos. Medidas apenas vazias continuam ausentes e exigem ressalva.
 Compare evolucao somente entre locais anatomicos, metodos, unidades e versoes compativeis; nao compare automaticamente legado com V2.
 Nao inferir doenca atual de antecedente familiar nem uso atual de medicamento passado.`;
@@ -334,7 +337,7 @@ protocolo e limitações. Recomende correlação com exame clínico e outros mó
 export function promptAntropometria(ctx: PacienteContexto, dados: any) {
   if (isAnthropometryV2(dados)) return {
     system: `${SISTEMA_BASE(ctx)}\n${ANTHROPOMETRY_AI_RULES}`,
-    user: `Modulo: ANTROPOMETRIA\nReferencias dos resultados:\n${referenciasParaIA({ antropometria: true }, dados)}\nDados salvos:\n${JSON.stringify(anthropometryAIData(dados))}\nInterprete somente os resultados disponiveis e selecionados. Explique pendencias e limitacoes sem prescrever dieta.`,
+    user: `Modulo: ANTROPOMETRIA\nReferencias dos resultados:\n${referenciasParaIA({ antropometria: true }, dados)}\nDados calculados e utilizaveis:\n${JSON.stringify(anthropometryAIData(dados))}\nInterprete os resultados numericos selecionados, inclusive os calculados com ressalva. A coleta pode ter somente uma leitura por medida ou ser parcial: isso deve reduzir a certeza, nao impedir a analise. Mencione a limitacao da coleta no maximo uma vez e depois analise composicao, proporcionalidade e porte fisico com os dados existentes. Nao enumere medidas ausentes e nao prescreva dieta.`,
   };
   const estM = dados?.estatura ? dados.estatura / 100 : 1.75;
   const ffmi = dados?.massa_magra ? +(dados.massa_magra / (estM * estM)).toFixed(1) : null;

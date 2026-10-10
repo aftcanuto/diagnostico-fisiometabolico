@@ -14,7 +14,7 @@ type InputData = ReturnType<typeof newAnthropometry>;
 type Context = Parameters<typeof calculateAnthropometry>[1];
 type MeasurementId = keyof InputData['measurements'];
 export type AnthropometryStoredRow = { registro_v2: unknown; resultados_v2: AnthropometryResult | null; revision_v2: number | null };
-const statusLabels = { available: 'Consolidada', missing: 'Faltam leituras', review: 'Revisar', invalid: 'Invalida' };
+const statusLabels = { available: 'Consolidada', missing: 'Faltam leituras', review: 'Calculada com ressalva', invalid: 'Invalida' };
 const consolidationLabels = { none: 'Sem valor', single: 'Leitura unica', mean: 'Media', median: 'Mediana' };
 const groupLabels = { basic: 'Medidas basicas', skinfold: 'Dobras cutaneas', girth: 'Perimetros', breadth: 'Diametros osseos' };
 const methodsById = new Map(METHODS.map(method => [method.id, method]));
@@ -156,7 +156,8 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
   const previous = steps.slice(0, currentStep).reverse().find(step => step.enabled);
   const next = steps.slice(currentStep + 1).find(step => step.enabled);
   const groups = [...new Set(MEASUREMENTS.map(measurement => measurement.group))];
-  const pending = result ? Object.values(result.measurements).filter(measurement => measurement.status !== 'available' && !input.measurements[measurement.id].notApplicable).length : 26;
+  const pending = result ? Object.values(result.measurements).filter(measurement => (measurement.status === 'missing' || measurement.status === 'invalid') && !input.measurements[measurement.id].notApplicable).length : 26;
+  const cautions = result ? Object.values(result.measurements).filter(measurement => measurement.status === 'review' && !input.measurements[measurement.id].notApplicable).length : 0;
   const ignored = Object.values(input.measurements).filter(measurement => measurement.notApplicable).length;
   const invalidNumber = Object.values(invalidFields).some(Boolean);
   const chosenHistory = history.filter(item => selectedHistory.includes(item.id));
@@ -184,7 +185,7 @@ export default function AnthropometryForm({ avaliacaoId, initialRow }: { avaliac
             <Button variant="ghost" title="Remover instrumento" aria-label={`Remover instrumento ${index + 1}`} onClick={() => { change({ instruments: input.instruments.filter((_, position) => position !== index) }); setInvalidFields(current => Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith('resolution-')))); }}><Trash2 size={16} /></Button>
           </div>)}</div><Button variant="secondary" onClick={() => change({ instruments: [...input.instruments, { name: '', resolution: null, unit: '' }] })}><Plus size={16} />Adicionar instrumento</Button>
         </section>
-        <div className="flex items-center gap-2 text-sm text-amber-900"><AlertTriangle size={16} className="shrink-0" /><span>{pending} medidas com pendencias{ignored ? `; ${ignored} confirmada(s) como nao aplicavel(is)` : ''}. Rascunhos parciais sao permitidos. Lado direito do avaliado; excecoes justificadas.</span></div>
+        <div className="flex items-center gap-2 text-sm text-amber-900"><AlertTriangle size={16} className="shrink-0" /><span>{pending} medidas ausentes ou invalidas{cautions ? `; ${cautions} calculada(s) com leitura unica ou outra ressalva` : ''}{ignored ? `; ${ignored} confirmada(s) como nao aplicavel(is)` : ''}. Valores parciais podem ser salvos e analisados com cautela. Lado direito do avaliado; excecoes justificadas.</span></div>
         {groups.map(group => <section key={group} className="space-y-3"><h2 className="text-lg font-semibold">{groupLabels[group]}</h2><div className="divide-y border-y">{MEASUREMENTS.filter(measurement => measurement.group === group).map(measurement => {
           const id = measurement.id as MeasurementId;
           const reading = input.measurements[id];

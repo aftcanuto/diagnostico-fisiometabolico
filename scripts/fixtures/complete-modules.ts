@@ -78,7 +78,7 @@ export function completeAnthropometry(scale = 1) {
   }
   input.collectionProtocol = 'ISAK - conjunto estrito de 26 medidas';
   input.manualEdition = 'Edicao adotada pela clinica';
-  input.methods = ['direct','indices','martin1990','lee2000','kerrMuscle1988','kerrAdipose1988','martinBone1991','rocha1975','heathCarter','phantom','bmiWHO','dubois1916','harrisBenedict1919'];
+  input.methods = ['direct','indices','martin1990','lee2000','kerrMuscle1988','kerrAdipose1988','martinBone1991','rocha1975','heathCarter','phantom','durninWomersley1974','siri1961','bmiWHO','dubois1916','harrisBenedict1919'];
   input.populationCategory = 'whiteHispanic';
   input.instruments = [{ name:'Adipometro Cescorf Clinico - auditoria', resolution:0.1, unit:'mm' }];
   const results = calculateAnthropometry(input, { date:'2026-04-27', birthDate:'1989-08-12', sex:'F' });

@@ -109,7 +109,16 @@ assert.equal(projection.massa_ossea, null, 'dois metodos osseos selecionados nao
 const singleBoneInput = structuredClone(input);
 singleBoneInput.methods = singleBoneInput.methods.filter(method => method !== 'rocha1975');
 const singleBoneProjection = legacyProjection(singleBoneInput, calculateAnthropometry(singleBoneInput, context));
-assert.equal(singleBoneProjection.massa_ossea, null, 'resultado em revisao permanece no snapshot V2 e nao vaza como valor legado confirmado');
+assert.ok((singleBoneProjection.massa_ossea ?? 0) > 0, 'resultado numerico em revisao deve permanecer utilizavel com ressalva');
+
+const singleReadingInput = structuredClone(input);
+for (const measurement of MEASUREMENTS) {
+  singleReadingInput.measurements[measurement.id].readings = [values[measurement.id], null, null];
+}
+const singleReadingResult = calculateAnthropometry(singleReadingInput, context);
+assert.equal(singleReadingResult.results.find(item => item.id === 'fatPercent')?.status, 'review');
+assert.ok((legacyProjection(singleReadingInput, singleReadingResult).percentual_gordura ?? 0) > 0,
+  'percentual calculado com uma leitura deve alimentar relatorio e IA com ressalva');
 
 const withoutAbdomen = structuredClone(input);
 withoutAbdomen.measurements.abdominal = { ...withoutAbdomen.measurements.abdominal, readings:[null,null,null], notApplicable:true, notApplicableReason:'Nao coletada' };

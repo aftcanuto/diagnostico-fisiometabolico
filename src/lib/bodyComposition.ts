@@ -8,7 +8,7 @@ export function percentualGorduraAntropometria(antropometria: any): number | nul
   if (projetado != null) return projetado;
   if (antropometria?.registro_v2?.version !== 2) return null;
   const resultado = antropometria?.resultados_v2?.results?.find((item: any) =>
-    item?.id === 'fatPercent' && item?.selected === true && item?.status === 'available'
+    item?.id === 'fatPercent' && item?.selected === true && (item?.status === 'available' || item?.status === 'review')
   );
   return numeroClinico(resultado?.value);
 }
@@ -19,7 +19,7 @@ export function composicaoOficialParaIA(antropometria: any, bioimpedancia?: any)
     percentual_gordura: percentual,
     fonte: percentual != null ? 'antropometria' as const : 'indisponivel' as const,
     metodo: antropometria?.resultados_v2?.results?.find((item: any) =>
-      item?.id === 'fatPercent' && item?.selected === true && item?.status === 'available'
+      item?.id === 'fatPercent' && item?.selected === true && (item?.status === 'available' || item?.status === 'review')
     )?.label ?? null,
     percentual_bioimpedancia_excluido: numeroClinico(bioimpedancia?.percentual_gordura) != null,
     regra: 'O percentual de gordura global da IA vem exclusivamente da antropometria. Nao substituir pela bioimpedancia.',

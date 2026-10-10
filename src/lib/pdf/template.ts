@@ -11,7 +11,7 @@ import { scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { classificarComposicaoCorporal, resolverPercentualGordura } from '@/lib/bodyComposition';
 import { normalizarReferenciasBiomecanica } from '@/lib/biomecanica/referencias';
 import { jumpReportHtml } from './jump-test';
-import { anthropometryReportHtml, anthropometrySummaryHtml, isAnthropometryV2 } from './anthropometry';
+import { anthropometryReportHtml, isAnthropometryV2 } from './anthropometry';
 import { resumoInterpretativoBioimpedancia } from '@/lib/clinical/bioimpedance';
 import { friendComparisonFromAssessment, friendInterpretationLabel } from '@/lib/calculations/friend';
 
@@ -186,7 +186,7 @@ function silhueta(sexo: 'M' | 'F', pctG?: number | null, imc?: number | null): s
   const cor = visual.cor;
   const nivel = visual.nivel;
   const src = sexo === 'M' ? SIL_M[nivel] : SIL_F[nivel];
-  return `<img src="${src}" style="width:90px;height:auto;max-height:180px;object-fit:contain;filter:drop-shadow(0 4px 16px ${cor}66)"/>`;
+  return `<img src="${src}" alt="Representacao corporal" data-body-silhouette="true" style="width:90px;height:auto;max-height:180px;object-fit:contain;filter:drop-shadow(0 4px 16px ${cor}66)"/>`;
 }
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -1088,7 +1088,6 @@ function pgSinais(s: any, ia?: any): string {
 
 function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
   const ant = d.dados.antropometria;
-  if (isAnthropometryV2(ant)) return anthropometrySummaryHtml(ant);
   const bio = d.dados.bioimpedancia;
   if (!ant && !bio) return '';
 
@@ -1102,18 +1101,23 @@ function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
     if (n == null) return '—';
     return n.toLocaleString('pt-BR', { maximumFractionDigits: dec });
   };
+  const antV2 = isAnthropometryV2(ant);
+  const snapshot = antV2 ? ant?.resultados_v2 : null;
+  const v2Result = (id: string) => toNum(snapshot?.results?.find((item: any) =>
+    item?.id === id && item?.selected === true && (item?.status === 'available' || item?.status === 'review'))?.value);
+  const v2Measurement = (id: string) => toNum(snapshot?.measurements?.[id]?.value);
   const gorduraRelatorio = resolverPercentualGordura(d.avaliacao, ant, bio);
   const pctG = toNum(gorduraRelatorio.valor);
-  const peso = toNum(ant?.peso ?? bio?.peso_kg ?? bio?.peso);
-  const altura = toNum(ant?.estatura ?? ant?.altura ?? bio?.altura_cm ?? bio?.estatura_cm);
-  const imc = toNum(ant?.imc ?? bio?.imc);
-  const massaMagra = toNum(ant?.massa_magra ?? bio?.massa_livre_gordura_kg ?? bio?.massa_magra_kg);
-  const tmb = toNum(bio?.taxa_metabolica_basal_kcal ?? bio?.tmb ?? ant?.taxa_metabolica_basal_kcal ?? ant?.metabolismo_basal);
-  const rcq = toNum(ant?.rcq ?? bio?.rcq);
+  const peso = antV2 ? v2Measurement('mass') ?? toNum(bio?.peso_kg ?? bio?.peso) : toNum(ant?.peso ?? bio?.peso_kg ?? bio?.peso);
+  const altura = antV2 ? v2Measurement('height') ?? toNum(bio?.altura_cm ?? bio?.estatura_cm) : toNum(ant?.estatura ?? ant?.altura ?? bio?.altura_cm ?? bio?.estatura_cm);
+  const imc = antV2 ? v2Result('bmi') ?? toNum(bio?.imc) : toNum(ant?.imc ?? bio?.imc);
+  const massaMagra = antV2 ? v2Result('fatFreeMass') : toNum(ant?.massa_magra ?? bio?.massa_livre_gordura_kg ?? bio?.massa_magra_kg);
+  const tmb = antV2 ? v2Result('basalEnergy') ?? toNum(bio?.taxa_metabolica_basal_kcal ?? bio?.tmb) : toNum(bio?.taxa_metabolica_basal_kcal ?? bio?.tmb ?? ant?.taxa_metabolica_basal_kcal ?? ant?.metabolismo_basal);
+  const rcq = antV2 ? v2Result('waistHipRatio') : toNum(ant?.rcq ?? bio?.rcq);
   const agua = toNum(bio?.agua_corporal_pct ?? bio?.agua_corporal_percentual ?? bio?.agua_corporal_kg);
   const gorduraVisceral = toNum(bio?.gordura_visceral);
   const visual = classificarComposicaoCorporal({ sexo: d.paciente.sexo, pctGordura: pctG, imc });
-  const somatotipo = ant?.somatotipo?.classificacao ?? ant?.somatotipo_classificacao ?? null;
+  const somatotipo = antV2 ? snapshot?.somatotype?.classification ?? null : ant?.somatotipo?.classificacao ?? ant?.somatotipo_classificacao ?? null;
   const row = (label: string, value: string, unit = '', color = '#0f172a') => value === '—' ? '' : `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:8px;background:#f8fafc">
       <span style="font-size:11px;color:#475569">${x(label)}</span>

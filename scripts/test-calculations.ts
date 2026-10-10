@@ -101,5 +101,11 @@ assert.deepEqual(composicaoOficialParaIA(antroV2, { percentual_gordura: 27.9 }),
   regra: 'O percentual de gordura global da IA vem exclusivamente da antropometria. Nao substituir pela bioimpedancia.',
 });
 assert.equal(composicaoOficialParaIA(null, { percentual_gordura: 27.9 }).percentual_gordura, null);
+const antroV2SingleReading = {
+  registro_v2: { version: 2 },
+  resultados_v2: { results: [{ id: 'fatPercent', selected: true, status: 'review', value: 18.2, label: 'Durnin-Womersley + Siri' }] },
+};
+assert.equal(percentualGorduraAntropometria(antroV2SingleReading), 18.2,
+  'percentual calculado em coleta unica deve ser utilizado com ressalva');
 
 console.log('OK: formulas clinicas principais validadas');

@@ -9,7 +9,7 @@ type Reference = AnthropometryResult['references'][number];
 export const anthropometryFormat = (value: number | null | undefined, digits = 2) =>
   value == null || !Number.isFinite(value) ? 'Nao disponivel' : value.toLocaleString('pt-BR', { maximumFractionDigits: digits });
 export const anthropometryDate = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.split('-').reverse().join('/') : date;
-const statusLabels = { available: 'Disponivel', missing: 'Faltam dados', review: 'Revisao necessaria', invalid: 'Invalido' };
+const statusLabels = { available: 'Disponivel', missing: 'Faltam dados', review: 'Calculado com ressalva', invalid: 'Invalido' };
 const cell: CSSProperties = { padding: '10px 8px', borderBottom: '1px solid #e5e7eb', verticalAlign: 'top', textAlign: 'left' };
 const section: CSSProperties = { padding: '20px 0', borderTop: '1px solid #e5e7eb', minWidth: 0 };
 const heading: CSSProperties = { fontSize: 18, fontWeight: 600, marginBottom: 12 };

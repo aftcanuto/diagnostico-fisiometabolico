@@ -9,7 +9,7 @@ import type { AnthropometryInput } from './schema';
 import type { AnthropometryResults, Result } from './types';
 
 function publishable(result: Result | undefined): result is Result & { value: number } {
-  return !!result && result.selected && result.status === 'available'
+  return !!result && result.selected && (result.status === 'available' || result.status === 'review')
     && typeof result.value === 'number' && Number.isFinite(result.value);
 }
 
