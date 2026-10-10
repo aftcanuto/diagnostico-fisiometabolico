@@ -10,6 +10,7 @@ import { jumpSchema, jumpSummary, jumpComparable, jumpIsSimulated, jumpClinicalC
 import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-record';
 import { friendComparisonFromAssessment } from '@/lib/calculations/friend';
 import { composicaoOficialParaIA } from '@/lib/bodyComposition';
+import { isGlobalConclusionComplete } from './global-conclusion';
 
 async function stampAnthropometry(sb: any, avaliacaoId: string, row: any, content: any) {
   if (!isAnthropometryV2(row)) return;
@@ -288,8 +289,31 @@ export async function gerarConclusaoGlobal(avaliacaoId: string) {
     bodyComposition: composicaoOficialParaIA(anthropometry, bioimpedance),
   });
   const system = `${prompt.system}\n${P.JUMP_AI_RULES}\n${P.ANTHROPOMETRY_AI_RULES}`, user = prompt.user;
-  const resp = await llmCall({ system, user, json: true, temperature: 0.5, maxTokens: 1800 });
-  const conteudo = parseJSON(resp.text);
+  let resp = await llmCall({
+    system,
+    user,
+    json: true,
+    jsonSchema: 'conclusao_global',
+    temperature: 0.5,
+    maxTokens: 2600,
+  });
+  let conteudo = parseJSON(resp.text);
+  if (!isGlobalConclusionComplete(conteudo)) {
+    await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', resp);
+    resp = await llmCall({
+      system: `${system}\n\nA tentativa anterior veio incompleta. Preencha obrigatoriamente todos os campos do schema e entregue o relatorio global integrado completo.`,
+      user,
+      json: true,
+      jsonSchema: 'conclusao_global',
+      temperature: 0.3,
+      maxTokens: 2600,
+    });
+    conteudo = parseJSON(resp.text);
+    if (!isGlobalConclusionComplete(conteudo)) {
+      await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', resp);
+      throw new Error('A IA devolveu uma conclusao global incompleta em duas tentativas. Nenhum conteudo vazio foi salvo.');
+    }
+  }
   await stampAnthropometry(sb, avaliacaoId, anthropometry, conteudo);
   await persistir(avaliacaoId, 'conclusao_global', conteudo, resp.modelo);
   await registrarUso(clinicaId, avaliacaoId, 'conclusao_global', resp);

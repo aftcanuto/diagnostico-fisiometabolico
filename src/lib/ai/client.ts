@@ -10,6 +10,7 @@ export interface LLMOptions {
   temperature?: number;
   maxTokens?: number;
   json?: boolean;
+  jsonSchema?: 'analise' | 'conclusao_global';
 }
 
 export interface LLMResponse {
@@ -88,6 +89,49 @@ const ANALISE_JSON_TOOL = {
     },
   },
 };
+
+const CONCLUSAO_GLOBAL_JSON_TOOL = {
+  name: 'emitir_conclusao_global_json',
+  description: 'Retorna a conclusao clinica global integrada em JSON estruturado para o sistema.',
+  input_schema: {
+    type: 'object',
+    additionalProperties: false,
+    required: [
+      'relatorio_global',
+      'resumo_executivo',
+      'pontos_fortes',
+      'pontos_criticos',
+      'prioridades',
+      'mensagem_paciente',
+    ],
+    properties: {
+      relatorio_global: { type: 'string', minLength: 200 },
+      resumo_executivo: { type: 'string', minLength: 40 },
+      pontos_fortes: { type: 'array', items: { type: 'string' } },
+      pontos_criticos: { type: 'array', items: { type: 'string' } },
+      prioridades: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['titulo', 'acao', 'prazo'],
+          properties: {
+            titulo: { type: 'string' },
+            acao: { type: 'string' },
+            prazo: { type: 'string' },
+          },
+        },
+      },
+      mensagem_paciente: { type: 'string' },
+    },
+  },
+};
+
+function jsonTool(opts: LLMOptions) {
+  return opts.jsonSchema === 'conclusao_global'
+    ? CONCLUSAO_GLOBAL_JSON_TOOL
+    : ANALISE_JSON_TOOL;
+}
 
 function normalizarModeloClaude(modelo?: string) {
   if (!modelo) return CLAUDE_DEFAULT;
@@ -170,6 +214,7 @@ async function callClaude(opts: LLMOptions): Promise<LLMResponse> {
 }
 
 async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LLMResponse> {
+  const tool = jsonTool(opts);
   const system = opts.system + (opts.json
     ? '\n\nResponda APENAS com um objeto JSON valido. Nao use markdown, nao use ``` e nao escreva texto antes ou depois do JSON.'
     : '');
@@ -186,8 +231,8 @@ async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LL
     messages: [{ role: 'user', content: opts.user }],
     ...(opts.json
       ? {
-          tools: [ANALISE_JSON_TOOL],
-          tool_choice: { type: 'tool', name: ANALISE_JSON_TOOL.name },
+          tools: [tool],
+          tool_choice: { type: 'tool', name: tool.name },
         }
       : {}),
   };
@@ -214,7 +259,7 @@ async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LL
   const data = await res.json();
 
   const toolUse = Array.isArray(data.content)
-    ? data.content.find((item: any) => item?.type === 'tool_use' && item?.name === ANALISE_JSON_TOOL.name)
+    ? data.content.find((item: any) => item?.type === 'tool_use' && item?.name === tool.name)
     : null;
   const textBlock = Array.isArray(data.content)
     ? data.content.find((item: any) => item?.type === 'text' && item?.text)
@@ -230,6 +275,7 @@ async function callClaudeComModelo(opts: LLMOptions, modelo: string): Promise<LL
 
 async function callOpenAI(opts: LLMOptions): Promise<LLMResponse> {
   const modelo = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const tool = jsonTool(opts);
   const body: any = {
     model: modelo,
     max_tokens: opts.maxTokens ?? 1500,
@@ -238,7 +284,18 @@ async function callOpenAI(opts: LLMOptions): Promise<LLMResponse> {
       { role: 'system', content: opts.system + (opts.json ? '\n\nResponda APENAS com JSON valido.' : '') },
       { role: 'user', content: opts.user },
     ],
-    ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
+    ...(opts.jsonSchema === 'conclusao_global'
+      ? {
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: tool.name,
+              strict: true,
+              schema: tool.input_schema,
+            },
+          },
+        }
+      : opts.json ? { response_format: { type: 'json_object' } } : {}),
   };
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {

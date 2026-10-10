@@ -1585,3 +1585,15 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - A interface diferencia medidas ausentes/invalidas de medidas calculadas com leitura unica ou outra ressalva. Coletas parciais continuam salvaveis.
 - Validacoes aprovadas: testes de antropometria, IA antropometrica e formulas clinicas, smoke test completo, TypeScript, lint, build de producao e auditoria visual do PDF em 37 paginas sem imagens quebradas, cards cortados, overflow ou paginas vazias.
 - Sem migration nova e sem alteracao automatica das analises de IA ja persistidas. A analise do paciente precisa ser regenerada depois da publicacao para refletir as novas regras.
+
+## 2026-10-10 - Conclusao global vazia bloqueada
+
+- A auditoria do registro de producao confirmou que a ultima geracao da conclusao global foi salva apenas com o marcador interno de revisao antropometrica, sem `relatorio_global` ou demais campos clinicos.
+- A causa era o schema generico da ferramenta de IA, que permitia ao Claude responder com um objeto vazio mesmo quando o prompt solicitava uma conclusao completa.
+- A conclusao global passou a usar um schema proprio e estrito, com relatorio integrado, resumo executivo, pontos fortes, pontos criticos, prioridades e mensagem ao paciente obrigatorios.
+- O limite de resposta foi ampliado para comportar os quatro a sete paragrafos solicitados e uma segunda tentativa automatica e feita se o provedor ainda devolver conteudo incompleto.
+- O sistema valida a resposta antes de persistir. Uma conclusao vazia nao substitui mais conteudo anterior nem e marcada como gerada.
+- Painel de IA e checklist de revisao agora identificam registros antigos incompletos e mantem a conclusao global como pendente ate existir texto utilizavel.
+- Validacoes aprovadas: contrato estruturado do Claude sem dados de paciente, validador de conteudo, smoke test completo, TypeScript, lint e build de producao.
+- A geracao real para Alfredo nao foi executada pelo Codex porque a autorizacao de privacidade anterior abrangia outra avaliacao. O registro vazio permanece pendente para regeneracao autorizada no app.
+- Sem migration nova. Registros vazios existentes devem ser regenerados depois da publicacao.

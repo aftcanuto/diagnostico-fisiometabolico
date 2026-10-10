@@ -17,6 +17,7 @@ import {
 } from '@/lib/scores';
 import { numeroClinico, scoreForcaPorDadosPreensao } from '@/lib/forcaPreensao';
 import { resolverPercentualGordura, type FonteGorduraRelatorio } from '@/lib/bodyComposition';
+import { hasUsableGlobalConclusion } from '@/lib/ai/global-conclusion';
 import { FileDown, CheckCircle2, Loader2, Dumbbell, AlertTriangle, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
 
 export default function RevisaoPage(props: { params: Promise<{ id: string }> }) {
@@ -885,7 +886,11 @@ function montarChecklist(
     });
   }
 
-  const tiposGerados = new Set((analises ?? []).map((a: any) => a.tipo));
+  const tiposGerados = new Set(
+    (analises ?? [])
+      .filter((a: any) => a.tipo !== 'conclusao_global' || hasUsableGlobalConclusion(a))
+      .map((a: any) => a.tipo)
+  );
   const analisesFaltantes = Object.entries(mods)
     .filter(([modulo, ativo]) => ativo && modulo !== 'revisao' && !tiposGerados.has(modulo))
     .map(([modulo]) => labels[modulo] ?? modulo);

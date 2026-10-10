@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Input';
 import { Sparkles, Loader2, Check, Edit3, Save, X } from 'lucide-react';
+import { hasUsableGlobalConclusion } from '@/lib/ai/global-conclusion';
 
 const MODULOS: { tipo: string; label: string }[] = [
   { tipo: 'anamnese', label: 'Anamnese' },
@@ -121,16 +122,18 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
 
         {MODULOS.filter(m => isDisponivel(m.tipo)).map(m => {
           const a = analises[m.tipo];
+          const gerada = !!a && (m.tipo !== 'conclusao_global' || hasUsableGlobalConclusion(a));
           const ed = editando === m.tipo;
           return (
             <div key={m.tipo} className="rounded-lg border border-slate-200 p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{m.label}</span>
-                  {a && <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><Check className="w-3 h-3" /> gerada</span>}
+                  {gerada && <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><Check className="w-3 h-3" /> gerada</span>}
+                  {a && !gerada && <span className="text-xs text-amber-700">incompleta</span>}
                 </div>
                 <div className="flex gap-1">
-                  {a && !ed && (
+                  {gerada && !ed && (
                     <Button size="sm" variant="ghost" onClick={() => {
                       setEditando(m.tipo);
                       setRascunho(a.texto_editado || renderizarTextoBase(a.conteudo));
@@ -140,7 +143,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                   )}
                   <Button size="sm" variant="secondary" onClick={() => gerar(m.tipo)} disabled={loading === m.tipo}>
                     {loading === m.tipo ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                    {a ? 'Regerar' : 'Gerar'}
+                    {gerada ? 'Regerar' : 'Gerar'}
                   </Button>
                 </div>
               </div>
@@ -173,7 +176,7 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
                 </div>
               )}
 
-              {a && !ed && <AnaliseConteudo a={a} />}
+              {gerada && !ed && <AnaliseConteudo a={a} />}
             </div>
           );
         })}
