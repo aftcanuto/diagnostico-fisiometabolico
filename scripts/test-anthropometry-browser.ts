@@ -89,7 +89,7 @@ async function main() {
     assert.equal(revision, 1);
     assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /Leitura unica/);
     assert.match(await page.$eval('[data-measurement-id="mass"]', element => element.textContent ?? ''), /84 kg/);
-    assert.match(await page.$eval('[data-anthropometry-v2]', element => element.textContent ?? ''), /25 medidas com pendencias; 1 confirmada/);
+    assert.match(await page.$eval('[data-anthropometry-v2]', element => element.textContent ?? ''), /24 medidas ausentes ou invalidas; 1 calculada\(s\).*1 confirmada\(s\) como nao aplicavel/i);
     assert.match(await page.$eval('[data-measurement-id="abdomen"]', element => element.textContent ?? ''), /Nao aplicavel/);
     await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Resultados'))?.click());
     const fatMethodsText = await page.$eval('[data-fat-methods]', element => element.textContent ?? '');
@@ -143,6 +143,10 @@ async function main() {
     const html = `<!doctype html><meta charset="utf-8"><style>@page{size:A4;margin:0}body{margin:0;background:#ddd;font-family:Arial}.page{box-sizing:border-box;width:794px;min-height:1123px;margin:0 auto 12px;background:white;padding:42px;overflow:hidden}.mod-head{border-bottom:1px solid #ddd;margin-bottom:12px}.mod-title{font-size:22px;font-weight:700;padding-bottom:8px}table{break-inside:avoid}h3{break-after:avoid}</style>${anthropometryReportHtml({registro_v2:input,resultados_v2:results,revision_v2:1})}`;
     assert.match(html, /Medidas coletadas/);
     assert.match(html, /Resultado consolidado/);
+    assert.match(html, /Distribuicao antropometrica regional/);
+    assert.match(html, /data-body-sex="M"/);
+    assert.match(html, /Nao corresponde a massa tecidual regional medida/);
+    assert.match(html, /Somatocarta Heath-Carter/);
     for (const technicalLabel of [
       />1 \/ 2 \/ 3</i,
       />Qualidade</i,
@@ -153,6 +157,9 @@ async function main() {
       /Catalogo medfit/i,
       /Motor anthropometry/i,
     ]) assert.doesNotMatch(html, technicalLabel);
+    const femaleResults = calculateAnthropometry(input, { date:'2026-09-28', birthDate:'1990-01-01', sex:'F' });
+    const femaleHtml = anthropometryReportHtml({registro_v2:input,resultados_v2:femaleResults,revision_v2:1});
+    assert.match(femaleHtml, /data-body-sex="F"/, 'relatorio feminino deve usar o modelo anatomico feminino');
     const reportPath = path.join(dir,'report.html'); fs.writeFileSync(reportPath, html);
     await page.setViewport({ width:900, height:900 });
     await page.goto(`file:///${reportPath.replace(/\\/g,'/')}`, { waitUntil:'networkidle0' });
@@ -175,6 +182,8 @@ async function main() {
     assert.doesNotMatch(reportText, /MARTIN_OSSEO_1991|strict26-v1|Ressalvas dos resultados|Metodo \/ versao/);
     assert.match(reportText, /Perimetros corrigidos/);
     assert.match(reportText, /Braco relaxado corrigido/);
+    assert.match(reportText, /Adiposidade relativa/i);
+    assert.match(reportText, /Muscularidade relativa/i);
     const renderedPages = await page.$$('.page');
     for (let index = 0; index < renderedPages.length; index++) {
       await renderedPages[index].screenshot({ path:path.join(dir, `report-page-${String(index + 1).padStart(2, '0')}.png`) });
@@ -212,8 +221,15 @@ async function main() {
       const anthropometryText = await anthropometry!.evaluate(element => element.textContent ?? '');
       assert.match(anthropometryText, /Perimetros corrigidos/);
       assert.match(anthropometryText, /Panturrilha maxima corrigida/);
+      assert.match(anthropometryText, /Distribuicao antropometrica regional/);
+      assert.equal(await anthropometry!.$$('svg[aria-label="Distribuicao antropometrica regional"]').then(nodes => nodes.length), 1);
+      assert.ok(await anthropometry!.$$('[data-body-sex="M"]').then(nodes => nodes.length) >= 1);
+      assert.equal(await anthropometry!.$$('svg[aria-label="Somatocarta Heath-Carter"]').then(nodes => nodes.length), 1);
       await anthropometry!.screenshot({path:path.join(dir,`panel-anthropometry-${width}.png`)});
       if (width === 320) {
+        const regionalSection = await anthropometry!.$('[data-anthropometry-section="regional-distribution"]');
+        assert.ok(regionalSection, 'distribuicao regional ausente no mobile');
+        await regionalSection!.screenshot({path:path.join(dir,'panel-regional-320.png')});
         const box = await anthropometry!.boundingBox();
         assert.ok(box, 'dimensoes do painel antropometrico indisponiveis');
         const positions = [box!.y, box!.y + box!.height / 2, Math.max(box!.y, box!.y + box!.height - 900)];

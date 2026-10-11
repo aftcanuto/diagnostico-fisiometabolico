@@ -80,6 +80,6 @@ export function anthropometryAIData(row: any) {
       somatotype: snapshot.somatotype,
       references: (snapshot.references ?? []).filter((reference: any) => referenceIds.has(reference.id)),
     },
-    observacao: 'Analise os resultados numericos calculados. Coleta unica ou parcial reduz a robustez metrologica, mas nao invalida automaticamente o valor: interprete com cautela e mencione a limitacao uma unica vez, sem transformar a analise em lista de pendencias.',
+    observacao: 'Analise os resultados numericos calculados. Coleta unica ou parcial reduz a robustez metrologica, mas nao invalida automaticamente o valor: interprete com cautela e mencione a limitacao uma unica vez, sem transformar a analise em lista de pendencias. Indicadores regionais sao participacoes relativas de dobras ou perimetros corrigidos e nao representam massa tecidual regional medida.',
   };
 }

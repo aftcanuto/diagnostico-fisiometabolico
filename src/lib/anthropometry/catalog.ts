@@ -5,8 +5,8 @@ export function deepFreeze<T>(value: T): T {
   }
   return value;
 }
-export const ENGINE_VERSION = 'anthropometry-2.2.1' as const;
-export const CATALOG_VERSION = 'medfit-strict26-2026-10-09.4' as const;
+export const ENGINE_VERSION = 'anthropometry-2.3.0' as const;
+export const CATALOG_VERSION = 'medfit-strict26-2026-10-10.1' as const;
 const definitions = [
   ['mass','Massa corporal','kg','basic','Balanca calibrada; vestimenta minima'],
   ['height','Estatura','cm','basic','Vertex ao solo; plano de Frankfurt'],
@@ -43,6 +43,14 @@ export const CORRECTED_GIRTH_RESULT_IDS = deepFreeze([
   'thighMidCorrected',
   'calfCorrected',
   'correctedGirthSum5',
+] as const);
+export const REGIONAL_DISTRIBUTION_RESULT_IDS = deepFreeze([
+  'regionalAdiposityUpper',
+  'regionalAdiposityCentral',
+  'regionalAdiposityLower',
+  'regionalMuscularityArm',
+  'regionalMuscularityThigh',
+  'regionalMuscularityCalf',
 ] as const);
 export const MEASUREMENTS = deepFreeze(definitions.map(([id,label,unit,group,landmark]) => ({
   id,label,unit,group,landmark,defaultSide:'D' as const,referenceIds:['ISAK_PADRONIZACAO'],

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { CORRECTED_GIRTH_RESULT_IDS, type calculateAnthropometry } from '@/lib/anthropometry';
+import { CORRECTED_GIRTH_RESULT_IDS, REGIONAL_DISTRIBUTION_RESULT_IDS, type calculateAnthropometry } from '@/lib/anthropometry';
+import { RegionalBodyMap, Somatochart } from './AnthropometryMorphology';
 
 export type AnthropometryResult = ReturnType<typeof calculateAnthropometry>;
 export type AnthropometryHistoryEntry = { id: string; date: string; results: AnthropometryResult };
@@ -23,32 +24,6 @@ export function ReferenceLinks({ ids, references }: { ids: string[]; references:
         : <span key={id} title={ref?.text}>{id}</span>;
     })}
   </span>;
-}
-
-export function Somatochart({ somatotype }: { somatotype: AnthropometryResult['somatotype'] }) {
-  const { x, y } = somatotype;
-  const valid = x != null && y != null && Number.isFinite(x) && Number.isFinite(y);
-  const extent = valid ? Math.max(12, Math.ceil(Math.max(Math.abs(x), Math.abs(y)) / 4) * 4) : 12;
-  const projectX = (value: number) => 240 + value / extent * 185;
-  const projectY = (value: number) => 205 - value / extent * 155;
-  return <figure style={{ margin: 0, maxWidth: 600 }}>
-    <svg viewBox="0 0 480 410" role="img" aria-label="Somatocarta Heath-Carter" style={{ width: '100%', height: 'auto', display: 'block', aspectRatio: '48 / 41' }}>
-      <rect x="0" y="0" width="480" height="410" fill="#fff" />
-      {[-1, -0.5, 0, 0.5, 1].map(fraction => <g key={fraction}>
-        <line x1={projectX(fraction * extent)} x2={projectX(fraction * extent)} y1="50" y2="360" stroke="#e5e7eb" />
-        <line x1="55" x2="425" y1={projectY(fraction * extent)} y2={projectY(fraction * extent)} stroke="#e5e7eb" />
-        <text x={projectX(fraction * extent)} y="380" textAnchor="middle" fontSize="11" fill="#4b5563">{anthropometryFormat(fraction * extent, 0)}</text>
-        <text x="44" y={projectY(fraction * extent) + 4} textAnchor="end" fontSize="11" fill="#4b5563">{anthropometryFormat(fraction * extent, 0)}</text>
-      </g>)}
-      <line x1="55" y1="205" x2="425" y2="205" stroke="#6b7280" />
-      <line x1="240" y1="50" x2="240" y2="360" stroke="#6b7280" />
-      <text x="240" y="24" textAnchor="middle" fontSize="13" fill="#374151">Mesomorfia (Y)</text>
-      <text x="65" y="401" textAnchor="start" fontSize="12" fill="#374151">Endomorfia</text>
-      <text x="415" y="401" textAnchor="end" fontSize="12" fill="#374151">Ectomorfia (X)</text>
-      {valid && <circle data-somatotype-point cx={projectX(x)} cy={projectY(y)} r="7" fill="#0f766e" stroke="#fff" strokeWidth="2"><title>{`X ${anthropometryFormat(x)}; Y ${anthropometryFormat(y)}`}</title></circle>}
-    </svg>
-    <figcaption style={{ fontSize: 12, color: '#4b5563' }}>{valid ? `X: ${anthropometryFormat(x)}; Y: ${anthropometryFormat(y)}. ${somatotype.classification ?? ''}` : somatotype.reason || 'Somatotipo indisponivel.'}</figcaption>
-  </figure>;
 }
 
 export function PhantomChart({ rows }: { rows: ResultRow[] }) {
@@ -101,8 +76,10 @@ function ResultsTable({ rows, snapshot }: { rows: ResultRow[]; snapshot: Anthrop
 export function AnthropometryResults({ results, history = [], selectedOnly = true }: { results: AnthropometryResult; history?: AnthropometryHistoryEntry[]; selectedOnly?: boolean }) {
   const rows = results.results.filter(row => !selectedOnly || row.selected);
   const correctedIds = new Set<string>(CORRECTED_GIRTH_RESULT_IDS);
+  const regionalIds = new Set<string>(REGIONAL_DISTRIBUTION_RESULT_IDS);
   const correctedGirths = rows.filter(row => correctedIds.has(row.id));
-  const remainingRows = rows.filter(row => !correctedIds.has(row.id));
+  const regionalRows = rows.filter(row => regionalIds.has(row.id));
+  const remainingRows = rows.filter(row => !correctedIds.has(row.id) && !regionalIds.has(row.id));
   const phantom = results.phantom.filter(row => !selectedOnly || row.selected);
   const usedIds = new Set([...rows, ...phantom].flatMap(row => row.referenceIds));
   const references = results.references.filter(reference => usedIds.has(reference.id));
@@ -112,6 +89,10 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
       <h2 style={heading}>Perimetros corrigidos</h2>
       <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Valores derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas permanecem preservadas; o antebraco nao recebe correcao por nao haver dobra correspondente no protocolo.</p>
       <ResultsTable rows={correctedGirths} snapshot={results} />
+    </section>}
+    {regionalRows.some(row => row.value != null) && <section data-anthropometry-section="regional-distribution" style={section}>
+      <h2 style={heading}>Distribuicao antropometrica regional</h2>
+      <RegionalBodyMap rows={regionalRows} sex={results.context.sex} />
     </section>}
     <section data-anthropometry-section="results" style={section}>
       <h2 style={heading}>Resultados de Antropometria</h2>

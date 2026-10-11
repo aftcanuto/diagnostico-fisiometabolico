@@ -1599,3 +1599,27 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Validacoes aprovadas: contrato estruturado do Claude sem dados de paciente, validador de conteudo, smoke test completo, TypeScript, lint e build de producao.
 - Depois de autorizacao explicita, a conclusao de Alfredo foi regenerada e persistida com os sete campos esperados, cinco paragrafos aproximados, quatro prioridades e sem o rotulo proprietario removido.
 - Sem migration nova. Registros vazios existentes devem ser regenerados depois da publicacao.
+
+## 2026-10-11 - Distribuicao antropometrica regional e somatocarta
+
+- O motor antropometrico passou para `anthropometry-2.3.0` e calcula seis indicadores regionais rastreaveis quando o metodo de indices esta selecionado.
+- Adiposidade superior, central e inferior representam, respectivamente, a participacao de triceps + subescapular, supraespinal + abdominal e coxa anterior + panturrilha medial no somatorio de seis dobras.
+- Muscularidade de braco, coxa e panturrilha representa a participacao dos tres perimetros corrigidos na soma de braco relaxado, coxa media e panturrilha corrigidos.
+- Os dois conjuntos fecham em 100% e sao apresentados como distribuicoes relativas descritivas. O sistema declara que nao representam massa tecidual regional medida, DXA ou diagnostico.
+- Modulo clinico, painel e portal do paciente receberam um modelo anatomico original dividido entre adiposidade e muscularidade. Em mobile, a silhueta e os percentuais usam composicao propria para preservar legibilidade em 320 px.
+- A somatocarta anterior foi substituida por uma visualizacao curva original, mantendo as coordenadas Heath-Carter X e Y, os tres componentes e a classificacao persistida.
+- O PDF exibe a distribuicao regional em bloco proprio, fora da tabela generica, e mantem titulo e primeira tabela de resultados no mesmo grupo de paginacao.
+- O payload da IA recebe os seis indicadores calculados e regras explicitas para interpreta-los apenas como distribuicoes relativas, sem transforma-los em massa regional, percentual tecidual ou diagnostico.
+- Snapshots historicos permanecem inalterados. Para uma avaliacao antiga receber os novos indicadores e visuais, a coleta antropometrica deve ser aberta e salva novamente; analises de IA antigas precisam ser regeneradas.
+- Sem migration nova: os resultados continuam armazenados no JSON versionado ja existente.
+- Validacoes aprovadas: testes do motor e IA, TypeScript, lint, build de producao, navegador real do modulo/painel/portal em 320/390/768/1440 px e relatorio antropometrico paginado em cinco paginas sem overflow.
+
+## 2026-10-11 - Modelo anatomico adulto por sexo
+
+- A silhueta geometrica original da distribuicao regional foi substituida por modelos adultos frontais masculino e feminino, selecionados automaticamente pelo sexo registrado na avaliacao.
+- A fonte vetorial e `Silhouette femme homme anterieur posterieur`, de Christophe Dang Ngoc Chan, disponibilizada em CC0 no Wikimedia Commons; o original foi preservado fora da pasta publica em `resources/anthropometry` e a procedencia/licenca foi documentada junto aos derivados.
+- Os derivados usam a paleta MedFit dividida entre adiposidade e muscularidade e recebem vestimenta clinica neutra sobre areas intimas.
+- Painel clinico, portal do paciente e PDF usam exatamente os mesmos ativos incorporados, evitando divergencia visual e imagens externas quebradas.
+- O script `scripts/build-anthropometry-body-assets.mjs` reproduz os PNGs e o modulo de dados incorporados a partir do SVG-fonte.
+- Nao houve alteracao nas formulas, nos percentuais regionais, no banco de dados ou em avaliacoes historicas. Sem migration nova.
+- Validacoes aprovadas: testes antropometricos e de IA, TypeScript, lint, build de producao, navegador real em 320/390/768/1440 px e auditoria do PDF completo em 37 paginas sem imagens quebradas, cards cortados, overflow ou paginas vazias.

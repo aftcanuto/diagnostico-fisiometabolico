@@ -71,6 +71,20 @@ export function calculateAnthropometry(raw:AnthropometryInput, context:Calculati
   for (const [girth,fold,label] of corrections) add(`${girth}Corrected`,label,'cm','indices',[girth,fold],v => correctedGirth(v[girth],v[fold]));
   const girths = ['armRelaxedCorrected','forearm','chestCorrected','thighMidCorrected','calfCorrected'];
   add('correctedGirthSum5','Somatorio de cinco perimetros (quatro corrigidos)','cm','indices',girths,v => girths.reduce((s,key) => s+v[key],0));
+  const regionalNote = 'Indicador descritivo de distribuicao relativa; nao representa massa tecidual regional nem diagnostico.';
+  add('regionalAdiposityUpper','Adiposidade relativa - regiao superior','%','indices',['triceps','subscapular','sum6'],v => 100*(v.triceps+v.subscapular)/v.sum6,
+    {extra:{definition:'Triceps + subescapular como percentual do somatorio de 6 dobras',interpretation:regionalNote}});
+  add('regionalAdiposityCentral','Adiposidade relativa - regiao central','%','indices',['supraspinale','abdominal','sum6'],v => 100*(v.supraspinale+v.abdominal)/v.sum6,
+    {extra:{definition:'Supraespinal + abdominal como percentual do somatorio de 6 dobras',interpretation:regionalNote}});
+  add('regionalAdiposityLower','Adiposidade relativa - regiao inferior','%','indices',['thighSkinfold','calfSkinfold','sum6'],v => 100*(v.thighSkinfold+v.calfSkinfold)/v.sum6,
+    {extra:{definition:'Coxa anterior + panturrilha medial como percentual do somatorio de 6 dobras',interpretation:regionalNote}});
+  const regionalGirths = ['armRelaxedCorrected','thighMidCorrected','calfCorrected'];
+  add('regionalMuscularityArm','Muscularidade relativa - braco','%','indices',regionalGirths,v => 100*v.armRelaxedCorrected/regionalGirths.reduce((sum,key) => sum+v[key],0),
+    {extra:{definition:'Braco relaxado corrigido como percentual da soma de braco, coxa e panturrilha corrigidos',interpretation:regionalNote}});
+  add('regionalMuscularityThigh','Muscularidade relativa - coxa','%','indices',regionalGirths,v => 100*v.thighMidCorrected/regionalGirths.reduce((sum,key) => sum+v[key],0),
+    {extra:{definition:'Coxa media corrigida como percentual da soma de braco, coxa e panturrilha corrigidos',interpretation:regionalNote}});
+  add('regionalMuscularityCalf','Muscularidade relativa - panturrilha','%','indices',regionalGirths,v => 100*v.calfCorrected/regionalGirths.reduce((sum,key) => sum+v[key],0),
+    {extra:{definition:'Panturrilha corrigida como percentual da soma de braco, coxa e panturrilha corrigidos',interpretation:regionalNote}});
   add('bmi','IMC','kg/m2','indices',['mass','height'],v => v.mass/(v.height/100)**2);
   add('waistHipRatio','Relacao cintura/quadril','razao','indices',['waist','hip'],v => v.waist/v.hip);
   add('waistHeightRatio','Relacao cintura minima/estatura','razao','indices',['waist','height'],v => v.waist/v.height,

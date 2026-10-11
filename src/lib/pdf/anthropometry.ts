@@ -1,5 +1,6 @@
 import { qualificationLabel } from '@/lib/isak-qualification';
-import { compareAnthropometry, CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, type AnthropometryInput, type AnthropometryResults, type Result } from '@/lib/anthropometry';
+import { compareAnthropometry, CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, REGIONAL_DISTRIBUTION_RESULT_IDS, type AnthropometryInput, type AnthropometryResults, type Result } from '@/lib/anthropometry';
+import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
 
 // Read persisted snapshots only. No anthropometric calculation belongs in a report.
 type Snapshot = AnthropometryResults & { professional?: { name?: string; qualification?: unknown } };
@@ -25,6 +26,45 @@ function chunks<T>(items: T[], size: number): T[][] {
   const groups: T[][] = [];
   for (let index = 0; index < items.length; index += size) groups.push(items.slice(index, index + size));
   return groups;
+}
+
+function bodyModelDataUri(sex: string): string {
+  return sex === 'F' ? FEMALE_BODY_MODEL_DATA_URI : MALE_BODY_MODEL_DATA_URI;
+}
+
+function regionalBodyHtml(rows: Result[], sex: string): string {
+  const value = (id: string) => rows.find(result => result.id === id && withValue(result))?.value ?? null;
+  const female = sex === 'F';
+  const model = bodyModelDataUri(sex);
+  const clothing = `${female ? '<path d="M299 116 Q320 109 341 116 L339 140 Q320 146 301 140 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>' : ''}<path d="${female ? 'M300 189 Q320 184 340 189 L337 217 Q328 224 320 216 Q312 224 303 217 Z' : 'M303 174 Q320 169 337 174 L334 204 Q327 211 320 203 Q313 211 306 204 Z'}" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>`;
+  const label = (x: number, y: number, title: string, amount: number | null, color: string, anchor = 'start') => `<g transform="translate(${x} ${y})"><text text-anchor="${anchor}" font-size="11" fill="#64748b">${esc(title)}</text><text y="22" text-anchor="${anchor}" font-size="20" font-weight="700" fill="${color}">${fmt(amount)}%</text></g>`;
+  return `<div style="break-inside:avoid;page-break-inside:avoid;border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc">
+    <svg role="img" aria-label="Distribuicao antropometrica regional" data-body-sex="${female ? 'F' : 'M'}" viewBox="0 0 640 340" style="display:block;width:100%;height:285px">
+      <text x="24" y="24" font-size="12" font-weight="700" fill="#9f3f4f">ADIPOSIDADE RELATIVA</text><text x="616" y="24" text-anchor="end" font-size="12" font-weight="700" fill="#087f6d">MUSCULARIDADE RELATIVA</text>
+      <path d="M320 39 H282 Q248 39 248 75 V304 Q248 338 282 338 H320 Z" fill="#f8e9eb"/><path d="M320 39 H358 Q392 39 392 75 V304 Q392 338 358 338 H320 Z" fill="#e5f4f0"/>
+      ${model ? `<image href="${model}" x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet"/>` : ''}${clothing}<line x1="320" y1="40" x2="320" y2="337" stroke="#fff" stroke-width="2" opacity=".92"/>
+      <g fill="none" stroke="#a94f5c" stroke-width="1.5"><path d="M278 105 H158"/><path d="M286 178 H158"/><path d="M292 270 H158"/></g>
+      <g fill="none" stroke="#087f6d" stroke-width="1.5"><path d="M366 115 H482"/><path d="M350 228 H482"/><path d="M356 294 H482"/></g>
+      ${label(24,88,'Superior',value('regionalAdiposityUpper'),'#9f3f4f')}${label(24,171,'Central',value('regionalAdiposityCentral'),'#9f3f4f')}${label(24,254,'Inferior',value('regionalAdiposityLower'),'#9f3f4f')}
+      ${label(616,98,'Braco',value('regionalMuscularityArm'),'#087f6d','end')}${label(616,211,'Coxa',value('regionalMuscularityThigh'),'#087f6d','end')}${label(616,277,'Panturrilha',value('regionalMuscularityCalf'),'#087f6d','end')}
+      <g fill="none" stroke="#147d6f" stroke-width="2" opacity=".8"><path d="M337 98 Q352 115 341 139"/><path d="M334 169 Q352 185 340 205"/><path d="M339 232 Q350 252 340 277"/><path d="M336 282 Q347 298 339 313"/></g>
+    </svg>
+    <p style="font-size:9px;line-height:1.45;color:#64748b;margin:5px 4px 0">Distribuicao descritiva. Adiposidade: participacao dos pares de dobras na soma de seis dobras. Muscularidade: participacao de braco, coxa e panturrilha corrigidos na soma desses tres perimetros. Nao corresponde a massa tecidual regional medida.</p>
+  </div>`;
+}
+
+function somatochartHtml(soma: Snapshot['somatotype']): string {
+  const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
+  const projectX = (amount: number) => 270 + Math.max(-10, Math.min(10, amount)) / 10 * 188;
+  const projectY = (amount: number) => 294 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 242;
+  return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 540 380" style="display:block;width:100%;height:285px">
+    <rect width="540" height="380" rx="8" fill="#f8fafc"/><path d="M76 296 Q270 366 464 296 Q510 145 270 42 Q30 145 76 296 Z" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <g fill="none" stroke="#dbe4ea" stroke-width="1.2"><path d="M108 278 Q270 330 432 278"/><path d="M142 252 Q270 290 398 252"/><path d="M176 219 Q270 242 364 219"/><path d="M101 273 Q165 151 270 42"/><path d="M439 273 Q375 151 270 42"/><path d="M76 296 Q270 207 464 296"/><path d="M118 185 Q270 260 422 185"/></g>
+    <line x1="82" y1="197" x2="458" y2="197" stroke="#94a3b8"/><line x1="270" y1="52" x2="270" y2="294" stroke="#94a3b8"/>
+    <text x="270" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">MESOMORFIA</text><text x="64" y="331" font-size="13" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="476" y="331" text-anchor="end" font-size="13" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
+    ${valid ? `<circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="12" fill="#0f766e" opacity=".18"/><circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="6" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
+    <text x="270" y="368" text-anchor="middle" font-size="10" fill="#64748b">X = ectomorfia - endomorfia; Y = 2 x mesomorfia - endomorfia - ectomorfia</text>
+  </svg>`;
 }
 
 export function anthropometrySummaryHtml(row: Row): string {
@@ -56,22 +96,27 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
   }
   if (enabled(row, 'results')) {
     const correctedIds = new Set<string>(CORRECTED_GIRTH_RESULT_IDS);
+    const regionalIds = new Set<string>(REGIONAL_DISTRIBUTION_RESULT_IDS);
     const correctedGirths = selected(s).filter(result => correctedIds.has(result.id) && withValue(result));
+    const regionalRows = selected(s).filter(result => regionalIds.has(result.id) && withValue(result));
     const rows = selected(s).filter(result =>
       withValue(result)
       &&
       !correctedIds.has(result.id)
+      && !regionalIds.has(result.id)
       &&
       !(enabled(row, 'measurements') && result.methodId === 'direct')
       && !(enabled(row, 'somatotype') && result.methodId === 'heathCarter'));
     if (correctedGirths.length) sections.push(block('Perimetros corrigidos',
       '<p style="font-size:10px">Derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas preservadas; antebraco sem correcao por nao haver dobra correspondente.</p>' +
       table(['Resultado', 'Valor'], correctedGirths.map(result => [result.label, `${fmt(result.value)} ${result.unit}`]))));
+    if (regionalRows.length) sections.push(block('Distribuicao antropometrica regional', regionalBodyHtml(regionalRows, s.context.sex)));
     const resultBlocks = chunks(rows, 14).map((group, index) => block(`Resultados selecionados${index ? ' (continuacao)' : ''}`, table(
       ['Resultado', 'Valor'],
       group.map(r => [r.label, `${fmt(r.value)} ${r.unit}${r.classification ? ` - ${r.classification}` : ''}`]),
     )));
-    sections.push(block('Resultados', resultBlocks.length ? '<p style="font-size:10px">Resultados numericos dos metodos selecionados.</p>' : '<p>Nenhum resultado numerico selecionado para publicacao.</p>'), ...resultBlocks);
+    if (resultBlocks.length) sections.push(block('Resultados', '<p style="font-size:10px">Resultados numericos dos metodos selecionados.</p>' + resultBlocks[0]), ...resultBlocks.slice(1));
+    else sections.push(block('Resultados', '<p>Nenhum resultado numerico selecionado para publicacao.</p>'));
   }
   const phantom = (s.phantom ?? []).filter(r => r.selected && withValue(r));
   if (enabled(row, 'phantom') && phantom.length) {
@@ -84,9 +129,7 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
   }
   const soma = s.somatotype;
   if (enabled(row, 'somatotype') && soma && selected(s).some(r => /somato|heath/i.test(r.methodId))) {
-    const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
-    const extent = Math.max(10, Math.abs(soma.x ?? 0), Math.abs(soma.y ?? 0));
-    sections.push(block('Somatotipo e somatocarta', block('Somatocarta', `<svg role="img" aria-label="Somatocarta" viewBox="0 0 440 300" style="display:block;width:100%;height:300px"><line x1="30" y1="150" x2="410" y2="150" stroke="#64748b"/><line x1="220" y1="20" x2="220" y2="280" stroke="#64748b"/><text x="230" y="18" font-size="11">Mesomorfia (+Y)</text><text x="8" y="170" font-size="11">Endomorfia (-X)</text><text x="315" y="170" font-size="11">Ectomorfia (+X)</text>${valid ? `<circle cx="${220 + soma.x! / extent * 180}" cy="${150 - soma.y! / extent * 120}" r="6" fill="#0891b2"/>` : ''}<text x="30" y="295" font-size="10">Eixos: -${extent} a +${extent}</text></svg>`) + block('Componentes', table(['Endomorfia', 'Mesomorfia', 'Ectomorfia', 'X / Y'], [[fmt(soma.endomorphy), fmt(soma.mesomorphy), fmt(soma.ectomorphy), `${fmt(soma.x)} / ${fmt(soma.y)}`]])) + (soma.classification ? `<p style="font-size:11px">Classificacao: ${esc(soma.classification)}</p>` : '')));
+    sections.push(block('Somatotipo e somatocarta', block('Somatocarta', somatochartHtml(soma)) + block('Componentes', table(['Endomorfia', 'Mesomorfia', 'Ectomorfia', 'X / Y'], [[fmt(soma.endomorphy), fmt(soma.mesomorphy), fmt(soma.ectomorphy), `${fmt(soma.x)} / ${fmt(soma.y)}`]])) + (soma.classification ? `<p style="font-size:11px">Classificacao: ${esc(soma.classification)}</p>` : '')));
   }
   if (enabled(row, 'context')) {
     const contextRows = [

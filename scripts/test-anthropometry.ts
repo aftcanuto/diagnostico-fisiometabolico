@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {
-  CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, calculateAnthropometry, compareAnthropometry, legacyProjection,
+  CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, REGIONAL_DISTRIBUTION_RESULT_IDS, calculateAnthropometry, compareAnthropometry, legacyProjection,
   newAnthropometry, selectedReferences,
 } from '../src/lib/anthropometry';
 import { hasLegacyAnthropometryData } from '../src/lib/anthropometry-record';
@@ -63,6 +63,19 @@ assert.deepEqual([...CORRECTED_GIRTH_RESULT_IDS], [
 ]);
 for (const id of CORRECTED_GIRTH_RESULT_IDS) {
   assert.ok(result.results.some(item => item.id === id && item.value !== null), `${id} deve estar disponivel na coleta completa`);
+}
+assert.deepEqual([...REGIONAL_DISTRIBUTION_RESULT_IDS], [
+  'regionalAdiposityUpper', 'regionalAdiposityCentral', 'regionalAdiposityLower',
+  'regionalMuscularityArm', 'regionalMuscularityThigh', 'regionalMuscularityCalf',
+]);
+const regional = Object.fromEntries(REGIONAL_DISTRIBUTION_RESULT_IDS.map(id => [id, result.results.find(item => item.id === id)?.value]));
+assert.ok(Math.abs(regional.regionalAdiposityUpper! - 100 * (result.measurements.triceps.value! + result.measurements.subscapular.value!) / result.results.find(item => item.id === 'sum6')!.value!) < 1e-12);
+assert.ok(Math.abs(regional.regionalAdiposityUpper! + regional.regionalAdiposityCentral! + regional.regionalAdiposityLower! - 100) < 1e-10);
+assert.ok(Math.abs(regional.regionalMuscularityArm! + regional.regionalMuscularityThigh! + regional.regionalMuscularityCalf! - 100) < 1e-10);
+for (const id of REGIONAL_DISTRIBUTION_RESULT_IDS) {
+  const row = result.results.find(item => item.id === id)!;
+  assert.equal(row.methodId, 'indices');
+  assert.match(String(row.inputs.interpretation), /nao representa massa tecidual regional/i);
 }
 assert.ok(Math.abs(result.results.find(item => item.id === 'armRelaxedCorrected')!.value! - correctedGirth(result.measurements.armRelaxed.value!, result.measurements.triceps.value!)) < 1e-12);
 assert.ok(Math.abs(result.results.find(item => item.id === 'chestCorrected')!.value! - correctedGirth(result.measurements.chest.value!, result.measurements.subscapular.value!)) < 1e-12);

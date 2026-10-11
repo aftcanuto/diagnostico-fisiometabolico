@@ -25,6 +25,7 @@ Nao recalcule nem invente medidas, normas, coeficientes ou referencias. Ausente 
 Diferencie gordura quimica, tecido adiposo, massa livre de gordura e musculo esqueletico. Nao combine equacoes nem trate estimativa ossea como DXA ou densidade mineral.
 Quando disponivel, o percentual antropometrico usa densidade de Durnin-Rahaman aos 16 anos ou Durnin-Womersley dos 17 aos 72 anos (biceps, triceps, subescapular e crista iliaca ISAK), convertida por Siri; nao atribua a dobra abdominal ou qualquer perimetro a esse calculo.
 Phantom descreve proporcionalidade, nao diagnostica risco, doenca ou potencial genetico. Somatotipo nao determina destino biologico.
+Os indicadores regionais sao distribuicoes relativas: dobras superiores, centrais e inferiores dentro da soma de seis dobras; e perimetros corrigidos de braco, coxa e panturrilha dentro da soma desses tres perimetros. Interprete o padrao apenas de forma descritiva. Nao os chame de massa, percentual tecidual regional, DXA ou diagnostico.
 ISAK padroniza a coleta, nao certifica o software nem valida universalmente todas as equacoes.
 O resultado waistHeightRatio usa a cintura minima ISAK dividida pela estatura. Trate-o como razao descritiva e nao aplique os cortes absolutos de cintura da OMS, que exigem medida no ponto medio entre a ultima costela e a crista iliaca.
 Resultados numericos em revisao continuam utilizaveis como estimativas com ressalva; resultados ausentes ou invalidos nao sustentam conclusoes clinicas.
