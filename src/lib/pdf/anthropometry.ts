@@ -32,6 +32,95 @@ function bodyModelDataUri(sex: string): string {
   return sex === 'F' ? FEMALE_BODY_MODEL_DATA_URI : MALE_BODY_MODEL_DATA_URI;
 }
 
+function dashboardBodyHtml(sex: string): string {
+  const female = sex === 'F';
+  const model = bodyModelDataUri(sex);
+  const clothing = `${female ? '<path d="M299 116 Q320 109 341 116 L339 140 Q320 146 301 140 Z" fill="#fff" stroke="#cbd5e1" stroke-width="1.2"/>' : ''}<path d="${female ? 'M300 189 Q320 184 340 189 L337 217 Q328 224 320 216 Q312 224 303 217 Z' : 'M303 174 Q320 169 337 174 L334 204 Q327 211 320 203 Q313 211 306 204 Z'}" fill="#fff" stroke="#cbd5e1" stroke-width="1.2"/>`;
+  return `<svg role="img" aria-label="Modelo corporal ${female ? 'feminino' : 'masculino'}" data-body-sex="${female ? 'F' : 'M'}" viewBox="238 30 164 315" style="display:block;width:138px;height:265px;margin:0 auto">
+    <path d="M320 39 H282 Q248 39 248 75 V304 Q248 338 282 338 H320 Z" fill="#f8e9eb"/><path d="M320 39 H358 Q392 39 392 75 V304 Q392 338 358 338 H320 Z" fill="#e5f4f0"/>
+    <image href="${model}" x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet"/>${clothing}<line x1="320" y1="40" x2="320" y2="337" stroke="#fff" stroke-width="2" opacity=".92"/>
+  </svg>`;
+}
+
+function anthropometryDashboardHtml(snapshot: Snapshot): string {
+  const rows = selected(snapshot);
+  const result = (id: string) => rows.find(item => item.id === id && withValue(item));
+  const measurement = (id: keyof Snapshot['measurements']) => snapshot.measurements?.[id]?.value ?? null;
+  const fat = result('fatPercent');
+  const lean = result('fatFreePercent');
+  const bmi = result('bmiClassification') ?? result('bmi');
+  const waistHeight = result('waistHeightRatio');
+  const mass = measurement('mass');
+  const height = measurement('height');
+  const soma = snapshot.somatotype;
+  const fatValue = fat?.value ?? null;
+  const leanValue = lean?.value ?? (fatValue == null ? null : 100 - fatValue);
+  const circumference = 301.59;
+  const fatArc = fatValue == null ? 0 : Math.max(0, Math.min(100, fatValue)) / 100 * circumference;
+  const card = (label: string, amount: number | null, unit: string, note: string) => `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:13px 14px;min-height:82px">
+    <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.7px">${esc(label)}</div>
+    <div style="font-size:24px;font-weight:800;color:#0f172a;line-height:1.1;margin-top:6px">${fmt(amount)} <span style="font-size:10px;font-weight:500;color:#94a3b8">${esc(unit)}</span></div>
+    <div style="font-size:9px;line-height:1.35;color:#64748b;margin-top:5px">${esc(note)}</div>
+  </div>`;
+  const regional = (ids: string[]) => ids.map(id => result(id)?.value ?? null);
+  const adiposity = regional(['regionalAdiposityUpper','regionalAdiposityCentral','regionalAdiposityLower']);
+  const muscularity = regional(['regionalMuscularityArm','regionalMuscularityThigh','regionalMuscularityCalf']);
+  const distribution = (title: string, labels: string[], values: (number | null)[], colors: string[]) => {
+    const available = values.every(value => typeof value === 'number' && Number.isFinite(value));
+    return `<div style="margin-top:13px"><div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:6px"><strong style="font-size:10px;color:#334155">${esc(title)}</strong><span style="font-size:8px;color:#94a3b8">distribuicao relativa</span></div>
+      ${available ? `<div style="height:12px;border-radius:999px;overflow:hidden;display:flex;background:#e2e8f0">${values.map((value, index) => `<span style="width:${Math.max(0, value!)}%;background:${colors[index]}"></span>`).join('')}</div>` : '<div style="height:12px;border-radius:999px;background:#e2e8f0"></div>'}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">${labels.map((label, index) => `<div style="font-size:8px;color:#64748b"><span style="display:inline-block;width:6px;height:6px;border-radius:2px;background:${colors[index]};margin-right:4px"></span>${esc(label)} <strong style="color:#334155">${fmt(values[index])}%</strong></div>`).join('')}</div>
+    </div>`;
+  };
+  const bmiNote = bmi?.classification || 'Indice de massa corporal';
+  const waistNote = waistHeight ? `Cintura/estatura: ${fmt(waistHeight.value)}` : 'Relacao cintura/estatura indisponivel';
+  const dashboard = `<div data-anthropometry-dashboard="true">
+    <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px">
+      <div><div style="font-size:11px;font-weight:800;color:#087f6d;text-transform:uppercase;letter-spacing:1px">Resumo corporal</div><p style="font-size:11px;line-height:1.45;color:#64748b;margin:6px 0 0">Uma leitura visual dos principais resultados. Os detalhes tecnicos, metodos e medidas aparecem nas paginas seguintes.</p></div>
+      <div style="font-size:9px;color:#64748b;text-align:right;white-space:nowrap">Coleta: ${esc(snapshot.calculatedAt)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:15px">
+      ${card('Gordura corporal', fatValue, '%', 'Estimativa por dobras cutaneas')}
+      ${card('Massa livre de gordura', leanValue, '%', 'Complemento da gordura estimada')}
+      ${card('IMC', bmi?.value ?? null, 'kg/m2', bmiNote)}
+      ${card('Massa corporal', mass, 'kg', height == null ? 'Medida coletada' : `Estatura: ${fmt(height)} cm`)}
+    </div>
+    <div style="display:grid;grid-template-columns:190px 1fr;gap:15px;align-items:stretch">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;text-align:center">
+        ${dashboardBodyHtml(snapshot.context.sex)}
+        <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">Perfil corporal</div>
+        <div style="font-size:14px;font-weight:800;color:#0f172a;margin-top:4px">${esc(soma.classification || 'Nao calculado')}</div>
+        <div style="font-size:8px;color:#64748b;line-height:1.35;margin-top:4px">Descricao morfologica; nao representa diagnostico.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px">
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:17px;align-items:center">
+          <div style="text-align:center">
+            <svg viewBox="0 0 120 120" role="img" aria-label="Composicao corporal estimada" style="width:118px;height:118px">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#d9eee9" stroke-width="13"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#b75b6b" stroke-width="13" stroke-linecap="round" stroke-dasharray="${fatArc} ${circumference}" transform="rotate(-90 60 60)"/>
+              <text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">GORDURA</text><text x="60" y="76" text-anchor="middle" font-size="19" font-weight="800" fill="#0f172a">${fmt(fatValue)}%</text>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:#0f172a">Composicao estimada</div>
+            <div style="display:flex;gap:15px;margin-top:10px;font-size:9px;color:#64748b"><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#b75b6b;margin-right:5px"></i>Gordura ${fmt(fatValue)}%</span><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7ac7b5;margin-right:5px"></i>Livre de gordura ${fmt(leanValue)}%</span></div>
+            <p style="font-size:9px;line-height:1.45;color:#64748b;margin:10px 0 0">${esc(waistNote)}. Resultados estimados por antropometria e interpretados no conjunto da avaliacao.</p>
+          </div>
+        </div>
+        ${distribution('Adiposidade por regiao', ['Superior','Central','Inferior'], adiposity, ['#d9929e','#b75b6b','#863746'])}
+        ${distribution('Muscularidade por segmento', ['Braco','Coxa','Panturrilha'], muscularity, ['#88cfc0','#42aa92','#087f6d'])}
+        <div style="margin-top:14px;padding-top:11px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+          <div><span style="font-size:8px;color:#94a3b8">ENDOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.endomorphy)}</strong></div>
+          <div><span style="font-size:8px;color:#94a3b8">MESOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.mesomorphy)}</strong></div>
+          <div><span style="font-size:8px;color:#94a3b8">ECTOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.ectomorphy)}</strong></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:8.5px;line-height:1.45;color:#64748b;margin:13px 2px 0">Os percentuais regionais descrevem a participacao relativa das medidas coletadas e nao equivalem a massa tecidual regional, DXA ou diagnostico. A interpretacao final deve considerar os demais modulos e o contexto clinico.</p>
+  </div>`;
+  return page('Antropometria', dashboard);
+}
+
 function regionalBodyHtml(rows: Result[], sex: string): string {
   const value = (id: string) => rows.find(result => result.id === id && withValue(result))?.value ?? null;
   const female = sex === 'F';
@@ -124,7 +213,11 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
     const phantomTable = (group: Result[]) => table(
       ['Medida', 'Z'], group.map(r => [r.label, fmt(r.value)]),
     );
-    sections.push(block('Proporcionalidade Phantom', '<p style="font-size:10px">Z-scores de proporcionalidade; nao representam diagnostico, percentil ou ideal.</p>' + phantomTable(phantomGroups[0])),
+    const phantomExplanation = `<div style="margin:0 0 12px;padding:11px 13px;border-left:3px solid #0f766e;background:#f0fdfa;border-radius:4px;font-size:10px;line-height:1.45;color:#334155">
+      <strong style="display:block;margin-bottom:4px;color:#0f4f49">O que e o modelo Phantom?</strong>
+      O Phantom e uma referencia humana conceitual e unissex, com proporcoes padronizadas. Ele ajusta as medidas corporais para uma estatura geometrica de referencia, permitindo comparar a proporcionalidade de pessoas com tamanhos diferentes. O escore Z mostra quanto cada medida se afasta da referencia: valores positivos indicam proporcao relativamente maior e valores negativos, relativamente menor. Esses resultados descrevem proporcionalidade corporal; nao representam percentil, diagnostico ou corpo ideal.
+    </div>`;
+    sections.push(block('Proporcionalidade Phantom', phantomExplanation + phantomTable(phantomGroups[0])),
       ...phantomGroups.slice(1).map(group => block('Proporcionalidade Phantom (continuacao)', phantomTable(group))));
   }
   const soma = s.somatotype;
@@ -134,7 +227,7 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
   if (enabled(row, 'context')) {
     const contextRows = [
     ['Contexto do calculo', `Data: ${s.context.date}; sexo: ${s.context.sex}; idade decimal: ${fmt(s.age)} anos`],
-    ['Protocolo de coleta', input.collectionProtocol], ['Edicao do manual', input.manualEdition], ['Condicoes', input.conditions], ['Observacoes', input.notes],
+    ['Protocolo de coleta', input.collectionProtocol], ['Condicoes', input.conditions], ['Observacoes', input.notes],
     ['Categoria populacional informada', input.populationCategory === 'whiteHispanic' ? 'Branca ou hispanica' : input.populationCategory === 'africanAmerican' ? 'Negra ou afrodescendente' : input.populationCategory === 'asian' ? 'Asiatica' : 'Nao informada'],
     ['Gestacao informada', input.pregnant == null ? 'Nao informada' : input.pregnant ? 'Sim' : 'Nao'],
     ['Atividade', `Fator: ${fmt(input.activityFactor)}; justificativa: ${input.activityJustification || 'Nao informada'}`],
@@ -143,7 +236,7 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
       ...(input.instruments?.length ? [block('Instrumentos', table(['Instrumento', 'Resolucao', 'Unidade'], input.instruments.map(i => [i.name, fmt(i.resolution), i.unit])))] : []));
   }
   if (enabled(row, 'conclusion')) sections.push(textBlocks('Conclusao profissional', input.professionalConclusion || 'Conclusao profissional nao registrada.'));
-  return page('Antropometria', meta + sections.join('') + analysisHtml);
+  return anthropometryDashboardHtml(s) + page('Antropometria - detalhamento', meta + sections.join('') + analysisHtml);
 }
 
 export function anthropometryEvolutionHtml(evaluations: { id?: string; data: string; antropometria?: Row }[]): string {

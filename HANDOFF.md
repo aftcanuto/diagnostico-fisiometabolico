@@ -1623,3 +1623,21 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O script `scripts/build-anthropometry-body-assets.mjs` reproduz os PNGs e o modulo de dados incorporados a partir do SVG-fonte.
 - Nao houve alteracao nas formulas, nos percentuais regionais, no banco de dados ou em avaliacoes historicas. Sem migration nova.
 - Validacoes aprovadas: testes antropometricos e de IA, TypeScript, lint, build de producao, navegador real em 320/390/768/1440 px e auditoria do PDF completo em 37 paginas sem imagens quebradas, cards cortados, overflow ou paginas vazias.
+
+## 2026-10-11 - Dashboard antropometrico para o paciente
+
+- A primeira pagina da antropometria no PDF passou a ser um dashboard de leitura simples, antes de qualquer tabela tecnica.
+- O resumo apresenta gordura corporal estimada, massa livre de gordura, IMC com classificacao quando disponivel, massa corporal, estatura, relacao cintura/estatura, perfil Heath-Carter e modelo corporal conforme o sexo cadastrado.
+- Um grafico circular compara gordura e massa livre de gordura; barras segmentadas mostram adiposidade superior/central/inferior e muscularidade relativa de braco/coxa/panturrilha.
+- O dashboard usa somente valores calculados e persistidos no snapshot V2. Valores ausentes permanecem como indisponiveis e nenhuma faixa normativa foi criada para resultados sem classificacao validada.
+- As paginas seguintes preservam medidas, resultados, perimetros corrigidos, distribuicao regional, Phantom, somatocarta, contexto, instrumentos, conclusao e analise de IA sob o titulo `Antropometria - detalhamento`.
+- `Edicao do manual` deixou de ser exibida no contexto do PDF; o dado continua preservado internamente no registro da coleta.
+- Sem migration nova e sem alteracao dos calculos ou dos registros historicos.
+- Validacoes aprovadas: motor e IA antropometricos, TypeScript, lint, build de producao, render do modulo em 320/390/768 px, relatorio antropometrico em seis paginas e auditoria do PDF completo sem imagens quebradas, cards cortados, overflow ou paginas vazias.
+
+## 2026-10-11 - Explicacao do modelo Phantom no relatorio
+
+- A pagina de proporcionalidade Phantom no PDF passou a iniciar com uma explicacao acessivel ao paciente sobre a referencia humana conceitual e unissex.
+- O texto esclarece o ajuste das medidas para uma estatura geometrica de referencia e a leitura dos escores Z positivos e negativos.
+- Foi preservada a ressalva de que os resultados descrevem proporcionalidade corporal e nao representam percentil, diagnostico ou corpo ideal.
+- Sem migration nova e sem alteracao dos calculos antropometricos ou dos registros historicos.

@@ -143,6 +143,11 @@ async function main() {
     const html = `<!doctype html><meta charset="utf-8"><style>@page{size:A4;margin:0}body{margin:0;background:#ddd;font-family:Arial}.page{box-sizing:border-box;width:794px;min-height:1123px;margin:0 auto 12px;background:white;padding:42px;overflow:hidden}.mod-head{border-bottom:1px solid #ddd;margin-bottom:12px}.mod-title{font-size:22px;font-weight:700;padding-bottom:8px}table{break-inside:avoid}h3{break-after:avoid}</style>${anthropometryReportHtml({registro_v2:input,resultados_v2:results,revision_v2:1})}`;
     assert.match(html, /Medidas coletadas/);
     assert.match(html, /Resultado consolidado/);
+    assert.match(html, /data-anthropometry-dashboard="true"/);
+    assert.match(html, /Resumo corporal/);
+    assert.match(html, /Composicao estimada/);
+    assert.match(html, /Antropometria - detalhamento/);
+    assert.ok(html.indexOf('data-anthropometry-dashboard="true"') < html.indexOf('Medidas coletadas'), 'dashboard deve anteceder o detalhamento antropometrico');
     assert.match(html, /Distribuicao antropometrica regional/);
     assert.match(html, /data-body-sex="M"/);
     assert.match(html, /Nao corresponde a massa tecidual regional medida/);
@@ -156,6 +161,7 @@ async function main() {
       />Revisao</i,
       /Catalogo medfit/i,
       /Motor anthropometry/i,
+      /Edicao do manual/i,
     ]) assert.doesNotMatch(html, technicalLabel);
     const femaleResults = calculateAnthropometry(input, { date:'2026-09-28', birthDate:'1990-01-01', sex:'F' });
     const femaleHtml = anthropometryReportHtml({registro_v2:input,resultados_v2:femaleResults,revision_v2:1});
@@ -184,6 +190,9 @@ async function main() {
     assert.match(reportText, /Braco relaxado corrigido/);
     assert.match(reportText, /Adiposidade relativa/i);
     assert.match(reportText, /Muscularidade relativa/i);
+    assert.match(reportText, /O que e o modelo Phantom/);
+    assert.match(reportText, /referencia humana conceitual e unissex/);
+    assert.match(reportText, /estatura geometrica de referencia/);
     const renderedPages = await page.$$('.page');
     for (let index = 0; index < renderedPages.length; index++) {
       await renderedPages[index].screenshot({ path:path.join(dir, `report-page-${String(index + 1).padStart(2, '0')}.png`) });
