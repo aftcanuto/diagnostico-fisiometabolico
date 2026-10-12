@@ -1699,3 +1699,15 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O smoke test usa uma conclusao extensa, proxima do limite visual do caso real, para impedir regressao para paginas de continuacao.
 - A alteracao e apenas de apresentacao; o texto gerado, editado e persistido permanece integral e inalterado.
 - Sem migration nova.
+
+## 2026-10-12 - Compactacao do laudo e indicadores antropometricos
+
+- Bioimpedancia: `Idade metabolica` foi removida do laudo e `Gordura visceral` passou a ocupar o quarto card da linha principal; resultados segmentares e analise clinica foram compactados para permanecerem na mesma pagina.
+- RML: os cinco testes do protocolo jovem/ativo, incluindo Wall Sit, passaram a ocupar uma unica linha de cards; tabela e analise foram compactadas para manter o modulo em uma pagina.
+- Antropometria: o dashboard passou a exibir relacao cintura/estatura, relacao cintura/quadril e indice cormico. A explicacao tecnica do fechamento em 100% foi removida das superficies destinadas ao paciente.
+- O antebraco passou a aparecer junto aos perimetros corrigidos, identificado corretamente como medida direta sem correcao por dobra correspondente.
+- A linha interna de fator/justificativa de atividade foi removida do contexto exibido no laudo, sem alterar o dado persistido ou seu uso em calculos selecionados.
+- As miniaturas da somatocarta receberam proporcao vertical maior para evitar aparencia achatada no modulo, painel, portal e PDF.
+- A tipografia da conclusao clinica foi ampliada em todas as faixas de comprimento, mantendo a verificacao automatica de pagina unica e ausencia de texto oculto.
+- As referencias passaram de nove para ate quatorze itens por pagina, com espacamento mais eficiente e preservacao de cada referencia como bloco indivisivel.
+- Sem migration nova.

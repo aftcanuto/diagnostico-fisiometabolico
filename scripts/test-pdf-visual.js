@@ -142,6 +142,9 @@ async function main() {
         textLength: String(box.textContent || '').trim().length,
       })).filter(item => item.scrollHeight > item.clientHeight + 1);
       const conclusionPages = new Set(conclusionBoxes.map(box => box.closest('.page'))).size;
+      const bioPages = pageAudit.filter(item => /^Bioimpedância/i.test(item.title)).length;
+      const rmlPages = pageAudit.filter(item => /^Resistência Muscular/i.test(item.title)).length;
+      const referencePages = pageAudit.filter(item => /^Referências bibliográficas/i.test(item.title)).length;
 
       return {
         badImages,
@@ -156,6 +159,9 @@ async function main() {
         conclusionBoxes: conclusionBoxes.length,
         conclusionPages,
         conclusionOverflow,
+        bioPages,
+        rmlPages,
+        referencePages,
       };
     });
 
@@ -171,6 +177,8 @@ async function main() {
     if (result.conclusionBoxes && (result.conclusionPages !== 1 || result.conclusionOverflow.length)) {
       errors.push('Conclusao clinica nao cabe integralmente em uma unica pagina');
     }
+    if (result.bioPages > 1) errors.push('Bioimpedancia ocupa mais de uma pagina');
+    if (result.rmlPages > 1) errors.push('RML ocupa mais de uma pagina');
 
     if (errors.length) {
       fail('Teste visual do PDF encontrou problemas', {
@@ -195,6 +203,9 @@ async function main() {
       conclusionBoxes: result.conclusionBoxes,
       conclusionPages: result.conclusionPages,
       conclusionOverflow: result.conclusionOverflow,
+      bioPages: result.bioPages,
+      rmlPages: result.rmlPages,
+      referencePages: result.referencePages,
     }, null, 2));
   } finally {
     await browser.close();

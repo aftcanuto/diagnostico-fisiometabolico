@@ -236,6 +236,8 @@ export const dados: LaudoData = {
       abd_prancha_classificacao: 'Regular',
       mmii_agach_reps: 42,
       mmii_agach_classificacao: 'Bom',
+      mmii_wallsit_seg: 118,
+      mmii_wallsit_classificacao: 'Bom',
       score: 76,
     },
     cardiorrespiratorio: {

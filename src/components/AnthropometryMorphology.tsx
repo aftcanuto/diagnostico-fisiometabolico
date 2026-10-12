@@ -99,17 +99,19 @@ export function Somatochart({ somatotype, sex }: { somatotype: AnthropometryResu
   const profile = (kind: SomatotypeProfile, x: number, y: number, label: string, color: string) => {
     const figure = somatotypeFigure(kind, sex);
     const skin = '#d99670';
-    return <g transform={`translate(${x} ${y}) scale(.43) translate(-30 -72)`} aria-label={`Perfil corporal ${label}`}>
-      <ellipse {...figure.head} fill={skin} />
-      <path d={figure.neck} fill={skin} />
-      <path d={figure.leftArm} fill={skin} /><path d={figure.rightArm} fill={skin} />
-      <path d={figure.leftLeg} fill={skin} /><path d={figure.rightLeg} fill={skin} />
-      <path d={figure.torso} fill={skin} />
-      <path d={figure.pelvis} fill={skin} />
-      <path d={figure.garment} fill={color} opacity=".92" />
-      <path d="M26 7 Q30 3 34 7" fill="none" stroke="#7c4b3a" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="30" y1="29" x2="30" y2="66" stroke="#9b654e" strokeWidth=".8" opacity=".55" />
-      <text x="30" y="158" textAnchor="middle" fontSize="17" fontWeight="700" fill={color}>{label}</text>
+    return <g transform={`translate(${x} ${y})`} aria-label={`Perfil corporal ${label}`}>
+      <g transform="scale(.39 .49) translate(-30 -72)">
+        <ellipse {...figure.head} fill={skin} />
+        <path d={figure.neck} fill={skin} />
+        <path d={figure.leftArm} fill={skin} /><path d={figure.rightArm} fill={skin} />
+        <path d={figure.leftLeg} fill={skin} /><path d={figure.rightLeg} fill={skin} />
+        <path d={figure.torso} fill={skin} />
+        <path d={figure.pelvis} fill={skin} />
+        <path d={figure.garment} fill={color} opacity=".92" />
+        <path d="M26 7 Q30 3 34 7" fill="none" stroke="#7c4b3a" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="30" y1="29" x2="30" y2="66" stroke="#9b654e" strokeWidth=".8" opacity=".55" />
+      </g>
+      <text y="48" textAnchor="middle" fontSize="8" fontWeight="700" fill={color}>{label}</text>
     </g>;
   };
   return <figure style={{ margin: 0, maxWidth: 760 }}>

@@ -51,6 +51,8 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
   const fat = result('fatPercent');
   const bmi = result('bmiClassification') ?? result('bmi');
   const waistHeight = result('waistHeightRatio');
+  const waistHip = result('waistHipRatio');
+  const cormic = result('cormicIndex');
   const mass = measurement('mass');
   const height = measurement('height');
   const soma = snapshot.somatotype;
@@ -107,12 +109,19 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
         <div style="font-size:13px;font-weight:800;color:#0f172a">Composicao corporal estimada</div>
         <p style="font-size:9px;line-height:1.45;color:#64748b;margin:5px 0 12px">Participacao da massa corporal em quatro compartimentos. ${esc(waistNote)}.</p>
         ${tissueBar}
-        <p style="font-size:8px;line-height:1.4;color:#64748b;margin:10px 0 0">Total: 100%. O componente residual completa a massa corporal nao atribuida as tres estimativas selecionadas. Se as equacoes excederem 100%, os componentes sao normalizados apenas para visualizacao.</p>
         <div style="margin-top:14px;padding-top:11px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
           <div><span style="font-size:8px;color:#94a3b8">ENDOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.endomorphy)}</strong></div>
           <div><span style="font-size:8px;color:#94a3b8">MESOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.mesomorphy)}</strong></div>
           <div><span style="font-size:8px;color:#94a3b8">ECTOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.ectomorphy)}</strong></div>
         </div>
+      </div>
+    </div>
+    <div style="margin-top:11px;border:1px solid #dbe7e3;background:#f4fbf8;border-radius:8px;padding:10px 12px">
+      <div style="font-size:8px;font-weight:800;color:#087f6d;text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px">Indicadores de saude e proporcionalidade</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div><span style="font-size:8px;color:#64748b">Cintura / estatura</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(waistHeight?.value)}</strong></div>
+        <div><span style="font-size:8px;color:#64748b">Cintura / quadril</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(waistHip?.value)}</strong></div>
+        <div><span style="font-size:8px;color:#64748b">Indice cormico</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(cormic?.value)}${cormic ? '%' : ''}</strong></div>
       </div>
     </div>
     <p style="font-size:8.5px;line-height:1.45;color:#64748b;margin:11px 2px 0">As massas sao estimativas antropometricas e nao equivalem a mensuracao por DXA.</p>
@@ -147,12 +156,12 @@ function somatochartHtml(soma: Snapshot['somatotype'], sex?: string): string {
   const silhouette = (kind: SomatotypeProfile, x: number, y: number, label: string, color: string) => {
     const figure = somatotypeFigure(kind, sex);
     const head = figure.head;
-    return `<g transform="translate(${x} ${y}) scale(.68) translate(-30 -72)" aria-label="Perfil corporal ${label}">
+    return `<g transform="translate(${x} ${y})" aria-label="Perfil corporal ${label}"><g transform="scale(.6 .76) translate(-30 -72)">
       <ellipse cx="${head.cx}" cy="${head.cy}" rx="${head.rx}" ry="${head.ry}" fill="#d99670"/><path d="${figure.neck}" fill="#d99670"/>
       <path d="${figure.leftArm}" fill="#d99670"/><path d="${figure.rightArm}" fill="#d99670"/><path d="${figure.leftLeg}" fill="#d99670"/><path d="${figure.rightLeg}" fill="#d99670"/>
       <path d="${figure.torso}" fill="#d99670"/><path d="${figure.pelvis}" fill="#d99670"/><path d="${figure.garment}" fill="${color}" opacity=".92"/>
       <path d="M26 7 Q30 3 34 7" fill="none" stroke="#7c4b3a" stroke-width="1.5" stroke-linecap="round"/><line x1="30" y1="29" x2="30" y2="66" stroke="#9b654e" stroke-width=".8" opacity=".55"/>
-      <text x="30" y="158" text-anchor="middle" font-size="14" font-weight="700" fill="${color}">${label}</text></g>`;
+      </g><text y="68" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${label}</text></g>`;
   };
   return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 640 390" style="display:block;width:100%;height:300px">
     <rect width="640" height="370" rx="8" fill="#f8fafc"/><path d="M116 300 Q320 354 524 300 Q564 164 320 54 Q76 164 116 300 Z" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
@@ -206,9 +215,12 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
       &&
       !(enabled(row, 'measurements') && result.methodId === 'direct')
       && !(enabled(row, 'somatotype') && result.methodId === 'heathCarter'));
-    if (correctedGirths.length) sections.push(block('Perimetros corrigidos',
+    const forearm = s.measurements?.forearm?.value;
+    const correctedRows: unknown[][] = correctedGirths.map(result => [result.label, `${fmt(result.value)} ${result.unit}`]);
+    if (typeof forearm === 'number' && Number.isFinite(forearm)) correctedRows.splice(1, 0, ['Antebraco (medida direta, sem correcao)', `${fmt(forearm)} cm`]);
+    if (correctedRows.length) sections.push(block('Perimetros corrigidos',
       '<p style="font-size:10px">Derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas preservadas; antebraco sem correcao por nao haver dobra correspondente.</p>' +
-      table(['Resultado', 'Valor'], correctedGirths.map(result => [result.label, `${fmt(result.value)} ${result.unit}`]))));
+      table(['Resultado', 'Valor'], correctedRows)));
     if (regionalRows.length) sections.push(block('Distribuicao antropometrica regional', regionalBodyHtml(regionalRows, s.context.sex)));
     const resultBlocks = chunks(rows, 14).map((group, index) => block(`Resultados selecionados${index ? ' (continuacao)' : ''}`, table(
       ['Resultado', 'Valor'],
@@ -243,7 +255,6 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
     ['Protocolo de coleta', input.collectionProtocol], ['Condicoes', input.conditions], ['Observacoes', input.notes],
     ['Categoria populacional informada', input.populationCategory === 'whiteHispanic' ? 'Branca ou hispanica' : input.populationCategory === 'africanAmerican' ? 'Negra ou afrodescendente' : input.populationCategory === 'asian' ? 'Asiatica' : 'Nao informada'],
     ['Gestacao informada', input.pregnant == null ? 'Nao informada' : input.pregnant ? 'Sim' : 'Nao'],
-    ['Atividade', `Fator: ${fmt(input.activityFactor)}; justificativa: ${input.activityJustification || 'Nao informada'}`],
     ].map(([title, value]) => [title, value || 'Nao informado']);
     sections.push(block('Contexto da coleta', table(['Item', 'Registro'], contextRows)),
       ...(input.instruments?.length ? [block('Instrumentos', table(['Instrumento', 'Resolucao', 'Unidade'], input.instruments.map(i => [i.name, fmt(i.resolution), i.unit])))] : []));

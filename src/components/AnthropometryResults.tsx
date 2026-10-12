@@ -20,6 +20,9 @@ function CompositionSummary({ rows }: { rows: ResultRow[] }) {
   const muscle = value(['lee2000', 'martin1990', 'kerrMuscle1988']);
   const adipose = value(['kerrAdipose1988', 'fatMass']);
   const bone = value(['martinBone1991', 'rocha1975']);
+  const waistHeight = value(['waistHeightRatio']);
+  const waistHip = value(['waistHipRatio']);
+  const cormic = value(['cormicIndex']);
   const percentages = [
     value(['kerrAdipose1988Percent', 'fatPercent'])?.value,
     value(['lee2000Percent', 'martin1990Percent', 'kerrMuscle1988Percent'])?.value,
@@ -40,7 +43,13 @@ function CompositionSummary({ rows }: { rows: ResultRow[] }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10, marginBottom: 14 }}>
       {[['Massa muscular', muscle], ['Massa adiposa', adipose], ['Massa ossea', bone]].map(([label, row]) => <div key={String(label)} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, background: '#f8fafc' }}><div style={{ fontSize: 11, color: '#64748b' }}>{String(label)}</div><strong style={{ display: 'block', fontSize: 20, marginTop: 4 }}>{row ? `${anthropometryFormat((row as ResultRow).value)} kg` : 'Nao disponivel'}</strong></div>)}
     </div>
-    {complete ? <><div data-tissue-total="100" style={{ height: 18, display: 'flex', overflow: 'hidden', borderRadius: 999, background: '#e2e8f0' }}>{parts.map((part, index) => <span key={labels[index]} style={{ width: `${Math.max(0, part)}%`, background: colors[index] }} />)}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8, marginTop: 8 }}>{labels.map((label, index) => <div key={label} style={{ fontSize: 11, color: '#64748b' }}><span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: 2, background: colors[index], marginRight: 4 }} />{label}<strong style={{ display: 'block', color: '#334155', marginTop: 3 }}>{anthropometryFormat(parts[index], 1)}%</strong></div>)}</div><p style={{ fontSize: 11, color: '#64748b', marginTop: 9 }}>Total: 100%. O componente residual completa a massa corporal nao atribuida as estimativas adiposa, muscular e ossea.</p></> : <p style={{ fontSize: 12, color: '#64748b' }}>O fracionamento percentual requer estimativas selecionadas de massa adiposa, muscular e ossea.</p>}
+    {complete ? <><div data-tissue-total="100" style={{ height: 18, display: 'flex', overflow: 'hidden', borderRadius: 999, background: '#e2e8f0' }}>{parts.map((part, index) => <span key={labels[index]} style={{ width: `${Math.max(0, part)}%`, background: colors[index] }} />)}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8, marginTop: 8 }}>{labels.map((label, index) => <div key={label} style={{ fontSize: 11, color: '#64748b' }}><span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: 2, background: colors[index], marginRight: 4 }} />{label}<strong style={{ display: 'block', color: '#334155', marginTop: 3 }}>{anthropometryFormat(parts[index], 1)}%</strong></div>)}</div></> : <p style={{ fontSize: 12, color: '#64748b' }}>O fracionamento percentual requer estimativas selecionadas de massa adiposa, muscular e ossea.</p>}
+    <div style={{ marginTop: 14, border: '1px solid #dbe7e3', background: '#f4fbf8', borderRadius: 8, padding: 12 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#087f6d', marginBottom: 9 }}>Indicadores de saude e proporcionalidade</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 10 }}>
+        {[['Cintura / estatura', waistHeight, ''], ['Cintura / quadril', waistHip, ''], ['Indice cormico', cormic, '%']].map(([label, row, unit]) => <div key={String(label)}><span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>{String(label)}</span><strong style={{ display: 'block', fontSize: 17, marginTop: 3 }}>{anthropometryFormat((row as ResultRow | undefined)?.value)}{row ? String(unit) : ''}</strong></div>)}
+      </div>
+    </div>
   </section>;
 }
 
@@ -119,6 +128,7 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
       <h2 style={heading}>Perimetros corrigidos</h2>
       <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Valores derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas permanecem preservadas; o antebraco nao recebe correcao por nao haver dobra correspondente no protocolo.</p>
       <ResultsTable rows={correctedGirths} snapshot={results} />
+      {typeof results.measurements?.forearm?.value === 'number' && <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12, padding: '10px 8px', borderBottom: '1px solid #e5e7eb', fontSize: 13 }}><strong>Antebraco (medida direta, sem correcao)</strong><span>{anthropometryFormat(results.measurements.forearm.value)} cm</span></div>}
     </section>}
     {regionalRows.some(row => row.value != null) && <section data-anthropometry-section="regional-distribution" style={section}>
       <h2 style={heading}>Distribuicao antropometrica regional</h2>

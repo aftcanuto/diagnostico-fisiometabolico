@@ -378,6 +378,10 @@ function main() {
   assert(laudo.indexOf('Analise em versao PDF/paciente simulada para biomecanica_corrida.') > laudo.indexOf('Gráficos cinemáticos'),
     'Biomecanica: analise deve aparecer depois da ultima pagina de resultados do modulo');
   assert(laudo.includes('Conclusão clínica') || laudo.includes('Conclusao clinica'), 'Laudo deveria incluir a conclusão clínica integrada');
+  assert(!laudo.includes('Idade metabólica'), 'Laudo nao deve exibir idade metabolica na bioimpedancia');
+  assert(laudo.includes('Gordura visceral'), 'Laudo deve exibir gordura visceral na bioimpedancia');
+  assert(laudo.includes('Indicadores de saude e proporcionalidade'), 'Dashboard antropometrico deve exibir indicadores de saude');
+  assert(!laudo.includes('O componente residual completa a massa corporal'), 'Laudo nao deve exibir explicacao tecnica do componente residual');
   assert(laudo.indexOf('A avaliação integrada indica condição funcional global favorável') < laudo.indexOf('Referências bibliográficas'),
     'Conclusao integrada deve aparecer antes das referencias bibliograficas');
   const inicioProtocolos = laudo.indexOf('Protocolos utilizados');

@@ -348,6 +348,16 @@ tr:last-child td { border-bottom: none; }
 .ai-box { background: var(--pdf-highlight); border-left: 5px solid ${pri}; border-radius: 0 22px 22px 0; padding: 14px 22px; margin-top: 20px; break-inside: auto; page-break-inside: auto; }
 .ai-title { font-size: 11px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .ai-text { font-size: 13px; line-height: 1.7; color: #374151; }
+.bio-compact .kpi { padding:9px 11px; min-height:48px; }
+.bio-compact .kpi-label { font-size:8px; margin-bottom:3px; }
+.bio-compact .kpi-val { font-size:13px; }
+.bio-segments table { font-size:9px; }
+.bio-segments th, .bio-segments td { padding:5px 7px; }
+.bio-analysis .ai-box, .rml-analysis .ai-box { margin-top:8px; padding:10px 14px; border-radius:0 14px 14px 0; }
+.bio-analysis .ai-title, .rml-analysis .ai-title { margin-bottom:5px; font-size:9px; }
+.bio-analysis .ai-text, .rml-analysis .ai-text { font-size:9.4px; line-height:1.42; }
+.rml-table table { font-size:10px !important; }
+.rml-table th, .rml-table td { padding:6px 9px !important; }
 .dark-block { background: var(--pdf-panel); border:1px solid var(--pdf-line); border-radius: 22px; padding: 18px 22px; color: #111827; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
 .dark-label { font-size: 8px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
 .prog-bar { background: #1f2937; border-radius: 999px; height: 8px; overflow: hidden; }
@@ -1228,8 +1238,9 @@ function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
   const segs=[{k:'braco_dir',l:'Braço D',c:'bd'},{k:'braco_esq',l:'Braço E',c:'be'},{k:'tronco',l:'Tronco',c:'tr'},{k:'perna_dir',l:'Perna D',c:'pd'},{k:'perna_esq',l:'Perna E',c:'pe'}];
   const temSeg=Object.keys(sm).length>0;
   const mostrarGorduraBio = b.percentual_gordura != null && (!gorduraRelatorio?.fonteDefinida || gorduraRelatorio.fonte === 'bioimpedancia');
-  return pgModulo('Bioimpedância', null, `
-  <div class="dark-block">
+  const bioAnalysis = aiBlock(ia);
+  return pgModulo('Bioimpedância', null, `<div class="bio-compact">
+  <div class="dark-block" style="padding:14px 18px;margin-bottom:10px">
     <div class="dark-label">${x(b.aparelho??'Avabio 380')}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
       ${b.peso_kg!=null?`<div><div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1">${b.peso_kg}</div><div style="font-size:8px;color:#6b7280;margin-top:3px">Peso (kg)</div></div>`:''}
@@ -1238,22 +1249,21 @@ function pgBio(b: any, ia?: any, gorduraRelatorio?: any): string {
       ${b.agua_corporal_kg!=null?`<div><div style="font-size:20px;font-weight:800;color:#2563eb;line-height:1">${b.agua_corporal_kg}</div><div style="font-size:8px;color:#6b7280;margin-top:3px">Água (kg)</div></div>`:''}
     </div>
   </div>
-  <div class="kpi-grid">
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
     ${b.imc!=null?kpi('IMC',b.imc):''}
     ${b.taxa_metabolica_basal_kcal!=null?kpi('TMB',b.taxa_metabolica_basal_kcal,'kcal/dia'):''}
     ${b.indice_apendicular!=null?kpi('Índice apendicular',b.indice_apendicular):''}
-    ${b.idade_metabolica!=null?kpi('Idade metabólica',b.idade_metabolica,'anos'):''}
     ${b.gordura_visceral_nivel!=null?kpi('Gordura visceral',b.gordura_visceral_nivel,'nível'):''}
   </div>
-  ${(resumo.agua_corporal_kg!=null||resumo.agua_corporal_percentual_peso!=null||resumo.assimetrias.length>0)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px">
+  ${(resumo.agua_corporal_kg!=null||resumo.agua_corporal_percentual_peso!=null||resumo.assimetrias.length>0)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 10px">
     ${(resumo.agua_corporal_kg!=null||resumo.agua_corporal_percentual_peso!=null)?`<div style="padding:10px;border:1px solid #bae6fd;border-radius:8px;background:#f0f9ff"><div class="kpi-label">Água corporal</div><div style="font-size:16px;font-weight:800;color:#0284c7">${[resumo.agua_corporal_kg!=null?`${x(resumo.agua_corporal_kg)} kg`:null,resumo.agua_corporal_percentual_peso!=null?`${x(resumo.agua_corporal_percentual_peso)}% do peso`:null].filter(Boolean).join(' · ')}</div><div style="font-size:8px;line-height:1.4;color:#64748b;margin-top:4px">A interpretação depende do aparelho, preparo e equilíbrio de fluidos; não diagnostica hidratação isoladamente.</div></div>`:''}
     ${resumo.assimetrias.length?`<div style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc"><div class="kpi-label">Assimetrias segmentares</div>${resumo.assimetrias.map(item=>`<div style="font-size:8.5px;line-height:1.45;color:#334155">${x(item.componente)} · ${x(item.segmento)}: <b>${x(item.assimetria_percentual)}%</b> (${x(item.maior_lado)})</div>`).join('')}<div style="font-size:8px;line-height:1.4;color:#64748b;margin-top:4px">Comparação descritiva, sem corte universal ou inferência isolada de lesão.</div></div>`:''}
   </div>`:''}
-  ${temSeg?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-    <div><div class="sec-sub">Massa magra por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sm[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sm[s.k]?.kg??'—'}</td><td>${sm[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
-    <div><div class="sec-sub">Gordura por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sg[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sg[s.k]?.kg??'—'}</td><td>${sg[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
+  ${temSeg?`<div class="bio-segments" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+    <div><div class="sec-sub" style="margin:8px 0 5px">Massa magra por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sm[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sm[s.k]?.kg??'—'}</td><td>${sm[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
+    <div><div class="sec-sub" style="margin:8px 0 5px">Gordura por segmento</div><table><thead><tr><th>Segmento</th><th>kg</th><th>%</th></tr></thead><tbody>${segs.filter(s=>sg[s.k]).map(s=>`<tr><td>${s.l}</td><td style="font-weight:700">${sg[s.k]?.kg??'—'}</td><td>${sg[s.k]?.pct??'—'}%</td></tr>`).join('')}</tbody></table></div>
   </div>`:''}
-  `, ia);
+  <div class="bio-analysis">${bioAnalysis}</div></div>`, undefined);
 
 }
 
@@ -1477,7 +1487,7 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
   const miniGauge = (val: number | null, lbl: string, cls?: string | null) => {
     const cor = cls ? (COR_CLASSE[cls] ?? '#6b7280') : '#6b7280';
     const unit = lbl.toLowerCase().includes('seg') ? 'seg' : 'reps';
-    return `<div style="flex:1 1 120px;min-width:118px;background:#fff;border:1px solid ${cor}33;border-radius:12px;padding:12px 10px;text-align:center">
+    return `<div style="min-width:0;background:#fff;border:1px solid ${cor}33;border-radius:12px;padding:10px 7px;text-align:center">
       <div style="font-size:26px;font-weight:900;color:${cor};line-height:1">${val??'—'}</div>
       <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:3px 0 5px">${unit}</div>
       <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.35px;text-align:center;line-height:1.25;white-space:normal">${x(lbl).replace(/\n/g,'<br/>')}</div>
@@ -1561,17 +1571,18 @@ function pgRML(r: any, score: number | null, sexo: 'M'|'F', idade: number, ia?: 
   </div>
 
   <!-- Gauges -->
-  <div style="display:flex;gap:16px;justify-content:flex-start;align-items:flex-start;flex-wrap:wrap;margin-bottom:22px;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+  <div style="display:grid;grid-template-columns:repeat(${cat === 'jovem_ativo' ? 5 : 2},minmax(0,1fr));gap:8px;margin-bottom:12px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
     ${gaugesHTML || '<span style="color:#9ca3af;font-size:12px">Nenhum teste registrado</span>'}
   </div>
 
   <!-- Tabela detalhada -->
-  <div style="border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:16px">
+  <div class="rml-table" style="border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:10px">
     ${tabelaHTML}
   </div>
 
-  ${r.observacoes ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid #e5e7eb"><b style="color:#374151">Observações:</b> ${x(r.observacoes)}</div>` : ''}
-  `, ia);
+  ${r.observacoes ? `<div style="font-size:10px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:8px 12px;margin-bottom:8px;border-left:3px solid #e5e7eb"><b style="color:#374151">Observações:</b> ${x(r.observacoes)}</div>` : ''}
+  <div class="rml-analysis">${aiHTML}</div>
+  `, undefined);
 }
 
 function numeroPdf(valor: any): number | null {
@@ -1673,12 +1684,12 @@ function pgConclusao(d: LaudoData, pri: string): string {
   if (textoPdf) {
     const length = textoPdf.length;
     const typography = length <= 2800
-      ? { font: 11, line: 1.52, padding: '18px 20px' }
-      : length <= 4200
-        ? { font: 9.8, line: 1.42, padding: '16px 18px' }
-        : length <= 5600
-          ? { font: 8.7, line: 1.34, padding: '14px 17px' }
-          : { font: 7.8, line: 1.27, padding: '13px 16px' };
+      ? { font: 12.6, line: 1.5, padding: '18px 20px' }
+      : length <= 4400
+        ? { font: 11.8, line: 1.43, padding: '17px 19px' }
+        : length <= 6200
+          ? { font: 10.8, line: 1.36, padding: '15px 18px' }
+          : { font: 9.5, line: 1.28, padding: '14px 17px' };
     return `<section class="page module conclusion-page" style="display:flex;flex-direction:column">
       <div class="mod-head" style="flex:0 0 auto">
         <h2 class="mod-title">Conclusão clínica</h2>
@@ -2051,14 +2062,14 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
     protocolo?.label && protocolo?.texto && !padroesConhecidos.test(`${protocolo.label} ${protocolo.texto}`)));
   const refs = referenciasAvaliacao(d.modulos, d.dados.antropometria);
   const gruposRefs = [];
-  for (let i = 0; i < refs.length; i += 9) gruposRefs.push(refs.slice(i, i + 9));
+  for (let i = 0; i < refs.length; i += 14) gruposRefs.push(refs.slice(i, i + 14));
   const paginasRefs = [];
   let inicioRef = 1;
   for (const grupoRefs of gruposRefs) {
     paginasRefs.push(`<section class="ref-section page module" style="page-break-after:auto">
       <div class="mod-head"><div class="mod-title">Referências bibliográficas</div></div>
-      <ol start="${inicioRef}" style="padding-left:18px;font-size:10.5px;line-height:1.42;overflow-wrap:anywhere">
-        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:12px;break-inside:avoid">
+      <ol start="${inicioRef}" style="padding-left:18px;font-size:10px;line-height:1.34;overflow-wrap:anywhere">
+        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:8px;break-inside:avoid">
           <div style="font-weight:700;color:${pri}">${x(ref.modulos.filter(m => d.modulos[m] === true).map(m => MODULOS_REFERENCIAS[m]).join(' · '))}</div>
           <div>${x(ref.texto)}</div>
           ${ref.nota ? `<div style="color:#64748b">${x(ref.nota)}</div>` : ''}
