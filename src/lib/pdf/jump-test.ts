@@ -17,12 +17,31 @@ export function jumpReportHtml(data: unknown, analysisHtml = '') {
   if (!parsed.success) return '<section class="page module"><div class="mod-head"><h2 class="mod-title">Jump Test</h2></div><p class="module-intro">Os testes de salto avaliam potencia, capacidade explosiva, uso do ciclo alongamento-encurtamento e resposta reativa.</p><p>Sem coleta valida disponivel.</p></section>';
   const d = parsed.data, s = jumpSummary(d), ref = jumpReference(d);
   const page = (title: string, body: string) => `<section class="page module"><div class="mod-head"><h2 class="mod-title">${esc(title)}</h2></div>${title === 'Jump Test' ? '<p class="module-intro">Os testes de salto avaliam potencia, capacidade explosiva, uso do ciclo alongamento-encurtamento e resposta reativa por tempos de voo e contato.</p>' : ''}${body}</section>`;
-  const summary = `<p style="font-size:11px;margin-bottom:12px">${esc(d.equipamento)} · ${esc(d.software)} · Massa ${fmt(d.peso_kg)} kg · DJ ${d.altura_queda_cm} cm · Repetidos 15 s<br/>Tecnica dos bracos definida por protocolo · Descanso: ${d.descanso_s} s · Esporte: ${esc(d.esporte)} · Nivel: ${esc(d.nivel)}</p>
+  const protocolCards = s.grupos.map((g, index) => {
+    const colors = ['#0f766e','#2563eb','#7c3aed','#b45309','#be123c'];
+    const color = colors[index % colors.length];
+    const secondary = g.rsi_medio != null ? `RSI ${fmt(g.rsi_medio)} m/s` : g.potencia_media_w != null ? `Pico medio ${fmt(g.potencia_media_w)} W` : `CV ${fmt(g.cv_percent)}%`;
+    return `<div style="border:1px solid ${color}33;border-top:3px solid ${color};border-radius:8px;padding:9px 10px;background:#fff;min-height:82px">
+      <div style="font-size:9px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.4px">${esc(JUMP_PROTOCOLS[g.protocolo])}</div>
+      <div style="font-size:21px;font-weight:900;color:#0f172a;line-height:1;margin-top:6px">${fmt(g.melhor_cm)} <span style="font-size:9px;color:#64748b">cm</span></div>
+      <div style="font-size:8px;color:#64748b;margin-top:5px">Melhor · media ${fmt(g.media_cm)} cm</div>
+      <div style="font-size:8px;font-weight:700;color:${color};margin-top:4px">${secondary}</div>
+    </div>`;
+  }).join('');
+  const summary = `<style>.jump-trials th,.jump-trials td{padding:2px 5px!important;line-height:1.15}.jump-trials table{font-size:8.5px!important}</style><div data-jump-dashboard="true" style="margin-bottom:10px">
+    <div style="font-size:11px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Resumo neuromuscular</div>
+    <p style="font-size:9px;color:#64748b;line-height:1.35;margin:0 0 8px">Leitura rapida dos melhores saltos e indicadores centrais; as tentativas aparecem abaixo.</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:9px">${protocolCards}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px">
+      <div><span style="font-size:8px;color:#64748b;text-transform:uppercase">EUR altura</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:3px">${fmt(s.eur_altura)}</strong></div>
+      <div><span style="font-size:8px;color:#64748b;text-transform:uppercase">EUR potencia</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:3px">${fmt(s.eur_potencia)}</strong></div>
+      <div><span style="font-size:8px;color:#64748b;text-transform:uppercase">Assimetria</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:3px">${fmt(s.assimetria_altura_percent)}%</strong></div>
+    </div>
+  </div>
+  <p style="font-size:10px;margin-bottom:8px">${esc(d.equipamento)} · ${esc(d.software)} · Massa ${fmt(d.peso_kg)} kg · DJ ${d.altura_queda_cm} cm · Repetidos 15 s · Descanso ${d.descanso_s} s</p>
     ${!s.pronto ? `<p style="font-size:11px;color:#92400e">Resultados parciais: ${esc(s.pendencias.join(' '))}</p>` : ''}
-    ${table(['Protocolo', 'Validos', 'Media cm', 'Melhor cm', 'CV %', 'Pico medio W', 'RSI m/s'], s.grupos.map(g => [JUMP_PROTOCOLS[g.protocolo], String(g.n), fmt(g.media_cm), fmt(g.melhor_cm), fmt(g.cv_percent), fmt(g.potencia_media_w), fmt(g.rsi_medio)]))}
-    <p style="font-size:11px;margin-top:12px">EUR altura (${s.eur_protocolo ? `${s.eur_protocolo.toUpperCase()}/SJ` : '-'}): ${fmt(s.eur_altura)} · EUR potencia: ${fmt(s.eur_potencia)}<br/>Assimetria de altura: ${fmt(s.assimetria_altura_percent)}% · Maior media: ${esc(s.lado_maior_altura ?? '-')}</p>
-    <p style="font-size:10px;margin-top:8px">EUR: VJ/SJ nas coletas atuais; CMJ/SJ apenas em coleta legada sem VJ. Medias de tres tentativas. Assimetria: |D-E|/maior(D,E) x 100, CMJ unilateral. Potencia: ${esc(d.metodo_potencia)}. Sem inferencia de forca bilateral independente ou classificacao de lesao.</p>
-    ${ref ? `<div class="sec-sub">Referencia contextual</div><p style="font-size:10px">${esc(ref.label)}, n=${ref.n}, idade ${ref.idade_media} ± ${ref.idade_dp} anos. CMJ ${ref.media_cm} ± ${ref.dp_cm} cm (media ± DP). ${esc(ref.protocolo)}. ${esc(ref.fonte)}. ${esc(ref.limitacao)}<br/>Ressalvas do avaliador: ${esc(ref.justificativa)}</p>` : '<p style="font-size:10px;margin-top:10px">Sem referencia cientifica compativel selecionada. Sem percentis ou faixas universais.</p>'}
+  <p style="font-size:8px;margin:4px 0 10px;line-height:1.3">EUR: VJ/SJ nas coletas atuais; CMJ/SJ apenas em coleta legada sem VJ. Assimetria: |D-E|/maior(D,E) x 100, CMJ unilateral. Sem classificacao de lesao.</p>
+    ${ref ? `<div class="sec-sub">Referencia contextual</div><p style="font-size:10px">${esc(ref.label)}, n=${ref.n}, idade ${ref.idade_media} ± ${ref.idade_dp} anos. CMJ ${ref.media_cm} ± ${ref.dp_cm} cm (media ± DP). ${esc(ref.protocolo)}. ${esc(ref.fonte)}. ${esc(ref.limitacao)}<br/>Ressalvas do avaliador: ${esc(ref.justificativa)}</p>` : ''}
     `;
   const interpretation = `${d.observacoes ? `<div class="sec-sub">Condicoes e limitacoes</div><p style="font-size:11px;white-space:pre-wrap">${esc(d.observacoes)}</p>` : ''}
     ${d.conclusao ? `<div class="sec-sub">Conclusao profissional</div><p style="font-size:11px;white-space:pre-wrap">${esc(d.conclusao)}</p>` : ''}
@@ -41,8 +60,8 @@ export function jumpReportHtml(data: unknown, analysisHtml = '') {
         ].filter(Boolean);
         return details.length ? `${offset + i + 1}: ${details.join('; ')}` : '';
       }).filter(Boolean).join('\n');
-      blocks.push(`<div class="jump-trials" style="margin-top:12px;break-inside:avoid"><h3 style="font-size:13px;margin:0 0 3px">${esc(JUMP_PROTOCOLS[p])}${offset ? ' (continuacao)' : ''}</h3><p style="font-size:9px;margin:0 0 5px">Tecnica: ${esc(jumpProtocolTechnique(d, p))}.</p>` + table(['Salto', 'cm', 'mm', 'Voo ms', 'Contato ms', 'Pico W', 'W/kg', 'RSI m/s', 'Status'], rows) + (notes ? `<p style="font-size:9px;white-space:pre-wrap;margin-top:5px">${esc(notes)}</p>` : '') + '</div>');
+      blocks.push(`<div class="jump-trials" style="margin-top:8px;break-inside:avoid"><h3 style="font-size:12px;margin:0 0 2px">${esc(JUMP_PROTOCOLS[p])}${offset ? ' (continuacao)' : ''}</h3><p style="font-size:8px;margin:0 0 3px">Tecnica: ${esc(jumpProtocolTechnique(d, p))}.</p>` + table(['Salto', 'cm', 'mm', 'Voo ms', 'Contato ms', 'Pico W', 'W/kg', 'RSI m/s', 'Status'], rows) + (notes ? `<p style="font-size:8px;white-space:pre-wrap;margin-top:3px">${esc(notes)}</p>` : '') + '</div>');
     }
   }
-  return page('Jump Test', summary + blocks.join('') + interpretation);
+  return page('Jump Test', summary + '<div class="sec-sub">Tentativas por protocolo</div>' + blocks.join('') + interpretation);
 }

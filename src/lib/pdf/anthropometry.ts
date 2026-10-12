@@ -1,6 +1,7 @@
 import { qualificationLabel } from '@/lib/isak-qualification';
 import { compareAnthropometry, CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, REGIONAL_DISTRIBUTION_RESULT_IDS, type AnthropometryInput, type AnthropometryResults, type Result } from '@/lib/anthropometry';
 import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
+import { classifySomatotype } from '@/lib/anthropometry/formulas';
 
 // Read persisted snapshots only. No anthropometric calculation belongs in a report.
 type Snapshot = AnthropometryResults & { professional?: { name?: string; qualification?: unknown } };
@@ -41,33 +42,6 @@ function dashboardBodyHtml(sex: string): string {
   </svg>`;
 }
 
-function somatotypeDashboardHtml(snapshot: Snapshot): string {
-  const soma = snapshot.somatotype;
-  if (!soma) return '';
-  const model = bodyModelDataUri(snapshot.context.sex);
-  const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
-  const px = valid ? 175 + Math.max(-10, Math.min(10, soma.x!)) / 10 * 112 : 175;
-  const py = valid ? 151 - (Math.max(-12, Math.min(18, soma.y!)) + 12) / 30 * 114 : 151;
-  const miniature = (x: number, width: number) => `<image href="${model}" x="${x}" y="12" width="${width}" height="105" preserveAspectRatio="xMidYMid meet"/>`;
-  return `<div data-dashboard-somatochart="true" style="margin-top:12px;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;background:#fff;display:grid;grid-template-columns:1.25fr .9fr;gap:14px;align-items:center">
-    <div>
-      <div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:4px">Somatotipo na somatocarta</div>
-      <p style="font-size:8.5px;line-height:1.4;color:#64748b;margin:0 0 5px">O ponto mostra o equilibrio entre adiposidade relativa, robustez musculoesqueletica e linearidade corporal.</p>
-      <svg role="img" aria-label="Somatocarta resumida" viewBox="0 0 350 190" style="display:block;width:100%;height:128px">
-        <path d="M46 158 Q175 188 304 158 Q328 80 175 25 Q22 80 46 158 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-        <path d="M46 158 Q93 109 175 25 Q135 121 175 158 Z" fill="#f9e8eb" opacity=".8"/><path d="M175 25 Q257 109 304 158 L175 158 Z" fill="#e5f4f0" opacity=".9"/><path d="M46 158 Q175 117 304 158 Q175 187 46 158 Z" fill="#eef2f7" opacity=".9"/>
-        <line x1="55" y1="130" x2="295" y2="130" stroke="#cbd5e1"/><line x1="175" y1="34" x2="175" y2="158" stroke="#cbd5e1"/>
-        <text x="175" y="17" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">MESOMORFIA</text><text x="38" y="176" font-size="9" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="312" y="176" text-anchor="end" font-size="9" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
-        ${valid ? `<circle cx="${px}" cy="${py}" r="10" fill="#0f766e" opacity=".18"/><circle cx="${px}" cy="${py}" r="5" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
-      </svg>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;text-align:center">
-      ${[['Endo', soma.endomorphy, 52], ['Meso', soma.mesomorphy, 42], ['Ecto', soma.ectomorphy, 32]].map(([label, amount, width], index) => `<div style="min-width:0"><svg viewBox="0 0 70 124" style="width:100%;height:78px">${miniature((70 - Number(width)) / 2, Number(width))}</svg><div style="font-size:8px;color:${['#9f3f4f','#334155','#087f6d'][index]}">${label}</div><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(Number(amount))}</strong></div>`).join('')}
-      <div style="grid-column:1/-1;font-size:8px;line-height:1.35;color:#64748b;margin-top:2px">Miniaturas ilustram os tres componentes; nao representam o corpo real do avaliado.</div>
-    </div>
-  </div>`;
-}
-
 function anthropometryDashboardHtml(snapshot: Snapshot): string {
   const rows = selected(snapshot);
   const result = (id: string) => rows.find(item => item.id === id && withValue(item));
@@ -79,6 +53,9 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
   const mass = measurement('mass');
   const height = measurement('height');
   const soma = snapshot.somatotype;
+  const somatoClassification = [soma.endomorphy, soma.mesomorphy, soma.ectomorphy].every(value => typeof value === 'number' && Number.isFinite(value))
+    ? classifySomatotype(soma.endomorphy!, soma.mesomorphy!, soma.ectomorphy!)
+    : soma.classification;
   const fatValue = fat?.value ?? null;
   const muscleMass = firstResult(['lee2000', 'martin1990', 'kerrMuscle1988']);
   const adiposeMass = firstResult(['kerrAdipose1988', 'fatMass']);
@@ -122,7 +99,7 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;text-align:center">
         ${dashboardBodyHtml(snapshot.context.sex)}
         <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">Perfil corporal</div>
-        <div style="font-size:14px;font-weight:800;color:#0f172a;margin-top:4px">${esc(soma.classification || 'Nao calculado')}</div>
+        <div style="font-size:14px;font-weight:800;color:#0f172a;margin-top:4px">${esc(somatoClassification || 'Nao calculado')}</div>
         <div style="font-size:8px;color:#64748b;line-height:1.35;margin-top:4px">Descricao morfologica; nao representa diagnostico.</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px">
@@ -137,7 +114,6 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
         </div>
       </div>
     </div>
-    ${somatotypeDashboardHtml(snapshot)}
     <p style="font-size:8.5px;line-height:1.45;color:#64748b;margin:11px 2px 0">As massas sao estimativas antropometricas e nao equivalem a mensuracao por DXA.</p>
   </div>`;
   return page('Antropometria', dashboard);
@@ -167,14 +143,19 @@ function somatochartHtml(soma: Snapshot['somatotype']): string {
   const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
   const projectX = (amount: number) => 320 + Math.max(-10, Math.min(10, amount)) / 10 * 168;
   const projectY = (amount: number) => 290 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 214;
-  return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 640 370" style="display:block;width:100%;height:280px">
+  const silhouette = (kind: 'endo'|'meso'|'ecto', x: number, y: number, label: string, color: string) => {
+    const path = kind === 'endo' ? 'M0,-19 C-10,-18 -13,-9 -12,1 C-11,14 -8,23 -6,34 L-13,58 L-6,60 L0,40 L6,60 L13,58 L6,34 C8,23 11,14 12,1 C13,-9 10,-18 0,-19 Z' : kind === 'meso' ? 'M0,-19 L-14,-11 L-19,8 L-10,30 L-12,58 L-5,60 L0,34 L5,60 L12,58 L10,30 L19,8 L14,-11 Z' : 'M0,-19 C-5,-18 -7,-8 -6,5 L-5,30 L-8,60 L-2,60 L0,34 L2,60 L8,60 L5,30 L6,5 C7,-8 5,-18 0,-19 Z';
+    return `<g transform="translate(${x} ${y})"><circle cy="-27" r="6" fill="${color}" opacity=".82"/><path d="${path}" fill="${color}" opacity=".72"/><text y="73" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${label}</text></g>`;
+  };
+  return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 640 390" style="display:block;width:100%;height:300px">
     <rect width="640" height="370" rx="8" fill="#f8fafc"/><path d="M116 300 Q320 354 524 300 Q564 164 320 54 Q76 164 116 300 Z" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
     <path d="M116 300 Q203 177 320 54 Q260 222 320 300 Z" fill="#f9e8eb" opacity=".82"/><path d="M320 54 Q437 177 524 300 L320 300 Z" fill="#e5f4f0" opacity=".9"/><path d="M116 300 Q320 224 524 300 Q320 351 116 300 Z" fill="#edf2f7" opacity=".9"/>
     <g fill="none" stroke="#d4dde5" stroke-width="1"><path d="M155 278 Q320 322 485 278"/><path d="M198 244 Q320 275 442 244"/><path d="M155 275 Q222 160 320 54"/><path d="M485 275 Q418 160 320 54"/></g>
     <line x1="126" y1="218" x2="514" y2="218" stroke="#94a3b8"/><line x1="320" y1="66" x2="320" y2="300" stroke="#94a3b8"/>
     <text x="320" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">MESOMORFIA</text><text x="96" y="326" font-size="13" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="544" y="326" text-anchor="end" font-size="13" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
+    ${silhouette('endo',166,180,'Endo','#9f3f4f')}${silhouette('meso',320,135,'Meso','#334155')}${silhouette('ecto',474,180,'Ecto','#087f6d')}
     ${valid ? `<circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="13" fill="#0f766e" opacity=".18"/><circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="6" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
-    <text x="320" y="355" text-anchor="middle" font-size="10" fill="#64748b">O ponto combina endomorfia, mesomorfia e ectomorfia no sistema Heath-Carter.</text>
+    <text x="320" y="370" text-anchor="middle" font-size="10" fill="#64748b">O ponto combina endomorfia, mesomorfia e ectomorfia no sistema Heath-Carter.</text>
   </svg>`;
 }
 
@@ -244,7 +225,10 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
   }
   const soma = s.somatotype;
   if (enabled(row, 'somatotype') && soma && selected(s).some(r => /somato|heath/i.test(r.methodId))) {
-    sections.push(block('Somatotipo e somatocarta', block('Somatocarta', somatochartHtml(soma)) + block('Componentes', table(['Endomorfia', 'Mesomorfia', 'Ectomorfia', 'X / Y'], [[fmt(soma.endomorphy), fmt(soma.mesomorphy), fmt(soma.ectomorphy), `${fmt(soma.x)} / ${fmt(soma.y)}`]])) + (soma.classification ? `<p style="font-size:11px">Classificacao: ${esc(soma.classification)}</p>` : '')));
+    const classification = [soma.endomorphy, soma.mesomorphy, soma.ectomorphy].every(value => typeof value === 'number' && Number.isFinite(value))
+      ? classifySomatotype(soma.endomorphy!, soma.mesomorphy!, soma.ectomorphy!)
+      : soma.classification;
+    sections.push(block('Somatotipo e somatocarta', block('Somatocarta', somatochartHtml(soma)) + block('Componentes', table(['Endomorfia', 'Mesomorfia', 'Ectomorfia', 'X / Y'], [[fmt(soma.endomorphy), fmt(soma.mesomorphy), fmt(soma.ectomorphy), `${fmt(soma.x)} / ${fmt(soma.y)}`]])) + (classification ? `<p style="font-size:11px">Classificacao: ${esc(classification)}</p>` : '')));
   }
   if (enabled(row, 'context')) {
     const contextRows = [

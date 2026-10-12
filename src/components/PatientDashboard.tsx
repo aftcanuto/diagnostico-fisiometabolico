@@ -1196,7 +1196,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
 
   const zonas = atual.cardiorrespiratorio?.zonas;
   const zonaCores=['#22c55e','#10b981','#f59e0b','#f97316','#ef4444'];
-  const zonaNomes=['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO₂máx'];
+  const zonaNomes=['Regenerativo','Base aeróbica','Ritmo / tempo','Limiar','VO₂máx'];
   const numeroValido = (valor: any) => {
     const n = Number(valor);
     return Number.isFinite(n) ? n : null;
@@ -1213,7 +1213,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       : zonas ? [
         { label: 'Z1', nome: 'Regenerativo', min: numeroValido(zonas.z1?.min), max: numeroValido(zonas.z1?.max), cor: zonaCores[0] },
         { label: 'Z2', nome: 'Base aeróbica', min: numeroValido(zonas.z2?.min), max: numeroValido(zonas.z2?.max), cor: zonaCores[1] },
-        { label: 'Z3', nome: 'Aeróbico',      min: numeroValido(zonas.z3?.min), max: numeroValido(zonas.z3?.max), cor: zonaCores[2] },
+        { label: 'Z3', nome: 'Ritmo / tempo', min: numeroValido(zonas.z3?.min), max: numeroValido(zonas.z3?.max), cor: zonaCores[2] },
         { label: 'Z4', nome: 'Limiar',         min: numeroValido(zonas.z4?.min), max: numeroValido(zonas.z4?.max), cor: zonaCores[3] },
         { label: 'Z5', nome: 'VO₂máx',         min: numeroValido(zonas.z5?.min), max: numeroValido(zonas.z5?.max), cor: zonaCores[4] },
       ] : [];
@@ -1226,7 +1226,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
     const defs = [
       { label:'Z1', nome:'Regenerativo', intensidades:[60,65] },
       { label:'Z2', nome:'Base aeróbica', intensidades:[70,75] },
-      { label:'Z3', nome:'Aeróbico', intensidades:[80,85] },
+      { label:'Z3', nome:'Ritmo / tempo', intensidades:[80,85] },
       { label:'Z4', nome:'Limiar', intensidades:[90,95] },
       { label:'Z5', nome:'VO₂máx', intensidades:[100] },
     ];
@@ -1609,7 +1609,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
             {flex && (
               <div style={{ order: 60, background: 'white', borderRadius: 16, padding: '24px 28px', color: '#0f172a', border:'1px solid #e2e8f0' }}>
                 <div style={{ display:'flex',alignItems:'center',gap:8,fontSize: 18, fontWeight: 700, color:'#0f172a', marginBottom: 4 }}><span>Flexibilidade</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.flexibilidade)} /><ModuleScoreBadge score={sc.flexibilidade}/></div>
-                <div style={{ fontSize: 12, color:'#94a3b8', marginBottom: 16 }}>Banco de Wells - Sit and Reach</div>
+                <div style={{ fontSize: 12, color:'#94a3b8', marginBottom: 16 }}>Banco de Wells - cadeia posterior (isquiotibiais, eretores da coluna e tríceps sural)</div>
                 <div style={{display:'flex',alignItems:'center',gap:24,flexWrap:'wrap'}}>
                   <div style={{textAlign:'center',flexShrink:0,paddingRight:18,borderRight:'1px solid #f1f5f9'}}>
                     <div style={{fontSize:44,fontWeight:600,color:corFlex,lineHeight:1}}>{flex.melhor_resultado ?? '-'}</div>
@@ -2281,7 +2281,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
         return (
           <div style={{order: 90, background:'white',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px 28px',color:'#0f172a'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,fontSize:18,fontWeight:700,marginBottom:4}}><span>Saúde cardiovascular</span> <AnaliseInfoTooltip texto={textoAnaliseClinica(atual.analises_ia?.cardiorrespiratorio)} /><ModuleScoreBadge score={sc.cardiorrespiratorio}/></div>
-            <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aerobica, sinais vitais e zonas de treinamento</div>
+            <div style={{fontSize:12,color:'#94a3b8',marginBottom:16}}>Capacidade aeróbica e resposta ao esforço; os resultados permitem definir zonas de treinamento</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,190px),1fr))',gap:8}}>
               {itens.map(([l,v,u,c]: any) => <MetricLine key={l} label={l} value={v} unit={u} color={c}/>)}
             </div>
@@ -2348,9 +2348,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
                   Resistência Muscular (RML)
                   <AnaliseInfoTooltip texto={analiseRml} />
                 </div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                  {cat === 'jovem_ativo' ? 'Jovem / Ativo' : 'Idoso (≥ 60 anos)'}
-                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>Capacidade de MMSS, MMII e core sustentarem esforços repetidos ou prolongados</div>
               </div>
               {sc.rml != null && (
                 <div style={{ textAlign: 'center', padding: '9px 18px', background: '#f8fafc', border: '1px solid #d1fae5', borderRadius: 14 }}>

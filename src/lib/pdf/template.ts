@@ -969,8 +969,8 @@ function moduleIntroduction(titulo: string): string {
   const introductions: Record<string, string> = {
     'Bioimpedância': 'A bioimpedancia estima a distribuicao corporal por resistencia eletrica. A leitura prioriza agua corporal, massa magra, gordura e assimetrias entre segmentos.',
     'Força': 'A dinamometria quantifica a capacidade de produzir forca e compara lados e segmentos. Os resultados ajudam a identificar equilibrio funcional e orientar o treinamento.',
-    'Resistência Muscular (RML)': 'Os testes de resistencia muscular localizada observam quantas repeticoes podem ser sustentadas em um movimento padronizado e situam o desempenho em referencias validadas.',
-    'Cardiorrespiratório': 'O teste cardiorrespiratorio avalia a resposta ao esforco, o VO2max, os limiares e as zonas de treinamento para orientar intensidade e acompanhar a aptidao aerobica.',
+    'Resistência Muscular (RML)': 'A avaliacao de resistencia muscular localizada descreve a capacidade de MMSS, MMII e core sustentarem esforcos repetidos ou prolongados.',
+    'Cardiorrespiratório': 'O teste cardiorrespiratorio avalia a resposta ao esforco, o VO2max e os limiares. A partir desses resultados, podem ser definidas zonas individualizadas de treinamento.',
   };
   const text = introductions[titulo];
   return text ? `<p class="module-intro">${x(text)}</p>` : '';
@@ -1144,7 +1144,7 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
     ${p && !f && scoreP!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreP}</div>`:''}
     ${!p && scoreF!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreF}</div>`:''}
   </div>
-  <p class="module-intro" style="margin-top:12px">${p && f ? 'A posturografia descreve alinhamentos corporais, enquanto o teste de flexibilidade observa a amplitude da cadeia posterior pelo Banco de Wells.' : p ? 'A posturografia registra alinhamentos e assimetrias observaveis para apoiar a leitura funcional da postura.' : 'O teste de flexibilidade pelo Banco de Wells estima a amplitude da cadeia posterior e permite comparar o resultado com referencias do protocolo.'}</p>
+  <p class="module-intro" style="margin-top:12px">${p && f ? 'A posturografia descreve alinhamentos corporais, enquanto o teste de flexibilidade observa a amplitude da cadeia posterior (principalmente isquiotibiais, eretores da coluna e triceps sural) pelo Banco de Wells.' : p ? 'A posturografia registra alinhamentos e assimetrias observaveis para apoiar a leitura funcional da postura.' : 'O teste de flexibilidade pelo Banco de Wells estima a amplitude da cadeia posterior (principalmente isquiotibiais, eretores da coluna e triceps sural) e permite comparar o resultado com referencias do protocolo.'}</p>
 
   ${p ? `<!-- Posturografia -->
   <div style="padding:20px 0 18px;${f ? 'border-bottom:2px dashed #e5e7eb' : ''}">
@@ -1583,7 +1583,7 @@ function agruparVelocidadesTreino(vel: any[] = []) {
   const defs = [
     { label: 'Z1', nome: 'Regenerativo', intensidades: [60, 65] },
     { label: 'Z2', nome: 'Base aerobica', intensidades: [70, 75] },
-    { label: 'Z3', nome: 'Aerobico', intensidades: [80, 85] },
+    { label: 'Z3', nome: 'Ritmo / tempo', intensidades: [80, 85] },
     { label: 'Z4', nome: 'Limiar', intensidades: [90, 95] },
     { label: 'Z5', nome: 'VO2max', intensidades: [100] },
   ];
@@ -1604,7 +1604,7 @@ function agruparVelocidadesTreino(vel: any[] = []) {
 }
 
 function normalizarZonasLimiar(zLim: any[] = []) {
-  const nomes = ['Regenerativo', 'Base aerobica', 'Aerobico', 'Limiar', 'VO2max'];
+  const nomes = ['Regenerativo', 'Base aerobica', 'Ritmo / tempo', 'Limiar', 'VO2max'];
   return (Array.isArray(zLim) ? zLim : []).slice(0, 5).map((z: any, i: number) => ({
     label: `Z${i + 1}`,
     nome: z.nome ?? nomes[i],
@@ -1649,7 +1649,7 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
   </div>`:''}
   ${Object.keys(recFC).length?`<div class="sec-sub">Recuperação da FC</div>
   <table><thead><tr><th>Segundos</th>${[10,30,60].map(s=>`<th style="text-align:center">${s}s</th>`).join('')}</tr></thead>
-  <tbody><tr><td style="font-weight:600">Î” bpm</td>${[10,30,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:600;color:${cor}">${v??'—'}</td>`;}).join('')}</tr></tbody></table>
+  <tbody><tr><td style="font-weight:600">&Delta; bpm</td>${[10,30,60].map(s=>{const v=recFC[s];const cor=v!=null?(v<=-20?'#10b981':v<=-6?'#f59e0b':'#ef4444'):'#9ca3af';return `<td style="text-align:center;font-weight:600;color:${cor}">${v??'—'}</td>`;}).join('')}</tr></tbody></table>
   ${rec60!=null?`<div style="margin-top:8px;font-size:11px;font-weight:600;color:${recCor}">Rec. 60s: ${rec60} bpm · ${rec60<=-20?'Boa':rec60<=-12?'Mediana':'Ruim'}</div>`:''}
   `:''}
   ${zLim.length?`<div class="sec-sub">Zonas por limiar ventilatório</div>
@@ -1658,7 +1658,7 @@ function pgCardio(c: any, score: number | null, ia?: any): string {
   </div>`:''}
   ${Object.keys(zonas).length?`<div class="sec-sub">Zonas de treinamento Z1–Z5</div>
   <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-    ${['z1','z2','z3','z4','z5'].map((k,i)=>{const z=zonas[k];if(!z)return '';const pct=Math.round(z.max/(c.fc_max||200)*100);return `<div style="display:flex;align-items:center;gap:10px"><div style="width:80px;font-size:10px;font-weight:600;color:#374151">${['Z1 Regen.','Z2 Base','Z3 Aerobico','Z4 Limiar','Z5 VO2max'][i]}</div><div style="flex:1;background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${zCores[i]};border-radius:999px"></div></div><div style="width:88px;font-size:10px;color:#6b7280;text-align:right">${z.min}–${z.max} bpm</div></div>`;}).join('')}
+    ${['z1','z2','z3','z4','z5'].map((k,i)=>{const z=zonas[k];if(!z)return '';const pct=Math.round(z.max/(c.fc_max||200)*100);return `<div style="display:flex;align-items:center;gap:10px"><div style="width:100px;font-size:10px;font-weight:600;color:#374151">${['Z1 Regenerativo','Z2 Base','Z3 Ritmo/tempo','Z4 Limiar','Z5 VO2max'][i]}</div><div style="flex:1;background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${zCores[i]};border-radius:999px"></div></div><div style="width:88px;font-size:10px;color:#6b7280;text-align:right">${z.min}–${z.max} bpm</div></div>`;}).join('')}
   </div>`:''}
   ${vel.length?`<div class="sec-sub">Velocidades por intensidade</div>
   <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="text-align:left;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Zona</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h mín</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">km/h máx</th><th style="text-align:center;padding:6px 10px;font-size:9px;color:#94a3b8;text-transform:uppercase">Pace mín</th></tr></thead>
@@ -1671,10 +1671,10 @@ function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
   const textoPdf = textoAnalisePdf(c);
   if (textoPdf) {
-    return quebrarTextoPdf(textoPdf, 2400).map((parte, idx) => pgModulo(idx === 0 ? 'Conclusão clínica' : 'Conclusão clínica', null, `
+    return quebrarTextoPdf(textoPdf, 3900).map((parte, idx) => pgModulo(idx === 0 ? 'Conclusão clínica' : 'Conclusão clínica', null, `
       ${idx > 0 ? `<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:-10px;margin-bottom:18px">continuação</div>` : ''}
-      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:16px 20px">
-        <p style="font-size:12px;color:#166534;line-height:1.68;white-space:pre-line">${x(parte)}</p>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px 18px">
+        <p style="font-size:10.8px;color:#166534;line-height:1.55;white-space:pre-line">${x(parte)}</p>
       </div>
     `)).join('');
   }
@@ -2041,14 +2041,14 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
     protocolo?.label && protocolo?.texto && !padroesConhecidos.test(`${protocolo.label} ${protocolo.texto}`)));
   const refs = referenciasAvaliacao(d.modulos, d.dados.antropometria);
   const gruposRefs = [];
-  for (let i = 0; i < refs.length; i += 8) gruposRefs.push(refs.slice(i, i + 8));
+  for (let i = 0; i < refs.length; i += 9) gruposRefs.push(refs.slice(i, i + 9));
   const paginasRefs = [];
   let inicioRef = 1;
   for (const grupoRefs of gruposRefs) {
     paginasRefs.push(`<section class="ref-section page module" style="page-break-after:auto">
       <div class="mod-head"><div class="mod-title">Referências bibliográficas</div></div>
-      <ol start="${inicioRef}" style="padding-left:18px;font-size:11px;line-height:1.5;overflow-wrap:anywhere">
-        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:16px;break-inside:avoid">
+      <ol start="${inicioRef}" style="padding-left:18px;font-size:10.5px;line-height:1.42;overflow-wrap:anywhere">
+        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:12px;break-inside:avoid">
           <div style="font-weight:700;color:${pri}">${x(ref.modulos.filter(m => d.modulos[m] === true).map(m => MODULOS_REFERENCIAS[m]).join(' · '))}</div>
           <div>${x(ref.texto)}</div>
           ${ref.nota ? `<div style="color:#64748b">${x(ref.nota)}</div>` : ''}

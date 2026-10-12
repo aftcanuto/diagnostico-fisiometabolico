@@ -4,6 +4,17 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-12 - Somatocarta, Jump Test e compactacao do laudo
+
+- A classificacao Heath-Carter deixou de reduzir o resultado aos tres componentes dominantes e passou a aplicar as 13 categorias posicionais. O caso 2,13-7,2-0,77 e apresentado como `Meso-endomorfo`; snapshots antigos recebem a classificacao atual somente na apresentacao, sem alterar as medidas persistidas.
+- A somatocarta foi removida do dashboard antropometrico e permanece apenas no detalhamento. As miniaturas repetidas foram substituidas por silhuetas distintas de endomorfia, mesomorfia e ectomorfia, inseridas dentro do grafico para orientar a leitura das regioes.
+- O Jump Test ganhou um resumo visual com melhor salto, media e indicador central por protocolo, seguido pelo detalhamento das tentativas. O aviso `Sem referencia cientifica compativel selecionada` deixou de ser publicado quando nenhuma coorte contextual for escolhida.
+- Banco de Wells passou a explicitar a cadeia posterior avaliada; RML descreve a resistencia de MMSS, MMII e core; cardiorrespiratorio diferencia o que o teste mede das zonas que podem ser definidas a partir dos resultados.
+- Nas zonas de cinco faixas, Z1 permanece `Regenerativo` por extenso e Z3 passou a `Ritmo / tempo`, alinhado ao esquema de Joe Friel. O rotulo corrompido da variacao da recuperacao da FC foi substituido por `Delta bpm`, preservando o sinal negativo quando a FC cai.
+- A conclusao clinica passou a usar blocos maiores e tipografia mais compacta, reduzindo fragmentacao com espacos vazios. As referencias passaram a comportar nove itens por pagina com espacamento ajustado.
+- Base tecnica consultada: Heath e Carter, metodo antropometrico e categorias do somatotipo; guia de zonas de Joe Friel/TrainingPeaks, no qual Z1 e recuperacao ativa e Z3 e tempo. Sem migration.
+- Validacoes: TypeScript, lint, calculos clinicos, referencias, smoke completo, navegador antropometrico em 320/390/768 px e auditoria visual do PDF sem imagens quebradas, cards cortados, overflow horizontal ou paginas vazias.
+
 ### 2026-10-09 - Cintura minima e relacao cintura/estatura
 
 - Confirmado que o conjunto estrito coleta `Cintura minima` segundo o ponto anatomico ISAK e que essa medida alimenta matematicamente a relacao cintura/estatura.

@@ -24,12 +24,23 @@ export function ectomorphy(hwr:number):number {
 export function classifySomatotype(endo:number,meso:number,ecto:number):string {
   const values = [endo,meso,ecto];
   if (Math.max(...values)-Math.min(...values) <= 1) return 'Central';
-  const ranked = values.map((value,index) => ({value,index})).sort((a,b) => b.value-a.value);
-  if (ranked[0].value-ranked[1].value <= .5) {
-    const pair = [ranked[0].index,ranked[1].index].sort().join('');
-    return pair === '01' ? 'Mesomorfo-endomorfo' : pair === '12' ? 'Mesomorfo-ectomorfo' : 'Endomorfo-ectomorfo';
+  const close = (a:number,b:number) => Math.abs(a-b) <= .5;
+  if (endo > meso && endo > ecto) {
+    if (close(meso,ecto)) return 'Endomorfo equilibrado';
+    return meso > ecto ? 'Endo-mesomorfo' : 'Endo-ectomorfo';
   }
-  return ['Endomorfo','Mesomorfo','Ectomorfo'][ranked[0].index];
+  if (meso > endo && meso > ecto) {
+    if (close(endo,ecto)) return 'Mesomorfo equilibrado';
+    return endo > ecto ? 'Meso-endomorfo' : 'Meso-ectomorfo';
+  }
+  if (ecto > endo && ecto > meso) {
+    if (close(endo,meso)) return 'Ectomorfo equilibrado';
+    return endo > meso ? 'Ecto-endomorfo' : 'Ecto-mesomorfo';
+  }
+  if (close(endo,meso) && ecto < Math.min(endo,meso)) return 'Endomorfo-mesomorfo';
+  if (close(meso,ecto) && endo < Math.min(meso,ecto)) return 'Mesomorfo-ectomorfo';
+  if (close(endo,ecto) && meso < Math.min(endo,ecto)) return 'Endomorfo-ectomorfo';
+  return 'Central';
 }
 export function phantomZ(p:{value:number;height:number;mean:number;sd:number;dimension:1|2|3}):number|null {
   if (![p.value,p.height,p.mean,p.sd].every(Number.isFinite) || p.height <= 0 || p.sd <= 0) return null;

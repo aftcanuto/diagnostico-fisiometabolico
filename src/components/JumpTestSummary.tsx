@@ -8,10 +8,30 @@ export function JumpTestSummary({ data, previous, previousDate }: { data: unknow
   const d = parsed.data, s = jumpSummary(d), ref = jumpReference(d);
   const old = jumpSchema.safeParse(previous), before = old.success ? jumpSummary(old.data) : null;
   return <section aria-label="Resultados Jump Test" className="space-y-3 py-4" style={{ minWidth: 0 }}>
-    <h3 className="text-lg font-semibold">Jump Test</h3>
+    <div style={{fontSize:11,fontWeight:800,color:'#0f766e',textTransform:'uppercase',letterSpacing:'.8px'}}>Resumo neuromuscular</div>
+    <p style={{fontSize:12,color:'#64748b',lineHeight:1.5,margin:0}}>Melhores saltos e indicadores centrais da capacidade explosiva, reativa e do ciclo alongamento-encurtamento.</p>
+    <div data-jump-dashboard="true" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,180px),1fr))',gap:10}}>
+      {s.grupos.map((g,index)=>{
+        const colors=['#0f766e','#2563eb','#7c3aed','#b45309','#be123c'];
+        const color=colors[index%colors.length];
+        const secondary=g.rsi_medio!=null?`RSI ${jumpFormat(g.rsi_medio)} m/s`:g.potencia_media_w!=null?`Pico médio ${jumpFormat(g.potencia_media_w)} W`:`CV ${jumpFormat(g.cv_percent)}%`;
+        return <div key={g.protocolo} style={{border:`1px solid ${color}33`,borderTop:`4px solid ${color}`,borderRadius:8,padding:'12px 13px',background:'#fff',minWidth:0}}>
+          <div style={{fontSize:10,fontWeight:800,color,textTransform:'uppercase'}}>{JUMP_PROTOCOLS[g.protocolo]}</div>
+          <div style={{fontSize:28,fontWeight:800,color:'#0f172a',lineHeight:1,marginTop:8}}>{jumpFormat(g.melhor_cm)} <span style={{fontSize:11,color:'#64748b'}}>cm</span></div>
+          <div style={{fontSize:11,color:'#64748b',marginTop:6}}>Melhor · média {jumpFormat(g.media_cm)} cm</div>
+          <div style={{fontSize:11,fontWeight:700,color,marginTop:5}}>{secondary}</div>
+        </div>;
+      })}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:8,padding:12,border:'1px solid #e2e8f0',borderRadius:8,background:'#f8fafc',textAlign:'center'}}>
+      <div><div style={{fontSize:10,color:'#64748b'}}>EUR altura</div><strong>{jumpFormat(s.eur_altura)}</strong></div>
+      <div><div style={{fontSize:10,color:'#64748b'}}>EUR potência</div><strong>{jumpFormat(s.eur_potencia)}</strong></div>
+      <div><div style={{fontSize:10,color:'#64748b'}}>Assimetria</div><strong>{jumpFormat(s.assimetria_altura_percent)}%</strong></div>
+    </div>
     <p className="text-sm">{d.equipamento} · {d.peso_kg ? `${jumpFormat(d.peso_kg)} kg` : 'Peso nao informado'} · DJ {d.altura_queda_cm} cm · Repetidos {d.duracao_s} s</p>
     {(d.protocolos.includes('vj') || d.protocolos.includes('cmj')) && <p className="text-xs text-gray-600">{d.protocolos.filter(p => p === 'vj' || p === 'cmj').map(p => `${JUMP_PROTOCOLS[p]}: ${jumpProtocolTechnique(d, p)}`).join(' · ')}</p>}
     {!s.pronto && <p role="status" className="text-sm text-amber-800">Resultados parciais: {s.pendencias.join(' ')}</p>}
+    <h4 style={{fontSize:13,fontWeight:700,margin:'14px 0 4px'}}>Detalhamento por protocolo</h4>
     <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 480 }}>
       <thead><tr>{['Protocolo', 'Validos', 'Media (cm)', 'Melhor (cm)', 'CV (%)', 'Pico medio (W)', 'RSI (m/s)'].map(h => <th key={h} className="border-b p-2 text-left">{h}</th>)}</tr></thead>
       <tbody>{s.grupos.map(g => <tr key={g.protocolo}>{[JUMP_PROTOCOLS[g.protocolo], `${g.n}${g.completo ? '' : ' *'}`, jumpFormat(g.media_cm), jumpFormat(g.melhor_cm), jumpFormat(g.cv_percent), jumpFormat(g.potencia_media_w), jumpFormat(g.rsi_medio)].map((v, i) => <td key={i} className="border-b p-2">{v}</td>)}</tr>)}</tbody>

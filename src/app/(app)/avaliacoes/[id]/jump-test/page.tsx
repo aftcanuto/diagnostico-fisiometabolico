@@ -85,7 +85,7 @@ export default function JumpTestPage({ params }: { params: Promise<{ id: string 
         })}</div>
         <Button variant="secondary" onClick={() => change({ tentativas: [...form.tentativas, newJumpTrial(p, crypto.randomUUID())] })}><Plus size={16}/>{p === 'repetidos' ? 'Adicionar salto da serie' : 'Adicionar tentativa substituta'}</Button>
       </section>)}
-      <section className="space-y-3 border-t pt-5"><h2 className="font-semibold">Referencia cientifica contextual</h2><Select aria-label="Referencia cientifica" value={form.referencia} onChange={e => change({ referencia: e.target.value as JumpData['referencia'] })}><option value="nenhuma">Sem referencia compativel selecionada</option>{Object.entries(JUMP_REFERENCES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</Select>
+      <section className="space-y-3 border-t pt-5"><h2 className="font-semibold">Referencia cientifica contextual</h2><Select aria-label="Referencia cientifica" value={form.referencia} onChange={e => change({ referencia: e.target.value as JumpData['referencia'] })}><option value="nenhuma">Nao usar referencia contextual</option>{Object.entries(JUMP_REFERENCES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</Select>
         {form.referencia !== 'nenhuma' && <Field label="Compatibilidade da populacao e diferencas de protocolo"><Textarea value={form.referencia_justificativa} onChange={e => change({ referencia_justificativa: e.target.value })}/></Field>}
       </section>
       {form.tentativas.some(t => t.status === 'pendente' && validateEnteredJump(t).status === 'valida') &&

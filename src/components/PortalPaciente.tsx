@@ -665,7 +665,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const zonasItems=Array.isArray(zonas)
     ?zonas.map((z:any,i:number)=>({
       label:z.label??z.nome??`Z${i+1}`,
-      nome:z.descricao??z.nome??['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO2máx'][i]??`Zona ${i+1}`,
+      nome:z.descricao??z.nome??['Regenerativo','Base aeróbica','Ritmo / tempo','Limiar','VO2máx'][i]??`Zona ${i+1}`,
       min:z.min??0,
       max:z.max??0,
       cor:['#22c55e','#10b981','#f59e0b','#f97316','#ef4444'][i]??'#10b981',
@@ -673,7 +673,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     :zonas?[
     {label:'Z1',nome:'Regenerativo', min:zonas.z1?.min??0,max:zonas.z1?.max??0,cor:'#6ee7b7'},
     {label:'Z2',nome:'Base aeróbica',min:zonas.z2?.min??0,max:zonas.z2?.max??0,cor:'#34d399'},
-    {label:'Z3',nome:'Aeróbico',     min:zonas.z3?.min??0,max:zonas.z3?.max??0,cor:'#fbbf24'},
+    {label:'Z3',nome:'Ritmo / tempo',min:zonas.z3?.min??0,max:zonas.z3?.max??0,cor:'#fbbf24'},
     {label:'Z4',nome:'Limiar',       min:zonas.z4?.min??0,max:zonas.z4?.max??0,cor:'#f97316'},
     {label:'Z5',nome:'VO2máx',       min:zonas.z5?.min??0,max:zonas.z5?.max??0,cor:'#ef4444'},
   ]:[];
@@ -698,7 +698,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     const defs=[
       {label:'Z1',nome:'Regenerativo',intensidades:[60,65],match:['z1','zona 1']},
       {label:'Z2',nome:'Base aeróbica',intensidades:[70,75],match:['z2','zona 2']},
-      {label:'Z3',nome:'Aeróbico',intensidades:[80,85],match:['z3','zona 3']},
+      {label:'Z3',nome:'Ritmo / tempo',intensidades:[80,85],match:['z3','zona 3']},
       {label:'Z4',nome:'Limiar',intensidades:[90,95],match:['z4','zona 4']},
       {label:'Z5',nome:'VO2máx',intensidades:[100],match:['z5','zona 5']},
     ];
@@ -722,7 +722,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     const raw=Array.isArray((atual.cardiorrespiratorio as any)?.zonas_limiar)
       ?((atual.cardiorrespiratorio as any).zonas_limiar as any[])
       :[];
-    const nomes=['Regenerativo','Base aeróbica','Aeróbico','Limiar','VO2máx'];
+    const nomes=['Regenerativo','Base aeróbica','Ritmo / tempo','Limiar','VO2máx'];
     return raw.slice(0,5).map((z:any,i:number)=>({
       label:`Z${i+1}`,
       nome:z?.descricao??nomes[i]??`Zona ${i+1}`,
@@ -1255,9 +1255,9 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       })()}
 
       {/* 4. CARDIOVASCULAR */}
-      {atual.jump_test && <Secao ordem={56} titulo="Jump Test" sub="Capacidades neuromusculares"><JumpTestSummary data={atual.jump_test} previous={ant?.jump_test} previousDate={ant?.data}/></Secao>}
+      {atual.jump_test && <Secao ordem={56} titulo="Jump Test" sub="Potência, força explosiva, capacidade reativa e uso do ciclo alongamento-encurtamento"><JumpTestSummary data={atual.jump_test} previous={ant?.jump_test} previousDate={ant?.data}/></Secao>}
       {(vo2!=null||sv||zonasItems.length>0)&&(
-        <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica, sinais vitais e zonas de treinamento" score={sc.cardiorrespiratorio}>
+        <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica e resposta ao esforço; os resultados permitem definir zonas de treinamento" score={sc.cardiorrespiratorio}>
           {(vo2!=null||sv)&&(
             <Card style={{marginBottom:14}}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,230px),1fr))',gap:8}}>
@@ -1474,7 +1474,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 6. FLEXIBILIDADE */}
       {flex&&(
-        <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — Sit and Reach" score={sc.flexibilidade}>
+        <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — cadeia posterior (isquiotibiais, eretores da coluna e tríceps sural)" score={sc.flexibilidade}>
           <Card>
             <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:24}}>
               <div style={{textAlign:'center',flexShrink:0}}>
@@ -1541,7 +1541,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         const ativos = testes.filter(t => t.val != null);
         if (!ativos.length) return null;
         return (
-          <Secao ordem={80} titulo="Resistência Muscular (RML)" sub={cat === 'jovem_ativo' ? 'Jovem / Ativo — testes dinâmicos e isométricos' : 'Idoso — Senior Fitness Test'} score={sc.rml}>
+          <Secao ordem={80} titulo="Resistência Muscular (RML)" sub="Capacidade de MMSS, MMII e core sustentarem esforços repetidos ou prolongados" score={sc.rml}>
             <Card>
               <div style={{display:'flex', gap:12, flexWrap:'wrap', marginBottom: ativos.length ? 14 : 0}}>
                 {ativos.map((t, i) => {

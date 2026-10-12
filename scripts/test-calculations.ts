@@ -8,12 +8,16 @@ import { assimetria, forcaRelativa } from '../src/lib/calculations/forca';
 import { calcularRML } from '../src/lib/calculations/rml';
 import { scoreComposicaoCorporal } from '../src/lib/scores';
 import { classificarComposicaoCorporal, composicaoOficialParaIA, percentualGorduraAntropometria } from '../src/lib/bodyComposition';
+import { classifySomatotype } from '../src/lib/anthropometry/formulas';
 
 assert.equal(imc(76, 170), 26.3);
 assert.deepEqual(mediaDobra(10, 10.4, null), { media: 10.2, precisaTerceira: false });
 assert.deepEqual(mediaDobra(10, 12, null), { media: null, precisaTerceira: true });
 assert.equal(massaMagra(76, 14.32), 65.12);
 assert.equal(rcq(72, 92), 0.783);
+assert.equal(classifySomatotype(2.13, 7.2, 0.77), 'Meso-endomorfo');
+assert.equal(classifySomatotype(6, 3, 2), 'Endo-mesomorfo');
+assert.equal(classifySomatotype(2, 2.3, 2.7), 'Central');
 
 const seteDobras = {
   peitoral: { media: 10 }, axilar_media: { media: 12 }, triceps: { media: 14 },

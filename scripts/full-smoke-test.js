@@ -350,7 +350,10 @@ function main() {
   assert(!laudo.includes('<h2 class="mod-title">Anamnese</h2>'), 'Laudo nao deve publicar pagina de anamnese');
   assert(!laudo.includes('A interpretacao final deve considerar os demais modulos e o contexto clinico'), 'Laudo nao deve publicar a frase removida do resumo antropometrico');
   assert(laudo.includes('data-tissue-total="100"'), 'Dashboard antropometrico deve apresentar fracionamento tecidual fechado em 100%');
-  assert(laudo.includes('data-dashboard-somatochart="true"'), 'Somatocarta deve aparecer no dashboard antropometrico');
+  assert(!laudo.includes('data-dashboard-somatochart="true"'), 'Somatocarta nao deve duplicar o dashboard antropometrico');
+  assert(laudo.includes('Somatocarta Heath-Carter'), 'Somatocarta deve permanecer no detalhamento antropometrico');
+  assert(laudo.includes('data-jump-dashboard="true"'), 'Jump Test deve iniciar com resumo visual');
+  assert(!laudo.includes('Sem referencia cientifica compativel selecionada'), 'Jump Test nao deve publicar aviso de referencia nao selecionada');
   for (const introduction of [
     'A bioimpedancia estima a distribuicao corporal',
     'Os testes de salto avaliam potencia',

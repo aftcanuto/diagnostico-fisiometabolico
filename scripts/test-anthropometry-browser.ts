@@ -150,7 +150,7 @@ async function main() {
     assert.match(html, /Massa ossea/);
     assert.match(html, /Massa adiposa/);
     assert.match(html, /data-tissue-total="100"/);
-    assert.match(html, /data-dashboard-somatochart="true"/);
+    assert.doesNotMatch(html, /data-dashboard-somatochart="true"/);
     assert.doesNotMatch(html, /A interpretacao final deve considerar os demais modulos e o contexto clinico/);
     assert.match(html, /Antropometria - detalhamento/);
     assert.ok(html.indexOf('data-anthropometry-dashboard="true"') < html.indexOf('Medidas coletadas'), 'dashboard deve anteceder o detalhamento antropometrico');
