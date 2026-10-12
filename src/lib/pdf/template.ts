@@ -1671,12 +1671,22 @@ function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
   const textoPdf = textoAnalisePdf(c);
   if (textoPdf) {
-    return quebrarTextoPdf(textoPdf, 3900).map((parte, idx) => pgModulo(idx === 0 ? 'Conclusão clínica' : 'Conclusão clínica', null, `
-      ${idx > 0 ? `<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:-10px;margin-bottom:18px">continuação</div>` : ''}
-      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px 18px">
-        <p style="font-size:10.8px;color:#166534;line-height:1.55;white-space:pre-line">${x(parte)}</p>
+    const length = textoPdf.length;
+    const typography = length <= 2800
+      ? { font: 11, line: 1.52, padding: '18px 20px' }
+      : length <= 4200
+        ? { font: 9.8, line: 1.42, padding: '16px 18px' }
+        : length <= 5600
+          ? { font: 8.7, line: 1.34, padding: '14px 17px' }
+          : { font: 7.8, line: 1.27, padding: '13px 16px' };
+    return `<section class="page module conclusion-page" style="display:flex;flex-direction:column">
+      <div class="mod-head" style="flex:0 0 auto">
+        <h2 class="mod-title">Conclusão clínica</h2>
       </div>
-    `)).join('');
+      <div data-clinical-conclusion="true" style="flex:1 1 auto;min-height:0;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:${typography.padding};display:flex;align-items:flex-start;overflow:hidden">
+        <p style="width:100%;font-size:${typography.font}px;color:#166534;line-height:${typography.line};white-space:pre-line;overflow-wrap:anywhere">${x(textoPdf)}</p>
+      </div>
+    </section>`;
   }
   return pgModulo('Conclusão clínica', null, `
   ${`

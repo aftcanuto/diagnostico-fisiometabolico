@@ -135,6 +135,13 @@ async function main() {
         .map(({index,title,scrollHeight,clientHeight}) => ({index,title,scrollHeight,clientHeight}));
       const tractionCards = Array.from(document.querySelectorAll('.traction-test-card'));
       const tractionPages = new Set(tractionCards.map(card => card.closest('.page'))).size;
+      const conclusionBoxes = Array.from(document.querySelectorAll('[data-clinical-conclusion="true"]'));
+      const conclusionOverflow = conclusionBoxes.map((box) => ({
+        scrollHeight: box.scrollHeight,
+        clientHeight: box.clientHeight,
+        textLength: String(box.textContent || '').trim().length,
+      })).filter(item => item.scrollHeight > item.clientHeight + 1);
+      const conclusionPages = new Set(conclusionBoxes.map(box => box.closest('.page'))).size;
 
       return {
         badImages,
@@ -146,6 +153,9 @@ async function main() {
         heightMismatches,
         tractionCards:tractionCards.length,
         tractionPages,
+        conclusionBoxes: conclusionBoxes.length,
+        conclusionPages,
+        conclusionOverflow,
       };
     });
 
@@ -157,6 +167,9 @@ async function main() {
     if (result.emptyPages.length) errors.push('Pagina vazia ou sem conteudo util');
     if (result.tractionCards >= 4 && result.tractionPages > Math.ceil(result.tractionCards / 2)) {
       errors.push('Dinamometria por tracao ocupa paginas demais para a quantidade de testes');
+    }
+    if (result.conclusionBoxes && (result.conclusionPages !== 1 || result.conclusionOverflow.length)) {
+      errors.push('Conclusao clinica nao cabe integralmente em uma unica pagina');
     }
 
     if (errors.length) {
@@ -179,6 +192,9 @@ async function main() {
       heightMismatches: result.heightMismatches,
       tractionCards: result.tractionCards,
       tractionPages: result.tractionPages,
+      conclusionBoxes: result.conclusionBoxes,
+      conclusionPages: result.conclusionPages,
+      conclusionOverflow: result.conclusionOverflow,
     }, null, 2));
   } finally {
     await browser.close();

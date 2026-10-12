@@ -97,7 +97,7 @@ const iaMock = tipo => ({
 const analisesIA = Object.fromEntries(
   tipos.map(tipo => [tipo, tipo === 'conclusao_global'
     ? {
-        relatorio_global: 'A avaliação integrada indica condição funcional global favorável, com relação coerente entre capacidade cardiorrespiratória, força e composição corporal. Os achados devem ser acompanhados em conjunto, considerando o objetivo e a evolução clínica, sem interpretação isolada por exame.',
+        relatorio_global: `A avaliação integrada indica condição funcional global favorável, com relação coerente entre capacidade cardiorrespiratória, força e composição corporal.\n${Array.from({ length: 18 }, (_, index) => `Paragrafo integrado ${index + 1}. A avaliacao funcional relaciona capacidade cardiorrespiratoria, forca, composicao corporal, mobilidade e resposta ao esforco. Os achados devem ser acompanhados em conjunto, considerando objetivos, contexto individual e evolucao clinica, sem interpretacao isolada por exame.`).join('\n')}`,
         resumo_executivo: 'Conclusão global simulada para teste completo.',
         pontos_fortes: ['Boa aderência geral'],
         pontos_criticos: ['Monitorar assimetrias e composição corporal'],

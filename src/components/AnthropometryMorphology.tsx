@@ -2,6 +2,7 @@ import React from 'react';
 import type { calculateAnthropometry } from '@/lib/anthropometry';
 import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
 import { classifySomatotype } from '@/lib/anthropometry/formulas';
+import { somatotypeFigure, type SomatotypeProfile } from '@/lib/anthropometry/somatotype-figures';
 
 type AnthropometryResult = ReturnType<typeof calculateAnthropometry>;
 
@@ -87,7 +88,7 @@ export function RegionalBodyMap({ rows, sex }: { rows: ResultRow[]; sex: string 
   </figure>;
 }
 
-export function Somatochart({ somatotype }: { somatotype: AnthropometryResult['somatotype']; sex?: string }) {
+export function Somatochart({ somatotype, sex }: { somatotype: AnthropometryResult['somatotype']; sex?: string }) {
   const { x, y } = somatotype;
   const valid = x != null && y != null && Number.isFinite(x) && Number.isFinite(y);
   const classification = [somatotype.endomorphy, somatotype.mesomorphy, somatotype.ectomorphy].every(v => typeof v === 'number' && Number.isFinite(v))
@@ -95,13 +96,21 @@ export function Somatochart({ somatotype }: { somatotype: AnthropometryResult['s
     : somatotype.classification;
   const projectX = (amount: number) => 175 + Math.max(-10, Math.min(10, amount)) / 10 * 112;
   const projectY = (amount: number) => 151 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 114;
-  const profile = (kind: 'endo'|'meso'|'ecto', x: number, y: number, label: string, color: string) => {
-    const path = kind === 'endo'
-      ? 'M0,-19 C-10,-18 -13,-9 -12,1 C-11,14 -8,23 -6,34 L-13,58 L-6,60 L0,40 L6,60 L13,58 L6,34 C8,23 11,14 12,1 C13,-9 10,-18 0,-19 Z'
-      : kind === 'meso'
-        ? 'M0,-19 L-14,-11 L-19,8 L-10,30 L-12,58 L-5,60 L0,34 L5,60 L12,58 L10,30 L19,8 L14,-11 Z'
-        : 'M0,-19 C-5,-18 -7,-8 -6,5 L-5,30 L-8,60 L-2,60 L0,34 L2,60 L8,60 L5,30 L6,5 C7,-8 5,-18 0,-19 Z';
-    return <g transform={`translate(${x} ${y})`} aria-label={`Perfil ${label}`}><circle cy="-27" r="6" fill={color} opacity=".82"/><path d={path} fill={color} opacity=".72"/><text y="73" textAnchor="middle" fontSize="8" fontWeight="700" fill={color}>{label}</text></g>;
+  const profile = (kind: SomatotypeProfile, x: number, y: number, label: string, color: string) => {
+    const figure = somatotypeFigure(kind, sex);
+    const skin = '#d99670';
+    return <g transform={`translate(${x} ${y}) scale(.43) translate(-30 -72)`} aria-label={`Perfil corporal ${label}`}>
+      <ellipse {...figure.head} fill={skin} />
+      <path d={figure.neck} fill={skin} />
+      <path d={figure.leftArm} fill={skin} /><path d={figure.rightArm} fill={skin} />
+      <path d={figure.leftLeg} fill={skin} /><path d={figure.rightLeg} fill={skin} />
+      <path d={figure.torso} fill={skin} />
+      <path d={figure.pelvis} fill={skin} />
+      <path d={figure.garment} fill={color} opacity=".92" />
+      <path d="M26 7 Q30 3 34 7" fill="none" stroke="#7c4b3a" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="30" y1="29" x2="30" y2="66" stroke="#9b654e" strokeWidth=".8" opacity=".55" />
+      <text x="30" y="158" textAnchor="middle" fontSize="17" fontWeight="700" fill={color}>{label}</text>
+    </g>;
   };
   return <figure style={{ margin: 0, maxWidth: 760 }}>
     <svg viewBox="0 0 350 210" role="img" aria-label="Somatocarta Heath-Carter" style={{ width: '100%', height: 'auto', display: 'block' }}>
@@ -113,9 +122,9 @@ export function Somatochart({ somatotype }: { somatotype: AnthropometryResult['s
         <text x="175" y="17" textAnchor="middle" fontSize="9" fontWeight="700" fill="#334155">MESOMORFIA</text>
         <text x="38" y="176" fontSize="9" fontWeight="700" fill="#9f3f4f">ENDOMORFIA</text>
         <text x="312" y="176" textAnchor="end" fontSize="9" fontWeight="700" fill="#087f6d">ECTOMORFIA</text>
-        {profile('endo', 76, 88, 'Endo', '#9f3f4f')}
-        {profile('meso', 175, 78, 'Meso', '#334155')}
-        {profile('ecto', 274, 88, 'Ecto', '#087f6d')}
+        {profile('endo', 76, 91, 'Endo', '#9f3f4f')}
+        {profile('meso', 175, 82, 'Meso', '#334155')}
+        {profile('ecto', 274, 91, 'Ecto', '#087f6d')}
         {valid && <g data-somatotype-point><circle cx={projectX(x)} cy={projectY(y)} r="10" fill="#0f766e" opacity="0.18" /><circle cx={projectX(x)} cy={projectY(y)} r="5" fill="#0f766e" stroke="#ffffff" strokeWidth="2"><title>{`X ${fmt(x)}; Y ${fmt(y)}`}</title></circle></g>}
       </svg>
     <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, textAlign:'center', marginTop:6, fontSize:12 }}>

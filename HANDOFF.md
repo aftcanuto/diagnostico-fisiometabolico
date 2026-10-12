@@ -1681,3 +1681,21 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Cada modulo do laudo passou a apresentar, junto ao titulo inicial, uma introducao breve sobre o que o teste mede e sua finalidade para o avaliado.
 - A conclusao clinica passou a usar blocos de ate 2.400 caracteres, fonte e espacamento mais compactos, reduzindo a fragmentacao de textos longos sem cortar paragrafos ou ultrapassar a area util.
 - Sem migration nova e sem recalculo automatico de avaliacoes historicas.
+
+## 2026-10-12 - Miniaturas adultas na somatocarta
+
+- As miniaturas geometricas simplificadas da somatocarta foram substituidas por ilustracoes corporais adultas de corpo inteiro, inspiradas na referencia visual fornecida pelo usuario.
+- Ectomorfia, mesomorfia e endomorfia agora possuem proporcoes corporais realmente distintas: perfil linear, perfil atletico e perfil arredondado.
+- O contorno recebe variacao masculina ou feminina conforme o sexo registrado na avaliacao, com vestimenta neutra e a mesma linguagem visual no modulo, painel, portal e PDF.
+- As figuras permanecem dentro das respectivas regioes da somatocarta e nao alteram coordenadas, classificacao, formulas ou dados historicos.
+- Sem migration nova.
+
+## 2026-10-12 - Conclusao clinica em pagina unica
+
+- A conclusao clinica global deixou de ser fragmentada em paginas de continuacao no PDF.
+- A pagina agora usa uma caixa unica e continua que ocupa toda a altura util entre o cabecalho e o rodape.
+- Fonte, entrelinha e preenchimento sao ajustados por faixas de tamanho do texto para acomodar conclusoes extensas sem cortar conteudo.
+- O teste visual do PDF verifica a altura interna da caixa e falha se a conclusao transbordar ou ocupar mais de uma pagina.
+- O smoke test usa uma conclusao extensa, proxima do limite visual do caso real, para impedir regressao para paginas de continuacao.
+- A alteracao e apenas de apresentacao; o texto gerado, editado e persistido permanece integral e inalterado.
+- Sem migration nova.
