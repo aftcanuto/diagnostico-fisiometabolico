@@ -14,6 +14,7 @@ import { jumpReportHtml } from './jump-test';
 import { anthropometryReportHtml, isAnthropometryV2 } from './anthropometry';
 import { resumoInterpretativoBioimpedancia } from '@/lib/clinical/bioimpedance';
 import { friendComparisonFromAssessment, friendInterpretationLabel } from '@/lib/calculations/friend';
+import { classifySomatotype } from '@/lib/anthropometry/formulas';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -1081,7 +1082,14 @@ function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
   const agua = toNum(bio?.agua_corporal_pct ?? bio?.agua_corporal_percentual ?? bio?.agua_corporal_kg);
   const gorduraVisceral = toNum(bio?.gordura_visceral);
   const visual = classificarComposicaoCorporal({ sexo: d.paciente.sexo, pctGordura: pctG, imc });
-  const somatotipo = antV2 ? snapshot?.somatotype?.classification ?? null : ant?.somatotipo?.classificacao ?? ant?.somatotipo_classificacao ?? null;
+  const somatotypeComponents = antV2
+    ? [snapshot?.somatotype?.endomorphy, snapshot?.somatotype?.mesomorphy, snapshot?.somatotype?.ectomorphy].map(toNum)
+    : [ant?.somatotipo?.endomorfia, ant?.somatotipo?.mesomorfia, ant?.somatotipo?.ectomorfia].map(toNum);
+  const somatotipo = somatotypeComponents.every((value): value is number => value != null)
+    ? classifySomatotype(somatotypeComponents[0], somatotypeComponents[1], somatotypeComponents[2])
+    : antV2
+      ? snapshot?.somatotype?.classification ?? null
+      : ant?.somatotipo?.classificacao ?? ant?.somatotipo_classificacao ?? null;
   const row = (label: string, value: string, unit = '', color = '#0f172a') => value === '—' ? '' : `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:8px;background:#f8fafc">
       <span style="font-size:11px;color:#475569">${x(label)}</span>
@@ -2088,8 +2096,8 @@ function pgRodape(d: LaudoData, pri: string, evolucao?: any): string {
   for (const grupoRefs of gruposRefs) {
     paginasRefs.push(`<section class="ref-section page module" style="page-break-after:auto">
       <div class="mod-head"><div class="mod-title">Referências bibliográficas</div></div>
-      <ol start="${inicioRef}" style="padding-left:18px;font-size:10px;line-height:1.34;overflow-wrap:anywhere">
-        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:8px;break-inside:avoid">
+      <ol start="${inicioRef}" style="padding-left:18px;font-size:9.5px;line-height:1.28;overflow-wrap:anywhere">
+        ${grupoRefs.map(ref => `<li data-reference-id="${xa(ref.id)}" style="margin-bottom:6px;break-inside:avoid;page-break-inside:avoid">
           <div style="font-weight:700;color:${pri}">${x(ref.modulos.filter(m => d.modulos[m] === true).map(m => MODULOS_REFERENCIAS[m]).join(' · '))}</div>
           <div>${x(ref.texto)}</div>
           ${ref.nota ? `<div style="color:#64748b">${x(ref.nota)}</div>` : ''}

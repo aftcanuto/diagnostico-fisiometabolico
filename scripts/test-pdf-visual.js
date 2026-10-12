@@ -145,6 +145,18 @@ async function main() {
       const bioPages = pageAudit.filter(item => /^Bioimpedância/i.test(item.title)).length;
       const rmlPages = pageAudit.filter(item => /^Resistência Muscular/i.test(item.title)).length;
       const referencePages = pageAudit.filter(item => /^Referências bibliográficas/i.test(item.title)).length;
+      const referenceOverflow = Array.from(document.querySelectorAll('.ref-section [data-reference-id]')).map((ref) => {
+        const section = ref.closest('.page');
+        const footer = section?.querySelector(':scope > .pdf-footer')?.getBoundingClientRect();
+        const bounds = section?.getBoundingClientRect();
+        const rect = ref.getBoundingClientRect();
+        const limit = footer?.top ?? bounds?.bottom ?? Infinity;
+        return {
+          id: ref.getAttribute('data-reference-id'),
+          excess: Math.round(rect.bottom - limit),
+          horizontalOverflow: ref.scrollWidth > ref.clientWidth + 1,
+        };
+      }).filter(item => item.excess > 1 || item.horizontalOverflow);
 
       return {
         badImages,
@@ -162,6 +174,7 @@ async function main() {
         bioPages,
         rmlPages,
         referencePages,
+        referenceOverflow,
       };
     });
 
@@ -179,6 +192,7 @@ async function main() {
     }
     if (result.bioPages > 1) errors.push('Bioimpedancia ocupa mais de uma pagina');
     if (result.rmlPages > 1) errors.push('RML ocupa mais de uma pagina');
+    if (result.referenceOverflow.length) errors.push('Referencia bibliografica invade o rodape ou excede a largura');
 
     if (errors.length) {
       fail('Teste visual do PDF encontrou problemas', {
@@ -188,6 +202,7 @@ async function main() {
         overflowPages: result.overflowPages,
         emptyPages: result.emptyPages,
         conclusionOverflow: result.conclusionOverflow,
+        referenceOverflow: result.referenceOverflow,
       });
     }
 
@@ -207,6 +222,7 @@ async function main() {
       bioPages: result.bioPages,
       rmlPages: result.rmlPages,
       referencePages: result.referencePages,
+      referenceOverflow: result.referenceOverflow,
     }, null, 2));
   } finally {
     await browser.close();

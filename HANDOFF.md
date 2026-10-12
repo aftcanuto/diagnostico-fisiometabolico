@@ -1720,3 +1720,12 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - A tipografia da conclusao clinica foi ampliada em todas as faixas de comprimento, mantendo a verificacao automatica de pagina unica e ausencia de texto oculto.
 - As referencias passaram de nove para ate quatorze itens por pagina, com espacamento mais eficiente e preservacao de cada referencia como bloco indivisivel.
 - Sem migration nova.
+
+## 2026-10-12 - Classificacao atual do somatotipo e protecao do rodape
+
+- O resumo corporal do PDF deixou de reutilizar o rotulo historico salvo quando os tres componentes Heath-Carter estao disponiveis.
+- Endomorfia, mesomorfia e ectomorfia agora sao sempre submetidas ao classificador atual de 13 posicoes; no caso de Alfredo (2,13 / 7,2 / 0,77), o resultado exibido e `Meso-endomorfo`.
+- O rotulo persistido permanece apenas como compatibilidade para registros antigos sem os tres componentes numericos.
+- A tipografia e o espacamento das referencias foram ajustados para preservar a area fixa do rodape sem remover conteudo nem criar pagina adicional.
+- O teste visual passou a verificar cada referencia e cada link individualmente, falhando se qualquer um invadir o rodape ou exceder a largura.
+- Sem migration nova.
