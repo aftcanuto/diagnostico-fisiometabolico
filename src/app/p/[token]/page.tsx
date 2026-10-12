@@ -40,7 +40,6 @@ export default async function PortalPacientePage(props: { params: Promise<{ toke
         termografia(*),
         jump_test(*),
         sinais_vitais(*),
-        anamnese(*),
         biomecanica_corrida(*),
         analises_ia(tipo, conteudo, texto_editado, conteudo_paciente, texto_paciente_editado, plano_acao, gerado_em)
       `)
@@ -72,7 +71,7 @@ export default async function PortalPacientePage(props: { params: Promise<{ toke
   const normalizadas = (avaliacoes ?? []).map((a: any) => {
     const um = (v: any) => Array.isArray(v) ? (v[0] ?? null) : v;
     const analises = Array.isArray(a.analises_ia)
-      ? Object.fromEntries(a.analises_ia.filter((ia: any) => jumpAnalysisUsable(ia, um(a.jump_test)) && anthropometryAnalysisUsable(ia, um(a.antropometria))).map((ia: any) => [
+      ? Object.fromEntries(a.analises_ia.filter((ia: any) => ia.tipo !== 'anamnese' && jumpAnalysisUsable(ia, um(a.jump_test)) && anthropometryAnalysisUsable(ia, um(a.antropometria))).map((ia: any) => [
           ia.tipo,
           {
             conteudo: ia.conteudo,
@@ -98,7 +97,6 @@ export default async function PortalPacientePage(props: { params: Promise<{ toke
       termografia: um(a.termografia),
       jump_test: um(a.jump_test),
       sinais_vitais: um(a.sinais_vitais),
-      anamnese: um(a.anamnese),
       biomecanica_corrida: um(a.biomecanica_corrida),
       plano_alimentar: planoAlimentarMap[a.id] ?? null,
       analises_ia: analises,

@@ -42,6 +42,19 @@ for (const formula of F.FORMULAS_CLINICAS) for (const id of String(formula.refer
 }
 assert.deepEqual(R.referenciasAvaliacao({ anamnese: true }), []);
 assert.equal(R.referenciasModulo('anamnese'), '');
+const anamneseSentinela = 'ANAMNESE_NAO_DEVE_APARECER_AO_PACIENTE';
+const avaliacaoComAnamnese = {
+  id: 'fixture-anamnese-privada', data: '2026-09-24', tipo: 'personalizado', status: 'finalizada',
+  modulos_selecionados: { anamnese: true }, scores: {},
+  anamnese: { respostas: { objetivo: anamneseSentinela, __campos_publicos_relatorio: ['objetivo'] } },
+  analises_ia: { anamnese: { conteudo_paciente: { resumo: anamneseSentinela } } },
+};
+const laudoSemAnamnese = renderLaudoHTML({ paciente, avaliador: { nome: 'Teste' }, avaliacao: avaliacaoComAnamnese, modulos: { anamnese: true }, dados: { anamnese: avaliacaoComAnamnese.anamnese }, scores: {} });
+const portalSemAnamnese = renderToStaticMarkup(React.createElement(PortalPaciente, { paciente, avaliacoes: [avaliacaoComAnamnese] }));
+assert(!laudoSemAnamnese.includes(anamneseSentinela), 'PDF nao deve expor respostas de anamnese');
+assert(!portalSemAnamnese.includes(anamneseSentinela), 'Portal nao deve expor respostas ou analise de anamnese');
+assert(!laudoSemAnamnese.includes('>Anamnese<'), 'PDF nao deve renderizar pagina de anamnese');
+assert(!portalSemAnamnese.includes('>Anamnese<'), 'Portal nao deve renderizar modulo de anamnese');
 assert.deepEqual(R.modulosDaAvaliacao({ modulos_selecionados: {}, jump_test: {} }), {});
 assert.equal(R.modulosDaAvaliacao({ jump_test: {} }).jump_test, true);
 const builders = {

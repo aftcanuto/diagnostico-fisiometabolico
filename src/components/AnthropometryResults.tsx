@@ -15,6 +15,35 @@ const cell: CSSProperties = { padding: '10px 8px', borderBottom: '1px solid #e5e
 const section: CSSProperties = { padding: '20px 0', borderTop: '1px solid #e5e7eb', minWidth: 0 };
 const heading: CSSProperties = { fontSize: 18, fontWeight: 600, marginBottom: 12 };
 
+function CompositionSummary({ rows }: { rows: ResultRow[] }) {
+  const value = (ids: string[]) => ids.map(id => rows.find(row => row.id === id && typeof row.value === 'number' && Number.isFinite(row.value))).find(Boolean);
+  const muscle = value(['lee2000', 'martin1990', 'kerrMuscle1988']);
+  const adipose = value(['kerrAdipose1988', 'fatMass']);
+  const bone = value(['martinBone1991', 'rocha1975']);
+  const percentages = [
+    value(['kerrAdipose1988Percent', 'fatPercent'])?.value,
+    value(['lee2000Percent', 'martin1990Percent', 'kerrMuscle1988Percent'])?.value,
+    value(['martinBone1991Percent', 'rocha1975Percent'])?.value,
+  ];
+  const complete = percentages.every(item => typeof item === 'number' && Number.isFinite(item) && item >= 0);
+  const subtotal = complete ? percentages.reduce<number>((sum, item) => sum + Number(item), 0) : 0;
+  const parts = complete && subtotal <= 100
+    ? [...percentages.map(Number), 100 - subtotal]
+    : complete && subtotal > 0
+      ? [...percentages.map(item => Number(item) / subtotal * 100), 0]
+      : [];
+  if (!muscle && !adipose && !bone) return null;
+  const labels = ['Adiposa', 'Muscular', 'Ossea', 'Residual'];
+  const colors = ['#b75b6b', '#168b76', '#6686a8', '#d6b66d'];
+  return <section data-anthropometry-section="composition-summary" style={{ ...section, borderTop: 0, paddingTop: 4 }}>
+    <h2 style={heading}>Resumo da composicao corporal</h2>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10, marginBottom: 14 }}>
+      {[['Massa muscular', muscle], ['Massa adiposa', adipose], ['Massa ossea', bone]].map(([label, row]) => <div key={String(label)} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, background: '#f8fafc' }}><div style={{ fontSize: 11, color: '#64748b' }}>{String(label)}</div><strong style={{ display: 'block', fontSize: 20, marginTop: 4 }}>{row ? `${anthropometryFormat((row as ResultRow).value)} kg` : 'Nao disponivel'}</strong></div>)}
+    </div>
+    {complete ? <><div data-tissue-total="100" style={{ height: 18, display: 'flex', overflow: 'hidden', borderRadius: 999, background: '#e2e8f0' }}>{parts.map((part, index) => <span key={labels[index]} style={{ width: `${Math.max(0, part)}%`, background: colors[index] }} />)}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8, marginTop: 8 }}>{labels.map((label, index) => <div key={label} style={{ fontSize: 11, color: '#64748b' }}><span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: 2, background: colors[index], marginRight: 4 }} />{label}<strong style={{ display: 'block', color: '#334155', marginTop: 3 }}>{anthropometryFormat(parts[index], 1)}%</strong></div>)}</div><p style={{ fontSize: 11, color: '#64748b', marginTop: 9 }}>Total: 100%. O componente residual completa a massa corporal nao atribuida as estimativas adiposa, muscular e ossea.</p></> : <p style={{ fontSize: 12, color: '#64748b' }}>O fracionamento percentual requer estimativas selecionadas de massa adiposa, muscular e ossea.</p>}
+  </section>;
+}
+
 export function ReferenceLinks({ ids, references }: { ids: string[]; references: Reference[] }) {
   return <span className="inline-flex flex-wrap gap-x-2 gap-y-1" style={{ fontSize: 12 }}>
     {[...new Set(ids)].map(id => {
@@ -85,6 +114,7 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
   const references = results.references.filter(reference => usedIds.has(reference.id));
   const showSomato = !selectedOnly || rows.some(row => /heath|somato/i.test(row.methodId));
   return <div aria-label="Resultados de Antropometria" style={{ width: '100%', maxWidth: '100%', minWidth: 0, overflow: 'hidden', color: '#1f2937', letterSpacing: 0 }}>
+    <CompositionSummary rows={rows} />
     {correctedGirths.length > 0 && <section data-anthropometry-section="corrected-girths" style={section}>
       <h2 style={heading}>Perimetros corrigidos</h2>
       <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Valores derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas permanecem preservadas; o antebraco nao recebe correcao por nao haver dobra correspondente no protocolo.</p>
@@ -99,7 +129,7 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
       <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Motor {results.engineVersion}; catalogo {results.catalogVersion}. {selectedOnly ? 'Metodos selecionados.' : 'Revisao de todos os metodos.'}</p>
       {remainingRows.length ? <ResultsTable rows={remainingRows} snapshot={results} /> : <p>Nenhum outro resultado selecionado.</p>}
     </section>
-    {showSomato && <section data-anthropometry-section="somatotype" style={section}><h2 style={heading}>Somatotipo e somatocarta</h2><p style={{ fontSize: 13 }}>Endomorfia: {anthropometryFormat(results.somatotype.endomorphy)}; mesomorfia: {anthropometryFormat(results.somatotype.mesomorphy)}; ectomorfia: {anthropometryFormat(results.somatotype.ectomorphy)}.</p><Somatochart somatotype={results.somatotype} /><p style={{ fontSize: 12 }}>{results.somatotype.reason}</p></section>}
+    {showSomato && <section data-anthropometry-section="somatotype" style={section}><h2 style={heading}>Somatotipo e somatocarta</h2><p style={{ fontSize: 13 }}>Endomorfia: {anthropometryFormat(results.somatotype.endomorphy)}; mesomorfia: {anthropometryFormat(results.somatotype.mesomorphy)}; ectomorfia: {anthropometryFormat(results.somatotype.ectomorphy)}.</p><Somatochart somatotype={results.somatotype} sex={results.context.sex} /><p style={{ fontSize: 12 }}>{results.somatotype.reason}</p></section>}
     {phantom.length > 0 && <section data-anthropometry-section="phantom" style={section}><h2 style={heading}>Proporcionalidade Phantom</h2><PhantomChart rows={phantom} /><ResultsTable rows={phantom} snapshot={results} /></section>}
     {history.length > 0 && <section data-anthropometry-section="history" style={section}><h2 style={heading}>Historico de avaliacoes</h2><div className="overflow-x-auto" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%', minWidth: 0 }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}><thead><tr><th style={cell}>Resultado</th>{history.map(item => <th key={item.id} style={cell}>{anthropometryDate(item.date)}<div style={{ fontWeight: 400 }}>Motor {item.results.engineVersion}</div></th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id}><th style={cell}>{row.label} ({row.unit})</th>{history.map(item => {
       const old = item.results.results.find(candidate => candidate.id === row.id);

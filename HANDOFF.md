@@ -1641,3 +1641,32 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O texto esclarece o ajuste das medidas para uma estatura geometrica de referencia e a leitura dos escores Z positivos e negativos.
 - Foi preservada a ressalva de que os resultados descrevem proporcionalidade corporal e nao representam percentil, diagnostico ou corpo ideal.
 - Sem migration nova e sem alteracao dos calculos antropometricos ou dos registros historicos.
+
+## 2026-10-11 - Anamnese restrita ao ambiente profissional
+
+- A anamnese deixou de ser exibida no PDF e no portal do paciente, inclusive como modulo, respostas e analise individual.
+- O portal publico nao consulta mais a tabela de anamnese nem envia esses dados ou a analise especifica ao navegador do paciente.
+- As rotas dos PDFs individual, publico e longitudinal nao carregam mais a anamnese, e a capa/resumo do laudo nao a apresenta entre os modulos publicados.
+- A coleta, edicao, armazenamento e uso da anamnese pelo profissional e pela IA para compor a conclusao global permanecem inalterados.
+- Sem migration nova e sem exclusao ou modificacao de registros existentes.
+
+## 2026-10-11 - Modelos anatomicos clinicos realistas
+
+- Os modelos corporais anteriores, considerados excessivamente simples, foram substituidos por ilustracoes 3D adultas masculina e feminina, selecionadas automaticamente conforme o sexo registrado.
+- Cada figura integra superficie corporal e musculatura superficial em um unico corpo, com cobertura clinica, fundo transparente e proporcoes adequadas para painel, portal e PDF.
+- A galeria Magnific indicada pelo usuario foi usada somente como referencia conceitual. O download gratuito estava bloqueado e nenhum arquivo, miniatura ou ativo da plataforma foi incorporado ao projeto.
+- Os novos modelos sao ativos originais gerados para o MedFit com OpenAI Image Generation; os fontes e a procedencia foram preservados em `resources/anthropometry` e documentados em `public/assets/anthropometry/README.md`.
+- O gerador deixou de colorir a antiga silhueta CC0 e agora otimiza os modelos originais para PNG transparente e atualiza os dados incorporados usados nas tres superficies.
+- Foram removidas as formas vetoriais de vestimenta sobrepostas, pois os novos modelos ja possuem cobertura integrada e visualmente coerente.
+- Sem migration nova e sem alteracao de formulas, percentuais regionais ou registros historicos.
+
+## 2026-10-11 - Dashboard antropometrico tecidual e laudo didatico
+
+- O dashboard antropometrico passou a destacar massa muscular, massa adiposa e massa ossea em quilogramas, usando os metodos selecionados e os valores persistidos no snapshot da coleta.
+- A composicao visual usa quatro compartimentos: adiposo, muscular, osseo e residual. O residual completa a massa corporal para fechar exatamente 100%; quando a soma das equacoes excede 100%, os tres componentes sao normalizados somente para visualizacao e a ressalva permanece explicita.
+- Os trilhos vazios de adiposidade regional e muscularidade segmentar foram removidos do resumo. A distribuicao regional permanece no detalhamento apenas quando os seis indicadores estiverem calculados.
+- A somatocarta foi incorporada ao dashboard da primeira pagina, com zonas visuais, marcador do avaliado e miniaturas anatomicas didaticas para endomorfia, mesomorfia e ectomorfia. O mesmo conceito foi aplicado ao portal e ao painel.
+- Foi removida do PDF a frase `A interpretacao final deve considerar os demais modulos e o contexto clinico`.
+- Cada modulo do laudo passou a apresentar, junto ao titulo inicial, uma introducao breve sobre o que o teste mede e sua finalidade para o avaliado.
+- A conclusao clinica passou a usar blocos de ate 2.400 caracteres, fonte e espacamento mais compactos, reduzindo a fragmentacao de textos longos sem cortar paragrafos ou ultrapassar a area util.
+- Sem migration nova e sem recalculo automatico de avaliacoes historicas.

@@ -14,9 +14,9 @@ export function jumpEvolutionHtml(current: unknown, previous: unknown) {
 }
 export function jumpReportHtml(data: unknown, analysisHtml = '') {
   const parsed = jumpSchema.safeParse(data);
-  if (!parsed.success) return '<section class="page module"><div class="mod-head"><h2 class="mod-title">Jump Test</h2></div><p>Sem coleta valida disponivel.</p></section>';
+  if (!parsed.success) return '<section class="page module"><div class="mod-head"><h2 class="mod-title">Jump Test</h2></div><p class="module-intro">Os testes de salto avaliam potencia, capacidade explosiva, uso do ciclo alongamento-encurtamento e resposta reativa.</p><p>Sem coleta valida disponivel.</p></section>';
   const d = parsed.data, s = jumpSummary(d), ref = jumpReference(d);
-  const page = (title: string, body: string) => `<section class="page module"><div class="mod-head"><h2 class="mod-title">${esc(title)}</h2></div>${body}</section>`;
+  const page = (title: string, body: string) => `<section class="page module"><div class="mod-head"><h2 class="mod-title">${esc(title)}</h2></div>${title === 'Jump Test' ? '<p class="module-intro">Os testes de salto avaliam potencia, capacidade explosiva, uso do ciclo alongamento-encurtamento e resposta reativa por tempos de voo e contato.</p>' : ''}${body}</section>`;
   const summary = `<p style="font-size:11px;margin-bottom:12px">${esc(d.equipamento)} · ${esc(d.software)} · Massa ${fmt(d.peso_kg)} kg · DJ ${d.altura_queda_cm} cm · Repetidos 15 s<br/>Tecnica dos bracos definida por protocolo · Descanso: ${d.descanso_s} s · Esporte: ${esc(d.esporte)} · Nivel: ${esc(d.nivel)}</p>
     ${!s.pronto ? `<p style="font-size:11px;color:#92400e">Resultados parciais: ${esc(s.pendencias.join(' '))}</p>` : ''}
     ${table(['Protocolo', 'Validos', 'Media cm', 'Melhor cm', 'CV %', 'Pico medio W', 'RSI m/s'], s.grupos.map(g => [JUMP_PROTOCOLS[g.protocolo], String(g.n), fmt(g.media_cm), fmt(g.melhor_cm), fmt(g.cv_percent), fmt(g.potencia_media_w), fmt(g.rsi_medio)]))}

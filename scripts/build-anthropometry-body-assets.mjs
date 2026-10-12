@@ -4,65 +4,32 @@ import sharp from 'sharp';
 
 const root = process.cwd();
 const assetDir = path.join(root, 'public', 'assets', 'anthropometry');
-const source = path.join(root, 'resources', 'anthropometry', 'human-front-back-cc0.svg');
+const sourceDir = path.join(root, 'resources', 'anthropometry');
 
 const WIDTH = 420;
 const HEIGHT = 864;
-const LEFT_COLOR = [159, 63, 79];
-const RIGHT_COLOR = [8, 127, 109];
 
-const eraseEllipse = (buffer, centerX, centerY, radiusX, radiusY) => {
-  for (let y = Math.max(0, centerY - radiusY); y < Math.min(HEIGHT, centerY + radiusY); y += 1) {
-    for (let x = Math.max(0, centerX - radiusX); x < Math.min(WIDTH, centerX + radiusX); x += 1) {
-      const normalized = ((x - centerX) ** 2) / (radiusX ** 2) + ((y - centerY) ** 2) / (radiusY ** 2);
-      if (normalized <= 1) buffer[(y * WIDTH + x) * 4 + 3] = 0;
-    }
-  }
-};
-
-async function build(sex, left, privacyRegions) {
-  const { data, info } = await sharp(source, { density: 240 })
-    .extract({ left, top: 0, width: 744, height: 1530 })
-    .resize({ width: WIDTH, height: HEIGHT, fit: 'fill' })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  if (info.width !== WIDTH || info.height !== HEIGHT || info.channels !== 4) {
-    throw new Error(`Unexpected body asset dimensions: ${JSON.stringify(info)}`);
-  }
-
-  for (let y = 0; y < HEIGHT; y += 1) {
-    for (let x = 0; x < WIDTH; x += 1) {
-      const offset = (y * WIDTH + x) * 4;
-      if (data[offset + 3] === 0) continue;
-      const color = x < WIDTH / 2 ? LEFT_COLOR : RIGHT_COLOR;
-      data[offset] = color[0];
-      data[offset + 1] = color[1];
-      data[offset + 2] = color[2];
-    }
-  }
-
-  for (const region of privacyRegions) eraseEllipse(data, ...region);
-
+async function build(sex) {
+  const source = path.join(sourceDir, `human-${sex}-front-medfit.png`);
   const output = path.join(assetDir, `human-${sex}-front-clinical.png`);
-  await sharp(data, { raw: { width: WIDTH, height: HEIGHT, channels: 4 } })
-    .png({ compressionLevel: 9, palette: true })
+
+  await sharp(source)
+    .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 12 })
+    .resize({
+      width: WIDTH,
+      height: HEIGHT,
+      fit: 'contain',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+      withoutEnlargement: true,
+    })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toFile(output);
+
   return output;
 }
 
-const female = await build('female', 0, [
-  [145, 248, 10, 10],
-  [232, 248, 10, 10],
-  [207, 479, 13, 24],
-]);
-
-const male = await build('male', 744, [
-  [204, 203, 9, 9],
-  [289, 203, 9, 9],
-  [248, 420, 18, 30],
-]);
+const female = await build('female');
+const male = await build('male');
 
 const generatedModule = path.join(root, 'src', 'lib', 'anthropometry', 'body-assets.generated.ts');
 const dataUri = async file => `data:image/png;base64,${(await fs.readFile(file)).toString('base64')}`;

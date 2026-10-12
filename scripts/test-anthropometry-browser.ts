@@ -145,7 +145,13 @@ async function main() {
     assert.match(html, /Resultado consolidado/);
     assert.match(html, /data-anthropometry-dashboard="true"/);
     assert.match(html, /Resumo corporal/);
-    assert.match(html, /Composicao estimada/);
+    assert.match(html, /Composicao corporal estimada/);
+    assert.match(html, /Massa muscular/);
+    assert.match(html, /Massa ossea/);
+    assert.match(html, /Massa adiposa/);
+    assert.match(html, /data-tissue-total="100"/);
+    assert.match(html, /data-dashboard-somatochart="true"/);
+    assert.doesNotMatch(html, /A interpretacao final deve considerar os demais modulos e o contexto clinico/);
     assert.match(html, /Antropometria - detalhamento/);
     assert.ok(html.indexOf('data-anthropometry-dashboard="true"') < html.indexOf('Medidas coletadas'), 'dashboard deve anteceder o detalhamento antropometrico');
     assert.match(html, /Distribuicao antropometrica regional/);

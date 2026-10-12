@@ -556,26 +556,8 @@ function FotoPostura({src,label}:{src?:string|null;label:string}) {
   </div>;
 }
 
-function fmtValor(v:any){
-  if(v==null||v==='')return null;
-  if(typeof v==='boolean')return v?'Sim':'Não';
-  if(Array.isArray(v))return v.filter(Boolean).join(', ');
-  if(typeof v==='object')return null;
-  return String(v);
-}
 function humanLabel(k:string){
   return k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-}
-
-function anamnesePublica(row:any){
-  if (!row || typeof row !== 'object') return [];
-  const respostas = row.respostas && typeof row.respostas === 'object' ? row.respostas : row;
-  const permitidos = Array.isArray(respostas.__campos_publicos_relatorio) ? respostas.__campos_publicos_relatorio : [];
-  if (!permitidos.length) return [];
-  return Object.entries(respostas)
-    .filter(([k,v]) => k !== '__campos_publicos_relatorio' && permitidos.includes(k) && v != null && v !== '')
-    .map(([k,v]) => ({ label: humanLabel(k), valor: fmtValor(v) }))
-    .filter(i => i.valor);
 }
 
 function AnguloGauge({ label, v, comentario }: { label: string; v: any; comentario?: string }) {
@@ -641,7 +623,6 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
     sex:paciente.sexo,
   });
   const sv=atual.sinais_vitais as any;
-  const anamnese=(atual as any).anamnese as any;
   const bioImp=(atual as any).bioimpedancia as any;
   const resumoBio = resumoInterpretativoBioimpedancia(bioImp);
   const flex=atual.flexibilidade as any;
@@ -764,14 +745,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
   const corFlex=flex?.classificacao==='Excelente'?'#16a34a':flex?.classificacao==='Bom'?'#10b981'
     :flex?.classificacao==='Médio'?'#f59e0b':flex?.classificacao==='Regular'?'#f97316':'#ef4444';
-  const anamneseItems=anamnesePublica(anamnese);
-  const anamneseTopLabels=['Objetivo','Queixa Principal','Historico Lesoes','Histórico Lesões'];
-  const anamneseFullLabels=['Historia Familiar','História Familiar'];
-  const anamneseTop=anamneseItems.filter(i=>anamneseTopLabels.includes(i.label));
-  const anamneseFull=anamneseItems.filter(i=>anamneseFullLabels.includes(i.label));
-  const anamneseRest=anamneseItems.filter(i=>!anamneseTopLabels.includes(i.label)&&!anamneseFullLabels.includes(i.label));
   const modulosAnalise=[
-    ['anamnese','Anamnese'],['sinais_vitais','Sinais vitais'],['bioimpedancia','Bioimpedância'],
+    ['sinais_vitais','Sinais vitais'],['bioimpedancia','Bioimpedância'],
     ['posturografia','Posturografia'],['termografia','Termografia funcional'],
     ['antropometria','Antropometria'],['jump_test','Jump Test'],['flexibilidade','Flexibilidade'],
     ['forca','Força'],['rml','RML'],['cardiorrespiratorio','Cardiorrespiratório'],
@@ -963,31 +938,19 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         </div>
       </Secao>
 
-      {/* 2b. ANAMNESE E SINAIS */}
-      {(anamneseItems.length>0||sv)&&(
+      {/* 2b. SINAIS VITAIS */}
+      {sv&&(
         <Secao ordem={20} titulo="Dados vitais e corporais" sub="Resumo dos dados clínicos preenchidos na avaliação">
-          {anamneseItems.length>0&&(
-            <Card style={{marginBottom:14}}>
-              <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Anamnese</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8}}>
-                {[...anamneseTop,...anamneseRest,...anamneseFull].map((i)=>(
-                  <MetricaHorizontal key={i.label} label={i.label} valor={i.valor}/>
-                ))}
-              </div>
-            </Card>
-          )}
-          {sv&&(
-            <Card>
-              <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Sinais vitais</h3>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))',gap:8}}>
-                {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
-                {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
-                {sv?.spo2!=null&&<MetricaHorizontal label="SpO2" valor={`${sv.spo2}%`}/>}
-                {sv?.temperatura!=null&&sv?.temperatura!==''&&<MetricaHorizontal label="Temperatura" valor={sv.temperatura} un="°C"/>}
-                {sv?.fr!=null&&sv?.fr!==''&&<MetricaHorizontal label="Frequência respiratória" valor={sv.fr} un="irpm"/>}
-              </div>
-            </Card>
-          )}
+          <Card>
+            <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Sinais vitais</h3>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))',gap:8}}>
+              {sv?.pa_sistolica!=null&&sv?.pa_diastolica!=null&&<MetricaHorizontal label="Pressão arterial" valor={`${sv.pa_sistolica}/${sv.pa_diastolica}`} un="mmHg"/>}
+              {sv?.fc_repouso!=null&&<MetricaHorizontal label="FC repouso" valor={sv.fc_repouso} un="bpm"/>}
+              {sv?.spo2!=null&&<MetricaHorizontal label="SpO2" valor={`${sv.spo2}%`}/>}
+              {sv?.temperatura!=null&&sv?.temperatura!==''&&<MetricaHorizontal label="Temperatura" valor={sv.temperatura} un="°C"/>}
+              {sv?.fr!=null&&sv?.fr!==''&&<MetricaHorizontal label="Frequência respiratória" valor={sv.fr} un="irpm"/>}
+            </div>
+          </Card>
         </Secao>
       )}
 

@@ -320,7 +320,7 @@ function main() {
   assert(termografiaIsolada.includes('class="termografia-complementares-grid" style="display:grid;grid-template-columns:repeat(4,1fr)'), 'Imagens complementares da termografia devem usar quatro colunas no laudo');
 
   const laudo = checkTextFile('preview-laudo-full-smoke.html', [
-    ...Object.values(nomesRelatorio),
+    ...Object.values(nomesRelatorio).filter(nome => nome !== 'Anamnese'),
     'Análise clínica',
     'Ver vídeo',
     'Evolução longitudinal',
@@ -346,10 +346,22 @@ function main() {
     'Evolução dos scores',
   ]);
   assert(!laudo.includes('Indice MedFit 0-100'), 'Laudo nao deve publicar rotulo proprietario 0-100');
+  assert(!laudo.includes('Analise em versao PDF/paciente simulada para anamnese.'), 'Laudo nao deve publicar analise individual de anamnese');
+  assert(!laudo.includes('<h2 class="mod-title">Anamnese</h2>'), 'Laudo nao deve publicar pagina de anamnese');
+  assert(!laudo.includes('A interpretacao final deve considerar os demais modulos e o contexto clinico'), 'Laudo nao deve publicar a frase removida do resumo antropometrico');
+  assert(laudo.includes('data-tissue-total="100"'), 'Dashboard antropometrico deve apresentar fracionamento tecidual fechado em 100%');
+  assert(laudo.includes('data-dashboard-somatochart="true"'), 'Somatocarta deve aparecer no dashboard antropometrico');
+  for (const introduction of [
+    'A bioimpedancia estima a distribuicao corporal',
+    'Os testes de salto avaliam potencia',
+    'A dinamometria quantifica a capacidade de produzir forca',
+    'O teste cardiorrespiratorio avalia a resposta ao esforco',
+    'A analise cinematica 2D observa angulos',
+  ]) assert(laudo.includes(introduction), `Introducao de modulo ausente: ${introduction}`);
   assert(!dashboardCliente.includes('Índice MedFit'), 'Portal do paciente nao deve publicar rotulo Indice MedFit');
   assert(!dashboardClinico.includes('Índice MedFit'), 'Painel clinico nao deve publicar rotulo Indice MedFit');
 
-  const modulosComAnalise = tipos.filter(tipo => !['conclusao_global', 'evolucao'].includes(tipo));
+  const modulosComAnalise = tipos.filter(tipo => !['anamnese', 'conclusao_global', 'evolucao'].includes(tipo));
   const aiBlockCount = (laudo.match(/data-analysis-block="true"/g) ?? []).length;
   assert(aiBlockCount === modulosComAnalise.length,
     `Laudo deveria ter exatamente uma analise por modulo; esperadas ${modulosComAnalise.length}, encontrou ${aiBlockCount}`);

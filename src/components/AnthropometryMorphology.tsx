@@ -18,14 +18,10 @@ function value(rows: ResultRow[], id: string) {
 function ClinicalBodyFigure({ sex }: { sex: string }) {
   const female = sex === 'F';
   const asset = female ? FEMALE_BODY_MODEL_DATA_URI : MALE_BODY_MODEL_DATA_URI;
-  return <g data-body-sex={female ? 'F' : 'M'} data-body-source="Wikimedia Commons CC0">
+  return <g data-body-sex={female ? 'F' : 'M'} data-body-source="MedFit original clinical model">
     <path d="M320 39 H282 Q248 39 248 75 V304 Q248 338 282 338 H320 Z" fill="#f8e9eb" />
     <path d="M320 39 H358 Q392 39 392 75 V304 Q392 338 358 338 H320 Z" fill="#e5f4f0" />
     <image href={asset} x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet" />
-    {female && <path d="M299 116 Q320 109 341 116 L339 140 Q320 146 301 140 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.2" />}
-    <path d={female
-      ? 'M300 189 Q320 184 340 189 L337 217 Q328 224 320 216 Q312 224 303 217 Z'
-      : 'M303 174 Q320 169 337 174 L334 204 Q327 211 320 203 Q313 211 306 204 Z'} fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.2" />
     <line x1="320" y1="40" x2="320" y2="337" stroke="#ffffff" strokeWidth="2" opacity="0.92" />
   </g>;
 }
@@ -90,33 +86,35 @@ export function RegionalBodyMap({ rows, sex }: { rows: ResultRow[]; sex: string 
   </figure>;
 }
 
-export function Somatochart({ somatotype }: { somatotype: AnthropometryResult['somatotype'] }) {
+export function Somatochart({ somatotype, sex = 'M' }: { somatotype: AnthropometryResult['somatotype']; sex?: string }) {
   const { x, y } = somatotype;
+  const model = sex === 'F' ? FEMALE_BODY_MODEL_DATA_URI : MALE_BODY_MODEL_DATA_URI;
   const valid = x != null && y != null && Number.isFinite(x) && Number.isFinite(y);
-  const projectX = (amount: number) => 270 + Math.max(-10, Math.min(10, amount)) / 10 * 188;
-  const projectY = (amount: number) => 294 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 242;
-  return <figure style={{ margin: 0, maxWidth: 680 }}>
-    <svg viewBox="0 0 540 380" role="img" aria-label="Somatocarta Heath-Carter" style={{ width: '100%', height: 'auto', display: 'block', aspectRatio: '54 / 38' }}>
-      <rect width="540" height="380" rx="8" fill="#f8fafc" />
-      <path d="M76 296 Q270 366 464 296 Q510 145 270 42 Q30 145 76 296 Z" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2" />
-      <g fill="none" stroke="#dbe4ea" strokeWidth="1.2">
-        <path d="M108 278 Q270 330 432 278" /><path d="M142 252 Q270 290 398 252" /><path d="M176 219 Q270 242 364 219" />
-        <path d="M101 273 Q165 151 270 42" /><path d="M439 273 Q375 151 270 42" />
-        <path d="M76 296 Q270 207 464 296" /><path d="M118 185 Q270 260 422 185" />
-      </g>
-      <g stroke="#94a3b8" strokeWidth="1">
-        <line x1={projectX(-10)} y1={projectY(0)} x2={projectX(10)} y2={projectY(0)} />
-        <line x1={projectX(0)} y1={projectY(-12)} x2={projectX(0)} y2={projectY(18)} />
-      </g>
-      <text x="270" y="25" textAnchor="middle" fontSize="13" fontWeight="700" fill="#334155">MESOMORFIA</text>
-      <text x="64" y="331" fontSize="13" fontWeight="700" fill="#9f3f4f">ENDOMORFIA</text>
-      <text x="476" y="331" textAnchor="end" fontSize="13" fontWeight="700" fill="#087f6d">ECTOMORFIA</text>
-      <text x="270" y="369" textAnchor="middle" fontSize="11" fill="#64748b">X = ectomorfia - endomorfia; Y = 2 x mesomorfia - endomorfia - ectomorfia</text>
-      {valid && <g data-somatotype-point>
-        <circle cx={projectX(x)} cy={projectY(y)} r="12" fill="#0f766e" opacity="0.18" />
-        <circle cx={projectX(x)} cy={projectY(y)} r="6" fill="#0f766e" stroke="#ffffff" strokeWidth="2"><title>{`X ${fmt(x)}; Y ${fmt(y)}`}</title></circle>
-      </g>}
-    </svg>
+  const projectX = (amount: number) => 175 + Math.max(-10, Math.min(10, amount)) / 10 * 112;
+  const projectY = (amount: number) => 151 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 114;
+  const components = [
+    { label: 'Endomorfia', short: 'Endo', value: somatotype.endomorphy, width: 52, color: '#9f3f4f' },
+    { label: 'Mesomorfia', short: 'Meso', value: somatotype.mesomorphy, width: 42, color: '#334155' },
+    { label: 'Ectomorfia', short: 'Ecto', value: somatotype.ectomorphy, width: 32, color: '#087f6d' },
+  ];
+  return <figure style={{ margin: 0, maxWidth: 760 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))', gap: 16, alignItems: 'center' }}>
+      <svg viewBox="0 0 350 190" role="img" aria-label="Somatocarta Heath-Carter" style={{ width: '100%', height: 'auto', display: 'block' }}>
+        <path d="M46 158 Q175 188 304 158 Q328 80 175 25 Q22 80 46 158 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+        <path d="M46 158 Q93 109 175 25 Q135 121 175 158 Z" fill="#f9e8eb" opacity=".8" />
+        <path d="M175 25 Q257 109 304 158 L175 158 Z" fill="#e5f4f0" opacity=".9" />
+        <path d="M46 158 Q175 117 304 158 Q175 187 46 158 Z" fill="#eef2f7" opacity=".9" />
+        <line x1="55" y1="130" x2="295" y2="130" stroke="#cbd5e1" /><line x1="175" y1="34" x2="175" y2="158" stroke="#cbd5e1" />
+        <text x="175" y="17" textAnchor="middle" fontSize="9" fontWeight="700" fill="#334155">MESOMORFIA</text>
+        <text x="38" y="176" fontSize="9" fontWeight="700" fill="#9f3f4f">ENDOMORFIA</text>
+        <text x="312" y="176" textAnchor="end" fontSize="9" fontWeight="700" fill="#087f6d">ECTOMORFIA</text>
+        {valid && <g data-somatotype-point><circle cx={projectX(x)} cy={projectY(y)} r="10" fill="#0f766e" opacity="0.18" /><circle cx={projectX(x)} cy={projectY(y)} r="5" fill="#0f766e" stroke="#ffffff" strokeWidth="2"><title>{`X ${fmt(x)}; Y ${fmt(y)}`}</title></circle></g>}
+      </svg>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8, textAlign: 'center' }} aria-label="Modelos ilustrativos dos componentes">
+        {components.map(component => <div key={component.label} style={{ minWidth: 0 }}><svg viewBox="0 0 70 124" style={{ width: '100%', height: 110 }}><image href={model} x={(70 - component.width) / 2} y="8" width={component.width} height="108" preserveAspectRatio="xMidYMid meet" /></svg><div style={{ fontSize: 11, color: component.color }}>{component.short}</div><strong style={{ display: 'block', fontSize: 16, color: '#0f172a', marginTop: 2 }}>{fmt(component.value)}</strong></div>)}
+        <p style={{ gridColumn: '1 / -1', fontSize: 11, lineHeight: 1.4, color: '#64748b', margin: 0 }}>As miniaturas ilustram os componentes e nao representam o corpo real do avaliado.</p>
+      </div>
+    </div>
     <figcaption style={{ fontSize: 12, color: '#475569', marginTop: 8 }}>
       {valid ? `X: ${fmt(x)}; Y: ${fmt(y)}. ${somatotype.classification ?? ''}` : somatotype.reason || 'Somatotipo indisponivel.'}
     </figcaption>

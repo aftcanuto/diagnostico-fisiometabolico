@@ -64,11 +64,10 @@ export async function GET(req: NextRequest) {
 
     // Buscar todos os módulos em paralelo
     const [
-      anamnese, sinais_vitais, posturografia, termografia, jump_test, bioimpedancia,
+      sinais_vitais, posturografia, termografia, jump_test, bioimpedancia,
       antropometria, forca, flexibilidade, rml, cardio, biomecanica,
       planoAlimentar, scoresRow, avaliador, clinica, analises,
     ] = await Promise.all([
-      admin.from('anamnese').select('*, anamnese_templates(campos)').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('sinais_vitais').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('posturografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
       admin.from('termografia').select('*').eq('avaliacao_id', avaliacaoId).maybeSingle(),
@@ -136,7 +135,6 @@ export async function GET(req: NextRequest) {
       avaliacao: { data: aval.data, tipo: aval.tipo },
       modulos: aval.modulos_selecionados,
       dados: {
-        anamnese: anamnese.data ? { ...anamnese.data, _campos: (anamnese.data as any)?.anamnese_templates?.campos ?? [] } : null,
         sinais_vitais: sinais_vitais.data,
         posturografia: posturografia.data,
         termografia: termografia.data,

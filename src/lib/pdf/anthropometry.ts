@@ -17,7 +17,7 @@ const block = (title: string, content: string) => `<div style="margin-bottom:14p
 function textBlocks(title: string, text: string): string {
   return (text.match(/[\s\S]{1,900}/g) ?? ['Nao informado']).map((part, i) => block(i ? `${title} (continuacao)` : title, `<p style="font-size:11px;line-height:1.5;white-space:pre-wrap">${esc(part)}</p>`)).join('');
 }
-const page = (title: string, content: string) => `<section class="page module anthropometry-v2"><div class="mod-head"><div class="mod-title">${esc(title)}</div></div>${content}</section>`;
+const page = (title: string, content: string) => `<section class="page module anthropometry-v2"><div class="mod-head"><div class="mod-title">${esc(title)}</div></div>${title === 'Antropometria' ? '<p class="module-intro">A antropometria descreve dimensoes, proporcoes e composicao corporal estimada a partir de medidas padronizadas. O resumo facilita a leitura; as paginas seguintes apresentam os metodos e resultados detalhados.</p>' : ''}${content}</section>`;
 function selected(snapshot: Snapshot): Result[] { return (snapshot.results ?? []).filter(r => r.selected); }
 function withValue(result: Result): result is Result & { value: number } {
   return typeof result.value === 'number' && Number.isFinite(result.value);
@@ -35,43 +35,74 @@ function bodyModelDataUri(sex: string): string {
 function dashboardBodyHtml(sex: string): string {
   const female = sex === 'F';
   const model = bodyModelDataUri(sex);
-  const clothing = `${female ? '<path d="M299 116 Q320 109 341 116 L339 140 Q320 146 301 140 Z" fill="#fff" stroke="#cbd5e1" stroke-width="1.2"/>' : ''}<path d="${female ? 'M300 189 Q320 184 340 189 L337 217 Q328 224 320 216 Q312 224 303 217 Z' : 'M303 174 Q320 169 337 174 L334 204 Q327 211 320 203 Q313 211 306 204 Z'}" fill="#fff" stroke="#cbd5e1" stroke-width="1.2"/>`;
-  return `<svg role="img" aria-label="Modelo corporal ${female ? 'feminino' : 'masculino'}" data-body-sex="${female ? 'F' : 'M'}" viewBox="238 30 164 315" style="display:block;width:138px;height:265px;margin:0 auto">
+  return `<svg role="img" aria-label="Modelo corporal ${female ? 'feminino' : 'masculino'}" data-body-sex="${female ? 'F' : 'M'}" viewBox="238 30 164 315" style="display:block;width:128px;height:242px;margin:0 auto">
     <path d="M320 39 H282 Q248 39 248 75 V304 Q248 338 282 338 H320 Z" fill="#f8e9eb"/><path d="M320 39 H358 Q392 39 392 75 V304 Q392 338 358 338 H320 Z" fill="#e5f4f0"/>
-    <image href="${model}" x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet"/>${clothing}<line x1="320" y1="40" x2="320" y2="337" stroke="#fff" stroke-width="2" opacity=".92"/>
+    <image href="${model}" x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet"/><line x1="320" y1="40" x2="320" y2="337" stroke="#fff" stroke-width="2" opacity=".92"/>
   </svg>`;
+}
+
+function somatotypeDashboardHtml(snapshot: Snapshot): string {
+  const soma = snapshot.somatotype;
+  if (!soma) return '';
+  const model = bodyModelDataUri(snapshot.context.sex);
+  const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
+  const px = valid ? 175 + Math.max(-10, Math.min(10, soma.x!)) / 10 * 112 : 175;
+  const py = valid ? 151 - (Math.max(-12, Math.min(18, soma.y!)) + 12) / 30 * 114 : 151;
+  const miniature = (x: number, width: number) => `<image href="${model}" x="${x}" y="12" width="${width}" height="105" preserveAspectRatio="xMidYMid meet"/>`;
+  return `<div data-dashboard-somatochart="true" style="margin-top:12px;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;background:#fff;display:grid;grid-template-columns:1.25fr .9fr;gap:14px;align-items:center">
+    <div>
+      <div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:4px">Somatotipo na somatocarta</div>
+      <p style="font-size:8.5px;line-height:1.4;color:#64748b;margin:0 0 5px">O ponto mostra o equilibrio entre adiposidade relativa, robustez musculoesqueletica e linearidade corporal.</p>
+      <svg role="img" aria-label="Somatocarta resumida" viewBox="0 0 350 190" style="display:block;width:100%;height:128px">
+        <path d="M46 158 Q175 188 304 158 Q328 80 175 25 Q22 80 46 158 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+        <path d="M46 158 Q93 109 175 25 Q135 121 175 158 Z" fill="#f9e8eb" opacity=".8"/><path d="M175 25 Q257 109 304 158 L175 158 Z" fill="#e5f4f0" opacity=".9"/><path d="M46 158 Q175 117 304 158 Q175 187 46 158 Z" fill="#eef2f7" opacity=".9"/>
+        <line x1="55" y1="130" x2="295" y2="130" stroke="#cbd5e1"/><line x1="175" y1="34" x2="175" y2="158" stroke="#cbd5e1"/>
+        <text x="175" y="17" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">MESOMORFIA</text><text x="38" y="176" font-size="9" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="312" y="176" text-anchor="end" font-size="9" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
+        ${valid ? `<circle cx="${px}" cy="${py}" r="10" fill="#0f766e" opacity=".18"/><circle cx="${px}" cy="${py}" r="5" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
+      </svg>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;text-align:center">
+      ${[['Endo', soma.endomorphy, 52], ['Meso', soma.mesomorphy, 42], ['Ecto', soma.ectomorphy, 32]].map(([label, amount, width], index) => `<div style="min-width:0"><svg viewBox="0 0 70 124" style="width:100%;height:78px">${miniature((70 - Number(width)) / 2, Number(width))}</svg><div style="font-size:8px;color:${['#9f3f4f','#334155','#087f6d'][index]}">${label}</div><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(Number(amount))}</strong></div>`).join('')}
+      <div style="grid-column:1/-1;font-size:8px;line-height:1.35;color:#64748b;margin-top:2px">Miniaturas ilustram os tres componentes; nao representam o corpo real do avaliado.</div>
+    </div>
+  </div>`;
 }
 
 function anthropometryDashboardHtml(snapshot: Snapshot): string {
   const rows = selected(snapshot);
   const result = (id: string) => rows.find(item => item.id === id && withValue(item));
+  const firstResult = (ids: string[]) => ids.map(result).find(Boolean);
   const measurement = (id: keyof Snapshot['measurements']) => snapshot.measurements?.[id]?.value ?? null;
   const fat = result('fatPercent');
-  const lean = result('fatFreePercent');
   const bmi = result('bmiClassification') ?? result('bmi');
   const waistHeight = result('waistHeightRatio');
   const mass = measurement('mass');
   const height = measurement('height');
   const soma = snapshot.somatotype;
   const fatValue = fat?.value ?? null;
-  const leanValue = lean?.value ?? (fatValue == null ? null : 100 - fatValue);
-  const circumference = 301.59;
-  const fatArc = fatValue == null ? 0 : Math.max(0, Math.min(100, fatValue)) / 100 * circumference;
+  const muscleMass = firstResult(['lee2000', 'martin1990', 'kerrMuscle1988']);
+  const adiposeMass = firstResult(['kerrAdipose1988', 'fatMass']);
+  const boneMass = firstResult(['martinBone1991', 'rocha1975']);
+  const musclePercent = firstResult(['lee2000Percent', 'martin1990Percent', 'kerrMuscle1988Percent']);
+  const adiposePercent = firstResult(['kerrAdipose1988Percent', 'fatPercent']);
+  const bonePercent = firstResult(['martinBone1991Percent', 'rocha1975Percent']);
+  const tissueBase = [adiposePercent?.value, musclePercent?.value, bonePercent?.value];
+  const tissueAvailable = tissueBase.every(value => typeof value === 'number' && Number.isFinite(value) && value >= 0);
+  const tissueSubtotal = tissueAvailable ? tissueBase.reduce<number>((sum, value) => sum + Number(value), 0) : 0;
+  const tissueValues = tissueAvailable && tissueSubtotal <= 100
+    ? [...tissueBase.map(Number), 100 - tissueSubtotal]
+    : tissueAvailable && tissueSubtotal > 0
+      ? [...tissueBase.map(value => Number(value) / tissueSubtotal * 100), 0]
+      : [];
+  const tissueLabels = ['Adiposa', 'Muscular', 'Ossea', 'Residual'];
+  const tissueColors = ['#b75b6b', '#168b76', '#6686a8', '#d6b66d'];
   const card = (label: string, amount: number | null, unit: string, note: string) => `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:13px 14px;min-height:82px">
     <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.7px">${esc(label)}</div>
     <div style="font-size:24px;font-weight:800;color:#0f172a;line-height:1.1;margin-top:6px">${fmt(amount)} <span style="font-size:10px;font-weight:500;color:#94a3b8">${esc(unit)}</span></div>
     <div style="font-size:9px;line-height:1.35;color:#64748b;margin-top:5px">${esc(note)}</div>
   </div>`;
-  const regional = (ids: string[]) => ids.map(id => result(id)?.value ?? null);
-  const adiposity = regional(['regionalAdiposityUpper','regionalAdiposityCentral','regionalAdiposityLower']);
-  const muscularity = regional(['regionalMuscularityArm','regionalMuscularityThigh','regionalMuscularityCalf']);
-  const distribution = (title: string, labels: string[], values: (number | null)[], colors: string[]) => {
-    const available = values.every(value => typeof value === 'number' && Number.isFinite(value));
-    return `<div style="margin-top:13px"><div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:6px"><strong style="font-size:10px;color:#334155">${esc(title)}</strong><span style="font-size:8px;color:#94a3b8">distribuicao relativa</span></div>
-      ${available ? `<div style="height:12px;border-radius:999px;overflow:hidden;display:flex;background:#e2e8f0">${values.map((value, index) => `<span style="width:${Math.max(0, value!)}%;background:${colors[index]}"></span>`).join('')}</div>` : '<div style="height:12px;border-radius:999px;background:#e2e8f0"></div>'}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">${labels.map((label, index) => `<div style="font-size:8px;color:#64748b"><span style="display:inline-block;width:6px;height:6px;border-radius:2px;background:${colors[index]};margin-right:4px"></span>${esc(label)} <strong style="color:#334155">${fmt(values[index])}%</strong></div>`).join('')}</div>
-    </div>`;
-  };
+  const tissueBar = tissueAvailable ? `<div data-tissue-total="100" style="height:18px;border-radius:999px;overflow:hidden;display:flex;background:#e2e8f0">${tissueValues.map((value, index) => `<span title="${tissueLabels[index]} ${fmt(value)}%" style="width:${Math.max(0, value)}%;background:${tissueColors[index]}"></span>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px">${tissueLabels.map((label, index) => `<div style="font-size:8px;color:#64748b"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${tissueColors[index]};margin-right:4px"></span>${label}<strong style="display:block;font-size:12px;color:#334155;margin-top:3px">${fmt(tissueValues[index])}%</strong></div>`).join('')}</div>` : '<p style="font-size:9px;color:#64748b;margin:8px 0 0">Fracionamento indisponivel: selecione estimativas de massa adiposa, muscular e ossea.</p>';
   const bmiNote = bmi?.classification || 'Indice de massa corporal';
   const waistNote = waistHeight ? `Cintura/estatura: ${fmt(waistHeight.value)}` : 'Relacao cintura/estatura indisponivel';
   const dashboard = `<div data-anthropometry-dashboard="true">
@@ -79,11 +110,13 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
       <div><div style="font-size:11px;font-weight:800;color:#087f6d;text-transform:uppercase;letter-spacing:1px">Resumo corporal</div><p style="font-size:11px;line-height:1.45;color:#64748b;margin:6px 0 0">Uma leitura visual dos principais resultados. Os detalhes tecnicos, metodos e medidas aparecem nas paginas seguintes.</p></div>
       <div style="font-size:9px;color:#64748b;text-align:right;white-space:nowrap">Coleta: ${esc(snapshot.calculatedAt)}</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:15px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:15px">
       ${card('Gordura corporal', fatValue, '%', 'Estimativa por dobras cutaneas')}
-      ${card('Massa livre de gordura', leanValue, '%', 'Complemento da gordura estimada')}
+      ${card('Massa muscular', muscleMass?.value ?? null, 'kg', muscleMass?.label ?? 'Estimativa selecionada')}
+      ${card('Massa ossea', boneMass?.value ?? null, 'kg', boneMass?.label ?? 'Estimativa selecionada')}
       ${card('IMC', bmi?.value ?? null, 'kg/m2', bmiNote)}
       ${card('Massa corporal', mass, 'kg', height == null ? 'Medida coletada' : `Estatura: ${fmt(height)} cm`)}
+      ${card('Massa adiposa', adiposeMass?.value ?? null, 'kg', adiposeMass?.label ?? 'Estimativa selecionada')}
     </div>
     <div style="display:grid;grid-template-columns:190px 1fr;gap:15px;align-items:stretch">
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;text-align:center">
@@ -93,22 +126,10 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
         <div style="font-size:8px;color:#64748b;line-height:1.35;margin-top:4px">Descricao morfologica; nao representa diagnostico.</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px">
-        <div style="display:grid;grid-template-columns:150px 1fr;gap:17px;align-items:center">
-          <div style="text-align:center">
-            <svg viewBox="0 0 120 120" role="img" aria-label="Composicao corporal estimada" style="width:118px;height:118px">
-              <circle cx="60" cy="60" r="48" fill="none" stroke="#d9eee9" stroke-width="13"/>
-              <circle cx="60" cy="60" r="48" fill="none" stroke="#b75b6b" stroke-width="13" stroke-linecap="round" stroke-dasharray="${fatArc} ${circumference}" transform="rotate(-90 60 60)"/>
-              <text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">GORDURA</text><text x="60" y="76" text-anchor="middle" font-size="19" font-weight="800" fill="#0f172a">${fmt(fatValue)}%</text>
-            </svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:800;color:#0f172a">Composicao estimada</div>
-            <div style="display:flex;gap:15px;margin-top:10px;font-size:9px;color:#64748b"><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#b75b6b;margin-right:5px"></i>Gordura ${fmt(fatValue)}%</span><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7ac7b5;margin-right:5px"></i>Livre de gordura ${fmt(leanValue)}%</span></div>
-            <p style="font-size:9px;line-height:1.45;color:#64748b;margin:10px 0 0">${esc(waistNote)}. Resultados estimados por antropometria e interpretados no conjunto da avaliacao.</p>
-          </div>
-        </div>
-        ${distribution('Adiposidade por regiao', ['Superior','Central','Inferior'], adiposity, ['#d9929e','#b75b6b','#863746'])}
-        ${distribution('Muscularidade por segmento', ['Braco','Coxa','Panturrilha'], muscularity, ['#88cfc0','#42aa92','#087f6d'])}
+        <div style="font-size:13px;font-weight:800;color:#0f172a">Composicao corporal estimada</div>
+        <p style="font-size:9px;line-height:1.45;color:#64748b;margin:5px 0 12px">Participacao da massa corporal em quatro compartimentos. ${esc(waistNote)}.</p>
+        ${tissueBar}
+        <p style="font-size:8px;line-height:1.4;color:#64748b;margin:10px 0 0">Total: 100%. O componente residual completa a massa corporal nao atribuida as tres estimativas selecionadas. Se as equacoes excederem 100%, os componentes sao normalizados apenas para visualizacao.</p>
         <div style="margin-top:14px;padding-top:11px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
           <div><span style="font-size:8px;color:#94a3b8">ENDOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.endomorphy)}</strong></div>
           <div><span style="font-size:8px;color:#94a3b8">MESOMORFIA</span><strong style="display:block;font-size:14px;color:#334155;margin-top:3px">${fmt(soma.mesomorphy)}</strong></div>
@@ -116,7 +137,8 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
         </div>
       </div>
     </div>
-    <p style="font-size:8.5px;line-height:1.45;color:#64748b;margin:13px 2px 0">Os percentuais regionais descrevem a participacao relativa das medidas coletadas e nao equivalem a massa tecidual regional, DXA ou diagnostico. A interpretacao final deve considerar os demais modulos e o contexto clinico.</p>
+    ${somatotypeDashboardHtml(snapshot)}
+    <p style="font-size:8.5px;line-height:1.45;color:#64748b;margin:11px 2px 0">As massas sao estimativas antropometricas e nao equivalem a mensuracao por DXA.</p>
   </div>`;
   return page('Antropometria', dashboard);
 }
@@ -125,13 +147,12 @@ function regionalBodyHtml(rows: Result[], sex: string): string {
   const value = (id: string) => rows.find(result => result.id === id && withValue(result))?.value ?? null;
   const female = sex === 'F';
   const model = bodyModelDataUri(sex);
-  const clothing = `${female ? '<path d="M299 116 Q320 109 341 116 L339 140 Q320 146 301 140 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>' : ''}<path d="${female ? 'M300 189 Q320 184 340 189 L337 217 Q328 224 320 216 Q312 224 303 217 Z' : 'M303 174 Q320 169 337 174 L334 204 Q327 211 320 203 Q313 211 306 204 Z'}" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>`;
   const label = (x: number, y: number, title: string, amount: number | null, color: string, anchor = 'start') => `<g transform="translate(${x} ${y})"><text text-anchor="${anchor}" font-size="11" fill="#64748b">${esc(title)}</text><text y="22" text-anchor="${anchor}" font-size="20" font-weight="700" fill="${color}">${fmt(amount)}%</text></g>`;
   return `<div style="break-inside:avoid;page-break-inside:avoid;border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc">
     <svg role="img" aria-label="Distribuicao antropometrica regional" data-body-sex="${female ? 'F' : 'M'}" viewBox="0 0 640 340" style="display:block;width:100%;height:285px">
       <text x="24" y="24" font-size="12" font-weight="700" fill="#9f3f4f">ADIPOSIDADE RELATIVA</text><text x="616" y="24" text-anchor="end" font-size="12" font-weight="700" fill="#087f6d">MUSCULARIDADE RELATIVA</text>
       <path d="M320 39 H282 Q248 39 248 75 V304 Q248 338 282 338 H320 Z" fill="#f8e9eb"/><path d="M320 39 H358 Q392 39 392 75 V304 Q392 338 358 338 H320 Z" fill="#e5f4f0"/>
-      ${model ? `<image href="${model}" x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet"/>` : ''}${clothing}<line x1="320" y1="40" x2="320" y2="337" stroke="#fff" stroke-width="2" opacity=".92"/>
+      ${model ? `<image href="${model}" x="251" y="45" width="138" height="285" preserveAspectRatio="xMidYMid meet"/>` : ''}<line x1="320" y1="40" x2="320" y2="337" stroke="#fff" stroke-width="2" opacity=".92"/>
       <g fill="none" stroke="#a94f5c" stroke-width="1.5"><path d="M278 105 H158"/><path d="M286 178 H158"/><path d="M292 270 H158"/></g>
       <g fill="none" stroke="#087f6d" stroke-width="1.5"><path d="M366 115 H482"/><path d="M350 228 H482"/><path d="M356 294 H482"/></g>
       ${label(24,88,'Superior',value('regionalAdiposityUpper'),'#9f3f4f')}${label(24,171,'Central',value('regionalAdiposityCentral'),'#9f3f4f')}${label(24,254,'Inferior',value('regionalAdiposityLower'),'#9f3f4f')}
@@ -144,15 +165,16 @@ function regionalBodyHtml(rows: Result[], sex: string): string {
 
 function somatochartHtml(soma: Snapshot['somatotype']): string {
   const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
-  const projectX = (amount: number) => 270 + Math.max(-10, Math.min(10, amount)) / 10 * 188;
-  const projectY = (amount: number) => 294 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 242;
-  return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 540 380" style="display:block;width:100%;height:285px">
-    <rect width="540" height="380" rx="8" fill="#f8fafc"/><path d="M76 296 Q270 366 464 296 Q510 145 270 42 Q30 145 76 296 Z" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
-    <g fill="none" stroke="#dbe4ea" stroke-width="1.2"><path d="M108 278 Q270 330 432 278"/><path d="M142 252 Q270 290 398 252"/><path d="M176 219 Q270 242 364 219"/><path d="M101 273 Q165 151 270 42"/><path d="M439 273 Q375 151 270 42"/><path d="M76 296 Q270 207 464 296"/><path d="M118 185 Q270 260 422 185"/></g>
-    <line x1="82" y1="197" x2="458" y2="197" stroke="#94a3b8"/><line x1="270" y1="52" x2="270" y2="294" stroke="#94a3b8"/>
-    <text x="270" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">MESOMORFIA</text><text x="64" y="331" font-size="13" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="476" y="331" text-anchor="end" font-size="13" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
-    ${valid ? `<circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="12" fill="#0f766e" opacity=".18"/><circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="6" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
-    <text x="270" y="368" text-anchor="middle" font-size="10" fill="#64748b">X = ectomorfia - endomorfia; Y = 2 x mesomorfia - endomorfia - ectomorfia</text>
+  const projectX = (amount: number) => 320 + Math.max(-10, Math.min(10, amount)) / 10 * 168;
+  const projectY = (amount: number) => 290 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 214;
+  return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 640 370" style="display:block;width:100%;height:280px">
+    <rect width="640" height="370" rx="8" fill="#f8fafc"/><path d="M116 300 Q320 354 524 300 Q564 164 320 54 Q76 164 116 300 Z" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+    <path d="M116 300 Q203 177 320 54 Q260 222 320 300 Z" fill="#f9e8eb" opacity=".82"/><path d="M320 54 Q437 177 524 300 L320 300 Z" fill="#e5f4f0" opacity=".9"/><path d="M116 300 Q320 224 524 300 Q320 351 116 300 Z" fill="#edf2f7" opacity=".9"/>
+    <g fill="none" stroke="#d4dde5" stroke-width="1"><path d="M155 278 Q320 322 485 278"/><path d="M198 244 Q320 275 442 244"/><path d="M155 275 Q222 160 320 54"/><path d="M485 275 Q418 160 320 54"/></g>
+    <line x1="126" y1="218" x2="514" y2="218" stroke="#94a3b8"/><line x1="320" y1="66" x2="320" y2="300" stroke="#94a3b8"/>
+    <text x="320" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">MESOMORFIA</text><text x="96" y="326" font-size="13" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="544" y="326" text-anchor="end" font-size="13" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
+    ${valid ? `<circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="13" fill="#0f766e" opacity=".18"/><circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="6" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
+    <text x="320" y="355" text-anchor="middle" font-size="10" fill="#64748b">O ponto combina endomorfia, mesomorfia e ectomorfia no sistema Heath-Carter.</text>
   </svg>`;
 }
 

@@ -307,6 +307,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 }
 .mod-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--pdf-line); margin-bottom: 22px; break-after: avoid; page-break-after: avoid; }
 .mod-title { font-family: Georgia, 'Times New Roman', serif; font-size: 34px; font-weight: 600; line-height:1.05; color: var(--pdf-title); letter-spacing:-.6px; }
+.module-intro { margin:-10px 0 18px; padding:0 0 13px; border-bottom:1px solid #edf2f7; color:#64748b; font-size:11px; line-height:1.55; break-after:avoid; page-break-after:avoid; }
 .score-pill { padding: 9px 18px; background: linear-gradient(135deg, ${pri}, ${pri}cc); border:1px solid ${pri}; border-radius: 100px; color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; box-shadow:0 12px 28px rgba(21,92,71,.18); }
 .score-pill-lbl { font-size: 10px; font-weight: 500; opacity: .85; text-transform: uppercase; letter-spacing: .5px; }
 .data-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 26px; }
@@ -709,7 +710,6 @@ export function renderLaudoFooterHTML(d: LaudoData): string {
 }
 
 const LABELS_MODULOS_LAUDO: Record<string, string> = {
-  anamnese: 'Anamnese',
   sinais_vitais: 'Sinais vitais',
   posturografia: 'Posturografia',
   termografia: 'Termografia funcional',
@@ -965,12 +965,24 @@ function pgResumo(d: LaudoData): string {
 </section>`;
 }
 
+function moduleIntroduction(titulo: string): string {
+  const introductions: Record<string, string> = {
+    'Bioimpedância': 'A bioimpedancia estima a distribuicao corporal por resistencia eletrica. A leitura prioriza agua corporal, massa magra, gordura e assimetrias entre segmentos.',
+    'Força': 'A dinamometria quantifica a capacidade de produzir forca e compara lados e segmentos. Os resultados ajudam a identificar equilibrio funcional e orientar o treinamento.',
+    'Resistência Muscular (RML)': 'Os testes de resistencia muscular localizada observam quantas repeticoes podem ser sustentadas em um movimento padronizado e situam o desempenho em referencias validadas.',
+    'Cardiorrespiratório': 'O teste cardiorrespiratorio avalia a resposta ao esforco, o VO2max, os limiares e as zonas de treinamento para orientar intensidade e acompanhar a aptidao aerobica.',
+  };
+  const text = introductions[titulo];
+  return text ? `<p class="module-intro">${x(text)}</p>` : '';
+}
+
 function pgModulo(titulo: string, score: number | null, content: string, ia?: AnaliseIA & {texto_editado?:string|null}, _rodape = ''): string {
   return `<section class="page module">
   <div class="mod-head">
     <h2 class="mod-title">${x(titulo)}</h2>
     ${score!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${score}</div>`:''}
   </div>
+  ${moduleIntroduction(titulo)}
   ${content}
   ${aiBlock(ia)}
   ${_rodape}
@@ -999,77 +1011,6 @@ function kpi(label: string, val: any, unit = '') {
 function kpiMaybe(label: string, val: any, unit = '') {
   if (val === null || val === undefined || val === '') return '';
   return kpi(label, val, unit);
-}
-
-function pgAnamnese(a: any, ia?: any): string {
-  if (!a) return '';
-
-  // ── Modo dinâmico: quando há respostas + template ────────────────────────
-  if (a.respostas && typeof a.respostas === 'object' && Object.keys(a.respostas).length > 0) {
-    const permitidos = Array.isArray(a.respostas.__campos_publicos_relatorio) ? a.respostas.__campos_publicos_relatorio : [];
-    const resps = Object.fromEntries(Object.entries(a.respostas).filter(([k, v]) =>
-      k !== '__campos_publicos_relatorio' && permitidos.includes(k) && v !== null && v !== undefined && v !== ''
-    ));
-    if (!Object.keys(resps).length) return aiBlock(ia);
-    const campos: Array<{id:string;tipo:string;label:string;unidade?:string}> =
-      Array.isArray(a._campos) ? a._campos : [];
-
-    if (campos.length > 0) {
-      // Agrupar por seção
-      type Grupo = { titulo: string|null; items: Array<{label:string;valor:any;tipo:string;unidade?:string}> };
-      const grupos: Grupo[] = [];
-      let cur: Grupo = { titulo: null, items: [] };
-
-      for (const c of campos) {
-        if (c.tipo === 'secao') {
-          if (cur.items.length > 0 || cur.titulo) grupos.push(cur);
-          cur = { titulo: c.label, items: [] };
-        } else {
-          const val = resps[c.id];
-          if (val !== null && val !== undefined && val !== '') {
-            let display = val;
-            if (c.tipo === 'boolean') display = val ? 'Sim' : 'Não';
-            if (c.tipo === 'escala') display = `${val}/10`;
-            cur.items.push({ label: c.label, valor: display, tipo: c.tipo, unidade: c.unidade });
-          }
-        }
-      }
-      if (cur.items.length > 0 || cur.titulo) grupos.push(cur);
-
-      return grupos.map(g => `
-        ${g.titulo ? `<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">${x(g.titulo)}</div>` : ''}
-        <div class="anam-grid">
-          ${g.items.map(it => {
-            const labelNorm = it.label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-            const destaque = it.tipo === 'texto_longo' || /objetivo|queixa|historico|lesao|sono/.test(labelNorm);
-            return destaque
-              ? `<div class="anam-card wide"><div class="kpi-label">${x(it.label)}</div><div class="anam-value">${x(String(it.valor))}${it.unidade ? ` <span class="kpi-unit">${x(it.unidade)}</span>` : ''}</div></div>`
-              : `<div class="anam-card"><div class="kpi-label">${x(it.label)}</div><div class="anam-value">${x(String(it.valor))}${it.unidade ? ` <span class="kpi-unit">${x(it.unidade)}</span>` : ''}</div></div>`;
-          }).join('')}
-        </div>`
-      ).join('') + aiBlock(ia);
-    }
-
-    // template sem campos mapeados: exibir respostas como chave-valor
-    const entries = Object.entries(resps).filter(([,v]) => v !== null && v !== undefined && v !== '');
-    return `<div class="kpi-grid">
-      ${entries.map(([k, v]) => kpi(k.replace(/_/g,' '), String(v))).join('')}
-    </div>${aiBlock(ia)}`;
-  }
-
-  // ── Modo legado: campos diretos ──────────────────────────────────────────
-  const hist = a.historico_medico ?? {};
-  const pos  = Object.entries(hist).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' ')).join(', ')||'Nenhum';
-  const af   = a.atividade_fisica ?? {};
-  return `
-    ${a.queixa_principal?`<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:14px"><div class="kpi-label">Queixa principal</div><div style="font-size:13px;color:#111827;margin-top:4px;font-weight:500;line-height:1.5">${x(a.queixa_principal)}</div></div>`:''}
-    <div class="kpi-grid">
-      ${a.historico_medico?kpi('Histórico médico',pos):''}
-      ${a.medicamentos?kpi('Medicamentos',a.medicamentos):''}
-      ${af.tipo?kpi('Atividade física',`${af.tipo} · ${af.frequencia??0}×/sem`):''}
-      ${kpi('Objetivos',a.objetivos)}
-    </div>
-    ${aiBlock(ia)}`;
 }
 
 function pgSinais(s: any, ia?: any): string {
@@ -1156,13 +1097,14 @@ function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
 }
 
 // Página combinada: sinais vitais + resumo corporal visual
-function pgSinaisAnamnese(d: LaudoData, s: any, iaS: any, pri = '#059669'): string {
+function pgSinaisCorpo(d: LaudoData, s: any, iaS: any, pri = '#059669'): string {
   const corpoHtml = pgResumoCorporalRelatorio(d, pri);
   if (!s && !corpoHtml) return '';
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
     <h2 class="mod-title">Dados Vitais e Corporais</h2>
   </div>
+  <p class="module-intro" style="margin-top:12px">Os sinais vitais registram respostas fisiologicas em repouso. O resumo corporal reune medidas gerais para contextualizar os demais resultados da avaliacao.</p>
 
   ${s ? `<div style="padding:20px 0 18px;border-bottom:${corpoHtml ? '2px dashed #e5e7eb' : '0'}">
     <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
@@ -1202,6 +1144,7 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
     ${p && !f && scoreP!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreP}</div>`:''}
     ${!p && scoreF!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreF}</div>`:''}
   </div>
+  <p class="module-intro" style="margin-top:12px">${p && f ? 'A posturografia descreve alinhamentos corporais, enquanto o teste de flexibilidade observa a amplitude da cadeia posterior pelo Banco de Wells.' : p ? 'A posturografia registra alinhamentos e assimetrias observaveis para apoiar a leitura funcional da postura.' : 'O teste de flexibilidade pelo Banco de Wells estima a amplitude da cadeia posterior e permite comparar o resultado com referencias do protocolo.'}</p>
 
   ${p ? `<!-- Posturografia -->
   <div style="padding:20px 0 18px;${f ? 'border-bottom:2px dashed #e5e7eb' : ''}">
@@ -1728,10 +1671,10 @@ function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
   const textoPdf = textoAnalisePdf(c);
   if (textoPdf) {
-    return quebrarTextoPdf(textoPdf).map((parte, idx) => pgModulo(idx === 0 ? 'Conclusão clínica' : 'Conclusão clínica', null, `
+    return quebrarTextoPdf(textoPdf, 2400).map((parte, idx) => pgModulo(idx === 0 ? 'Conclusão clínica' : 'Conclusão clínica', null, `
       ${idx > 0 ? `<div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:-10px;margin-bottom:18px">continuação</div>` : ''}
-      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:18px 22px">
-        <p style="font-size:13px;color:#166534;line-height:1.78;white-space:pre-line">${x(parte)}</p>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:16px 20px">
+        <p style="font-size:12px;color:#166534;line-height:1.68;white-space:pre-line">${x(parte)}</p>
       </div>
     `)).join('');
   }
@@ -1930,6 +1873,7 @@ function pgBiomecanica(b: any, ia: any, pri = '#059669'): string {
       </div>
     </div>
   </div>
+  <p class="module-intro">A analise cinematica 2D observa angulos, alinhamentos e fases da corrida para descrever o movimento e apoiar decisoes tecnicas de treinamento.</p>
   ${videoLinks}
   <div style="display:grid;grid-template-columns:${frameUrl ? '1fr 1fr' : '1fr'};gap:20px;margin-bottom:18px">
     ${frameUrl ? `<div>
@@ -2147,15 +2091,12 @@ export function renderLaudoHTML(d: LaudoData): string {
   const footerLeft = d.clinica?.nome || 'Diagnóstico Fisiometabólico';
   const footerCenter = [d.avaliador.nome, d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
   const footerRight = `${d.paciente.nome}${d.paciente.cpf ? ` · CPF: ${d.paciente.cpf}` : ''}`;
-  const anamneseHtml = m.anamnese ? pgAnamnese(d.dados.anamnese, ia.anamnese) : '';
-
   const pages = [
     pgCapa(d),
     pgResumo(d),
-    anamneseHtml ? pgModulo('Anamnese', null, anamneseHtml) : '',
     // Ordem cronologica dos modulos da avaliacao
     (m.sinais_vitais || m.bioimpedancia || m.antropometria)
-      ? pgSinaisAnamnese(
+      ? pgSinaisCorpo(
           d,
           m.sinais_vitais ? d.dados.sinais_vitais : null,
           ia.sinais_vitais, pri)
