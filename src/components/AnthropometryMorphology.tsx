@@ -1,8 +1,7 @@
 import React from 'react';
 import type { calculateAnthropometry } from '@/lib/anthropometry';
-import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
+import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI, SOMATOTYPE_REFERENCE_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
 import { classifySomatotype } from '@/lib/anthropometry/formulas';
-import { somatotypeFigure, type SomatotypeProfile } from '@/lib/anthropometry/somatotype-figures';
 
 type AnthropometryResult = ReturnType<typeof calculateAnthropometry>;
 
@@ -88,7 +87,7 @@ export function RegionalBodyMap({ rows, sex }: { rows: ResultRow[]; sex: string 
   </figure>;
 }
 
-export function Somatochart({ somatotype, sex }: { somatotype: AnthropometryResult['somatotype']; sex?: string }) {
+export function Somatochart({ somatotype, sex: _sex }: { somatotype: AnthropometryResult['somatotype']; sex?: string }) {
   const { x, y } = somatotype;
   const valid = x != null && y != null && Number.isFinite(x) && Number.isFinite(y);
   const classification = [somatotype.endomorphy, somatotype.mesomorphy, somatotype.ectomorphy].every(v => typeof v === 'number' && Number.isFinite(v))
@@ -96,24 +95,6 @@ export function Somatochart({ somatotype, sex }: { somatotype: AnthropometryResu
     : somatotype.classification;
   const projectX = (amount: number) => 175 + Math.max(-10, Math.min(10, amount)) / 10 * 112;
   const projectY = (amount: number) => 151 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 114;
-  const profile = (kind: SomatotypeProfile, x: number, y: number, label: string, color: string) => {
-    const figure = somatotypeFigure(kind, sex);
-    const skin = '#d99670';
-    return <g transform={`translate(${x} ${y})`} aria-label={`Perfil corporal ${label}`}>
-      <g transform="scale(.39 .49) translate(-30 -72)">
-        <ellipse {...figure.head} fill={skin} />
-        <path d={figure.neck} fill={skin} />
-        <path d={figure.leftArm} fill={skin} /><path d={figure.rightArm} fill={skin} />
-        <path d={figure.leftLeg} fill={skin} /><path d={figure.rightLeg} fill={skin} />
-        <path d={figure.torso} fill={skin} />
-        <path d={figure.pelvis} fill={skin} />
-        <path d={figure.garment} fill={color} opacity=".92" />
-        <path d="M26 7 Q30 3 34 7" fill="none" stroke="#7c4b3a" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="30" y1="29" x2="30" y2="66" stroke="#9b654e" strokeWidth=".8" opacity=".55" />
-      </g>
-      <text y="48" textAnchor="middle" fontSize="8" fontWeight="700" fill={color}>{label}</text>
-    </g>;
-  };
   return <figure style={{ margin: 0, maxWidth: 760 }}>
     <svg viewBox="0 0 350 210" role="img" aria-label="Somatocarta Heath-Carter" style={{ width: '100%', height: 'auto', display: 'block' }}>
         <path d="M46 158 Q175 188 304 158 Q328 80 175 25 Q22 80 46 158 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
@@ -124,11 +105,10 @@ export function Somatochart({ somatotype, sex }: { somatotype: AnthropometryResu
         <text x="175" y="17" textAnchor="middle" fontSize="9" fontWeight="700" fill="#334155">MESOMORFIA</text>
         <text x="38" y="176" fontSize="9" fontWeight="700" fill="#9f3f4f">ENDOMORFIA</text>
         <text x="312" y="176" textAnchor="end" fontSize="9" fontWeight="700" fill="#087f6d">ECTOMORFIA</text>
-        {profile('endo', 76, 91, 'Endo', '#9f3f4f')}
-        {profile('meso', 175, 82, 'Meso', '#334155')}
-        {profile('ecto', 274, 91, 'Ecto', '#087f6d')}
         {valid && <g data-somatotype-point><circle cx={projectX(x)} cy={projectY(y)} r="10" fill="#0f766e" opacity="0.18" /><circle cx={projectX(x)} cy={projectY(y)} r="5" fill="#0f766e" stroke="#ffffff" strokeWidth="2"><title>{`X ${fmt(x)}; Y ${fmt(y)}`}</title></circle></g>}
       </svg>
+    <div style={{ fontSize: 10, fontWeight: 700, color:'#64748b', textTransform:'uppercase', letterSpacing:'.8px', margin:'4px 0 6px' }}>Legenda visual dos perfis corporais</div>
+    <img src={SOMATOTYPE_REFERENCE_DATA_URI} alt="Perfis ectomorfo, mesomorfo e endomorfo" style={{ display:'block', width:'100%', height:'auto', maxHeight:320, objectFit:'contain', border:'1px solid #e2e8f0', borderRadius:8, background:'#fff' }} />
     <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, textAlign:'center', marginTop:6, fontSize:12 }}>
       <span><b style={{color:'#9f3f4f'}}>Endomorfia</b><br/>{fmt(somatotype.endomorphy)}</span>
       <span><b style={{color:'#334155'}}>Mesomorfia</b><br/>{fmt(somatotype.mesomorphy)}</span>

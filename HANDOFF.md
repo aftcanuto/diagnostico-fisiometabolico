@@ -1729,3 +1729,14 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - A tipografia e o espacamento das referencias foram ajustados para preservar a area fixa do rodape sem remover conteudo nem criar pagina adicional.
 - O teste visual passou a verificar cada referencia e cada link individualmente, falhando se qualquer um invadir o rodape ou exceder a largura.
 - Sem migration nova.
+
+## 2026-10-12 - Scores apenas no resumo e legenda da somatocarta
+
+- O nome do avaliador foi removido do cabecalho da pagina de resumo; a identificacao profissional permanece na capa e no rodape institucional.
+- Todos os cards, selos e textos de score foram removidos das paginas internas dos modulos, incluindo postura e flexibilidade. Os scores permanecem exclusivamente no resumo da avaliacao.
+- A remocao elimina os cards vazios observados nas paginas 16 e 19 em visualizadores de telefone.
+- As miniaturas vetoriais da somatocarta foram removidas do PDF, painel e portal.
+- A imagem de referencia fornecida pelo usuario passou a ser usada como legenda visual dos perfis ectomorfo, mesomorfo e endomorfo, mantendo o grafico Heath-Carter e o ponto calculado separados e legiveis.
+- O ativo foi otimizado, incorporado ao PDF como data URI e preservado em `resources/anthropometry` e `public/assets/anthropometry`.
+- O teste visual passou a falhar se um score reaparecer fora do resumo, se o avaliador voltar ao cabecalho ou se a legenda da somatocarta nao carregar.
+- Sem migration nova.

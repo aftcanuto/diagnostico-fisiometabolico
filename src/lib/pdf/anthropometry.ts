@@ -1,8 +1,7 @@
 import { qualificationLabel } from '@/lib/isak-qualification';
 import { compareAnthropometry, CORRECTED_GIRTH_RESULT_IDS, MEASUREMENTS, REGIONAL_DISTRIBUTION_RESULT_IDS, type AnthropometryInput, type AnthropometryResults, type Result } from '@/lib/anthropometry';
-import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
+import { FEMALE_BODY_MODEL_DATA_URI, MALE_BODY_MODEL_DATA_URI, SOMATOTYPE_REFERENCE_DATA_URI } from '@/lib/anthropometry/body-assets.generated';
 import { classifySomatotype } from '@/lib/anthropometry/formulas';
-import { somatotypeFigure, type SomatotypeProfile } from '@/lib/anthropometry/somatotype-figures';
 
 // Read persisted snapshots only. No anthropometric calculation belongs in a report.
 type Snapshot = AnthropometryResults & { professional?: { name?: string; qualification?: unknown } };
@@ -155,30 +154,19 @@ function regionalBodyHtml(rows: Result[], sex: string): string {
   </div>`;
 }
 
-function somatochartHtml(soma: Snapshot['somatotype'], sex?: string): string {
+function somatochartHtml(soma: Snapshot['somatotype'], _sex?: string): string {
   const valid = typeof soma.x === 'number' && Number.isFinite(soma.x) && typeof soma.y === 'number' && Number.isFinite(soma.y);
   const projectX = (amount: number) => 320 + Math.max(-10, Math.min(10, amount)) / 10 * 168;
   const projectY = (amount: number) => 290 - (Math.max(-12, Math.min(18, amount)) + 12) / 30 * 214;
-  const silhouette = (kind: SomatotypeProfile, x: number, y: number, label: string, color: string) => {
-    const figure = somatotypeFigure(kind, sex);
-    const head = figure.head;
-    return `<g transform="translate(${x} ${y})" aria-label="Perfil corporal ${label}"><g transform="scale(.6 .76) translate(-30 -72)">
-      <ellipse cx="${head.cx}" cy="${head.cy}" rx="${head.rx}" ry="${head.ry}" fill="#d99670"/><path d="${figure.neck}" fill="#d99670"/>
-      <path d="${figure.leftArm}" fill="#d99670"/><path d="${figure.rightArm}" fill="#d99670"/><path d="${figure.leftLeg}" fill="#d99670"/><path d="${figure.rightLeg}" fill="#d99670"/>
-      <path d="${figure.torso}" fill="#d99670"/><path d="${figure.pelvis}" fill="#d99670"/><path d="${figure.garment}" fill="${color}" opacity=".92"/>
-      <path d="M26 7 Q30 3 34 7" fill="none" stroke="#7c4b3a" stroke-width="1.5" stroke-linecap="round"/><line x1="30" y1="29" x2="30" y2="66" stroke="#9b654e" stroke-width=".8" opacity=".55"/>
-      </g><text y="68" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${label}</text></g>`;
-  };
-  return `<svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 640 390" style="display:block;width:100%;height:300px">
+  return `<div style="break-inside:avoid;page-break-inside:avoid"><svg role="img" aria-label="Somatocarta Heath-Carter" viewBox="0 0 640 350" style="display:block;width:100%;height:270px">
     <rect width="640" height="370" rx="8" fill="#f8fafc"/><path d="M116 300 Q320 354 524 300 Q564 164 320 54 Q76 164 116 300 Z" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
     <path d="M116 300 Q203 177 320 54 Q260 222 320 300 Z" fill="#f9e8eb" opacity=".82"/><path d="M320 54 Q437 177 524 300 L320 300 Z" fill="#e5f4f0" opacity=".9"/><path d="M116 300 Q320 224 524 300 Q320 351 116 300 Z" fill="#edf2f7" opacity=".9"/>
     <g fill="none" stroke="#d4dde5" stroke-width="1"><path d="M155 278 Q320 322 485 278"/><path d="M198 244 Q320 275 442 244"/><path d="M155 275 Q222 160 320 54"/><path d="M485 275 Q418 160 320 54"/></g>
     <line x1="126" y1="218" x2="514" y2="218" stroke="#94a3b8"/><line x1="320" y1="66" x2="320" y2="300" stroke="#94a3b8"/>
     <text x="320" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">MESOMORFIA</text><text x="96" y="326" font-size="13" font-weight="700" fill="#9f3f4f">ENDOMORFIA</text><text x="544" y="326" text-anchor="end" font-size="13" font-weight="700" fill="#087f6d">ECTOMORFIA</text>
-    ${silhouette('endo',166,185,'Endo','#9f3f4f')}${silhouette('meso',320,145,'Meso','#334155')}${silhouette('ecto',474,185,'Ecto','#087f6d')}
     ${valid ? `<circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="13" fill="#0f766e" opacity=".18"/><circle cx="${projectX(soma.x!)}" cy="${projectY(soma.y!)}" r="6" fill="#0f766e" stroke="#fff" stroke-width="2"/>` : ''}
-    <text x="320" y="370" text-anchor="middle" font-size="10" fill="#64748b">O ponto combina endomorfia, mesomorfia e ectomorfia no sistema Heath-Carter.</text>
-  </svg>`;
+    <text x="320" y="340" text-anchor="middle" font-size="10" fill="#64748b">O ponto combina endomorfia, mesomorfia e ectomorfia no sistema Heath-Carter.</text>
+  </svg><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin:4px 0 6px">Legenda visual dos perfis corporais</div><img data-somatotype-reference="true" src="${SOMATOTYPE_REFERENCE_DATA_URI}" alt="Perfis ectomorfo, mesomorfo e endomorfo" style="display:block;width:100%;height:235px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;background:#fff"/></div>`;
 }
 
 export function anthropometrySummaryHtml(row: Row): string {

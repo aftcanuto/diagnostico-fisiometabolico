@@ -926,17 +926,13 @@ function pgResumo(d: LaudoData): string {
   return `<section class="page summary" style="display:flex;flex-direction:column">
 
   <!-- ── HEADER ── -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #e2e8f0;margin-bottom:20px">
+  <div data-summary-header="true" style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #e2e8f0;margin-bottom:20px">
     <div>
       <div style="font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Resumo da Avaliação</div>
       <div style="font-size:28px;font-weight:800;letter-spacing:-.5px;color:#0f172a">${x(d.paciente.nome)}</div>
       <div style="font-size:12px;color:#94a3b8;margin-top:4px">
         ${d.paciente.sexo==='M'?'Masculino':'Feminino'} · ${d.paciente.idade} anos · ${fd(d.avaliacao.data)} · ${x(tipoExibido)}
       </div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Avaliador</div>
-      <div style="font-size:14px;font-weight:600;color:#0f172a;font-weight:600">${x(d.avaliador.nome)}</div>
     </div>
   </div>
 
@@ -990,11 +986,10 @@ function moduleIntroduction(titulo: string): string {
   return text ? `<p class="module-intro">${x(text)}</p>` : '';
 }
 
-function pgModulo(titulo: string, score: number | null, content: string, ia?: AnaliseIA & {texto_editado?:string|null}, _rodape = ''): string {
+function pgModulo(titulo: string, _score: number | null, content: string, ia?: AnaliseIA & {texto_editado?:string|null}, _rodape = ''): string {
   return `<section class="page module">
   <div class="mod-head">
     <h2 class="mod-title">${x(titulo)}</h2>
-    ${score!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${score}</div>`:''}
   </div>
   ${moduleIntroduction(titulo)}
   ${content}
@@ -1003,14 +998,13 @@ function pgModulo(titulo: string, score: number | null, content: string, ia?: An
 </section>`;
 }
 
-function pgModuloContinuacao(titulo: string, score: number | null, content: string, ia?: AnaliseIA & {texto_editado?:string|null}): string {
+function pgModuloContinuacao(titulo: string, _score: number | null, content: string, ia?: AnaliseIA & {texto_editado?:string|null}): string {
   return `<section class="page module">
   <div class="mod-head">
     <div>
       <h2 class="mod-title">${x(titulo)}</h2>
       <div style="font-size:11px;color:#94a3b8;font-style:italic;margin-top:4px">continuação</div>
     </div>
-    ${score!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${score}</div>`:''}
   </div>
   ${content}
   ${aiBlock(ia)}
@@ -1155,7 +1149,7 @@ function pgSinaisCorpo(d: LaudoData, s: any, iaS: any, pri = '#059669'): string 
 </section>`;
 }
 
-function pgPostura(p: any, score: number | null, ia?: any): string {
+function pgPostura(p: any, _score: number | null, ia?: any): string {
   if (!p) return '';
   const alin = p.alinhamentos??{};
   const desv = Object.entries(alin).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' '));
@@ -1167,20 +1161,17 @@ function pgPostura(p: any, score: number | null, ia?: any): string {
     <div class="sec-sub" style="margin-top:0">Achados posturais</div>
     ${desv.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${desv.map(d=>`<span style="background:#fef2f2;color:#991b1b;font-size:11px;padding:4px 12px;border-radius:20px">${x(d)}</span>`).join('')}</div>`:'<span style="color:#10b981;font-size:13px;font-weight:500">Sem desvios relevantes</span>'}
     ${p.observacoes?`<p style="font-size:12px;color:#4b5563;margin-top:10px;line-height:1.6">${x(p.observacoes)}</p>`:''}
-    ${score!=null?`<div style="display:inline-block;margin-top:12px;padding:5px 14px;background:linear-gradient(135deg,#059669,#059669cc);border-radius:100px;color:#0f172a;font-weight:700;font-size:13px">Score Postura: ${score}</div>`:''}
     ${aiBlock(ia)}`;
 }
 
 // Pagina flexivel: pode renderizar Posturografia, Flexibilidade ou ambos.
-function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null, iaP: any, iaF: any, pri = '#059669'): string {
+function pgPosturaFlex(p: any, _scoreP: number|null, f: any, _scoreF: number|null, iaP: any, iaF: any, pri = '#059669'): string {
   if (!p && !f) return '';
   const corF = f?.classificacao==='Excelente'?'#16a34a':f?.classificacao==='Bom'?'#10b981':f?.classificacao==='Médio'?'#f59e0b':f?.classificacao==='Regular'?'#f97316':'#ef4444';
   const titulo = p && f ? 'Posturografia &amp; Flexibilidade' : p ? 'Posturografia' : 'Flexibilidade';
   return `<section class="page module" style="display:flex;flex-direction:column">
   <div class="mod-head" style="margin-bottom:0;padding-bottom:16px">
     <h2 class="mod-title">${titulo}</h2>
-    ${p && !f && scoreP!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreP}</div>`:''}
-    ${!p && scoreF!=null?`<div class="score-pill"><span class="score-pill-lbl">Score</span>${scoreF}</div>`:''}
   </div>
   <p class="module-intro" style="margin-top:12px">${p && f ? 'A posturografia descreve alinhamentos corporais, enquanto o teste de flexibilidade observa a amplitude da cadeia posterior (principalmente isquiotibiais, eretores da coluna e triceps sural) pelo Banco de Wells.' : p ? 'A posturografia registra alinhamentos e assimetrias observaveis para apoiar a leitura funcional da postura.' : 'O teste de flexibilidade pelo Banco de Wells estima a amplitude da cadeia posterior (principalmente isquiotibiais, eretores da coluna e triceps sural) e permite comparar o resultado com referencias do protocolo.'}</p>
 
@@ -1190,14 +1181,13 @@ function pgPosturaFlex(p: any, scoreP: number|null, f: any, scoreF: number|null,
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>
       Posturografia
     </div>
-    ${pgPostura(p, f ? scoreP : null, iaP)}
+    ${pgPostura(p, null, iaP)}
   </div>` : ''}
 
   ${f ? `<!-- Flexibilidade -->
   <div style="padding:20px 0 0">
     ${p ? `<div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;display:flex;align-items:center;gap:8px">
       <span style="width:3px;height:18px;background:${pri};border-radius:2px;display:inline-block"></span>Flexibilidade
-      ${scoreF!=null?`<span style="margin-left:auto;padding:4px 12px;background:linear-gradient(135deg,${pri},${pri}cc);border-radius:100px;color:#0f172a;font-weight:700;font-size:12px">Score: ${scoreF}</span>`:''}
     </div>` : ''}
     <div class="kpi-grid">
       ${kpi('Tentativa 1',f.tentativa_1,'cm')}${kpi('Tentativa 2',f.tentativa_2,'cm')}${kpi('Tentativa 3',f.tentativa_3,'cm')}
