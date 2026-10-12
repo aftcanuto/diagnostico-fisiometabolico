@@ -356,6 +356,9 @@ tr:last-child td { border-bottom: none; }
 .bio-analysis .ai-box, .rml-analysis .ai-box { margin-top:8px; padding:10px 14px; border-radius:0 14px 14px 0; }
 .bio-analysis .ai-title, .rml-analysis .ai-title { margin-bottom:5px; font-size:9px; }
 .bio-analysis .ai-text, .rml-analysis .ai-text { font-size:9.4px; line-height:1.42; }
+.rml-analysis .ai-box { min-height:210px; padding:14px 18px; }
+.rml-analysis .ai-title { font-size:10.5px; margin-bottom:8px; }
+.rml-analysis .ai-text { font-size:11.2px; line-height:1.58; text-align:justify; text-justify:inter-word; }
 .rml-table table { font-size:10px !important; }
 .rml-table th, .rml-table td { padding:6px 9px !important; }
 .dark-block { background: var(--pdf-panel); border:1px solid var(--pdf-line); border-radius: 22px; padding: 18px 22px; color: #111827; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
@@ -1056,15 +1059,25 @@ function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
   const snapshot = antV2 ? ant?.resultados_v2 : null;
   const v2Result = (id: string) => toNum(snapshot?.results?.find((item: any) =>
     item?.id === id && item?.selected === true && (item?.status === 'available' || item?.status === 'review'))?.value);
+  const v2FirstResult = (ids: string[]) => ids.map(v2Result).find((value) => value != null) ?? null;
   const v2Measurement = (id: string) => toNum(snapshot?.measurements?.[id]?.value);
   const gorduraRelatorio = resolverPercentualGordura(d.avaliacao, ant, bio);
   const pctG = toNum(gorduraRelatorio.valor);
   const peso = antV2 ? v2Measurement('mass') ?? toNum(bio?.peso_kg ?? bio?.peso) : toNum(ant?.peso ?? bio?.peso_kg ?? bio?.peso);
   const altura = antV2 ? v2Measurement('height') ?? toNum(bio?.altura_cm ?? bio?.estatura_cm) : toNum(ant?.estatura ?? ant?.altura ?? bio?.altura_cm ?? bio?.estatura_cm);
+  const cintura = antV2 ? v2Measurement('waist') : toNum(ant?.circunferencias?.waist ?? ant?.circunferencias?.cintura);
   const imc = antV2 ? v2Result('bmi') ?? toNum(bio?.imc) : toNum(ant?.imc ?? bio?.imc);
-  const massaMagra = antV2 ? v2Result('fatFreeMass') : toNum(ant?.massa_magra ?? bio?.massa_livre_gordura_kg ?? bio?.massa_magra_kg);
+  const massaMuscular = antV2 ? v2FirstResult(['lee2000', 'martin1990', 'kerrMuscle1988']) : toNum(ant?.massa_muscular);
+  const massaOssea = antV2 ? v2FirstResult(['martinBone1991', 'rocha1975']) : toNum(ant?.massa_ossea);
+  const massaMagra = antV2 ? v2Result('fatFreeMass') : toNum(ant?.massa_magra);
   const tmb = antV2 ? v2Result('basalEnergy') ?? toNum(bio?.taxa_metabolica_basal_kcal ?? bio?.tmb) : toNum(bio?.taxa_metabolica_basal_kcal ?? bio?.tmb ?? ant?.taxa_metabolica_basal_kcal ?? ant?.metabolismo_basal);
   const rcq = antV2 ? v2Result('waistHipRatio') : toNum(ant?.rcq ?? bio?.rcq);
+  const rca = antV2 ? v2Result('waistHeightRatio') : toNum(ant?.relacao_cintura_estatura);
+  const conicidadeCalculada = cintura != null && peso != null && altura != null && peso > 0 && altura > 0
+    ? (cintura / 100) / (0.109 * Math.sqrt(peso / (altura / 100)))
+    : null;
+  const conicidade = antV2 ? v2Result('conicityIndex') ?? conicidadeCalculada : toNum(ant?.indice_conicidade) ?? conicidadeCalculada;
+  const indiceCormico = antV2 ? v2Result('cormicIndex') : toNum(ant?.indice_cormico);
   const agua = toNum(bio?.agua_corporal_pct ?? bio?.agua_corporal_percentual ?? bio?.agua_corporal_kg);
   const gorduraVisceral = toNum(bio?.gordura_visceral);
   const visual = classificarComposicaoCorporal({ sexo: d.paciente.sexo, pctGordura: pctG, imc });
@@ -1077,30 +1090,37 @@ function pgResumoCorporalRelatorio(d: LaudoData, pri = '#059669'): string {
 
   return `<div style="margin-top:18px">
     <div class="sec-sub">Dados corporais</div>
-    <div style="border:1px solid #e2e8f0;border-radius:14px;padding:18px;background:#ffffff;display:grid;grid-template-columns:1.1fr 150px 1.1fr;gap:20px;align-items:center;break-inside:avoid;page-break-inside:avoid">
+    <div style="border:1px solid #e2e8f0;border-radius:14px;padding:18px;background:#ffffff;display:grid;grid-template-columns:1.1fr 140px 1.1fr;gap:18px;align-items:start;break-inside:avoid;page-break-inside:avoid">
       <div>
-        <div style="font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:7px">Indicadores principais</div>
+        <div style="height:28px;box-sizing:border-box;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:7px">Composição corporal</div>
         <div style="display:grid;gap:7px">
           ${row('Gordura corporal', fmt(pctG, 2), '%', zoneColor(d.scores.composicao_corporal))}
-          ${row('Metabolismo basal', fmt(tmb, 0), 'kcal')}
-          ${row('RCQ', fmt(rcq, 2))}
-          ${somatotipo ? row('Somatotipo', String(somatotipo)) : ''}
+          ${row('Massa muscular', fmt(massaMuscular, 2), 'kg', '#059669')}
+          ${row('Massa óssea', fmt(massaOssea, 2), 'kg')}
+          ${row('Massa livre de gordura', fmt(massaMagra, 2), 'kg', '#059669')}
+          ${row('Água corporal', fmt(agua, 1), bio?.agua_corporal_kg ? 'kg' : '%')}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding-top:28px">
         ${silhueta(d.paciente.sexo, pctG, imc)}
         <span style="display:inline-block;border:1px solid ${visual.cor}55;background:${visual.cor}12;color:${visual.cor};padding:4px 12px;border-radius:999px;font-size:10px;font-weight:700">${x(visual.label)}</span>
       </div>
       <div>
-        <div style="font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:7px">Demais dados</div>
+        <div style="height:28px;box-sizing:border-box;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:7px">Indicadores de saúde</div>
         <div style="display:grid;gap:7px">
-          ${row('Peso', fmt(peso, 1), 'kg')}
-          ${row('Altura', fmt(altura, 0), 'cm')}
           ${row('IMC', fmt(imc, 2))}
-          ${row('Massa magra', fmt(massaMagra, 2), 'kg', '#059669')}
-          ${row('Água corporal', fmt(agua, 1), bio?.agua_corporal_kg ? 'kg' : '%')}
-          ${row('Gordura visceral', fmt(gorduraVisceral, 0))}
+          ${row('RCA (cintura/estatura)', fmt(rca, 2))}
+          ${row('RCQ (cintura/quadril)', fmt(rcq, 2))}
+          ${row('Índice de conicidade', fmt(conicidade, 2))}
+          ${row('Índice córmico', fmt(indiceCormico, 2), '%')}
         </div>
+      </div>
+      <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;padding-top:12px;border-top:1px solid #e2e8f0">
+        ${row('Peso', fmt(peso, 1), 'kg')}
+        ${row('Altura', fmt(altura, 0), 'cm')}
+        ${row('Metabolismo basal', fmt(tmb, 0), 'kcal')}
+        ${row('Gordura visceral', fmt(gorduraVisceral, 0))}
+        ${somatotipo ? row('Somatotipo', String(somatotipo)) : ''}
       </div>
     </div>
   </div>`;
@@ -1684,18 +1704,18 @@ function pgConclusao(d: LaudoData, pri: string): string {
   if (textoPdf) {
     const length = textoPdf.length;
     const typography = length <= 2800
-      ? { font: 12.6, line: 1.5, padding: '18px 20px' }
+      ? { font: 13.2, line: 1.55, padding: '18px 20px' }
       : length <= 4400
-        ? { font: 11.8, line: 1.43, padding: '17px 19px' }
+        ? { font: 12.4, line: 1.48, padding: '17px 19px' }
         : length <= 6200
-          ? { font: 10.8, line: 1.36, padding: '15px 18px' }
-          : { font: 9.5, line: 1.28, padding: '14px 17px' };
+          ? { font: 11.3, line: 1.38, padding: '15px 18px' }
+          : { font: 10.4, line: 1.34, padding: '14px 17px' };
     return `<section class="page module conclusion-page" style="display:flex;flex-direction:column">
       <div class="mod-head" style="flex:0 0 auto">
         <h2 class="mod-title">Conclusão clínica</h2>
       </div>
       <div data-clinical-conclusion="true" style="flex:1 1 auto;min-height:0;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:${typography.padding};display:flex;align-items:flex-start;overflow:hidden">
-        <p style="width:100%;font-size:${typography.font}px;color:#166534;line-height:${typography.line};white-space:pre-line;overflow-wrap:anywhere">${x(textoPdf)}</p>
+        <p style="width:100%;font-size:${typography.font}px;color:#166534;line-height:${typography.line};white-space:pre-line;overflow-wrap:anywhere;text-align:justify;text-justify:inter-word">${x(textoPdf)}</p>
       </div>
     </section>`;
   }

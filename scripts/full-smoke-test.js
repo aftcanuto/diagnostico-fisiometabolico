@@ -381,6 +381,12 @@ function main() {
   assert(!laudo.includes('Idade metabólica'), 'Laudo nao deve exibir idade metabolica na bioimpedancia');
   assert(laudo.includes('Gordura visceral'), 'Laudo deve exibir gordura visceral na bioimpedancia');
   assert(laudo.includes('Indicadores de saude e proporcionalidade'), 'Dashboard antropometrico deve exibir indicadores de saude');
+  assert(laudo.includes('Composição corporal'), 'Resumo corporal deve agrupar a composicao antropometrica');
+  assert(laudo.includes('Indicadores de saúde'), 'Resumo corporal deve agrupar os indicadores de saude');
+  assert(laudo.includes('Índice de conicidade'), 'Resumo corporal deve exibir a conicidade');
+  assert(laudo.includes('Massa livre de gordura'), 'Resumo corporal deve exibir massa livre de gordura');
+  assert(laudo.includes('representar melhor o volume muscular'), 'Perimetros corrigidos devem ter explicacao orientada ao paciente');
+  assert(laudo.includes('text-align:justify'), 'Analises extensas devem usar alinhamento justificado');
   assert(!laudo.includes('O componente residual completa a massa corporal'), 'Laudo nao deve exibir explicacao tecnica do componente residual');
   assert(laudo.indexOf('A avaliação integrada indica condição funcional global favorável') < laudo.indexOf('Referências bibliográficas'),
     'Conclusao integrada deve aparecer antes das referencias bibliograficas');

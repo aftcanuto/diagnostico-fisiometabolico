@@ -187,6 +187,7 @@ async function main() {
         cutCards: result.cutCards,
         overflowPages: result.overflowPages,
         emptyPages: result.emptyPages,
+        conclusionOverflow: result.conclusionOverflow,
       });
     }
 

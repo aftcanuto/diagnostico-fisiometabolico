@@ -4,6 +4,15 @@ Documento de continuidade do projeto. Leia este arquivo antes de continuar em ou
 
 ## Atualizacoes recentes
 
+### 2026-10-12 - Resumo corporal clinico e melhor aproveitamento do laudo
+
+- O quadro `Dados corporais` foi reorganizado em composicao corporal e indicadores de saude. Gordura corporal, massa muscular, massa ossea, massa livre de gordura e agua corporal ficam agrupadas; IMC, relacao cintura/estatura, RCQ, conicidade e indice cormico aparecem juntos e alinhados.
+- Peso, altura, metabolismo basal, gordura visceral e somatotipo permanecem em uma faixa auxiliar, preservando todos os achados sem misturar composicao com indicadores de distribuicao corporal.
+- O motor passou a calcular o indice de conicidade de Valdez a partir da cintura minima ISAK, massa e estatura. O resultado e descritivo, nao recebe ponto de corte universal e e compartilhado por modulo, portal, PDF e IA. Motor `anthropometry-2.4.0`; catalogo `medfit-strict26-2026-10-12.2`.
+- A explicacao dos perimetros corrigidos passou a informar sua finalidade na estimativa do volume muscular dos segmentos, mantendo o antebraco como medida direta.
+- A analise de RML ganhou caixa, fonte e entrelinha maiores. RML e conclusao clinica usam alinhamento justificado; a conclusao recebeu nova escala tipografica para preencher melhor a pagina sem perder legibilidade.
+- Incluida a referencia de Valdez (1991) no catalogo antropometrico. Sem migration.
+
 ### 2026-10-12 - Somatocarta, Jump Test e compactacao do laudo
 
 - A classificacao Heath-Carter deixou de reduzir o resultado aos tres componentes dominantes e passou a aplicar as 13 categorias posicionais. O caso 2,13-7,2-0,77 e apresentado como `Meso-endomorfo`; snapshots antigos recebem a classificacao atual somente na apresentacao, sem alterar as medidas persistidas.

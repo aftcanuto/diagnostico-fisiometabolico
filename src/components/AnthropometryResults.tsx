@@ -15,13 +15,20 @@ const cell: CSSProperties = { padding: '10px 8px', borderBottom: '1px solid #e5e
 const section: CSSProperties = { padding: '20px 0', borderTop: '1px solid #e5e7eb', minWidth: 0 };
 const heading: CSSProperties = { fontSize: 18, fontWeight: 600, marginBottom: 12 };
 
-function CompositionSummary({ rows }: { rows: ResultRow[] }) {
+function CompositionSummary({ rows, results }: { rows: ResultRow[]; results: AnthropometryResult }) {
   const value = (ids: string[]) => ids.map(id => rows.find(row => row.id === id && typeof row.value === 'number' && Number.isFinite(row.value))).find(Boolean);
   const muscle = value(['lee2000', 'martin1990', 'kerrMuscle1988']);
   const adipose = value(['kerrAdipose1988', 'fatMass']);
   const bone = value(['martinBone1991', 'rocha1975']);
   const waistHeight = value(['waistHeightRatio']);
   const waistHip = value(['waistHipRatio']);
+  const conicity = value(['conicityIndex']);
+  const mass = results.measurements.mass?.value;
+  const height = results.measurements.height?.value;
+  const waist = results.measurements.waist?.value;
+  const conicityValue = conicity?.value ?? (waist != null && mass != null && height != null && mass > 0 && height > 0
+    ? (waist / 100) / (0.109 * Math.sqrt(mass / (height / 100)))
+    : null);
   const cormic = value(['cormicIndex']);
   const percentages = [
     value(['kerrAdipose1988Percent', 'fatPercent'])?.value,
@@ -47,7 +54,7 @@ function CompositionSummary({ rows }: { rows: ResultRow[] }) {
     <div style={{ marginTop: 14, border: '1px solid #dbe7e3', background: '#f4fbf8', borderRadius: 8, padding: 12 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: '#087f6d', marginBottom: 9 }}>Indicadores de saude e proporcionalidade</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 10 }}>
-        {[['Cintura / estatura', waistHeight, ''], ['Cintura / quadril', waistHip, ''], ['Indice cormico', cormic, '%']].map(([label, row, unit]) => <div key={String(label)}><span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>{String(label)}</span><strong style={{ display: 'block', fontSize: 17, marginTop: 3 }}>{anthropometryFormat((row as ResultRow | undefined)?.value)}{row ? String(unit) : ''}</strong></div>)}
+        {[['Cintura / estatura', waistHeight?.value, ''], ['Cintura / quadril', waistHip?.value, ''], ['Conicidade', conicityValue, ''], ['Indice cormico', cormic?.value, '%']].map(([label, resultValue, unit]) => <div key={String(label)}><span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>{String(label)}</span><strong style={{ display: 'block', fontSize: 17, marginTop: 3 }}>{anthropometryFormat(resultValue as number | null | undefined)}{resultValue != null ? String(unit) : ''}</strong></div>)}
       </div>
     </div>
   </section>;
@@ -123,10 +130,10 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
   const references = results.references.filter(reference => usedIds.has(reference.id));
   const showSomato = !selectedOnly || rows.some(row => /heath|somato/i.test(row.methodId));
   return <div aria-label="Resultados de Antropometria" style={{ width: '100%', maxWidth: '100%', minWidth: 0, overflow: 'hidden', color: '#1f2937', letterSpacing: 0 }}>
-    <CompositionSummary rows={rows} />
+    <CompositionSummary rows={rows} results={results} />
     {correctedGirths.length > 0 && <section data-anthropometry-section="corrected-girths" style={section}>
       <h2 style={heading}>Perimetros corrigidos</h2>
-      <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Valores derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas permanecem preservadas; o antebraco nao recebe correcao por nao haver dobra correspondente no protocolo.</p>
+      <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Os perimetros corrigidos reduzem a contribuicao da gordura subcutanea para representar melhor o volume muscular dos segmentos. O antebraco e apresentado como medida direta, pois o protocolo nao utiliza uma dobra correspondente para correcao.</p>
       <ResultsTable rows={correctedGirths} snapshot={results} />
       {typeof results.measurements?.forearm?.value === 'number' && <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12, padding: '10px 8px', borderBottom: '1px solid #e5e7eb', fontSize: 13 }}><strong>Antebraco (medida direta, sem correcao)</strong><span>{anthropometryFormat(results.measurements.forearm.value)} cm</span></div>}
     </section>}

@@ -52,6 +52,13 @@ assert.equal(waistHeightRatio?.label, 'Relacao cintura minima/estatura');
 assert.ok(Math.abs(waistHeightRatio!.value! - result.measurements.waist.value! / result.measurements.height.value!) < 1e-12);
 assert.equal(waistHeightRatio?.status, 'available');
 assert.match(String(waistHeightRatio?.inputs.measurementSite), /cintura minima ISAK/i);
+const conicityIndex = result.results.find(item => item.id === 'conicityIndex');
+const expectedConicity = (result.measurements.waist.value! / 100)
+  / (0.109 * Math.sqrt(result.measurements.mass.value! / (result.measurements.height.value! / 100)));
+assert.ok(Math.abs(conicityIndex!.value! - expectedConicity) < 1e-12);
+assert.equal(conicityIndex?.status, 'available');
+assert.ok(conicityIndex?.referenceIds.includes('VALDEZ_1991'));
+assert.match(String(conicityIndex?.inputs.measurementSite), /cintura minima ISAK/i);
 assert.equal(result.results.some(item => item.id === 'waistClassification'), false, 'Nao deve publicar classificacao OMS com cintura minima ISAK');
 assert.ok((result.results.find(item => item.id === 'martin1990')?.value ?? 0) > 0);
 assert.ok((result.results.find(item => item.id === 'martinBone1991')?.value ?? 0) > 0);

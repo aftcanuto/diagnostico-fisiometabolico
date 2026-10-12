@@ -52,9 +52,14 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
   const bmi = result('bmiClassification') ?? result('bmi');
   const waistHeight = result('waistHeightRatio');
   const waistHip = result('waistHipRatio');
+  const conicity = result('conicityIndex');
   const cormic = result('cormicIndex');
   const mass = measurement('mass');
   const height = measurement('height');
+  const waist = measurement('waist');
+  const conicityValue = conicity?.value ?? (waist != null && mass != null && height != null && mass > 0 && height > 0
+    ? (waist / 100) / (0.109 * Math.sqrt(mass / (height / 100)))
+    : null);
   const soma = snapshot.somatotype;
   const somatoClassification = [soma.endomorphy, soma.mesomorphy, soma.ectomorphy].every(value => typeof value === 'number' && Number.isFinite(value))
     ? classifySomatotype(soma.endomorphy!, soma.mesomorphy!, soma.ectomorphy!)
@@ -118,9 +123,10 @@ function anthropometryDashboardHtml(snapshot: Snapshot): string {
     </div>
     <div style="margin-top:11px;border:1px solid #dbe7e3;background:#f4fbf8;border-radius:8px;padding:10px 12px">
       <div style="font-size:8px;font-weight:800;color:#087f6d;text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px">Indicadores de saude e proporcionalidade</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
         <div><span style="font-size:8px;color:#64748b">Cintura / estatura</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(waistHeight?.value)}</strong></div>
         <div><span style="font-size:8px;color:#64748b">Cintura / quadril</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(waistHip?.value)}</strong></div>
+        <div><span style="font-size:8px;color:#64748b">Conicidade</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(conicityValue)}</strong></div>
         <div><span style="font-size:8px;color:#64748b">Indice cormico</span><strong style="display:block;font-size:13px;color:#0f172a;margin-top:2px">${fmt(cormic?.value)}${cormic ? '%' : ''}</strong></div>
       </div>
     </div>
@@ -219,7 +225,7 @@ export function anthropometryReportHtml(row: Row, analysisHtml = ''): string {
     const correctedRows: unknown[][] = correctedGirths.map(result => [result.label, `${fmt(result.value)} ${result.unit}`]);
     if (typeof forearm === 'number' && Number.isFinite(forearm)) correctedRows.splice(1, 0, ['Antebraco (medida direta, sem correcao)', `${fmt(forearm)} cm`]);
     if (correctedRows.length) sections.push(block('Perimetros corrigidos',
-      '<p style="font-size:10px">Derivados por perimetro - pi x dobra cutanea / 10. Medidas brutas preservadas; antebraco sem correcao por nao haver dobra correspondente.</p>' +
+      '<p style="font-size:10px">Os perimetros corrigidos reduzem a contribuicao da gordura subcutanea para representar melhor o volume muscular dos segmentos. O antebraco e apresentado como medida direta, pois o protocolo nao utiliza uma dobra correspondente para correcao.</p>' +
       table(['Resultado', 'Valor'], correctedRows)));
     if (regionalRows.length) sections.push(block('Distribuicao antropometrica regional', regionalBodyHtml(regionalRows, s.context.sex)));
     const resultBlocks = chunks(rows, 14).map((group, index) => block(`Resultados selecionados${index ? ' (continuacao)' : ''}`, table(

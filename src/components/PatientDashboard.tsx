@@ -1328,7 +1328,8 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
       <div style={{ order: 10, background: 'white', borderRadius: 16, padding: '28px 32px', color: '#0f172a' }}>
         {/* Header do card */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          paddingBottom: 18, borderBottom: '1px solid rgba(255,255,255,.08)', marginBottom: 22 }}>
+          flexWrap: 'wrap', gap: 12, paddingBottom: 18,
+          borderBottom: '1px solid rgba(255,255,255,.08)', marginBottom: 22 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 500, color: '#94a3b8',
               textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 6 }}>
@@ -1340,7 +1341,7 @@ export function PatientDashboard({ paciente, avaliador, avaliacoes, pdfBaseUrl, 
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>
             {peso != null && <MetricCard label="kg peso" value={peso} />}
             {mlg  != null && <MetricCard label="kg magra" value={mlg}  color="#4ade80" />}
             {imc  != null && <MetricCard label="IMC"     value={imc}  color="#60a5fa" />}

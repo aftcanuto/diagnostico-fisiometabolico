@@ -39,7 +39,12 @@ export function legacyProjection(input: AnthropometryInput, snapshot: Anthropome
     imc: publishable(result('bmi')) ? result('bmi')!.value : null,
     percentual_gordura: publishable(result('fatPercent')) ? result('fatPercent')!.value : null,
     massa_magra: publishable(result('fatFreeMass')) ? result('fatFreeMass')!.value : null,
+    massa_muscular: oneSelected(['martin1990', 'lee2000', 'kerrMuscle1988']),
     massa_ossea: oneSelected(['martinBone1991', 'rocha1975']),
+    relacao_cintura_quadril: publishable(result('waistHipRatio')) ? result('waistHipRatio')!.value : null,
+    relacao_cintura_estatura: publishable(result('waistHeightRatio')) ? result('waistHeightRatio')!.value : null,
+    indice_conicidade: publishable(result('conicityIndex')) ? result('conicityIndex')!.value : null,
+    indice_cormico: publishable(result('cormicIndex')) ? result('cormicIndex')!.value : null,
     dobras: Object.fromEntries(['triceps','subscapular','biceps','iliacCrest','supraspinale','abdominal','thighSkinfold','calfSkinfold']
       .map(id => [id, snapshot.measurements[id as keyof typeof snapshot.measurements]?.value ?? null])),
     circunferencias: Object.fromEntries(['armRelaxed','armFlexed','forearm','chest','waist','abdomen','hip','thighMax','thighMid','calf']

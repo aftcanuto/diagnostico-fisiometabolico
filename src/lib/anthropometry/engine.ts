@@ -89,6 +89,9 @@ export function calculateAnthropometry(raw:AnthropometryInput, context:Calculati
   add('waistHipRatio','Relacao cintura/quadril','razao','indices',['waist','hip'],v => v.waist/v.hip);
   add('waistHeightRatio','Relacao cintura minima/estatura','razao','indices',['waist','height'],v => v.waist/v.height,
     {extra:{measurementSite:'Cintura minima ISAK; razao descritiva, sem cortes absolutos de cintura da OMS'}});
+  add('conicityIndex','Indice de conicidade','indice','indices',['waist','mass','height'],v =>
+    (v.waist / 100) / (0.109 * Math.sqrt(v.mass / (v.height / 100))),
+    {references:['VALDEZ_1991'],extra:{measurementSite:'Cintura minima ISAK; indicador descritivo de distribuicao abdominal, sem ponto de corte universal'}});
   add('cormicIndex','Indice cormico','%','indices',['sittingHeight','height'],v => 100*v.sittingHeight/v.height);
   add('armSpanHeightRatio','Relacao envergadura/estatura','razao','indices',['armSpan','height'],v => v.armSpan/v.height);
   add('hwr','Indice ponderal HWR','cm/kg^(1/3)','indices',['height','mass'],v => v.height/Math.cbrt(v.mass));

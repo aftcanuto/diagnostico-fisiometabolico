@@ -5,8 +5,8 @@ export function deepFreeze<T>(value: T): T {
   }
   return value;
 }
-export const ENGINE_VERSION = 'anthropometry-2.3.0' as const;
-export const CATALOG_VERSION = 'medfit-strict26-2026-10-10.1' as const;
+export const ENGINE_VERSION = 'anthropometry-2.4.0' as const;
+export const CATALOG_VERSION = 'medfit-strict26-2026-10-12.2' as const;
 const definitions = [
   ['mass','Massa corporal','kg','basic','Balanca calibrada; vestimenta minima'],
   ['height','Estatura','cm','basic','Vertex ao solo; plano de Frankfurt'],
@@ -77,6 +77,7 @@ export const REFERENCES: readonly Reference[] = deepFreeze([
   {id:'KOZIEL_MALINA_2018',text:'Koziel SM, Malina RM. Modified Maturity Offset Prediction Equations: Validation in Independent Longitudinal Samples of Boys and Girls. Sports Med. 2018.',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC5752743/'},
   {id:'OMS_2000',text:'WHO. Obesity: preventing and managing the global epidemic. Technical Report Series 894; 2000.',url:'https://iris.who.int/handle/10665/42330'},
   {id:'OMS_CINTURA_2011',text:'WHO. Waist circumference and waist-hip ratio: report of a WHO expert consultation. 2011. Cintura no ponto medio costela-crista.',url:'https://iris.who.int/handle/10665/44583'},
+  {id:'VALDEZ_1991',text:'Valdez R. A simple model-based index of abdominal adiposity. J Clin Epidemiol. 1991;44(9):955-956. doi:10.1016/0895-4356(91)90059-I.',url:'https://doi.org/10.1016/0895-4356(91)90059-I'},
   {id:'DUBOIS_1916',text:'Du Bois D, Du Bois EF. A formula to estimate the approximate surface area if height and weight be known. Arch Intern Med. 1916;17:863-871.',url:null},
   {id:'HARRIS_BENEDICT_1919',text:'Harris JA, Benedict FG. A Biometric Study of Basal Metabolism in Man. Carnegie Institution of Washington, Publication 279; 1919.',url:null},
 ]);
