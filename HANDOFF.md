@@ -1740,3 +1740,12 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O ativo foi otimizado, incorporado ao PDF como data URI e preservado em `resources/anthropometry` e `public/assets/anthropometry`.
 - O teste visual passou a falhar se um score reaparecer fora do resumo, se o avaliador voltar ao cabecalho ou se a legenda da somatocarta nao carregar.
 - Sem migration nova.
+
+## 2026-10-12 - Tipografia padronizada das analises clinicas
+
+- Todas as analises clinicas dos modulos passaram a usar a mesma tipografia: 12,5 px, entrelinha 1,58 e alinhamento justificado.
+- Foram removidas as reducoes especificas da bioimpedancia (9,4 px) e da RML (11,2 px); ambos os modulos continuam cabendo em uma pagina no cenario completo de teste.
+- A conclusao clinica global sempre inicia em 13,2 px e entrelinha 1,55.
+- Durante a paginacao do PDF, a conclusao e reduzida em passos pequenos somente quando houver transbordamento real, respeitando o minimo de 10,4 px e permanecendo em uma unica pagina.
+- O teste visual valida a fonte unica das analises, a ausencia de cortes e a permanencia da conclusao, bioimpedancia e RML em uma pagina cada.
+- Sem migration nova.

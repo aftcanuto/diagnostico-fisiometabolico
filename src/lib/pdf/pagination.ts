@@ -115,6 +115,27 @@ export async function prepararPaginacaoLaudo(page: any) {
       return blocos;
     }
 
+    function ajustarConclusaoEmUmaPagina() {
+      const caixas = Array.from(document.querySelectorAll('[data-clinical-conclusion="true"]')) as HTMLElement[];
+      for (const caixa of caixas) {
+        const texto = caixa.querySelector('[data-clinical-conclusion-text="true"]') as HTMLElement | null;
+        if (!texto) continue;
+        let tamanho = 13.2;
+        let entrelinha = 1.55;
+        texto.style.fontSize = `${tamanho}px`;
+        texto.style.lineHeight = String(entrelinha);
+        while (caixa.scrollHeight > caixa.clientHeight + 1 && tamanho > 10.4) {
+          tamanho = Math.max(10.4, tamanho - 0.2);
+          entrelinha = Math.max(1.34, entrelinha - 0.015);
+          texto.style.fontSize = `${tamanho.toFixed(1)}px`;
+          texto.style.lineHeight = entrelinha.toFixed(3);
+        }
+        caixa.dataset.fittedFontSize = tamanho.toFixed(1);
+      }
+    }
+
+    ajustarConclusaoEmUmaPagina();
+
     const secoes = Array.from(document.querySelectorAll('section.page')).filter(ehModuloPaginavel) as HTMLElement[];
 
     for (const section of secoes) {

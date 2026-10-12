@@ -149,6 +149,10 @@ async function main() {
       const summaryHeader = document.querySelector('[data-summary-header="true"]');
       const summaryHeaderHasEvaluator = (summaryHeader?.children.length ?? 0) > 1;
       const somatotypeReferenceImages = document.querySelectorAll('[data-somatotype-reference="true"]').length;
+      const analysisFontSizes = Array.from(new Set(Array.from(document.querySelectorAll('.ai-text'))
+        .map(item => Number.parseFloat(getComputedStyle(item).fontSize).toFixed(1))));
+      const conclusionFontSizes = Array.from(document.querySelectorAll('[data-clinical-conclusion="true"]'))
+        .map(item => item.getAttribute('data-fitted-font-size'));
       const referenceOverflow = Array.from(document.querySelectorAll('.ref-section [data-reference-id]')).map((ref) => {
         const section = ref.closest('.page');
         const footer = section?.querySelector(':scope > .pdf-footer')?.getBoundingClientRect();
@@ -182,6 +186,8 @@ async function main() {
         moduleScoreCards,
         summaryHeaderHasEvaluator,
         somatotypeReferenceImages,
+        analysisFontSizes,
+        conclusionFontSizes,
       };
     });
 
@@ -203,6 +209,9 @@ async function main() {
     if (result.moduleScoreCards) errors.push('Cards de score ainda aparecem fora do resumo');
     if (result.summaryHeaderHasEvaluator) errors.push('Nome do avaliador ainda aparece no cabecalho do resumo');
     if (!result.somatotypeReferenceImages) errors.push('Legenda visual da somatocarta ausente');
+    if (result.analysisFontSizes.length !== 1 || result.analysisFontSizes[0] !== '12.5') {
+      errors.push('Analises clinicas nao usam tipografia padronizada de 12,5 px');
+    }
 
     if (errors.length) {
       fail('Teste visual do PDF encontrou problemas', {
@@ -236,6 +245,8 @@ async function main() {
       moduleScoreCards: result.moduleScoreCards,
       summaryHeaderHasEvaluator: result.summaryHeaderHasEvaluator,
       somatotypeReferenceImages: result.somatotypeReferenceImages,
+      analysisFontSizes: result.analysisFontSizes,
+      conclusionFontSizes: result.conclusionFontSizes,
     }, null, 2));
   } finally {
     await browser.close();

@@ -346,20 +346,15 @@ th { text-align: left; padding: 10px 14px; background: var(--pdf-panel); color: 
 td { padding: 10px 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
 tr { break-inside: avoid; page-break-inside: avoid; }
 tr:last-child td { border-bottom: none; }
-.ai-box { background: var(--pdf-highlight); border-left: 5px solid ${pri}; border-radius: 0 22px 22px 0; padding: 14px 22px; margin-top: 20px; break-inside: auto; page-break-inside: auto; }
-.ai-title { font-size: 11px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-.ai-text { font-size: 13px; line-height: 1.7; color: #374151; }
+.ai-box { background: var(--pdf-highlight); border-left: 5px solid ${pri}; border-radius: 0 18px 18px 0; padding: 14px 18px; margin-top: 14px; break-inside: auto; page-break-inside: auto; }
+.ai-title { font-size: 10.5px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.ai-text { font-size: 12.5px; line-height: 1.58; color: #374151; text-align:justify; text-justify:inter-word; }
 .bio-compact .kpi { padding:9px 11px; min-height:48px; }
 .bio-compact .kpi-label { font-size:8px; margin-bottom:3px; }
 .bio-compact .kpi-val { font-size:13px; }
 .bio-segments table { font-size:9px; }
 .bio-segments th, .bio-segments td { padding:5px 7px; }
-.bio-analysis .ai-box, .rml-analysis .ai-box { margin-top:8px; padding:10px 14px; border-radius:0 14px 14px 0; }
-.bio-analysis .ai-title, .rml-analysis .ai-title { margin-bottom:5px; font-size:9px; }
-.bio-analysis .ai-text, .rml-analysis .ai-text { font-size:9.4px; line-height:1.42; }
-.rml-analysis .ai-box { min-height:210px; padding:14px 18px; }
-.rml-analysis .ai-title { font-size:10.5px; margin-bottom:8px; }
-.rml-analysis .ai-text { font-size:11.2px; line-height:1.58; text-align:justify; text-justify:inter-word; }
+.bio-analysis .ai-box, .rml-analysis .ai-box { margin-top:8px; }
 .rml-table table { font-size:10px !important; }
 .rml-table th, .rml-table td { padding:6px 9px !important; }
 .dark-block { background: var(--pdf-panel); border:1px solid var(--pdf-line); border-radius: 22px; padding: 18px 22px; color: #111827; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
@@ -1700,20 +1695,12 @@ function pgConclusao(d: LaudoData, pri: string): string {
   const c = d.analisesIA?.conclusao_global; if(!c) return '';
   const textoPdf = textoAnalisePdf(c);
   if (textoPdf) {
-    const length = textoPdf.length;
-    const typography = length <= 2800
-      ? { font: 13.2, line: 1.55, padding: '18px 20px' }
-      : length <= 4400
-        ? { font: 12.4, line: 1.48, padding: '17px 19px' }
-        : length <= 6200
-          ? { font: 11.3, line: 1.38, padding: '15px 18px' }
-          : { font: 10.4, line: 1.34, padding: '14px 17px' };
     return `<section class="page module conclusion-page" style="display:flex;flex-direction:column">
       <div class="mod-head" style="flex:0 0 auto">
         <h2 class="mod-title">Conclusão clínica</h2>
       </div>
-      <div data-clinical-conclusion="true" style="flex:1 1 auto;min-height:0;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:${typography.padding};display:flex;align-items:flex-start;overflow:hidden">
-        <p style="width:100%;font-size:${typography.font}px;color:#166534;line-height:${typography.line};white-space:pre-line;overflow-wrap:anywhere;text-align:justify;text-justify:inter-word">${x(textoPdf)}</p>
+      <div data-clinical-conclusion="true" style="flex:1 1 auto;min-height:0;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:18px 20px;display:flex;align-items:flex-start;overflow:hidden">
+        <p data-clinical-conclusion-text="true" style="width:100%;font-size:13.2px;color:#166534;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere;text-align:justify;text-justify:inter-word">${x(textoPdf)}</p>
       </div>
     </section>`;
   }
