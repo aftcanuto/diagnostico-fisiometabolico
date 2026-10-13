@@ -1749,3 +1749,11 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - Durante a paginacao do PDF, a conclusao e reduzida em passos pequenos somente quando houver transbordamento real, respeitando o minimo de 10,4 px e permanecendo em uma unica pagina.
 - O teste visual valida a fonte unica das analises, a ausencia de cortes e a permanencia da conclusao, bioimpedancia e RML em uma pagina cada.
 - Sem migration nova.
+
+## 2026-10-12 - Protecao contra analise de IA vazia
+
+- O schema estruturado enviado ao Claude passou a exigir interpretacao, achados, recomendacoes e versao para o paciente.
+- Respostas vazias ou contendo apenas campos em branco agora sao rejeitadas antes do `upsert`, preservando a analise anterior em uma regeneracao malsucedida.
+- O painel deixou de considerar a simples existencia de um registro como analise gerada; registros antigos sem conteudo util aparecem como `incompleta` e oferecem a acao `Gerar`.
+- Foi adicionado um teste de regressao ao `predeploy` para respostas `{}`, campos vazios, metadados isolados e conteudo clinico valido.
+- Sem migration nova.

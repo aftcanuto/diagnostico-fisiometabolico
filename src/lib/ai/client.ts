@@ -51,6 +51,7 @@ const ANALISE_JSON_TOOL = {
   input_schema: {
     type: 'object',
     additionalProperties: true,
+    required: ['interpretacao', 'achados', 'recomendacoes', 'versao_paciente'],
     properties: {
       resumo_clinico: { type: 'string' },
       relatorio_global: { type: 'string' },

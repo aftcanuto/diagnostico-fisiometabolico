@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 import { Textarea } from './ui/Input';
 import { Sparkles, Loader2, Check, Edit3, Save, X } from 'lucide-react';
 import { hasUsableGlobalConclusion } from '@/lib/ai/global-conclusion';
+import { hasUsableAnalysisContent } from '@/lib/ai/analysis-content';
 
 const MODULOS: { tipo: string; label: string }[] = [
   { tipo: 'anamnese', label: 'Anamnese' },
@@ -122,7 +123,12 @@ export function AnalisesIAPanel({ avaliacaoId, modulosDisponiveis, temMultiplasA
 
         {MODULOS.filter(m => isDisponivel(m.tipo)).map(m => {
           const a = analises[m.tipo];
-          const gerada = !!a && (m.tipo !== 'conclusao_global' || hasUsableGlobalConclusion(a));
+          const gerada = !!a && (m.tipo === 'conclusao_global'
+            ? hasUsableGlobalConclusion(a)
+            : hasUsableAnalysisContent(a.texto_editado) ||
+              hasUsableAnalysisContent(a.texto_paciente_editado) ||
+              hasUsableAnalysisContent(a.conteudo) ||
+              hasUsableAnalysisContent(a.conteudo_paciente));
           const ed = editando === m.tipo;
           return (
             <div key={m.tipo} className="rounded-lg border border-slate-200 p-3">

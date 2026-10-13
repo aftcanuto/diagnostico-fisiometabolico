@@ -11,6 +11,7 @@ import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-reco
 import { friendComparisonFromAssessment } from '@/lib/calculations/friend';
 import { composicaoOficialParaIA } from '@/lib/bodyComposition';
 import { globalConclusionDiagnostics, isGlobalConclusionComplete, isGlobalConclusionSupportComplete } from './global-conclusion';
+import { hasUsableAnalysisContent } from './analysis-content';
 
 async function stampAnthropometry(sb: any, avaliacaoId: string, row: any, content: any) {
   if (!isAnthropometryV2(row)) return;
@@ -242,6 +243,9 @@ export async function gerarAnaliseModulo(avaliacaoId: string, modulo: TipoAnalis
   const promptUser = modelosTexto ? `${user}\n\n${modelosTexto}` : user;
   const resp = await llmCall({ system, user: promptUser, json: true, temperature: 0.4 });
   const conteudo = parseJSON(resp.text);
+  if (!hasUsableAnalysisContent(conteudo)) {
+    throw new Error('A IA retornou uma analise vazia. A analise anterior foi preservada; tente gerar novamente.');
+  }
   if (modulo === 'antropometria') await stampAnthropometry(sb, avaliacaoId, dados, conteudo);
   if (modulo === 'jump_test') {
     const { data: current } = await sb.from('jump_test').select('updated_at').eq('avaliacao_id', avaliacaoId).single();
