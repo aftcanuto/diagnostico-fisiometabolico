@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { hasUsableAnalysisContent } from '../src/lib/ai/analysis-content';
+import { hasCompleteModuleAnalysisContent, hasUsableAnalysisContent } from '../src/lib/ai/analysis-content';
 
 assert.equal(hasUsableAnalysisContent({}), false, 'objeto vazio nao pode ser tratado como analise gerada');
 assert.equal(hasUsableAnalysisContent({
@@ -23,6 +23,19 @@ assert.equal(hasUsableAnalysisContent({
 assert.equal(hasUsableAnalysisContent({
   versao_paciente: 'Seu resultado mostra boa capacidade aerobica para a sua faixa de comparacao.',
 }), true, 'a versao para o paciente deve ser aceita');
+assert.equal(hasCompleteModuleAnalysisContent({}), false, 'objeto vazio nao e uma analise completa');
+assert.equal(hasCompleteModuleAnalysisContent({
+  interpretacao: 'Capacidade aerobica acima do esperado para o perfil avaliado.',
+  achados: ['O resultado indica boa tolerancia ao esforco progressivo.'],
+  recomendacoes: [],
+  versao_paciente: 'Seu desempenho cardiorrespiratorio foi favoravel nesta avaliacao.',
+}), false, 'analise sem recomendacao nao deve substituir a versao anterior');
+assert.equal(hasCompleteModuleAnalysisContent({
+  interpretacao: 'Capacidade aerobica acima do esperado para o perfil avaliado.',
+  achados: ['O resultado indica boa tolerancia ao esforco progressivo.'],
+  recomendacoes: ['Manter treinamento individualizado e acompanhar a evolucao.'],
+  versao_paciente: 'Seu desempenho cardiorrespiratorio foi favoravel nesta avaliacao.',
+}), true, 'analise completa deve ser aceita');
 
 const clientSource = readFileSync(new URL('../src/lib/ai/client.ts', import.meta.url), 'utf8');
 assert.match(
@@ -32,9 +45,10 @@ assert.match(
 );
 
 const serviceSource = readFileSync(new URL('../src/lib/ai/service.ts', import.meta.url), 'utf8');
-const validationIndex = serviceSource.indexOf('if (!hasUsableAnalysisContent(conteudo))');
+const validationIndex = serviceSource.lastIndexOf('if (!hasCompleteModuleAnalysisContent(conteudo))');
 const persistenceIndex = serviceSource.indexOf('await persistir(avaliacaoId, modulo, conteudo, resp.modelo)');
 assert.ok(validationIndex >= 0, 'o servico deve validar o conteudo retornado pela IA');
 assert.ok(persistenceIndex > validationIndex, 'a resposta vazia deve ser rejeitada antes da persistencia');
+assert.match(serviceSource, /resposta anterior foi incompleta/i, 'o servico deve repetir uma geracao incompleta automaticamente');
 
 console.log('IA: respostas vazias rejeitadas e conteudo clinico valido reconhecido.');

@@ -118,7 +118,19 @@ function ResultsTable({ rows, snapshot }: { rows: ResultRow[]; snapshot: Anthrop
   </>;
 }
 
-export function AnthropometryResults({ results, history = [], selectedOnly = true }: { results: AnthropometryResult; history?: AnthropometryHistoryEntry[]; selectedOnly?: boolean }) {
+function PatientResultsTable({ rows }: { rows: ResultRow[] }) {
+  return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap: 10 }}>
+    {rows.map(row => <div key={row.id} data-result-id={row.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, background: '#f8fafc', minWidth: 0 }}>
+      <div style={{ fontSize: 12, color: '#64748b', overflowWrap: 'anywhere' }}>{row.label}</div>
+      <strong style={{ display: 'block', marginTop: 4, fontSize: 18, color: '#1f2937' }}>
+        {anthropometryFormat(row.value)}{row.value != null ? ` ${row.unit}` : ''}
+      </strong>
+      {row.classification && <div style={{ marginTop: 5, fontSize: 12, fontWeight: 600, color: '#087f6d' }}>{row.classification}</div>}
+    </div>)}
+  </div>;
+}
+
+export function AnthropometryResults({ results, history = [], selectedOnly = true, patientView = false }: { results: AnthropometryResult; history?: AnthropometryHistoryEntry[]; selectedOnly?: boolean; patientView?: boolean }) {
   const rows = results.results.filter(row => !selectedOnly || row.selected);
   const correctedIds = new Set<string>(CORRECTED_GIRTH_RESULT_IDS);
   const regionalIds = new Set<string>(REGIONAL_DISTRIBUTION_RESULT_IDS);
@@ -134,7 +146,7 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
     {correctedGirths.length > 0 && <section data-anthropometry-section="corrected-girths" style={section}>
       <h2 style={heading}>Perimetros corrigidos</h2>
       <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Os perimetros corrigidos reduzem a contribuicao da gordura subcutanea para representar melhor o volume muscular dos segmentos. O antebraco e apresentado como medida direta, pois o protocolo nao utiliza uma dobra correspondente para correcao.</p>
-      <ResultsTable rows={correctedGirths} snapshot={results} />
+      {patientView ? <PatientResultsTable rows={correctedGirths} /> : <ResultsTable rows={correctedGirths} snapshot={results} />}
       {typeof results.measurements?.forearm?.value === 'number' && <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12, padding: '10px 8px', borderBottom: '1px solid #e5e7eb', fontSize: 13 }}><strong>Antebraco (medida direta, sem correcao)</strong><span>{anthropometryFormat(results.measurements.forearm.value)} cm</span></div>}
     </section>}
     {regionalRows.some(row => row.value != null) && <section data-anthropometry-section="regional-distribution" style={section}>
@@ -143,17 +155,17 @@ export function AnthropometryResults({ results, history = [], selectedOnly = tru
     </section>}
     <section data-anthropometry-section="results" style={section}>
       <h2 style={heading}>Resultados de Antropometria</h2>
-      <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Motor {results.engineVersion}; catalogo {results.catalogVersion}. {selectedOnly ? 'Metodos selecionados.' : 'Revisao de todos os metodos.'}</p>
-      {remainingRows.length ? <ResultsTable rows={remainingRows} snapshot={results} /> : <p>Nenhum outro resultado selecionado.</p>}
+      {!patientView && <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>Motor {results.engineVersion}; catalogo {results.catalogVersion}. {selectedOnly ? 'Metodos selecionados.' : 'Revisao de todos os metodos.'}</p>}
+      {remainingRows.length ? patientView ? <PatientResultsTable rows={remainingRows} /> : <ResultsTable rows={remainingRows} snapshot={results} /> : <p>Nenhum outro resultado selecionado.</p>}
     </section>
     {showSomato && <section data-anthropometry-section="somatotype" style={section}><h2 style={heading}>Somatotipo e somatocarta</h2><p style={{ fontSize: 13 }}>Endomorfia: {anthropometryFormat(results.somatotype.endomorphy)}; mesomorfia: {anthropometryFormat(results.somatotype.mesomorphy)}; ectomorfia: {anthropometryFormat(results.somatotype.ectomorphy)}.</p><Somatochart somatotype={results.somatotype} sex={results.context.sex} /><p style={{ fontSize: 12 }}>{results.somatotype.reason}</p></section>}
-    {phantom.length > 0 && <section data-anthropometry-section="phantom" style={section}><h2 style={heading}>Proporcionalidade Phantom</h2><PhantomChart rows={phantom} /><ResultsTable rows={phantom} snapshot={results} /></section>}
+    {phantom.length > 0 && <section data-anthropometry-section="phantom" style={section}><h2 style={heading}>Proporcionalidade Phantom</h2><PhantomChart rows={phantom} />{patientView ? <PatientResultsTable rows={phantom} /> : <ResultsTable rows={phantom} snapshot={results} />}</section>}
     {history.length > 0 && <section data-anthropometry-section="history" style={section}><h2 style={heading}>Historico de avaliacoes</h2><div className="overflow-x-auto" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%', minWidth: 0 }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}><thead><tr><th style={cell}>Resultado</th>{history.map(item => <th key={item.id} style={cell}>{anthropometryDate(item.date)}<div style={{ fontWeight: 400 }}>Motor {item.results.engineVersion}</div></th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id}><th style={cell}>{row.label} ({row.unit})</th>{history.map(item => {
       const old = item.results.results.find(candidate => candidate.id === row.id);
       const compatible = old?.methodVersion === row.methodVersion && old?.methodId === row.methodId && item.results.engineVersion === results.engineVersion;
       return <td key={item.id} style={cell}>{anthropometryFormat(old?.value)}<div style={{ fontSize: 11 }}>{old ? `Versao ${old.methodVersion}` : 'Ausente'}{old && !compatible ? '; metodo ou motor diferente' : ''}</div></td>;
     })}</tr>)}</tbody></table></div><p style={{ fontSize: 12, marginTop: 8 }}>Valores originais preservados. Diferencas de metodo, protocolo e versao exigem revisao de comparabilidade.</p></section>}
-    {references.length > 0 && <section data-anthropometry-section="references" style={section}><h2 style={heading}>Referencias utilizadas</h2><ol style={{ paddingLeft: 20, fontSize: 12 }}>{references.map(reference => <li key={reference.id} data-reference-id={reference.id} style={{ paddingBottom: 10, overflowWrap: 'anywhere' }}>{reference.text}{reference.url && /^https?:\/\//i.test(reference.url) && <> <a href={reference.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>Consultar fonte</a></>}</li>)}</ol></section>}
+    {!patientView && references.length > 0 && <section data-anthropometry-section="references" style={section}><h2 style={heading}>Referencias utilizadas</h2><ol style={{ paddingLeft: 20, fontSize: 12 }}>{references.map(reference => <li key={reference.id} data-reference-id={reference.id} style={{ paddingBottom: 10, overflowWrap: 'anywhere' }}>{reference.text}{reference.url && /^https?:\/\//i.test(reference.url) && <> <a href={reference.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>Consultar fonte</a></>}</li>)}</ol></section>}
   </div>;
 }
 

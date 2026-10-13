@@ -27,7 +27,8 @@
     "test:anthropometry-browser": "tsx scripts/test-anthropometry-browser.ts",
     "test:jump-browser": "node scripts/test-jump-browser.cjs",
     "test:ai": "tsx scripts/test-ai-analysis-content.ts",
-    "predeploy": "npm run text:check && npm run db:audit && npm run test:full && npm run test:references && npm run test:pdf-visual && npm run test:calculations && npm run test:backup && npm run test:nutrition && npm run test:evolution-report && npm run test:jump && npm run test:anthropometry && npm run test:consent-evidence && npm run test:catalogo-vitrine && npm run test:ai && npx tsc --noEmit && npm run lint",
+    "test:portal-patient": "tsx scripts/test-patient-portal.ts",
+    "predeploy": "npm run text:check && npm run db:audit && npm run test:full && npm run test:references && npm run test:pdf-visual && npm run test:calculations && npm run test:backup && npm run test:nutrition && npm run test:evolution-report && npm run test:jump && npm run test:anthropometry && npm run test:consent-evidence && npm run test:catalogo-vitrine && npm run test:ai && npm run test:portal-patient && npx tsc --noEmit && npm run lint",
     "verify:release": "npm run predeploy && npm run build"
   },
   "dependencies": {

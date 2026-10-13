@@ -513,7 +513,9 @@ function main() {
     'atual.analises_ia?.termografia',
   ]);
   assertCodigoContem('src/components/PortalPaciente.tsx', [
-    "['termografia','Termografia funcional']",
+    'titulo="Termografia funcional"',
+    "analise={analiseModulo('termografia')}",
+    'data-patient-module-analysis="true"',
   ]);
   assertCodigoContem('src/app/(app)/avaliacoes/[id]/revisao/page.tsx', [
     "method: 'PATCH'",

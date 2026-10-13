@@ -1757,3 +1757,14 @@ As chaves reais nao devem ser gravadas em arquivo versionado. Guardar `SUPABASE_
 - O painel deixou de considerar a simples existencia de um registro como analise gerada; registros antigos sem conteudo util aparecem como `incompleta` e oferecem a acao `Gerar`.
 - Foi adicionado um teste de regressao ao `predeploy` para respostas `{}`, campos vazios, metadados isolados e conteudo clinico valido.
 - Sem migration nova.
+
+## 2026-10-12 - Paridade do portal e segunda tentativa da IA
+
+- O portal do paciente deixou de exibir scores nas secoes internas; os indicadores numericos permanecem somente no resumo global.
+- Cada analise clinica passou a aparecer integralmente ao final do respectivo modulo, e a conclusao global passou a ser exibida antes das referencias.
+- A antropometria do portal ganhou uma visualizacao destinada ao paciente, sem versoes de motor, catalogo, status metrologico ou entradas tecnicas; as referencias continuam centralizadas na secao final.
+- `Idade metabolica` foi removida tambem do detalhamento de bioimpedancia do portal, mantendo a mesma decisao editorial aplicada ao PDF.
+- A resposta estruturada de cada modulo agora precisa conter interpretacao, ao menos um achado, ao menos uma recomendacao e versao para o paciente com texto substantivo.
+- Quando a primeira resposta da IA vier vazia ou incompleta, o sistema faz uma segunda tentativa automatica com instrucao corretiva e temperatura menor. Se a segunda tentativa ainda falhar, nenhum `upsert` e executado e a analise anterior permanece preservada.
+- Foi criado um teste de regressao do portal completo, adicionado ao `predeploy`, cobrindo scores, analises por modulo, conclusao, referencias e simplificacao antropometrica.
+- Sem migration nova.

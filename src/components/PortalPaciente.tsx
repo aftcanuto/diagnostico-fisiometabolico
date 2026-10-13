@@ -279,22 +279,6 @@ function DeltaB({d,boa}:{d:number|null;boa:'subir'|'descer'}) {
 }
 
 /* Card / Secao / Metrica */
-function scoreNumero(v:any): number | null {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.round(n) : null;
-}
-
-function ModuleScoreBadge({score}:{score?:any}) {
-  const s = scoreNumero(score);
-  if (s == null) return null;
-  const cor = zCor(s);
-  return <div style={{marginLeft:'auto',textAlign:'center',padding:'8px 14px',background:'#f8fafc',
-    border:`1px solid ${cor}35`,borderRadius:14,flexShrink:0}}>
-    <div style={{fontSize:24,fontWeight:700,color:cor,lineHeight:1}}>{s}</div>
-    <div style={{fontSize:8,color:cor,textTransform:'uppercase',letterSpacing:1,marginTop:3,fontWeight:700}}>Score</div>
-  </div>;
-}
-
 function normalizarUrl(url?: string | null) {
   const limpo = String(url ?? '').trim();
   if (!limpo) return '';
@@ -317,17 +301,27 @@ function normalizarInstagram(valor?: string | null, nomeClinica?: string | null)
   return normalizarUrl(limpo);
 }
 
-function Secao({titulo,sub,children,ordem,score}:{titulo:string;sub?:string;children:React.ReactNode;ordem?:number;score?:any}) {
+function AnaliseClinicaPaciente({texto,modulo}:{texto?:string|null;modulo?:string}) {
+  if(!texto?.trim())return null;
+  return <div data-patient-module-analysis="true" data-patient-analysis-for={modulo} style={{marginTop:14,padding:'16px 18px',background:'#ecfdf5',border:'1px solid #bbf7d0',borderLeft:'4px solid #10b981',borderRadius:12}}>
+    <div style={{fontSize:10,fontWeight:800,color:'#047857',textTransform:'uppercase',letterSpacing:'.7px',marginBottom:8}}>Análise clínica</div>
+    <div style={{display:'grid',gap:9}}>
+      {formatarTextoAnalise(texto).map((paragrafo,index)=><p key={index} style={{fontSize:13,lineHeight:1.65,color:'#334155',margin:0,textAlign:'justify',overflowWrap:'anywhere',whiteSpace:'pre-line'}}>{paragrafo}</p>)}
+    </div>
+  </div>;
+}
+
+function Secao({titulo,sub,children,ordem,analise}:{titulo:string;sub?:string;children:React.ReactNode;ordem?:number;analise?:string|null}) {
   return <section style={{marginBottom:28,order:ordem??900}}>
     <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:sub?14:12}}>
       <div>
         <h2 style={{fontSize:17,fontWeight:700,color:'#0f172a',margin:'0 0 4px'}}>{titulo}</h2>
         {sub&&<p style={{fontSize:12,color:'#94a3b8',margin:0}}>{sub}</p>}
       </div>
-      <ModuleScoreBadge score={score}/>
     </div>
     {!sub&&<div style={{height:12}}/>}
     {children}
+    <AnaliseClinicaPaciente texto={analise} modulo={titulo}/>
   </section>;
 }
 function Card({children,bg,style}:{children:React.ReactNode;bg?:string;style?:React.CSSProperties}) {
@@ -745,22 +739,10 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
   const corFlex=flex?.classificacao==='Excelente'?'#16a34a':flex?.classificacao==='Bom'?'#10b981'
     :flex?.classificacao==='Médio'?'#f59e0b':flex?.classificacao==='Regular'?'#f97316':'#ef4444';
-  const modulosAnalise=[
-    ['sinais_vitais','Sinais vitais'],['bioimpedancia','Bioimpedância'],
-    ['posturografia','Posturografia'],['termografia','Termografia funcional'],
-    ['antropometria','Antropometria'],['jump_test','Jump Test'],['flexibilidade','Flexibilidade'],
-    ['forca','Força'],['rml','RML'],['cardiorrespiratorio','Cardiorrespiratório'],
-    ['biomecanica_corrida','Biomecânica da corrida'],['conclusao_global','Conclusão global'],
-  ] as const;
   const modulosReferencias = modulosDaAvaliacao(atual);
   const referencias = referenciasAvaliacao(modulosReferencias, atual.antropometria);
-  const analisesPaciente=modulosAnalise
-    .map(([k,label])=>({
-      k,label,
-      texto:textoAnalise((atual as any).analises_ia?.[k]),
-      referencias:k==='conclusao_global'?[]:referencias.filter(ref=>ref.modulos.includes(k as any)),
-    }))
-    .filter(i=>i.texto);
+  const analiseModulo = (tipo:string) => textoAnalise((atual as any).analises_ia?.[tipo]);
+  const conclusaoGlobalPaciente = analiseModulo('conclusao_global');
   const planoAcaoPaciente=textoPlanoAcao((atual as any).analises_ia?.conclusao_global);
   const segs=[
     {k:'braco_dir',l:'Braço direito'},
@@ -816,6 +798,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
   const diamDisplayItems=diamRows
     .map(r=>{const k=r.keys.find(key=>diam[key]!=null&&diam[key]!==0);return k?[k,r.label] as [string,string]:null;})
     .filter(Boolean) as [string,string][];
+  const temCardioAvancado = Boolean((atual.cardiorrespiratorio as any)?.rec_fc || zonasLimiarItems.length > 0 || velocidadesTreinoItems.length > 0);
 
   return (
     <div style={{maxWidth:900,margin:'0 auto',fontFamily:'Inter,system-ui,sans-serif',display:'flex',flexDirection:'column'}}>
@@ -940,7 +923,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 2b. SINAIS VITAIS */}
       {sv&&(
-        <Secao ordem={20} titulo="Dados vitais e corporais" sub="Resumo dos dados clínicos preenchidos na avaliação">
+        <Secao ordem={20} titulo="Dados vitais e corporais" sub="Resumo dos dados clínicos preenchidos na avaliação" analise={analiseModulo('sinais_vitais')}>
           <Card>
             <h3 style={{fontSize:13,fontWeight:700,color:'#0f172a',margin:'0 0 12px'}}>Sinais vitais</h3>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))',gap:8}}>
@@ -974,7 +957,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
             ? [{ regiao, direita, esquerda, delta:Math.abs(direita - esquerda) }] : [];
         }).sort((a,b)=>b.delta-a.delta);
         return (
-          <Secao ordem={35} titulo="Termografia funcional" sub="Condições técnicas, regiões de interesse e registros termográficos">
+          <Secao ordem={35} titulo="Termografia funcional" sub="Condições técnicas, regiões de interesse e registros termográficos" analise={analiseModulo('termografia')}>
             <Card style={{marginBottom:14}}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,150px),1fr))',gap:8}}>
                 <Metrica label="Temperatura ambiente" valor={t.temperatura_ambiente??'Não informada'} un={t.temperatura_ambiente!=null?'°C':''}/>
@@ -1040,7 +1023,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 3. COMPOSIÇÃO CORPORAL */}
       {(pctG!=null||peso!=null)&&(
-        <Secao ordem={40} titulo="Dados corporais" sub="Composição corporal, circunferências e medidas segmentadas" score={sc.composicao_corporal}>
+        <Secao ordem={40} titulo="Dados corporais" sub="Composição corporal, circunferências e medidas segmentadas">
           <Card style={{minWidth:0}}>
             <div style={{minWidth:0}}>
               <SilhuetaCircunferencias
@@ -1082,7 +1065,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       )}
 
       {!antroV2 && (ffmiValor!=null||mlg!=null)&&(
-        <Secao ordem={50} titulo="FFMI" sub="Índice descritivo de massa livre de gordura por estatura" score={sc.composicao_corporal}>
+        <Secao ordem={50} titulo="FFMI" sub="Índice descritivo de massa livre de gordura por estatura">
           <FfmiPotencial
             ffmi={ffmiValor??null}
             massaMagra={mlg??null}
@@ -1120,7 +1103,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 3b. BIOIMPEDÂNCIA DETALHADA */}
       {bioImp&&(
-        <Secao ordem={25} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar" score={sc.composicao_corporal}>
+        <Secao ordem={25} titulo="Bioimpedância detalhada" sub="Dados metabólicos e composição segmentar" analise={analiseModulo('bioimpedancia')}>
           {(resumoBio.agua_corporal_kg!=null||resumoBio.agua_corporal_percentual_peso!=null||resumoBio.assimetrias.length>0)&&(
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,280px),1fr))',gap:14,marginBottom:14}}>
               {(resumoBio.agua_corporal_kg!=null||resumoBio.agua_corporal_percentual_peso!=null)&&<Card>
@@ -1148,7 +1131,6 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
               {bioImp.agua_corporal_pct!=null&&<Metrica label="Água corporal" valor={bioImp.agua_corporal_pct} un="%" cor="#0ea5e9"/>}
               {bioImp.taxa_metabolica_basal_kcal!=null&&<Metrica label="TMB" valor={bioImp.taxa_metabolica_basal_kcal} un="kcal"/>}
               {(bioImp.gordura_visceral_nivel??bioImp.gordura_visceral)!=null&&<Metrica label="Gordura visceral" valor={bioImp.gordura_visceral_nivel??bioImp.gordura_visceral}/>}
-              {bioImp.idade_metabolica!=null&&<Metrica label="Idade metabólica" valor={bioImp.idade_metabolica} un="anos"/>}
               {bioImp.indice_apendicular!=null&&<Metrica label="Índice apendicular" valor={bioImp.indice_apendicular}/>}
               {bioImp.massa_muscular_kg!=null&&<Metrica label="Massa muscular" valor={bioImp.massa_muscular_kg} un="kg" cor="#10b981"/>}
             </div>
@@ -1201,8 +1183,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {(() => {
         const antropometria = atual.antropometria as any;
         if (isAnthropometryV2(antropometria) && antropometria.resultados_v2?.version === 2) return (
-          <Secao ordem={55} titulo="Antropometria" sub="Medidas, metodos selecionados e proporcionalidade" score={sc.composicao_corporal}>
-            <AnthropometryResults results={antropometria.resultados_v2} selectedOnly />
+          <Secao ordem={55} titulo="Antropometria" sub="Composição corporal, proporcionalidade e medidas selecionadas" analise={analiseModulo('antropometria')}>
+            <AnthropometryResults results={antropometria.resultados_v2} selectedOnly patientView />
           </Secao>
         );
         const valorDobra = (v:any): number | null => {
@@ -1227,7 +1209,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         if (!dobrasValidas.length && !temSomatotipo) return null;
 
         return (
-          <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares" score={sc.composicao_corporal}>
+          <Secao ordem={55} titulo="Antropometria detalhada" sub="Dobras cutâneas, somatotipo e indicadores complementares" analise={analiseModulo('antropometria')}>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
               {dobrasValidas.length > 0&&(
                 <Card>
@@ -1255,9 +1237,9 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       })()}
 
       {/* 4. CARDIOVASCULAR */}
-      {atual.jump_test && <Secao ordem={56} titulo="Jump Test" sub="Potência, força explosiva, capacidade reativa e uso do ciclo alongamento-encurtamento"><JumpTestSummary data={atual.jump_test} previous={ant?.jump_test} previousDate={ant?.data}/></Secao>}
+      {atual.jump_test && <Secao ordem={56} titulo="Jump Test" sub="Potência, força explosiva, capacidade reativa e uso do ciclo alongamento-encurtamento" analise={analiseModulo('jump_test')}><JumpTestSummary data={atual.jump_test} previous={ant?.jump_test} previousDate={ant?.data}/></Secao>}
       {(vo2!=null||sv||zonasItems.length>0)&&(
-        <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica e resposta ao esforço; os resultados permitem definir zonas de treinamento" score={sc.cardiorrespiratorio}>
+        <Secao ordem={90} titulo="Saúde cardiovascular" sub="Capacidade aeróbica e resposta ao esforço; os resultados permitem definir zonas de treinamento" analise={temCardioAvancado?null:analiseModulo('cardiorrespiratorio')}>
           {(vo2!=null||sv)&&(
             <Card style={{marginBottom:14}}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,230px),1fr))',gap:8}}>
@@ -1296,8 +1278,8 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       )}
 
       {/* 4b. CARDIO AVANÇADO */}
-      {((atual.cardiorrespiratorio as any)?.rec_fc||zonasLimiarItems.length>0||velocidadesTreinoItems.length>0)&&(
-        <Secao ordem={91} titulo="Cardiorrespiratório avançado" sub="Recuperação de frequência cardíaca, limiares e velocidades" score={sc.cardiorrespiratorio}>
+      {temCardioAvancado&&(
+        <Secao ordem={91} titulo="Cardiorrespiratório avançado" sub="Recuperação de frequência cardíaca, limiares e velocidades" analise={analiseModulo('cardiorrespiratorio')}>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
             {(atual.cardiorrespiratorio as any)?.rec_fc&&(
               <Card>
@@ -1347,7 +1329,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 5. FORÇA */}
       {(atual.forca?.preensao_dir_kgf||atual.forca?.preensao_esq_kgf||(atual.forca as any)?.sptech_testes?.length>0||(atual.forca as any)?.tracao_testes?.length>0)&&(
-        <Secao ordem={70} titulo="Força muscular" sub="Preensão palmar e dinamometria isométrica" score={sc.forca}>
+        <Secao ordem={70} titulo="Força muscular" sub="Preensão palmar e dinamometria isométrica" analise={analiseModulo('forca')}>
           {(atual.forca?.preensao_dir_kgf||atual.forca?.preensao_esq_kgf)&&(
             <Card style={{marginBottom:14}}>
               <h3 style={{fontSize:13,fontWeight:600,color:'#475569',margin:'0 0 12px'}}>Preensão palmar</h3>
@@ -1474,7 +1456,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
 
       {/* 6. FLEXIBILIDADE */}
       {flex&&(
-        <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — cadeia posterior (isquiotibiais, eretores da coluna e tríceps sural)" score={sc.flexibilidade}>
+        <Secao ordem={60} titulo="Flexibilidade" sub="Banco de Wells — cadeia posterior (isquiotibiais, eretores da coluna e tríceps sural)" analise={analiseModulo('flexibilidade')}>
           <Card>
             <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:24}}>
               <div style={{textAlign:'center',flexShrink:0}}>
@@ -1498,7 +1480,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
       {/* 7. POSTUROGRAFIA */}
       {post&&(()=>{
         const desv=Object.entries(post.alinhamentos??{}).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' '));
-        return <Secao ordem={30} titulo="Avaliação postural" score={sc.postura}>
+        return <Secao ordem={30} titulo="Avaliação postural" sub="Alinhamentos e assimetrias observados na avaliação postural" analise={analiseModulo('posturografia')}>
           <Card>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,160px),1fr))',gap:10,marginBottom:14}}>
               <FotoPostura src={post.foto_anterior} label="Anterior"/>
@@ -1541,7 +1523,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         const ativos = testes.filter(t => t.val != null);
         if (!ativos.length) return null;
         return (
-          <Secao ordem={80} titulo="Resistência Muscular (RML)" sub="Capacidade de MMSS, MMII e core sustentarem esforços repetidos ou prolongados" score={sc.rml}>
+          <Secao ordem={80} titulo="Resistência Muscular (RML)" sub="Capacidade de MMSS, MMII e core sustentarem esforços repetidos ou prolongados" analise={analiseModulo('rml')}>
             <Card>
               <div style={{display:'flex', gap:12, flexWrap:'wrap', marginBottom: ativos.length ? 14 : 0}}>
                 {ativos.map((t, i) => {
@@ -1595,7 +1577,7 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         ].filter(([k]) => grafs[k]);
         if (!keys.length && !grafItems.length && !videoSagital && !videoPosterior && !sagitalImgs.length && !posteriorImgs.length) return null;
         return (
-          <Secao ordem={100} titulo="Biomecânica da corrida" sub="Cinemática 2D e ângulos articulares">
+          <Secao ordem={100} titulo="Biomecânica da corrida" sub="Cinemática 2D e ângulos articulares" analise={analiseModulo('biomecanica_corrida')}>
             <Card>
               {videoSagital && (
                 <a href={videoSagital} target="_blank" rel="noopener noreferrer"
@@ -1832,29 +1814,9 @@ export function PortalPaciente({paciente,avaliador,clinica,avaliacoes}:Props) {
         );
       })()}
 
-      {analisesPaciente.length>0&&(
-        <Secao ordem={117} titulo="Análises clínicas" sub="Interpretações geradas e revisadas pelo avaliador">
-          <Card>
-            <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8}}>
-              {analisesPaciente.map(a=>(
-                <div key={a.k} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,flexWrap:'wrap',
-                  padding:'11px 13px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10}}>
-                  <div style={{minWidth:150}}>
-                    <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{a.label}</div>
-                    {a.referencias.length>0&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4}}>
-                      {a.referencias.map((ref,index)=><a key={ref.id} href={ref.url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:'#047857',textDecoration:'underline'}}>Base {index+1}</a>)}
-                    </div>}
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:8,minWidth:0,flex:1,justifyContent:'flex-end'}}>
-                    <span style={{fontSize:12,color:'#64748b',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'min(520px,60vw)'}}>
-                      {a.texto}
-                    </span>
-                    <TooltipInfo texto={a.texto} label={`Ver análise de ${a.label}`} placement="top"/>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+      {conclusaoGlobalPaciente&&(
+        <Secao ordem={117} titulo="Conclusão clínica" sub="Síntese global da avaliação antes das referências">
+          <AnaliseClinicaPaciente texto={conclusaoGlobalPaciente} modulo="Conclusão clínica"/>
         </Secao>
       )}
 

@@ -11,7 +11,7 @@ import { anthropometryAIData, isAnthropometryV2 } from '@/lib/anthropometry-reco
 import { friendComparisonFromAssessment } from '@/lib/calculations/friend';
 import { composicaoOficialParaIA } from '@/lib/bodyComposition';
 import { globalConclusionDiagnostics, isGlobalConclusionComplete, isGlobalConclusionSupportComplete } from './global-conclusion';
-import { hasUsableAnalysisContent } from './analysis-content';
+import { hasCompleteModuleAnalysisContent } from './analysis-content';
 
 async function stampAnthropometry(sb: any, avaliacaoId: string, row: any, content: any) {
   if (!isAnthropometryV2(row)) return;
@@ -241,10 +241,19 @@ export async function gerarAnaliseModulo(avaliacaoId: string, modulo: TipoAnalis
   const modelosTexto = blocoModelosInterpretacao(modelos);
   const { system, user } = builder(ctx, dados);
   const promptUser = modelosTexto ? `${user}\n\n${modelosTexto}` : user;
-  const resp = await llmCall({ system, user: promptUser, json: true, temperature: 0.4 });
-  const conteudo = parseJSON(resp.text);
-  if (!hasUsableAnalysisContent(conteudo)) {
-    throw new Error('A IA retornou uma analise vazia. A analise anterior foi preservada; tente gerar novamente.');
+  let resp = await llmCall({ system, user: promptUser, json: true, temperature: 0.4 });
+  let conteudo = parseJSON(resp.text);
+  if (!hasCompleteModuleAnalysisContent(conteudo)) {
+    resp = await llmCall({
+      system: `${system}\n\nA resposta anterior foi incompleta. Preencha obrigatoriamente interpretacao e versao_paciente com texto substantivo, alem de ao menos um achado e uma recomendacao.`,
+      user: promptUser,
+      json: true,
+      temperature: 0.2,
+    });
+    conteudo = parseJSON(resp.text);
+  }
+  if (!hasCompleteModuleAnalysisContent(conteudo)) {
+    throw new Error('A IA retornou uma analise vazia ou incompleta apos duas tentativas. A analise anterior foi preservada; tente gerar novamente.');
   }
   if (modulo === 'antropometria') await stampAnthropometry(sb, avaliacaoId, dados, conteudo);
   if (modulo === 'jump_test') {

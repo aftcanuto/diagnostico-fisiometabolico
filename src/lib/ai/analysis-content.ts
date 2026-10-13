@@ -45,3 +45,12 @@ export function hasUsableAnalysisContent(value: unknown): boolean {
   });
 }
 
+export function hasCompleteModuleAnalysisContent(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const content = value as Record<string, unknown>;
+  return hasText(content.interpretacao) &&
+    Array.isArray(content.achados) && content.achados.some(hasText) &&
+    Array.isArray(content.recomendacoes) && content.recomendacoes.some(hasText) &&
+    hasText(content.versao_paciente);
+}
+
