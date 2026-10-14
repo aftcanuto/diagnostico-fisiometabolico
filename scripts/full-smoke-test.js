@@ -312,7 +312,7 @@ function main() {
     analisesIA: { termografia: iaMock('termografia') },
   });
   fs.writeFileSync(path.resolve('preview-laudo-termografia-isolada.html'), termografiaIsolada, 'utf8');
-  assert(termografiaIsolada.includes('Tipo</div><div class="chip-val"') && termografiaIsolada.includes('Termografia funcional'), 'Capa isolada deveria identificar Termografia funcional');
+  assert(termografiaIsolada.includes('class="cover-module">Termografia funcional</div>'), 'Capa isolada deveria identificar Termografia funcional');
   assert(!termografiaIsolada.includes('Resultado global</div>'), 'Laudo isolado nao deve mostrar resultado global vazio');
   assert(!termografiaIsolada.includes('Score 0-100 da posturografia'), 'Laudo isolado nao deve mostrar scores de modulos ausentes');
   assert(!termografiaIsolada.includes('Resumo da Avaliação'), 'Laudo isolado sem score nao deve gerar pagina de resumo');

@@ -15,6 +15,8 @@ import { anthropometryReportHtml, isAnthropometryV2 } from './anthropometry';
 import { resumoInterpretativoBioimpedancia } from '@/lib/clinical/bioimpedance';
 import { friendComparisonFromAssessment, friendInterpretationLabel } from '@/lib/calculations/friend';
 import { classifySomatotype } from '@/lib/anthropometry/formulas';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export interface ClinicaBranding {
   nome?: string; logo_url?: string | null; cor_primaria?: string;
@@ -60,6 +62,21 @@ export interface LaudoData {
 const x = (s: any) => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const xa = (s: any) => x(s).replace(/"/g,'&quot;');
 const fd = formatCalendarDate;
+const assetDataUriCache = new Map<string, string>();
+
+function assetDataUri(caminho: string, mime = 'image/png'): string {
+  const cacheKey = `${mime}:${caminho}`;
+  const cached = assetDataUriCache.get(cacheKey);
+  if (cached) return cached;
+  try {
+    const data = readFileSync(join(process.cwd(), 'public', caminho));
+    const uri = `data:${mime};base64,${data.toString('base64')}`;
+    assetDataUriCache.set(cacheKey, uri);
+    return uri;
+  } catch {
+    return '';
+  }
+}
 function limparTextoHTML(html: string): string {
   const pares: [string, string][] = [
     ['ÃƒÂ¡','á'], ['ÃƒÂ ','à'], ['ÃƒÂ¢','â'], ['ÃƒÂ£','ã'], ['ÃƒÂ©','é'], ['Ãƒª','ê'], ['ÃƒÂ­','í'], ['Ãƒ³','ó'], ['ÃƒÂ´','ô'], ['ÃƒÂµ','õ'], ['Ãƒº','ú'], ['ÃƒÂ§','ç'],
@@ -211,33 +228,20 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue'
 }
 
 /* Cover */
-.cover { min-height: 297mm; height: 297mm; color: white; padding: 28px; display: flex; flex-direction: column; position: relative; overflow: hidden; background: var(--pdf-beige); }
-.cover::before,
-.cover::after { content:none; }
-.cover-shell { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:34px 38px; border-radius:34px; border:1px solid var(--pdf-line); overflow:hidden; box-shadow:0 24px 52px rgba(21,92,71,.12); background: var(--cover-gradient); }
-.cover-shell::before { content:''; position:absolute; inset:0; background:
-  radial-gradient(circle at 18% 14%, rgba(255,255,255,.22), transparent 28%),
-  radial-gradient(circle at 84% 12%, rgba(255,255,255,.14), transparent 24%),
-  radial-gradient(circle at 78% 82%, rgba(255,255,255,.12), transparent 30%);
-  pointer-events:none;
-}
-.cover-shell::after { content:''; position:absolute; right:-90px; top:120px; width:430px; height:430px; border-radius:50%; border:1px solid rgba(255,255,255,.18); box-shadow: inset 0 0 0 34px rgba(255,255,255,.035), inset 0 0 0 92px rgba(255,255,255,.028); pointer-events:none; }
-.cover-top, .cover-main, .cover-signature { position:relative; z-index:1; }
-.cover-top { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:26px; border-bottom:1px solid rgba(255,255,255,.16); }
-.cover-brand { display:flex; align-items:center; gap:14px; min-width:0; }
-.cover-logo { width: 58px; height: 58px; background:rgba(255,255,255,.96); border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.5); flex-shrink: 0; box-shadow:0 18px 45px rgba(15,23,42,.18); overflow:hidden; }
-.cover-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 48px 0 42px; max-width: 690px; }
-.cover-badge { width:max-content; background:rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.34); padding: 8px 18px; border-radius: 100px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 28px; backdrop-filter: blur(8px); }
-.cover-name { font-weight: 850; letter-spacing: -1.2px; color:#ffffff; text-transform: uppercase; margin-bottom: 18px; text-wrap: nowrap; white-space: nowrap; max-width: 100%; }
-.cover-subtitle { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,.76); max-width: 610px; margin-bottom: 34px; }
-.cover-chip-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; max-width: 650px; }
-.cover-signature { display:flex; align-items:stretch; padding-top:22px; border-top:1px solid rgba(255,255,255,.16); }
-.cover-sign-card { border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.11); border-radius:18px; padding:16px 18px; backdrop-filter: blur(10px); }
-.cover-label { font-size:8.5px; font-weight:800; color:rgba(255,255,255,.58); text-transform:uppercase; letter-spacing:1.6px; margin-bottom:7px; }
-.cover-value { font-size:14px; font-weight:650; color:#ffffff; line-height:1.35; }
-.chip { background:rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); padding: 12px 22px; border-radius: 12px; text-align: center; min-width: 95px; }
-.chip-label { font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-.chip-val { font-size: 15px; font-weight: 700; color: #ffffff; }
+.cover { min-height:297mm; height:297mm; padding:0; color:#1e293b; background:#fff; position:relative; overflow:hidden; }
+.cover-shell { position:relative; height:100%; overflow:hidden; background:linear-gradient(90deg,#fff 0%,#fff 62%,#fbfcfb 100%); }
+.cover-rail { position:absolute; z-index:4; left:16mm; top:0; bottom:0; width:.8mm; background:linear-gradient(to bottom,#008c68 0 67%,#c6a15b 67% 73.5%,#008c68 73.5% 100%); }
+.cover-anatomy { position:absolute; z-index:1; top:7mm; right:-35mm; height:286mm; width:auto; object-fit:contain; object-position:center top; filter:grayscale(1) contrast(1.08); opacity:.13; }
+.cover-logo { position:absolute; z-index:3; top:22mm; left:35mm; width:70mm; height:27mm; object-fit:contain; object-position:left center; display:block; }
+.cover-logo-fallback { position:absolute; z-index:3; top:25mm; left:35mm; color:#168857; font-size:22px; font-weight:800; }
+.cover-copy { position:absolute; z-index:3; top:78mm; left:35mm; width:126mm; }
+.cover-rule { width:16mm; height:.45mm; background:#b68b35; margin-bottom:10mm; }
+.cover-title { width:124mm; font-family:Georgia,'Times New Roman',serif; font-size:24pt; line-height:1.08; font-weight:500; letter-spacing:0; color:#1f2937; text-transform:uppercase; }
+.cover-patient { margin-top:17mm; }
+.cover-patient::before { content:''; display:block; width:16mm; height:.45mm; background:#b68b35; margin-bottom:11mm; }
+.cover-patient-name { font-family:Georgia,'Times New Roman',serif; font-size:12.5pt; line-height:1.35; color:#334155; }
+.cover-date { margin-top:2mm; font-family:Georgia,'Times New Roman',serif; font-size:10.5pt; line-height:1.35; color:#64748b; }
+.cover-module { margin-top:3mm; font-size:8.5pt; line-height:1.35; color:#168857; text-transform:uppercase; letter-spacing:.8px; font-weight:700; }
 
 .page:not(.cover) { min-height: 297mm; height: 297mm; padding-bottom: 70px !important; }
 .pdf-footer {
@@ -745,56 +749,27 @@ function tipoExibidoLaudo(d: LaudoData) {
 
 function pgCapa(d: LaudoData): string {
   const c = d.clinica;
-  const g1 = c?.cor_gradient_1 ?? '#052e16', g2 = c?.cor_gradient_2 ?? '#065f46', g3 = c?.cor_gradient_3 ?? '#059669';
-  const nomePaciente = d.paciente.nome ?? '';
-  const nomePesoVisual = nomePaciente
-    .toUpperCase()
-    .split('')
-    .reduce((total, char) => total + (char === ' ' ? 0.36 : /[IJLT]/.test(char) ? 0.42 : /[MW]/.test(char) ? 0.86 : 0.66), 0);
-  const nomeFont = Math.max(25, Math.min(46, Math.floor(680 / Math.max(nomePesoVisual, 1))));
-  const logoInner = c?.logo_url
-    ? `<img src="${x(c.logo_url)}" style="width:48px;height:48px;object-fit:contain;display:block"/>`
-    : `<span style="font-size:22px;font-weight:900;color:${x(c?.cor_primaria ?? '#059669')}">${x((c?.nome??'D').charAt(0))}</span>`;
-  const clinicaNome = c?.nome ?? 'Diagnóstico Fisiometabólico';
-  const contato = [c?.telefone, c?.email, c?.site].filter(Boolean).join(' · ');
-  const avaliadorLinha = [d.avaliador.conselho, d.avaliador.especialidade].filter(Boolean).join(' · ');
-  const tipoExibido = tipoExibidoLaudo(d);
-  const moduloUnico = modulosAtivosLaudo(d).length === 1;
-  return `<section class="page cover" style="--cover-gradient:linear-gradient(135deg,${g1} 0%,${g2} 52%,${g3} 100%)">
+  const logoSrc = assetDataUri('assets/branding/medfit-logo-horizontal.png') || c?.logo_url || '';
+  const anatomyAsset = d.paciente.sexo === 'F'
+    ? 'assets/anthropometry/human-female-front-clinical.png'
+    : 'assets/anthropometry/human-male-front-clinical.png';
+  const anatomySrc = assetDataUri(anatomyAsset);
+  const modulosAtivos = modulosAtivosLaudo(d);
+  const moduloUnico = modulosAtivos.length === 1 ? modulosAtivos[0].label : '';
+  return `<section class="page cover">
   <div class="cover-shell">
-    <div class="cover-top">
-      <div class="cover-brand">
-        <div class="cover-logo">${logoInner}</div>
-        <div style="min-width:0">
-          <div style="font-size:16px;font-weight:750;color:rgba(255,255,255,.96);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px">${x(clinicaNome)}</div>
-          ${contato ? `<div style="font-size:9.5px;color:rgba(255,255,255,.62);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">${x(contato)}</div>` : ''}
-        </div>
-      </div>
-      <div style="text-align:right">
-        <div class="cover-label" style="margin-bottom:5px">Emissão</div>
-        <div style="font-size:13px;font-weight:700;color:#ffffff">${new Date().toLocaleDateString('pt-BR')}</div>
-      </div>
-    </div>
-
-    <div class="cover-main">
-      <div class="cover-badge">${moduloUnico ? x(tipoExibido) : 'Avaliação fisiometabólica'}</div>
-      <h1 class="cover-name" style="font-size:${nomeFont}px;line-height:1.04;width:680px;max-width:100%;overflow:visible;text-overflow:clip">${x(nomePaciente)}</h1>
-      <div class="cover-subtitle">Relatório técnico de composição corporal, capacidades funcionais e indicadores fisiometabólicos.</div>
-      <div class="cover-chip-grid">
-        ${[
-          ['Paciente', d.paciente.sexo==='M'?'Masculino':'Feminino'],
-          ['Idade', `${d.paciente.idade} anos`],
-          ['Avaliação', fd(d.avaliacao.data)],
-          ['Tipo', tipoExibido],
-        ].map(([l,v])=>`<div class="chip" style="min-width:0;padding:13px 14px;text-align:left;border-radius:16px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.26)"><div class="chip-label">${x(l)}</div><div class="chip-val" style="font-size:${l === 'Tipo' ? '11.5px' : '14px'};line-height:1.15;white-space:${l === 'Tipo' ? 'normal' : 'nowrap'};overflow:hidden;text-overflow:ellipsis">${x(v)}</div></div>`).join('')}
-      </div>
-    </div>
-
-    <div class="cover-signature">
-      <div class="cover-sign-card" style="width:100%">
-        <div class="cover-label">Avaliador responsável</div>
-        <div class="cover-value">${x(d.avaliador.nome)}</div>
-        ${avaliadorLinha ? `<div style="font-size:10.5px;color:rgba(255,255,255,.66);margin-top:4px">${x(avaliadorLinha)}</div>` : ''}
+    <div class="cover-rail"></div>
+    ${anatomySrc ? `<img class="cover-anatomy" src="${anatomySrc}" alt="Ilustração anatômica"/>` : ''}
+    ${logoSrc
+      ? `<img class="cover-logo" src="${x(logoSrc)}" alt="MedFit Saúde e Bem-estar"/>`
+      : `<div class="cover-logo-fallback">MedFit Saúde e Bem-estar</div>`}
+    <div class="cover-copy">
+      <div class="cover-rule"></div>
+      <h1 class="cover-title">Relatório de<br/>avaliação<br/>fisiometabólica</h1>
+      <div class="cover-patient">
+        <div class="cover-patient-name">Paciente: ${x(d.paciente.nome)}</div>
+        <div class="cover-date">${fd(d.avaliacao.data)}</div>
+        ${moduloUnico ? `<div class="cover-module">${x(moduloUnico)}</div>` : ''}
       </div>
     </div>
   </div>
